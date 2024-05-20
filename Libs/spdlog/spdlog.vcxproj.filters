@@ -1,0 +1,139 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{F83AFF2B-D8A7-3543-8789-AE01608B65F4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\spdlog">
+      <UniqueIdentifier>{1188A027-0D0F-34D7-9DAB-5FB201D23609}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\spdlog\details">
+      <UniqueIdentifier>{A373CAF9-1F95-3601-A8A2-E5FBB99A8D5B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\spdlog\fmt">
+      <UniqueIdentifier>{41B39A08-3F6A-3C4A-9AE7-3A3890DB0263}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\spdlog\fmt\bundled">
+      <UniqueIdentifier>{C820C5D8-EA54-3C01-84F9-112A764C4298}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\spdlog\sinks">
+      <UniqueIdentifier>{92E29A27-2A7F-3C6C-93FA-7DCAE013221D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{1EC2C63E-9ECA-35AE-A493-2AF8BE10B2FF}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\async.cpp" />
+    <ClCompile Include="src\cfg.cpp" />
+    <ClCompile Include="src\color_sinks.cpp" />
+    <ClCompile Include="src\file_sinks.cpp" />
+    <ClCompile Include="src\spdlog.cpp" />
+    <ClCompile Include="src\stdout_sinks.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\spdlog\cfg\argv.h" />
+    <ClInclude Include="include\spdlog\cfg\env.h" />
+    <ClInclude Include="include\spdlog\cfg\helpers.h" />
+    <ClInclude Include="include\spdlog\cfg\helpers-inl.h" />
+    <ClInclude Include="include\spdlog\details\backtracer.h" />
+    <ClInclude Include="include\spdlog\details\backtracer-inl.h" />
+    <ClInclude Include="include\spdlog\details\circular_q.h" />
+    <ClInclude Include="include\spdlog\details\console_globals.h" />
+    <ClInclude Include="include\spdlog\details\file_helper.h" />
+    <ClInclude Include="include\spdlog\details\file_helper-inl.h" />
+    <ClInclude Include="include\spdlog\details\fmt_helper.h" />
+    <ClInclude Include="include\spdlog\details\log_msg.h" />
+    <ClInclude Include="include\spdlog\details\log_msg_buffer.h" />
+    <ClInclude Include="include\spdlog\details\log_msg_buffer-inl.h" />
+    <ClInclude Include="include\spdlog\details\log_msg-inl.h" />
+    <ClInclude Include="include\spdlog\details\mpmc_blocking_q.h" />
+    <ClInclude Include="include\spdlog\details\null_mutex.h" />
+    <ClInclude Include="include\spdlog\details\os.h" />
+    <ClInclude Include="include\spdlog\details\os-inl.h" />
+    <ClInclude Include="include\spdlog\details\periodic_worker.h" />
+    <ClInclude Include="include\spdlog\details\periodic_worker-inl.h" />
+    <ClInclude Include="include\spdlog\details\registry.h" />
+    <ClInclude Include="include\spdlog\details\registry-inl.h" />
+    <ClInclude Include="include\spdlog\details\synchronous_factory.h" />
+    <ClInclude Include="include\spdlog\details\tcp_client.h" />
+    <ClInclude Include="include\spdlog\details\tcp_client-windows.h" />
+    <ClInclude Include="include\spdlog\details\thread_pool.h" />
+    <ClInclude Include="include\spdlog\details\thread_pool-inl.h" />
+    <ClInclude Include="include\spdlog\details\udp_client.h" />
+    <ClInclude Include="include\spdlog\details\udp_client-windows.h" />
+    <ClInclude Include="include\spdlog\details\windows_include.h" />
+    <ClInclude Include="include\spdlog\fmt\bundled\args.h" />
+    <ClInclude Include="include\spdlog\fmt\bundled\chrono.h" />
+    <ClInclude Include="include\spdlog\fmt\bundled\color.h" />
+    <ClInclude Include="include\spdlog\fmt\bundled\compile.h" />
+    <ClInclude Include="include\spdlog\fmt\bundled\core.h" />
+    <ClInclude Include="include\spdlog\fmt\bundled\format.h" />
+    <ClInclude Include="include\spdlog\fmt\bundled\format-inl.h" />
+    <ClInclude Include="include\spdlog\fmt\bundled\locale.h" />
+    <ClInclude Include="include\spdlog\fmt\bundled\os.h" />
+    <ClInclude Include="include\spdlog\fmt\bundled\ostream.h" />
+    <ClInclude Include="include\spdlog\fmt\bundled\printf.h" />
+    <ClInclude Include="include\spdlog\fmt\bundled\ranges.h" />
+    <ClInclude Include="include\spdlog\fmt\bundled\std.h" />
+    <ClInclude Include="include\spdlog\fmt\bundled\xchar.h" />
+    <ClInclude Include="include\spdlog\fmt\bin_to_hex.h" />
+    <ClInclude Include="include\spdlog\fmt\chrono.h" />
+    <ClInclude Include="include\spdlog\fmt\compile.h" />
+    <ClInclude Include="include\spdlog\fmt\fmt.h" />
+    <ClInclude Include="include\spdlog\fmt\ostr.h" />
+    <ClInclude Include="include\spdlog\fmt\ranges.h" />
+    <ClInclude Include="include\spdlog\fmt\std.h" />
+    <ClInclude Include="include\spdlog\fmt\xchar.h" />
+    <ClInclude Include="include\spdlog\sinks\android_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\ansicolor_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\ansicolor_sink-inl.h" />
+    <ClInclude Include="include\spdlog\sinks\base_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\base_sink-inl.h" />
+    <ClInclude Include="include\spdlog\sinks\basic_file_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\basic_file_sink-inl.h" />
+    <ClInclude Include="include\spdlog\sinks\callback_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\daily_file_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\dist_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\dup_filter_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\hourly_file_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\kafka_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\mongo_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\msvc_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\null_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\ostream_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\qt_sinks.h" />
+    <ClInclude Include="include\spdlog\sinks\ringbuffer_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\rotating_file_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\rotating_file_sink-inl.h" />
+    <ClInclude Include="include\spdlog\sinks\sink.h" />
+    <ClInclude Include="include\spdlog\sinks\sink-inl.h" />
+    <ClInclude Include="include\spdlog\sinks\stdout_color_sinks.h" />
+    <ClInclude Include="include\spdlog\sinks\stdout_color_sinks-inl.h" />
+    <ClInclude Include="include\spdlog\sinks\stdout_sinks.h" />
+    <ClInclude Include="include\spdlog\sinks\stdout_sinks-inl.h" />
+    <ClInclude Include="include\spdlog\sinks\syslog_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\systemd_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\tcp_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\udp_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\win_eventlog_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\wincolor_sink.h" />
+    <ClInclude Include="include\spdlog\sinks\wincolor_sink-inl.h" />
+    <ClInclude Include="include\spdlog\async.h" />
+    <ClInclude Include="include\spdlog\async_logger.h" />
+    <ClInclude Include="include\spdlog\async_logger-inl.h" />
+    <ClInclude Include="include\spdlog\common.h" />
+    <ClInclude Include="include\spdlog\common-inl.h" />
+    <ClInclude Include="include\spdlog\formatter.h" />
+    <ClInclude Include="include\spdlog\fwd.h" />
+    <ClInclude Include="include\spdlog\logger.h" />
+    <ClInclude Include="include\spdlog\logger-inl.h" />
+    <ClInclude Include="include\spdlog\pattern_formatter.h" />
+    <ClInclude Include="include\spdlog\pattern_formatter-inl.h" />
+    <ClInclude Include="include\spdlog\spdlog.h" />
+    <ClInclude Include="include\spdlog\spdlog-inl.h" />
+    <ClInclude Include="include\spdlog\stopwatch.h" />
+    <ClInclude Include="include\spdlog\tweakme.h" />
+    <ClInclude Include="include\spdlog\version.h" />
+  </ItemGroup>
+</Project>
