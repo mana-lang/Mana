@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Lox\Chunk.h" />
+    <ClInclude Include="Include\Lox\Common.h" />
     <ClInclude Include="Include\Lox\Value.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -92,6 +93,9 @@
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
     <ClCompile Include="Source\Lox\Main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Include\Salem\" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

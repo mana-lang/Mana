@@ -11,3 +11,7 @@ void Chunk::Disassemble() const {
 void Chunk::Push(OpCode code) {
     code_.emplace_back(code);
 }
+
+void Chunk::PushValue(Value value) {
+    values_.Push(value);
+}

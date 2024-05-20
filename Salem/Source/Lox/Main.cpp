@@ -2,6 +2,6 @@
 
 int main() {
     Chunk chunk;
-    chunk.Push(OpCode::Op_Return);
+    chunk.Push(OpCode::Return);
     chunk.Disassemble();
 }

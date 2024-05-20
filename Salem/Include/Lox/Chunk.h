@@ -6,7 +6,8 @@
 #include <vector>
 
 enum class OpCode {
-    Op_Return,
+    Return,
+    Constant,
 };
 
 class Chunk {
@@ -16,4 +17,5 @@ class Chunk {
 public:
     void Disassemble() const;
     void Push(OpCode code);
+    void PushValue(Value value);
 };
