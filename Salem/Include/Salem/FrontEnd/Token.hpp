@@ -15,7 +15,7 @@ struct Token {
     enum class Type : u8;
 
     Type type;
-    const std::string contents;
+    std::string contents;
     TextPosition position;
 };
 

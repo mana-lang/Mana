@@ -9,11 +9,12 @@ namespace salem {
 // the operators method, which crystallizes them into regular operators
 Lexer::Lexer()
     : cursor_(0)
-    ,line_number_()
+    , line_number_()
 {}
 
 void Lexer::add_token(const Token::Type type, const std::string&& contents) {
-    token_stream_.emplace_back(Token(type, contents, {line_number_, cursor_ + 1}));
+    token_stream_.emplace_back(Token(type, std::forward<const std::string>(contents),
+        {line_number_, cursor_ + 1}));
 }
 
 bool Lexer::tokenize_file(const std::filesystem::path& path_to_file) {
@@ -21,7 +22,7 @@ bool Lexer::tokenize_file(const std::filesystem::path& path_to_file) {
 
     std::ifstream file(path_to_file);
     if (not file.is_open()) {
-        log(LogLevel::Error, "Failed to open file at '{}'", path_to_file.c_str());
+        Log(LogLevel::Error, "Failed to open file at '{}'", path_to_file.c_str());
         return false;
     }
 
@@ -112,10 +113,9 @@ bool Lexer::lex_numbers(const std::string_view current_line) {
     const auto current_char = current_line[cursor_];
 
     const bool is_negative_digit = current_char == '-' && std::isdigit(current_line[cursor_ + 1]);
-    if (not is_negative_digit) {
-        if (not std::isdigit(current_char)) {
+    if (not is_negative_digit
+        && not std::isdigit(current_char)) {
             return false;
-        }
     }
 
     // We're guaranteed to have at least a 1-digit number by now,
@@ -147,7 +147,6 @@ bool Lexer::lex_numbers(const std::string_view current_line) {
 
     add_token(Token::Type::Float, std::move(buffer));
     return true;
-
 }
 
 bool Lexer::lex_operators(const std::string_view current_line) {
