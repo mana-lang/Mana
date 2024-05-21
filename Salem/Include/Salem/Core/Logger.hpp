@@ -4,6 +4,7 @@
 #include <spdlog/spdlog.h>
 
 #include <Salem/Core/TypeAliases.hpp>
+#include <Salem/Core/ExitCodes.hpp>
 
 #include <memory>
 
@@ -71,11 +72,8 @@ class Internal_Log_ {
     } counters_;
 };
 
-// Putting this here as a reminder that exit codes may be useful,
-// esp for cooperating with Conjure
-constexpr int SALEM_EXIT_CRITICAL = 5;
 template<typename... Args>
-auto log(const LogLevel log_level, const char* msg, Args&&... args) -> void {
+void log(const LogLevel log_level, const char* msg, Args&&... args) {
     if (!Internal_Log_::was_initialized_) {
         Internal_Log_::init();
     }
@@ -83,32 +81,36 @@ auto log(const LogLevel log_level, const char* msg, Args&&... args) -> void {
     const auto runtime_msg = fmt::runtime(msg);
 
     switch (log_level) {
-    case LogLevel::Trace:
+        using enum LogLevel;
+        
+    case Trace:
         Internal_Log_::logger_->trace(runtime_msg, std::forward<Args>(args)...);
         ++Internal_Log_::counters_.trace;
         break;
-    case LogLevel::Debug:
+    case Debug:
         Internal_Log_::logger_->debug(runtime_msg, std::forward<Args>(args)...);
         ++Internal_Log_::counters_.debug;
         break;
-    case LogLevel::Info:
+    case Info:
         Internal_Log_::logger_->info(runtime_msg, std::forward<Args>(args)...);
         ++Internal_Log_::counters_.info;
         break;
-    case LogLevel::Warn:
+    case Warn:
         Internal_Log_::logger_->warn(runtime_msg, std::forward<Args>(args)...);
         ++Internal_Log_::counters_.warnings;
         break;
-    case LogLevel::Error:
+    case Error:
         Internal_Log_::logger_->error(runtime_msg, std::forward<Args>(args)...);
         ++Internal_Log_::counters_.errors;
         break;
-    case LogLevel::Critical:
+    case Critical:
         Internal_Log_::logger_->critical(runtime_msg, std::forward<Args>(args)...);
         Internal_Log_::logger_->critical("Shutting down.");
         throw std::runtime_error("Critical error");
-    default:
-        Internal_Log_::logger_->error("You really shouldn't have come here.");
+    case Off:
+        break;
+    // default:
+    //     Internal_Log_::logger_->error("You really shouldn't have come here.");
     }
 }
 
@@ -135,12 +137,12 @@ inline i64 log_counter(const LogLevel log_level) {
         return errors;
     case Critical:
         log(Error, "Critical errors always throw, so this path should never happen.");
-        return -1;
+        return EXIT::LOG_COUNTER_CRITICAL_CASE;
     case Off:
         return 0;
     }
 
-    return -133;
+    return EXIT::LOG_COUNTER_PAST_SWITCH;
 }
 
 }  // namespace salem
