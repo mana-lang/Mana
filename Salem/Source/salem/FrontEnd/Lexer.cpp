@@ -1,6 +1,8 @@
 #include <Salem/FrontEnd/Lexer.hpp>
 #include <Salem/Core/Logger.hpp>
 
+#include <magic_enum/magic_enum.hpp>
+
 #include <fstream>
 
 namespace salem {
@@ -12,22 +14,23 @@ Lexer::Lexer()
     , line_number_()
 {}
 
-void Lexer::add_token(const Token::Type type, const std::string&& contents) {
+void Lexer::AddToken(const Token::Type type, const std::string&& contents) {
     token_stream_.emplace_back(Token(type, std::forward<const std::string>(contents),
         {line_number_, cursor_ + 1}));
 }
 
-bool Lexer::tokenize_file(const std::filesystem::path& path_to_file) {
+bool Lexer::TokenizeFile(const std::filesystem::path& path_to_file) {
     token_stream_.clear();
 
     std::ifstream file(path_to_file);
     if (not file.is_open()) {
-        Log(LogLevel::Error, "Failed to open file at '{}'", path_to_file.c_str());
+        Log(LogLevel::Error, "Failed to open file at '{}'", path_to_file.string());
         return false;
     }
 
     std::string current_line;
     while (std::getline(file, current_line)) {
+        current_line.push_back('\n'); // reinsert delimiter for seek operations
         ++line_number_;
 
         if (current_line.empty()) {
@@ -37,79 +40,97 @@ bool Lexer::tokenize_file(const std::filesystem::path& path_to_file) {
 
         const auto line_size = current_line.size();
         while (cursor_ < line_size) {
-            if (is_comment(current_line[cursor_])) {
+            if (IsComment(current_line[cursor_])) {
                 break;
             }
 
-            if (is_whitespace(current_line[cursor_])) {
+            if (IsWhitespace(current_line[cursor_])) {
                 ++cursor_;
                 continue;
             }
 
-            if (lex_numbers(current_line)) {
+            if (LexNumbers(current_line)) {
                 continue;
             }
 
-            if (lex_identifiers(current_line)) {
+            if (LexIdentifiers(current_line)) {
                 continue;
             }
 
-            if (lex_operators(current_line)) {
+            if (LexOperators(current_line)) {
                 continue;
             }
 
-            lex_unknown(current_line);
+            LexUnknown(current_line);
         }
 
-        add_token(Token::Type::Newline, "\n");
+        AddToken(Token::Type::Newline, "\n");
     }
 
-    add_token(Token::Type::Eof, "EOF");
+    AddToken(Token::Type::Eof, "EOF");
     line_number_ = 0;
     cursor_      = 0;
     return true;
 }
 
-auto Lexer::relinquish_tokens() -> std::vector<Token>&& {
+void Lexer::PrintTokens() const {
+    if (token_stream_.empty()) {
+        Log(LogLevel::Error, "Lexer token print requested, but token stream was empty.");
+        return;
+    }
+
+
+    Log(LogLevel::Debug, "--- Printing Token Stream ---\n");
+
+    for (const auto& t : token_stream_) {
+        if (t.type == Token::Type::Newline) {
+            Log(LogLevel::Info, "[L: {} | C: {}] {}: \\n", t.position.line, t.position.column, magic_enum::enum_name(t.type));
+            continue;
+        }
+        Log(LogLevel::Info, "[L: {} | C: {}] {}: {}", t.position.line, t.position.column, magic_enum::enum_name(t.type), t.contents);
+    }
+}
+
+auto Lexer::RelinquishTokens() -> std::vector<Token>&& {
     return std::move(token_stream_);
 }
 
 // ID = ^[a-zA-Z_][a-zA-Z0-9_]+
-bool Lexer::lex_identifiers(const std::string_view current_line) {
+bool Lexer::LexIdentifiers(const std::string_view current_line) {
     if (current_line[cursor_] == '_' || std::isalpha(current_line[cursor_])) {
         std::string buffer;
         while (current_line[cursor_] == '_' || std::isalnum(current_line[cursor_])) {
             buffer.push_back(current_line[cursor_++]);
         }
 
-        add_token(Token::Type::Identifier, std::move(buffer));
+        AddToken(Token::Type::Identifier, std::move(buffer));
         return true;
     }
 
     return false;
 }
 
-void Lexer::lex_unknown(const std::string_view current_line) {
+void Lexer::LexUnknown(const std::string_view current_line) {
     std::string buffer;
-    while (!is_whitespace(current_line[cursor_])) {
+    while (!IsWhitespace(current_line[cursor_])) {
         buffer.push_back(current_line[cursor_++]);
     }
 
     if (not buffer.empty()) {
-        add_token(Token::Type::Unknown, std::move(buffer));
+        AddToken(Token::Type::Unknown, std::move(buffer));
     }
 }
 
-bool Lexer::is_whitespace(const char c) {
+bool Lexer::IsWhitespace(const char c) {
     return c == ' ' || c == '\0' || c == '\n' || c == '\r' || c == '\t';
 }
 
-bool Lexer::is_comment(const char c) {
+bool Lexer::IsComment(const char c) {
     return c == '#';
 }
 
 // NUMBER = INT | FLOAT
-bool Lexer::lex_numbers(const std::string_view current_line) {
+bool Lexer::LexNumbers(const std::string_view current_line) {
     const auto current_char = current_line[cursor_];
 
     const bool is_negative_digit = current_char == '-' && std::isdigit(current_line[cursor_ + 1]);
@@ -136,7 +157,7 @@ bool Lexer::lex_numbers(const std::string_view current_line) {
     // FLOAT = INT.[0-9]+
     // if we encounter a dot, it can't be an int
     if (current_line[cursor_] != '.') {
-        add_token(Token::Type::Int, std::move(buffer));
+        AddToken(Token::Type::Int, std::move(buffer));
         return true;
     }
 
@@ -145,11 +166,11 @@ bool Lexer::lex_numbers(const std::string_view current_line) {
 
     eat_digits();
 
-    add_token(Token::Type::Float, std::move(buffer));
+    AddToken(Token::Type::Float, std::move(buffer));
     return true;
 }
 
-bool Lexer::lex_operators(const std::string_view current_line) {
+bool Lexer::LexOperators(const std::string_view current_line) {
     const auto current_char = current_line[cursor_];
     Token::Type token_type;
 
@@ -198,7 +219,7 @@ bool Lexer::lex_operators(const std::string_view current_line) {
         return false;
     }
 
-    add_token(token_type, std::string(1, current_char));
+    AddToken(token_type, std::string(1, current_char));
     ++cursor_;
     return true;
 }

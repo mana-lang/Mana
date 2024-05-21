@@ -13,20 +13,21 @@ class Lexer {
 public:
     Lexer();
 
-    bool tokenize_file(const std::filesystem::path& path_to_file);
+    bool TokenizeFile(const std::filesystem::path& path_to_file);
+    void PrintTokens() const;
 
-    SALEM_NODISCARD auto relinquish_tokens() -> std::vector<Token>&&;
+    SALEM_NODISCARD auto RelinquishTokens() -> std::vector<Token>&&;
 
 private:
-    bool lex_identifiers(std::string_view current_line);
-    bool lex_numbers(std::string_view current_line);
-    bool lex_operators(std::string_view current_line);
-    void lex_unknown(std::string_view current_line);
+    bool LexIdentifiers(std::string_view current_line);
+    bool LexNumbers(std::string_view current_line);
+    bool LexOperators(std::string_view current_line);
+    void LexUnknown(std::string_view current_line);
 
-    SALEM_NODISCARD static bool is_whitespace(char c);
-    SALEM_NODISCARD static bool is_comment(char c);
+    SALEM_NODISCARD bool IsWhitespace(char c);
+    SALEM_NODISCARD bool IsComment(char c);
 
-    void add_token(Token::Type type, const std::string&& contents);
+    void AddToken(Token::Type type, const std::string&& contents);
 
 private:
     u64 cursor_;

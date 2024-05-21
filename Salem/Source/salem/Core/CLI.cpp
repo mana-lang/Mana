@@ -4,7 +4,7 @@
 
 namespace salem::cli {
 
-Settings::Settings(const int argc, char** argv)
+Interface::Interface(const int argc, char** argv)
     : cli_(std::make_unique<CLI::App>("Salem, the Mana compiler.\n"))
     , argc_(argc)
     , argv_(argv) {
@@ -12,18 +12,19 @@ Settings::Settings(const int argc, char** argv)
         ->check(CLI::ExistingFile);
 
     cli_->add_flag("-v,--version", flags_.show_version, "Current Salem version");
+    cli_->add_flag("-t,--tokens", flags_.print_tokens, "Print lexer tokens post-tokenization");
 
 }
 
-auto Settings::ProcessArgs() const -> int {
+auto Interface::ProcessArgs() const -> int {
     try {
         cli_->parse(argc_, argv_);
     } catch (const CLI::ParseError& e) {
         const auto exit_code = cli_->exit(e);
-        if (exit_code == EXIT::SUCCESS) {
+        if (exit_code == ExitCode(Exit::Success)) {
             const std::string helparg(argv_[1]);
             if (helparg == "--help" || helparg == "-h") {
-                return EXIT::CLI_HELP_ARG_USED;
+                return ExitCode(Exit::CLI_HelpArgUsed);
             }
         }
         return exit_code;
@@ -31,20 +32,25 @@ auto Settings::ProcessArgs() const -> int {
 
     if (flags_.show_version) {
         Log("{}", SALEM_VERSION_STR);
-        return EXIT::SUCCESS;
+        return ExitCode(Exit::Success);
     }
 
     if (options_.src_file == MANA_INVALID_SRC) {
         Log(LogLevel::Error, "Missing source file.\nRun with --help for more information.");
-        return EXIT::CLI_MISSING_SRC_FILE;
+        return ExitCode(Exit::CLI_MissingSrcFile);
     }
 
-    Log(LogLevel::Debug, "Source path: {}", options_.src_file);
+    Log(LogLevel::Debug, "Source path: {}\n", options_.src_file);
 
-    return EXIT::SUCCESS;
+    return ExitCode(Exit::Success);
 }
 
-auto Settings::SourceFile() const -> std::string_view {
+auto Interface::SourceFile() const -> std::string_view {
     return options_.src_file;
 }
+
+auto Interface::TokenPrintRequested() const -> bool {
+    return flags_.print_tokens;
+}
+
 } // namespace salem::cli

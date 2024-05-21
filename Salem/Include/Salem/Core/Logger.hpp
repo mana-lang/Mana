@@ -116,7 +116,7 @@ void Log(const LogLevel log_level, const char* msg, Args&&... args) {
 
 template<typename... Args>
 void Log(const char* msg, Args&&... args) {
-    log(LogLevel::Info, msg, std::forward<Args>(args)...);
+    Log(LogLevel::Info, msg, std::forward<Args>(args)...);
 }
 
 inline i64 LogCounter(const LogLevel log_level) {
@@ -137,12 +137,12 @@ inline i64 LogCounter(const LogLevel log_level) {
         return errors;
     case Critical:
         Log(Error, "Critical errors always throw, so this path should never happen.");
-        return EXIT::LOG_COUNTER_CRITICAL_CASE;
+        return ExitCode(Exit::Log_LogCounterIllegalPath);
     case Off:
         return 0;
     }
 
-    return EXIT::LOG_COUNTER_PAST_SWITCH;
+    return ExitCode(Exit::Log_LogCounterExhausted);
 }
 
 }  // namespace salem

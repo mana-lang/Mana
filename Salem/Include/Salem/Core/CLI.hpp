@@ -13,9 +13,10 @@ constexpr auto SALEM_VERSION_STR = "0.0.1p";
 
     struct Flags {
         bool show_version = false;
+        bool print_tokens = false;
     };
 
-    class Settings {
+    class Interface {
         std::unique_ptr<CLI::App> cli_;
         Options options_;
         Flags flags_;
@@ -24,9 +25,11 @@ constexpr auto SALEM_VERSION_STR = "0.0.1p";
         const CString* argv_;
 
     public:
-        Settings(int argc, char** argv);
+        Interface(int argc, char** argv);
+
         SALEM_NODISCARD auto ProcessArgs() const -> int;
         SALEM_NODISCARD auto SourceFile() const -> std::string_view;
+        SALEM_NODISCARD auto TokenPrintRequested() const -> bool;
 
 
     };

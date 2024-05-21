@@ -1,0 +1,8 @@
+data x = 5
+data ten = 10.0  # a comment, as well as a float
+
+data add = () {
+    x + y
+}
+
+data result = add(five, ten)
