@@ -9,6 +9,7 @@ namespace salem {
 
 // all contextual symbols (e.g. '-' unary vs. subtraction) should be handled before
 // the operators method, which crystallizes them into regular operators
+// where the hell is the obj file for this
 Lexer::Lexer()
     : cursor_(0)
     , line_number_()

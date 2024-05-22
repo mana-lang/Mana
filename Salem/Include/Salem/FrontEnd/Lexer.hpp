@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SALEM_LEXER_HPP
+#define SALEM_LEXER_HPP
 
 #include <Salem/Core/TypeAliases.hpp>
 #include <Salem/FrontEnd/Token.hpp>
@@ -37,3 +38,5 @@ private:
 };
 
 }  // namespace salem
+
+#endif
