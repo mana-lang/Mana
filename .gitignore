@@ -5,6 +5,7 @@
 .idea/
 .Build/
 .BuildFiles/
+*.user
 
 # Compiled Object files
 *.slo
@@ -28,3 +29,4 @@
 *.exe
 *.out
 *.app
+

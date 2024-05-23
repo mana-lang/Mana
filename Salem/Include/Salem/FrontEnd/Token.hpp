@@ -25,21 +25,43 @@ enum class Token::Type : u8 {
 
     Identifier,
 
-    OpAdd,
-    OpSub,
-    OpMul,
-    OpDiv,
+    Op_Add,
+    Op_Sub,
+    Op_Mul,
+    Op_Div,
 
-    OpColon,
-    OpComma,
-    OpAssign,
+    Op_Colon,
+    Op_Comma,
+    Op_Assign,
 
-    OpBraceLeft,
-    OpBraceRight,
-    OpParenLeft,
-    OpParenRight,
-    OpBracketLeft,
-    OpBracketRight,
+    Op_BraceLeft,
+    Op_BraceRight,
+    Op_ParenLeft,
+    Op_ParenRight,
+    Op_BracketLeft,
+    Op_BracketRight,
+
+    KW_i8,
+    KW_i16,
+    KW_i32,
+    KW_i64,
+    KW_i128,
+
+    KW_u8,
+    KW_u16,
+    KW_u32,
+    KW_u64,
+    KW_u128,
+
+    KW_f32,
+    KW_f64,
+
+    KW_byte,
+    KW_char,
+    KW_string,
+
+    KW_bool,
+    KW_void,
 
     Newline,
     Eof,

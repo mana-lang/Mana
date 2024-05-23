@@ -4,6 +4,7 @@
 #include <magic_enum/magic_enum.hpp>
 
 #include <fstream>
+#include <array>
 
 namespace salem {
 
@@ -104,10 +105,39 @@ bool Lexer::LexIdentifiers(const std::string_view current_line) {
             buffer.push_back(current_line[cursor_++]);
         }
 
-        AddToken(Token::Type::Identifier, std::move(buffer));
+        if (not LexKeywords(buffer)) {
+            AddToken(Token::Type::Identifier, std::move(buffer));
+        }
         return true;
     }
 
+    return false;
+}
+
+bool Lexer::LexKeywords(std::string& ident_buffer) {
+    static const std::array keyword_tokens = {
+        Token(Token::Type::KW_i8, "i8"),
+        Token(Token::Type::KW_i16, "i16"),
+        Token(Token::Type::KW_i32, "i32"),
+        Token(Token::Type::KW_i64, "i64"),
+        Token(Token::Type::KW_i128, "i128"),
+
+        Token(Token::Type::KW_u8, "u8"),
+        Token(Token::Type::KW_u16, "u16"),
+        Token(Token::Type::KW_u32, "u32"),
+        Token(Token::Type::KW_u64, "u64"),
+        Token(Token::Type::KW_u128, "u128"),
+
+        Token(Token::Type::KW_f32, "f32"),
+        Token(Token::Type::KW_f64, "f64"),
+    };
+
+    for (const auto& [token_type, keyword_name, _] : keyword_tokens) {
+        if (ident_buffer == keyword_name) {
+            AddToken(token_type, std::move(ident_buffer));
+            return true;
+        }
+    }
     return false;
 }
 
@@ -178,43 +208,43 @@ bool Lexer::LexOperators(const std::string_view current_line) {
     switch (current_char) {
         using enum Token::Type;
     case '=':
-        token_type = OpAssign;
+        token_type = Op_Assign;
         break;
     case '+':
-        token_type = OpAdd;
+        token_type = Op_Add;
         break;
     case '-':
-        token_type = OpSub;
+        token_type = Op_Sub;
         break;
     case '*':
-        token_type = OpMul;
+        token_type = Op_Mul;
         break;
     case '/':
-        token_type = OpDiv;
+        token_type = Op_Div;
         break;
     case ':':
-        token_type = OpColon;
+        token_type = Op_Colon;
         break;
     case ',':
-        token_type = OpComma;
+        token_type = Op_Comma;
         break;
     case '{':
-        token_type = OpBraceLeft;
+        token_type = Op_BraceLeft;
         break;
     case '}':
-        token_type = OpBraceRight;
+        token_type = Op_BraceRight;
         break;
     case '(':
-        token_type = OpParenLeft;
+        token_type = Op_ParenLeft;
         break;
     case ')':
-        token_type = OpParenRight;
+        token_type = Op_ParenRight;
         break;
     case '[':
-        token_type = OpBracketLeft;
+        token_type = Op_BracketLeft;
         break;
     case ']':
-        token_type = OpBracketRight;
+        token_type = Op_BracketRight;
         break;
     default:
         return false;
