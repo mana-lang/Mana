@@ -12,14 +12,14 @@ struct TextPosition {
 };
 
 struct Token {
-    enum class Type : u8;
+    enum class Type;
 
     Type type;
     std::string contents;
     TextPosition position;
 };
 
-enum class Token::Type : u8 {
+enum class Token::Type {
     Int,
     Float,
 
@@ -62,6 +62,23 @@ enum class Token::Type : u8 {
 
     KW_bool,
     KW_void,
+
+    KW_data,
+    KW_fn,
+    KW_mut,
+    KW_const,
+    KW_raw,
+
+    KW_pack,
+    KW_struct,
+    KW_enum,
+
+    KW_module,
+    KW_public,
+    KW_private,
+    KW_import,
+
+    KW_generic,
 
     Newline,
     Eof,

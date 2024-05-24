@@ -136,6 +136,22 @@ bool Lexer::IsKeyword(std::string& ident_buffer) {
         Token(Token::Type::KW_string, "string"),
         Token(Token::Type::KW_bool,   "bool"),
         Token(Token::Type::KW_void,   "void"),
+
+        Token(Token::Type::KW_data,  "data"),
+        Token(Token::Type::KW_fn,    "fn"),
+        Token(Token::Type::KW_mut,   "mut"),
+        Token(Token::Type::KW_const, "const"),
+        Token(Token::Type::KW_raw,   "raw"),
+
+        Token(Token::Type::KW_pack,    "pack"),
+        Token(Token::Type::KW_struct,  "struct"),
+        Token(Token::Type::KW_enum,    "enum"),
+        Token(Token::Type::KW_generic, "generic"),
+
+        Token(Token::Type::KW_module,  "module"),
+        Token(Token::Type::KW_public,  "public"),
+        Token(Token::Type::KW_private, "private"),
+        Token(Token::Type::KW_import,  "import"),
     };
 
     for (const auto& [token_type, keyword_name, _] : keyword_tokens) {
