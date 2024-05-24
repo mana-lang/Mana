@@ -73,7 +73,7 @@ TEST_CASE("Basic Lexing", "[lex][token]") {
         CHECK(tokens[11].type == salem::Token::Type::Identifier);
         CHECK(tokens[11].contents == "x");
 
-        CHECK(tokens[12].type == salem::Token::Type::Op_Add);
+        CHECK(tokens[12].type == salem::Token::Type::Op_Plus);
         CHECK(tokens[12].contents == "+");
 
         CHECK(tokens[13].type == salem::Token::Type::Identifier);
@@ -267,4 +267,46 @@ TEST_CASE("Lexing Keywords", "[lex][token][keyword]") {
         }
     }
 
+}
+
+TEST_CASE("Lexing Operators", "[lex][token][operator]") {
+    salem::Lexer lexer;
+    REQUIRE(lexer.TokenizeFile(Concatenate(LEXER_TESTING_PATH, "Operators.mn")));
+
+    const auto tokens = StripNewlinesFromTokens(lexer.RelinquishTokens());
+    REQUIRE(tokens.size() == 84);
+
+    CHECK(tokens[1].type == salem::Token::Type::Op_Period);
+    CHECK(tokens[1].contents == ".");
+
+    CHECK(tokens[1].type == salem::Token::Type::Op_Colon);
+    CHECK(tokens[1].contents == ":");
+
+    CHECK(tokens[2].type == salem::Token::Type::Op_ModuleElementAccess);
+    CHECK(tokens[2].contents == "::");
+
+    CHECK(tokens[3].type == salem::Token::Type::Op_Assign);
+    CHECK(tokens[3].contents == "=");
+
+    CHECK(tokens[4].type == salem::Token::Type::Op_LogicalNot);
+    CHECK(tokens[4].contents == "!");
+
+    CHECK(tokens[5].type == salem::Token::Type::Op_Equality);
+    CHECK(tokens[5].contents == "==");
+
+    CHECK(tokens[6].type == salem::Token::Type::Op_NotEqual);
+    CHECK(tokens[6].contents == "!=");
+
+    CHECK(tokens[7].type == salem::Token::Type::Op_LessThan);
+    CHECK(tokens[7].contents == "<");
+
+    CHECK(tokens[8].type == salem::Token::Type::Op_GreaterThan);
+    CHECK(tokens[8].contents == ">");
+
+    CHECK(tokens[9].type == salem::Token::Type::Op_LessEqual);
+    CHECK(tokens[9].contents == "<=");
+
+    CHECK(tokens[12].type == salem::Token::Type::Op_GreaterEqual);
+    CHECK(tokens[12].contents == ">=");
+    
 }

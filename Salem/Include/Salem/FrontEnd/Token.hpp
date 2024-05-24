@@ -25,10 +25,10 @@ enum class Token::Type {
 
     Identifier,
 
-    Op_Add,
-    Op_Sub,
-    Op_Mul,
-    Op_Div,
+    Op_Plus,
+    Op_Minus,
+    Op_Asterisk,
+    Op_FwdSlash,
 
     Op_Colon,
     Op_Comma,
@@ -40,6 +40,29 @@ enum class Token::Type {
     Op_ParenRight,
     Op_BracketLeft,
     Op_BracketRight,
+
+    Op_Period,
+    Op_ModuleElementAccess,
+
+    Op_LogicalNot,
+    Op_Equality,
+    Op_NotEqual,
+    Op_LessThan,
+    Op_GreaterThan,
+    Op_LessEqual,
+    Op_GreaterEqual,
+
+    Op_LogicalAnd,
+    Op_LogicalOr,
+
+    Op_Arrow,
+
+    Op_ExplicitRef,
+    Op_ExplicitCopy,
+    Op_ExplicitMove,
+
+    Sym_StringLiteral,
+    Sym_CharLiteral,
 
     KW_i8,
     KW_i16,

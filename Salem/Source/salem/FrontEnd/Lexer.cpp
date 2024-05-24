@@ -170,6 +170,10 @@ bool Lexer::MatchKeyword(std::string& ident_buffer) {
         {"for", KW_for},
         {"break", KW_break},
         {"skip", KW_skip},
+
+        {"and", Op_LogicalAnd},
+        {"or",  Op_LogicalOr},
+        {"not", Op_LogicalNot},
     };
 
     if (const auto keyword = keyword_map.find(ident_buffer); keyword != keyword_map.end()) {
@@ -241,26 +245,39 @@ bool Lexer::LexNumbers(const std::string_view current_line) {
 
 bool Lexer::LexOperators(const std::string_view current_line) {
     const auto current_char = current_line[cursor_];
+    const auto next_char = current_line[cursor_ + 1];
     Token::Type token_type;
 
     switch (current_char) {
         using enum Token::Type;
     case '=':
+        if (next_char == '=') {
+            token_type = Op_Equality; // ==
+            break;
+        }
         token_type = Op_Assign;
         break;
     case '+':
-        token_type = Op_Add;
+        token_type = Op_Plus;
         break;
     case '-':
-        token_type = Op_Sub;
+        if (next_char == '>') {
+            token_type = Op_Arrow; // ->
+            break;
+        }
+        token_type = Op_Minus;
         break;
     case '*':
-        token_type = Op_Mul;
+        token_type = Op_Asterisk;
         break;
     case '/':
-        token_type = Op_Div;
+        token_type = Op_FwdSlash;
         break;
     case ':':
+        if (next_char == ':') {
+            token_type = Op_ModuleElementAccess; // ::
+            break;
+        }
         token_type = Op_Colon;
         break;
     case ',':
@@ -284,12 +301,70 @@ bool Lexer::LexOperators(const std::string_view current_line) {
     case ']':
         token_type = Op_BracketRight;
         break;
+    case '.':
+        token_type = Op_Period;
+        break;
+    case '!':
+        if (next_char == '=') {
+            token_type = Op_NotEqual; // !=
+            break;
+        }
+        token_type = Op_LogicalNot;
+        break;
+    case '<':
+        if (next_char == '=') {
+            token_type = Op_LessEqual; // <=
+            break;
+        }
+        token_type = Op_LessThan;
+        break;
+    case '>':
+        if (next_char == '=') {
+            token_type = Op_GreaterEqual; // >=
+            break;
+        }
+        token_type = Op_GreaterThan;
+        break;
+    case '&':
+        token_type = Op_ExplicitRef;
+        break;
+    case '~':
+        token_type = Op_ExplicitMove;
+        break;
+    case '$':
+        token_type = Op_ExplicitCopy;
+        break;
+    case '\"':
+        token_type = Sym_StringLiteral;
+        break;
+    case '\'':
+        token_type = Sym_CharLiteral;
+        break;
+
     default:
         return false;
     }
 
-    AddToken(token_type, std::string(1, current_char));
+    std::string buffer(1, current_char);
+
+    switch (token_type) {
+        using enum Token::Type;
+
+    case Op_ModuleElementAccess:
+    case Op_Equality:
+    case Op_NotEqual:
+    case Op_LessEqual:
+    case Op_GreaterEqual:
+    case Op_Arrow:
+        buffer.push_back(next_char);
+        ++cursor_;
+        break;
+    default: break;
+    }
+
+    AddToken(token_type, std::move(buffer));
     ++cursor_;
+
     return true;
 }
 
