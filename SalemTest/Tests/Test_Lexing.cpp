@@ -12,12 +12,13 @@ auto Concatenate(String first, Rest... rest) {
     return std::string(first) + std::string(rest...);
 }
 
+using enum salem::Token::Type;
 using TokenStream = std::vector<salem::Token>;
 auto StripNewlinesFromTokens(const TokenStream& base_tokens) -> TokenStream {
     auto tokens = decltype(base_tokens){};
     tokens.reserve(base_tokens.size());
     for (const auto& t : base_tokens) {
-        if (t.type == salem::Token::Type::Newline) {
+        if (t.type == Newline) {
             continue;
         }
         tokens.push_back(t);
@@ -35,54 +36,54 @@ TEST_CASE("Basic Lexing", "[lex][token]") {
     REQUIRE(tokens.size() == 16);
 
     SECTION("Tokens are being processed") {
-        CHECK(tokens[0].type == salem::Token::Type::KW_data);
+        CHECK(tokens[0].type == KW_data);
         CHECK(tokens[0].contents == "data");
 
-        CHECK(tokens[1].type == salem::Token::Type::Identifier);
+        CHECK(tokens[1].type == Identifier);
         CHECK(tokens[1].contents == "x");
 
-        CHECK(tokens[2].type == salem::Token::Type::Op_Assign);
+        CHECK(tokens[2].type == Op_Assign);
         CHECK(tokens[2].contents == "=");
 
-        CHECK(tokens[3].type == salem::Token::Type::Int);
+        CHECK(tokens[3].type == Int);
         CHECK(tokens[3].contents == "5");
     }
 
     SECTION("Tokens are correctly registered") {
-        CHECK(tokens[4].type == salem::Token::Type::Float);
+        CHECK(tokens[4].type == Float);
         CHECK(tokens[4].contents == "10.783");
 
-        CHECK(tokens[5].type == salem::Token::Type::KW_data);
+        CHECK(tokens[5].type == KW_data);
         CHECK(tokens[5].contents == "data");
 
-        CHECK(tokens[6].type == salem::Token::Type::Identifier);
+        CHECK(tokens[6].type == Identifier);
         CHECK(tokens[6].contents == "add");
 
-        CHECK(tokens[7].type == salem::Token::Type::Op_Assign);
+        CHECK(tokens[7].type == Op_Assign);
         CHECK(tokens[7].contents == "=");
 
-        CHECK(tokens[8].type == salem::Token::Type::Op_ParenLeft);
+        CHECK(tokens[8].type == Op_ParenLeft);
         CHECK(tokens[8].contents == "(");
 
-        CHECK(tokens[9].type == salem::Token::Type::Op_ParenRight);
+        CHECK(tokens[9].type == Op_ParenRight);
         CHECK(tokens[9].contents == ")");
 
-        CHECK(tokens[10].type == salem::Token::Type::Op_BraceLeft);
+        CHECK(tokens[10].type == Op_BraceLeft);
         CHECK(tokens[10].contents == "{");
 
-        CHECK(tokens[11].type == salem::Token::Type::Identifier);
+        CHECK(tokens[11].type == Identifier);
         CHECK(tokens[11].contents == "x");
 
-        CHECK(tokens[12].type == salem::Token::Type::Op_Plus);
+        CHECK(tokens[12].type == Op_Plus);
         CHECK(tokens[12].contents == "+");
 
-        CHECK(tokens[13].type == salem::Token::Type::Identifier);
+        CHECK(tokens[13].type == Identifier);
         CHECK(tokens[13].contents == "y");
 
-        CHECK(tokens[14].type == salem::Token::Type::Op_BraceRight);
+        CHECK(tokens[14].type == Op_BraceRight);
         CHECK(tokens[14].contents == "}");
 
-        CHECK(tokens[15].type == salem::Token::Type::Eof);
+        CHECK(tokens[15].type == Eof);
         CHECK(tokens[15].contents == "EOF");
     }
 }
@@ -97,67 +98,67 @@ TEST_CASE("Lexing Keywords", "[lex][token][keyword]") {
 
     SECTION("Primitive Datatypes") {
         SECTION("Integers") {
-            CHECK(datatype_tokens[0].type == salem::Token::Type::KW_i8);
+            CHECK(datatype_tokens[0].type == KW_i8);
             CHECK(datatype_tokens[0].contents == "i8");
 
-            CHECK(datatype_tokens[1].type == salem::Token::Type::KW_i16);
+            CHECK(datatype_tokens[1].type == KW_i16);
             CHECK(datatype_tokens[1].contents == "i16");
 
-            CHECK(datatype_tokens[2].type == salem::Token::Type::KW_i32);
+            CHECK(datatype_tokens[2].type == KW_i32);
             CHECK(datatype_tokens[2].contents == "i32");
 
-            CHECK(datatype_tokens[3].type == salem::Token::Type::KW_i64);
+            CHECK(datatype_tokens[3].type == KW_i64);
             CHECK(datatype_tokens[3].contents == "i64");
 
-            CHECK(datatype_tokens[4].type == salem::Token::Type::KW_i128);
+            CHECK(datatype_tokens[4].type == KW_i128);
             CHECK(datatype_tokens[4].contents == "i128");
 
-            CHECK(datatype_tokens[5].type == salem::Token::Type::KW_u8);
+            CHECK(datatype_tokens[5].type == KW_u8);
             CHECK(datatype_tokens[5].contents == "u8");
 
-            CHECK(datatype_tokens[6].type == salem::Token::Type::KW_u16);
+            CHECK(datatype_tokens[6].type == KW_u16);
             CHECK(datatype_tokens[6].contents == "u16");
 
-            CHECK(datatype_tokens[7].type == salem::Token::Type::KW_u32);
+            CHECK(datatype_tokens[7].type == KW_u32);
             CHECK(datatype_tokens[7].contents == "u32");
 
-            CHECK(datatype_tokens[8].type == salem::Token::Type::KW_u64);
+            CHECK(datatype_tokens[8].type == KW_u64);
             CHECK(datatype_tokens[8].contents == "u64");
 
-            CHECK(datatype_tokens[9].type == salem::Token::Type::KW_u128);
+            CHECK(datatype_tokens[9].type == KW_u128);
             CHECK(datatype_tokens[9].contents == "u128");
 
-            CHECK(datatype_tokens[12].type == salem::Token::Type::KW_byte);
+            CHECK(datatype_tokens[12].type == KW_byte);
             CHECK(datatype_tokens[12].contents == "byte");
         }
 
         SECTION("Floats") {
-            CHECK(datatype_tokens[10].type == salem::Token::Type::KW_f32);
+            CHECK(datatype_tokens[10].type == KW_f32);
             CHECK(datatype_tokens[10].contents == "f32");
 
-            CHECK(datatype_tokens[11].type == salem::Token::Type::KW_f64);
+            CHECK(datatype_tokens[11].type == KW_f64);
             CHECK(datatype_tokens[11].contents == "f64");
         }
 
         SECTION("Textual Types") {
-            CHECK(datatype_tokens[13].type == salem::Token::Type::KW_char);
+            CHECK(datatype_tokens[13].type == KW_char);
             CHECK(datatype_tokens[13].contents == "char");
 
-            CHECK(datatype_tokens[14].type == salem::Token::Type::KW_string);
+            CHECK(datatype_tokens[14].type == KW_string);
             CHECK(datatype_tokens[14].contents == "string");
         }
 
         SECTION("Misc") {
-            CHECK(datatype_tokens[15].type == salem::Token::Type::KW_bool);
+            CHECK(datatype_tokens[15].type == KW_bool);
             CHECK(datatype_tokens[15].contents == "bool");
 
-            CHECK(datatype_tokens[16].type == salem::Token::Type::KW_void);
+            CHECK(datatype_tokens[16].type == KW_void);
             CHECK(datatype_tokens[16].contents == "void");
 
-            CHECK(datatype_tokens[17].type == salem::Token::Type::Op_ParenLeft);
+            CHECK(datatype_tokens[17].type == Op_ParenLeft);
             CHECK(datatype_tokens[17].contents == "(");
 
-            CHECK(datatype_tokens[18].type == salem::Token::Type::Op_ParenRight);
+            CHECK(datatype_tokens[18].type == Op_ParenRight);
             CHECK(datatype_tokens[18].contents == ")");
         }
     }
@@ -170,53 +171,53 @@ TEST_CASE("Lexing Keywords", "[lex][token][keyword]") {
 
     SECTION("Declarations") {
         SECTION("Data Declarators") {
-            CHECK(declaration_tokens[0].type == salem::Token::Type::KW_data);
+            CHECK(declaration_tokens[0].type == KW_data);
             CHECK(declaration_tokens[0].contents == "data");
 
-            CHECK(declaration_tokens[1].type == salem::Token::Type::KW_fn);
+            CHECK(declaration_tokens[1].type == KW_fn);
             CHECK(declaration_tokens[1].contents == "fn");
 
-            CHECK(declaration_tokens[2].type == salem::Token::Type::KW_mut);
+            CHECK(declaration_tokens[2].type == KW_mut);
             CHECK(declaration_tokens[2].contents == "mut");
 
-            CHECK(declaration_tokens[3].type == salem::Token::Type::KW_const);
+            CHECK(declaration_tokens[3].type == KW_const);
             CHECK(declaration_tokens[3].contents == "const");
 
-            CHECK(declaration_tokens[4].type == salem::Token::Type::KW_raw);
+            CHECK(declaration_tokens[4].type == KW_raw);
             CHECK(declaration_tokens[4].contents == "raw");
 
-            CHECK(declaration_tokens[13].type == salem::Token::Type::KW_override);
+            CHECK(declaration_tokens[13].type == KW_override);
             CHECK(declaration_tokens[13].contents == "override");
         }
 
         SECTION("UDT Declarators") {
-            CHECK(declaration_tokens[5].type == salem::Token::Type::KW_pack);
+            CHECK(declaration_tokens[5].type == KW_pack);
             CHECK(declaration_tokens[5].contents == "pack");
 
-            CHECK(declaration_tokens[6].type == salem::Token::Type::KW_struct);
+            CHECK(declaration_tokens[6].type == KW_struct);
             CHECK(declaration_tokens[6].contents == "struct");
 
-            CHECK(declaration_tokens[7].type == salem::Token::Type::KW_enum);
+            CHECK(declaration_tokens[7].type == KW_enum);
             CHECK(declaration_tokens[7].contents == "enum");
 
-            CHECK(declaration_tokens[12].type == salem::Token::Type::KW_generic);
+            CHECK(declaration_tokens[12].type == KW_generic);
             CHECK(declaration_tokens[12].contents == "generic");
         }
 
         SECTION("Module Declarators") {
-            CHECK(declaration_tokens[8].type == salem::Token::Type::KW_module);
+            CHECK(declaration_tokens[8].type == KW_module);
             CHECK(declaration_tokens[8].contents == "module");
 
-            CHECK(declaration_tokens[9].type == salem::Token::Type::KW_public);
+            CHECK(declaration_tokens[9].type == KW_public);
             CHECK(declaration_tokens[9].contents == "public");
 
-            CHECK(declaration_tokens[10].type == salem::Token::Type::KW_private);
+            CHECK(declaration_tokens[10].type == KW_private);
             CHECK(declaration_tokens[10].contents == "private");
 
-            CHECK(declaration_tokens[11].type == salem::Token::Type::KW_import);
+            CHECK(declaration_tokens[11].type == KW_import);
             CHECK(declaration_tokens[11].contents == "import");
 
-            CHECK(declaration_tokens[14].type == salem::Token::Type::KW_as);
+            CHECK(declaration_tokens[14].type == KW_as);
             CHECK(declaration_tokens[14].contents == "as");
         }
     }
@@ -229,40 +230,40 @@ TEST_CASE("Lexing Keywords", "[lex][token][keyword]") {
 
     SECTION("Control Flow") {
         SECTION("Branching") {
-            CHECK(controlflow_tokens[0].type == salem::Token::Type::KW_return);
+            CHECK(controlflow_tokens[0].type == KW_return);
             CHECK(controlflow_tokens[0].contents == "return");
 
-            CHECK(controlflow_tokens[1].type == salem::Token::Type::KW_true);
+            CHECK(controlflow_tokens[1].type == KW_true);
             CHECK(controlflow_tokens[1].contents == "true");
 
-            CHECK(controlflow_tokens[2].type == salem::Token::Type::KW_false);
+            CHECK(controlflow_tokens[2].type == KW_false);
             CHECK(controlflow_tokens[2].contents == "false");
 
-            CHECK(controlflow_tokens[3].type == salem::Token::Type::KW_if);
+            CHECK(controlflow_tokens[3].type == KW_if);
             CHECK(controlflow_tokens[3].contents == "if");
 
-            CHECK(controlflow_tokens[4].type == salem::Token::Type::KW_else);
+            CHECK(controlflow_tokens[4].type == KW_else);
             CHECK(controlflow_tokens[4].contents == "else");
 
-            CHECK(controlflow_tokens[5].type == salem::Token::Type::KW_match);
+            CHECK(controlflow_tokens[5].type == KW_match);
             CHECK(controlflow_tokens[5].contents == "match");
         }
 
         SECTION("Iteration") {
 
-            CHECK(controlflow_tokens[6].type == salem::Token::Type::KW_loop);
+            CHECK(controlflow_tokens[6].type == KW_loop);
             CHECK(controlflow_tokens[6].contents == "loop");
 
-            CHECK(controlflow_tokens[7].type == salem::Token::Type::KW_while);
+            CHECK(controlflow_tokens[7].type == KW_while);
             CHECK(controlflow_tokens[7].contents == "while");
 
-            CHECK(controlflow_tokens[8].type == salem::Token::Type::KW_for);
+            CHECK(controlflow_tokens[8].type == KW_for);
             CHECK(controlflow_tokens[8].contents == "for");
 
-            CHECK(controlflow_tokens[9].type == salem::Token::Type::KW_break);
+            CHECK(controlflow_tokens[9].type == KW_break);
             CHECK(controlflow_tokens[9].contents == "break");
 
-            CHECK(controlflow_tokens[10].type == salem::Token::Type::KW_skip);
+            CHECK(controlflow_tokens[10].type == KW_skip);
             CHECK(controlflow_tokens[10].contents == "skip");
         }
     }
@@ -276,37 +277,114 @@ TEST_CASE("Lexing Operators", "[lex][token][operator]") {
     const auto tokens = StripNewlinesFromTokens(lexer.RelinquishTokens());
     REQUIRE(tokens.size() == 84);
 
-    CHECK(tokens[1].type == salem::Token::Type::Op_Period);
-    CHECK(tokens[1].contents == ".");
+    SECTION("Logical Operators") {
+        CHECK(tokens[12].type == Op_LogicalNot);
+        CHECK(tokens[12].contents == "!");
 
-    CHECK(tokens[1].type == salem::Token::Type::Op_Colon);
-    CHECK(tokens[1].contents == ":");
+        CHECK(tokens[15].type == Op_Equality);
+        CHECK(tokens[15].contents == "==");
 
-    CHECK(tokens[2].type == salem::Token::Type::Op_ModuleElementAccess);
-    CHECK(tokens[2].contents == "::");
+        CHECK(tokens[18].type == Op_NotEqual);
+        CHECK(tokens[18].contents == "!=");
 
-    CHECK(tokens[3].type == salem::Token::Type::Op_Assign);
-    CHECK(tokens[3].contents == "=");
+        CHECK(tokens[21].type == Op_LessThan);
+        CHECK(tokens[21].contents == "<");
 
-    CHECK(tokens[4].type == salem::Token::Type::Op_LogicalNot);
-    CHECK(tokens[4].contents == "!");
+        CHECK(tokens[24].type == Op_GreaterThan);
+        CHECK(tokens[24].contents == ">");
 
-    CHECK(tokens[5].type == salem::Token::Type::Op_Equality);
-    CHECK(tokens[5].contents == "==");
+        CHECK(tokens[27].type == Op_LessEqual);
+        CHECK(tokens[27].contents == "<=");
 
-    CHECK(tokens[6].type == salem::Token::Type::Op_NotEqual);
-    CHECK(tokens[6].contents == "!=");
+        CHECK(tokens[30].type == Op_GreaterEqual);
+        CHECK(tokens[30].contents == ">=");
 
-    CHECK(tokens[7].type == salem::Token::Type::Op_LessThan);
-    CHECK(tokens[7].contents == "<");
+        CHECK(tokens[33].type == Op_LogicalAnd);
+        CHECK(tokens[33].contents == "and");
 
-    CHECK(tokens[8].type == salem::Token::Type::Op_GreaterThan);
-    CHECK(tokens[8].contents == ">");
+        CHECK(tokens[36].type == Op_LogicalOr);
+        CHECK(tokens[36].contents == "or");
 
-    CHECK(tokens[9].type == salem::Token::Type::Op_LessEqual);
-    CHECK(tokens[9].contents == "<=");
+        CHECK(tokens[81].type == Op_LogicalNot);
+        CHECK(tokens[81].contents == "not");
+    }
 
-    CHECK(tokens[12].type == salem::Token::Type::Op_GreaterEqual);
-    CHECK(tokens[12].contents == ">=");
-    
+    SECTION("Arithmetic Operators") {
+        CHECK(tokens[39].type == Op_Plus);
+        CHECK(tokens[39].contents == "+");
+
+        CHECK(tokens[42].type == Op_Minus);
+        CHECK(tokens[42].contents == "-");
+
+        CHECK(tokens[45].type == Op_Asterisk);
+        CHECK(tokens[45].contents == "*");
+
+        CHECK(tokens[48].type == Op_FwdSlash);
+        CHECK(tokens[48].contents == "/");
+    }
+
+    SECTION("Access Operators") {
+        CHECK(tokens[1].type == Op_Period);
+        CHECK(tokens[1].contents == ".");
+
+        CHECK(tokens[7].type == Op_ModuleElementAccess);
+        CHECK(tokens[7].contents == "::");
+
+        CHECK(tokens[51].type == Op_Arrow);
+        CHECK(tokens[51].contents == "->");
+
+        CHECK(tokens[55].type == Op_BracketLeft);
+        CHECK(tokens[55].contents == "[");
+
+        CHECK(tokens[56].type == Op_BracketRight);
+        CHECK(tokens[56].contents == "]");
+    }
+
+    SECTION("Assignment Operators") {
+        CHECK(tokens[4].type == Op_Colon);
+        CHECK(tokens[4].contents == ":");
+
+        CHECK(tokens[10].type == Op_Assign);
+        CHECK(tokens[10].contents == "=");
+
+        CHECK(tokens[64].type == Op_ExplicitCopy);
+        CHECK(tokens[64].contents == "$");
+
+        CHECK(tokens[68].type == Op_ExplicitMove);
+        CHECK(tokens[68].contents == "~");
+
+        CHECK(tokens[72].type == Op_ExplicitRef);
+        CHECK(tokens[72].contents == "&");
+    }
+
+    SECTION("Structural Operators") {
+        CHECK(tokens[53].type == Op_BraceLeft);
+        CHECK(tokens[53].contents == "{");
+
+        CHECK(tokens[54].type == Op_BraceRight);
+        CHECK(tokens[54].contents == "}");
+
+        CHECK(tokens[57].type == Op_ParenLeft);
+        CHECK(tokens[57].contents == "(");
+
+        CHECK(tokens[58].type == Op_ParenRight);
+        CHECK(tokens[58].contents == ")");
+
+        CHECK(tokens[60].type == Op_Comma);
+        CHECK(tokens[60].contents == ",");
+    }
+
+    SECTION("Textual Operators") {
+        CHECK(tokens[74].type == Sym_StringLiteral);
+        CHECK(tokens[74].contents == "\"");
+
+        CHECK(tokens[77].type == Sym_StringLiteral);
+        CHECK(tokens[77].contents == "\"");
+
+        CHECK(tokens[78].type == Sym_CharLiteral);
+        CHECK(tokens[78].contents == "\'");
+
+        CHECK(tokens[80].type == Sym_CharLiteral);
+        CHECK(tokens[80].contents == "\'");
+    }
 }

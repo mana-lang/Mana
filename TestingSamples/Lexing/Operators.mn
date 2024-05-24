@@ -1,7 +1,7 @@
 # comment! [no index]
 
 # member access [index 1]
-ident1.ident2
+x.y
 
 # type annotation [index 4]
 x: i32
@@ -36,7 +36,7 @@ x >= y
 # short-circuiting logical AND [33]
 x and y
 
-# short-circuiting logical ORR  [36]
+# short-circuiting logical OR  [36]
 x or y
 
 # plus [39]

@@ -4,7 +4,6 @@
 #include <magic_enum/magic_enum.hpp>
 
 #include <fstream>
-#include <array>
 #include <unordered_map>
 
 namespace salem {
@@ -70,6 +69,7 @@ bool Lexer::TokenizeFile(const std::filesystem::path& path_to_file) {
         AddToken(Token::Type::Newline, "\n");
     }
 
+    token_stream_.pop_back(); // remove extraneous newline before EOF
     AddToken(Token::Type::Eof, "EOF");
     line_number_ = 0;
     cursor_      = 0;
@@ -211,6 +211,7 @@ bool Lexer::LexNumbers(const std::string_view current_line) {
         && not std::isdigit(current_char)) {
             return false;
     }
+
 
     // We're guaranteed to have at least a 1-digit number by now,
     // so we can consume the current char
