@@ -1,6 +1,23 @@
-data x = 5
-10.783  # a comment, as well as a float
+return
 
-data add = () {
-    x + y
-}
+true
+false
+
+if
+
+else
+
+match
+
+loop
+
+while
+
+for
+
+# exit loop block
+break
+
+# identical to C++ 'continue' - move to next loop iteration
+# in branch-block it exits the block early
+skip

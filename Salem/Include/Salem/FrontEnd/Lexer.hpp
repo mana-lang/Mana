@@ -20,14 +20,15 @@ public:
     SALEM_NODISCARD auto RelinquishTokens() -> std::vector<Token>&&;
 
 private:
-    bool LexIdentifiers(std::string_view current_line);
-    bool LexNumbers(std::string_view current_line);
-    bool LexOperators(std::string_view current_line);
+    SALEM_NODISCARD bool LexIdentifiers(std::string_view current_line);
+    SALEM_NODISCARD bool LexNumbers(std::string_view current_line);
+    SALEM_NODISCARD bool LexOperators(std::string_view current_line);
     void LexUnknown(std::string_view current_line);
 
-    SALEM_NODISCARD bool IsKeyword(std::string& ident_buffer);
-    SALEM_NODISCARD bool IsWhitespace(char c);
-    SALEM_NODISCARD bool IsComment(char c);
+    SALEM_NODISCARD bool MatchKeyword(std::string& ident_buffer);
+
+    SALEM_NODISCARD bool IsWhitespace(char c) const;
+    SALEM_NODISCARD bool IsComment(char c) const;
 
     void AddToken(Token::Type type, const std::string&& contents);
 

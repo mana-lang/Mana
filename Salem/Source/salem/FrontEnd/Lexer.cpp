@@ -5,6 +5,7 @@
 
 #include <fstream>
 #include <array>
+#include <unordered_map>
 
 namespace salem {
 
@@ -105,7 +106,7 @@ bool Lexer::LexIdentifiers(const std::string_view current_line) {
             buffer.push_back(current_line[cursor_++]);
         }
 
-        if (not IsKeyword(buffer)) {
+        if (not MatchKeyword(buffer)) {
             AddToken(Token::Type::Identifier, std::move(buffer));
         }
         return true;
@@ -114,53 +115,66 @@ bool Lexer::LexIdentifiers(const std::string_view current_line) {
     return false;
 }
 
-bool Lexer::IsKeyword(std::string& ident_buffer) {
-    static const std::array keyword_tokens = {
-        Token(Token::Type::KW_i8,   "i8"),
-        Token(Token::Type::KW_i16,  "i16"),
-        Token(Token::Type::KW_i32,  "i32"),
-        Token(Token::Type::KW_i64,  "i64"),
-        Token(Token::Type::KW_i128, "i128"),
+bool Lexer::MatchKeyword(std::string& ident_buffer) {
+    using TokenMap = std::unordered_map<std::string, Token::Type>;
+    using enum Token::Type;
+    static const TokenMap keyword_map = {
+        {"i8",   KW_i8},
+        {"i16",  KW_i16},
+        {"i32",  KW_i32},
+        {"i64",  KW_i64},
+        {"i128", KW_i128},
 
-        Token(Token::Type::KW_u8,   "u8"),
-        Token(Token::Type::KW_u16,  "u16"),
-        Token(Token::Type::KW_u32,  "u32"),
-        Token(Token::Type::KW_u64,  "u64"),
-        Token(Token::Type::KW_u128, "u128"),
+        {"u8",   KW_u8},
+        {"u16",  KW_u16},
+        {"u32",  KW_u32},
+        {"u64",  KW_u64},
+        {"u128", KW_u128},
 
-        Token(Token::Type::KW_f32, "f32"),
-        Token(Token::Type::KW_f64, "f64"),
+        {"f32", KW_f32},
+        {"f64", KW_f64},
 
-        Token(Token::Type::KW_byte,   "byte"),
-        Token(Token::Type::KW_char,   "char"),
-        Token(Token::Type::KW_string, "string"),
-        Token(Token::Type::KW_bool,   "bool"),
-        Token(Token::Type::KW_void,   "void"),
+        {"byte",   KW_byte},
+        {"char",   KW_char},
+        {"string", KW_string},
+        {"bool",   KW_bool},
+        {"void",   KW_void},
 
-        Token(Token::Type::KW_data,     "data"),
-        Token(Token::Type::KW_fn,       "fn"),
-        Token(Token::Type::KW_mut,      "mut"),
-        Token(Token::Type::KW_const,    "const"),
-        Token(Token::Type::KW_raw,      "raw"),
-        Token(Token::Type::KW_override, "override"),
+        {"data",     KW_data},
+        {"fn",       KW_fn},
+        {"mut",      KW_mut},
+        {"raw",      KW_raw},
+        {"const",    KW_const},
+        {"override", KW_override},
 
-        Token(Token::Type::KW_pack,    "pack"),
-        Token(Token::Type::KW_struct,  "struct"),
-        Token(Token::Type::KW_enum,    "enum"),
-        Token(Token::Type::KW_generic, "generic"),
+        {"pack",    KW_pack},
+        {"struct",  KW_struct},
+        {"enum",    KW_enum},
+        {"generic", KW_generic},
 
-        Token(Token::Type::KW_module,  "module"),
-        Token(Token::Type::KW_public,  "public"),
-        Token(Token::Type::KW_private, "private"),
-        Token(Token::Type::KW_import,  "import"),
-        Token(Token::Type::KW_as,      "as"),
+        {"module",  KW_module},
+        {"public",  KW_public},
+        {"private", KW_private},
+        {"import",  KW_import},
+        {"as",      KW_as},
+
+        {"return", KW_return},
+        {"true", KW_true},
+        {"false", KW_false},
+        {"if", KW_if},
+        {"else", KW_else},
+        {"match", KW_match},
+
+        {"loop", KW_loop},
+        {"while", KW_while},
+        {"for", KW_for},
+        {"break", KW_break},
+        {"skip", KW_skip},
     };
 
-    for (const auto& [token_type, keyword_name, _] : keyword_tokens) {
-        if (ident_buffer == keyword_name) {
-            AddToken(token_type, std::move(ident_buffer));
-            return true;
-        }
+    if (const auto keyword = keyword_map.find(ident_buffer); keyword != keyword_map.end()) {
+        AddToken(keyword->second, std::move(ident_buffer));
+        return true;
     }
     return false;
 }
@@ -176,11 +190,11 @@ void Lexer::LexUnknown(const std::string_view current_line) {
     }
 }
 
-bool Lexer::IsWhitespace(const char c) {
+bool Lexer::IsWhitespace(const char c) const {
     return c == ' ' || c == '\0' || c == '\n' || c == '\r' || c == '\t';
 }
 
-bool Lexer::IsComment(const char c) {
+bool Lexer::IsComment(const char c) const {
     return c == '#';
 }
 

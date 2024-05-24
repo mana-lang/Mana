@@ -73,6 +73,7 @@ enum class Token::Type {
     KW_pack,
     KW_struct,
     KW_enum,
+    KW_generic,
 
     KW_module,
     KW_public,
@@ -80,7 +81,18 @@ enum class Token::Type {
     KW_import,
     KW_as,
 
-    KW_generic,
+    KW_return,
+    KW_true,
+    KW_false,
+    KW_if,
+    KW_else,
+    KW_match,
+
+    KW_loop,
+    KW_while,
+    KW_for,
+    KW_break,
+    KW_skip,
 
     Newline,
     Eof,

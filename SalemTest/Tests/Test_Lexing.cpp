@@ -221,4 +221,50 @@ TEST_CASE("Lexing Keywords", "[lex][token][keyword]") {
         }
     }
 
+    REQUIRE(lexer.TokenizeFile(Concatenate(KEYWORD_TESTING_PATH, "ControlFlow.mn")));
+
+
+    const auto controlflow_tokens = StripNewlinesFromTokens(lexer.RelinquishTokens());
+    REQUIRE(controlflow_tokens.size() == 12);
+
+    SECTION("Control Flow") {
+        SECTION("Branching") {
+            CHECK(controlflow_tokens[0].type == salem::Token::Type::KW_return);
+            CHECK(controlflow_tokens[0].contents == "return");
+
+            CHECK(controlflow_tokens[1].type == salem::Token::Type::KW_true);
+            CHECK(controlflow_tokens[1].contents == "true");
+
+            CHECK(controlflow_tokens[2].type == salem::Token::Type::KW_false);
+            CHECK(controlflow_tokens[2].contents == "false");
+
+            CHECK(controlflow_tokens[3].type == salem::Token::Type::KW_if);
+            CHECK(controlflow_tokens[3].contents == "if");
+
+            CHECK(controlflow_tokens[4].type == salem::Token::Type::KW_else);
+            CHECK(controlflow_tokens[4].contents == "else");
+
+            CHECK(controlflow_tokens[5].type == salem::Token::Type::KW_match);
+            CHECK(controlflow_tokens[5].contents == "match");
+        }
+
+        SECTION("Iteration") {
+
+            CHECK(controlflow_tokens[6].type == salem::Token::Type::KW_loop);
+            CHECK(controlflow_tokens[6].contents == "loop");
+
+            CHECK(controlflow_tokens[7].type == salem::Token::Type::KW_while);
+            CHECK(controlflow_tokens[7].contents == "while");
+
+            CHECK(controlflow_tokens[8].type == salem::Token::Type::KW_for);
+            CHECK(controlflow_tokens[8].contents == "for");
+
+            CHECK(controlflow_tokens[9].type == salem::Token::Type::KW_break);
+            CHECK(controlflow_tokens[9].contents == "break");
+
+            CHECK(controlflow_tokens[10].type == salem::Token::Type::KW_skip);
+            CHECK(controlflow_tokens[10].contents == "skip");
+        }
+    }
+
 }
