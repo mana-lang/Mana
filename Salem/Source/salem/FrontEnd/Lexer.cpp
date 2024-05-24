@@ -105,7 +105,7 @@ bool Lexer::LexIdentifiers(const std::string_view current_line) {
             buffer.push_back(current_line[cursor_++]);
         }
 
-        if (not LexKeywords(buffer)) {
+        if (not IsKeyword(buffer)) {
             AddToken(Token::Type::Identifier, std::move(buffer));
         }
         return true;
@@ -114,22 +114,28 @@ bool Lexer::LexIdentifiers(const std::string_view current_line) {
     return false;
 }
 
-bool Lexer::LexKeywords(std::string& ident_buffer) {
+bool Lexer::IsKeyword(std::string& ident_buffer) {
     static const std::array keyword_tokens = {
-        Token(Token::Type::KW_i8, "i8"),
-        Token(Token::Type::KW_i16, "i16"),
-        Token(Token::Type::KW_i32, "i32"),
-        Token(Token::Type::KW_i64, "i64"),
+        Token(Token::Type::KW_i8,   "i8"),
+        Token(Token::Type::KW_i16,  "i16"),
+        Token(Token::Type::KW_i32,  "i32"),
+        Token(Token::Type::KW_i64,  "i64"),
         Token(Token::Type::KW_i128, "i128"),
 
-        Token(Token::Type::KW_u8, "u8"),
-        Token(Token::Type::KW_u16, "u16"),
-        Token(Token::Type::KW_u32, "u32"),
-        Token(Token::Type::KW_u64, "u64"),
+        Token(Token::Type::KW_u8,   "u8"),
+        Token(Token::Type::KW_u16,  "u16"),
+        Token(Token::Type::KW_u32,  "u32"),
+        Token(Token::Type::KW_u64,  "u64"),
         Token(Token::Type::KW_u128, "u128"),
 
         Token(Token::Type::KW_f32, "f32"),
         Token(Token::Type::KW_f64, "f64"),
+
+        Token(Token::Type::KW_byte,   "byte"),
+        Token(Token::Type::KW_char,   "char"),
+        Token(Token::Type::KW_string, "string"),
+        Token(Token::Type::KW_bool,   "bool"),
+        Token(Token::Type::KW_void,   "void"),
     };
 
     for (const auto& [token_type, keyword_name, _] : keyword_tokens) {

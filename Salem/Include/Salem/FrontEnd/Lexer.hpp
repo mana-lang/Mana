@@ -21,11 +21,11 @@ public:
 
 private:
     bool LexIdentifiers(std::string_view current_line);
-    bool LexKeywords(std::string& ident_buffer);
     bool LexNumbers(std::string_view current_line);
     bool LexOperators(std::string_view current_line);
     void LexUnknown(std::string_view current_line);
 
+    SALEM_NODISCARD bool IsKeyword(std::string& ident_buffer);
     SALEM_NODISCARD bool IsWhitespace(char c);
     SALEM_NODISCARD bool IsComment(char c);
 
