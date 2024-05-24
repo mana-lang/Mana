@@ -38,3 +38,10 @@ import
 
 # generic type declarator
 generic
+
+# specifier to extend/overrule method functionality
+# prefix to fn, only works on pre-defined methods
+override
+
+# import aliasing
+as

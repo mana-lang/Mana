@@ -68,6 +68,7 @@ enum class Token::Type {
     KW_mut,
     KW_const,
     KW_raw,
+    KW_override,
 
     KW_pack,
     KW_struct,
@@ -77,6 +78,7 @@ enum class Token::Type {
     KW_public,
     KW_private,
     KW_import,
+    KW_as,
 
     KW_generic,
 

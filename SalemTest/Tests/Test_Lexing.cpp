@@ -166,7 +166,7 @@ TEST_CASE("Lexing Keywords", "[lex][token][keyword]") {
 
 
     const auto declaration_tokens = StripNewlinesFromTokens(lexer.RelinquishTokens());
-    REQUIRE(declaration_tokens.size() == 14);
+    REQUIRE(declaration_tokens.size() == 16);
 
     SECTION("Declarations") {
         SECTION("Data Declarators") {
@@ -184,6 +184,9 @@ TEST_CASE("Lexing Keywords", "[lex][token][keyword]") {
 
             CHECK(declaration_tokens[4].type == salem::Token::Type::KW_raw);
             CHECK(declaration_tokens[4].contents == "raw");
+
+            CHECK(declaration_tokens[13].type == salem::Token::Type::KW_override);
+            CHECK(declaration_tokens[13].contents == "override");
         }
 
         SECTION("UDT Declarators") {
@@ -212,6 +215,9 @@ TEST_CASE("Lexing Keywords", "[lex][token][keyword]") {
 
             CHECK(declaration_tokens[11].type == salem::Token::Type::KW_import);
             CHECK(declaration_tokens[11].contents == "import");
+
+            CHECK(declaration_tokens[14].type == salem::Token::Type::KW_as);
+            CHECK(declaration_tokens[14].contents == "as");
         }
     }
 
