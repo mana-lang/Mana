@@ -27,7 +27,7 @@ auto StripNewlinesFromTokens(const TokenStream& base_tokens) -> TokenStream {
     return tokens;
 }
 
-constexpr auto LEXER_TESTING_PATH = "TestingSamples/Lexing/";
+constexpr auto LEXER_TESTING_PATH = "Samples/Lexing/";
 TEST_CASE("Basic Lexing", "[lex][token]") {
     salem::Lexer lexer;
     REQUIRE(lexer.TokenizeFile(Concatenate(LEXER_TESTING_PATH, "Basic.mn")));
