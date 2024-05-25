@@ -1,5 +1,4 @@
-#ifndef SALEM_LEXER_HPP
-#define SALEM_LEXER_HPP
+#pragma once
 
 #include <Salem/Core/TypeAliases.hpp>
 #include <Salem/FrontEnd/Token.hpp>
@@ -14,8 +13,10 @@ class Lexer {
 public:
     Lexer();
 
+    void TokenizeLine(std::string_view current_line);
     bool TokenizeFile(const std::filesystem::path& path_to_file);
     void PrintTokens() const;
+    void Clear();
 
     SALEM_NODISCARD auto RelinquishTokens() -> std::vector<Token>&&;
 
@@ -30,7 +31,7 @@ private:
     SALEM_NODISCARD bool IsWhitespace(char c) const;
     SALEM_NODISCARD bool IsComment(char c) const;
 
-    void AddToken(Token::Type type, const std::string&& contents);
+    void AddToken(Token::Type type, std::string&& contents);
 
 private:
     u64 cursor_;
@@ -41,4 +42,4 @@ private:
 
 }  // namespace salem
 
-#endif
+//#endif
