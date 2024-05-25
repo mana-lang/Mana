@@ -13,7 +13,7 @@ Interface::Interface(const int argc, char** argv)
 
     cli_->add_flag("-v,--version", flags_.show_version, "Current Salem version");
     cli_->add_flag("-t,--tokens", flags_.print_tokens, "Print lexer tokens post-tokenization");
-
+    cli_->add_flag("-r,--repl", flags_.run_repl, "Run Mana REPL");
 }
 
 auto Interface::ProcessArgs() const -> int {
@@ -35,6 +35,10 @@ auto Interface::ProcessArgs() const -> int {
         return ExitCode(Exit::Success);
     }
 
+    if (flags_.run_repl) {
+        return ExitCode(Exit::Success);
+    }
+
     if (options_.src_file == MANA_INVALID_SRC) {
         Log(LogLevel::Error, "Missing source file.\nRun with --help for more information.");
         return ExitCode(Exit::CLI_MissingSrcFile);
@@ -49,8 +53,12 @@ auto Interface::SourceFile() const -> std::string_view {
     return options_.src_file;
 }
 
-auto Interface::TokenPrintRequested() const -> bool {
+auto Interface::RequestedTokenPrint() const -> bool {
     return flags_.print_tokens;
+}
+
+auto Interface::RequestedREPL() const -> bool {
+    return flags_.run_repl;
 }
 
 } // namespace salem::cli

@@ -7,7 +7,7 @@ constexpr auto PROMPT = ">>> ";
 class REPL {
 public:
 
-    void Start();
+    void Run();
 };
 
 } // namespace salem

@@ -91,13 +91,16 @@ void Lexer::PrintTokens() const {
 
     Log(LogLevel::Debug, "--- Printing Token Stream ---\n");
 
-    for (const auto& t : token_stream_) {
-        if (t.type == Token::Type::Newline) {
-            Log(LogLevel::Info, "[L: {} | C: {}] {}: \\n", t.position.line, t.position.column, magic_enum::enum_name(t.type));
+    for (const auto& [type, contents, position] : token_stream_) {
+        if (type == Token::Type::Newline) {
+            Log(LogLevel::Info, "[L: {} | C: {}] {}: \\n",
+                position.line, position.column, magic_enum::enum_name(type));
             continue;
         }
-        Log(LogLevel::Info, "[L: {} | C: {}] {}: {}", t.position.line, t.position.column, magic_enum::enum_name(t.type), t.contents);
+        Log(LogLevel::Info, "[L: {} | C: {}] {}: {}",
+            position.line, position.column, magic_enum::enum_name(type), contents);
     }
+    Log(LogLevel::Debug, "End of Stream.\n");
 }
 
 void Lexer::Clear() {

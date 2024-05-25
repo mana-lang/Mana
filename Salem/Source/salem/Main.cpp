@@ -1,6 +1,7 @@
 #include <Salem/Core/Logger.hpp>
 #include <Salem/Core/CLI.hpp>
 #include <Salem/FrontEnd/Lexer.hpp>
+#include <Salem/FrontEnd/REPL.hpp>
 
 int main(const int argc, char** argv) {
     using namespace salem;
@@ -11,6 +12,12 @@ int main(const int argc, char** argv) {
         return cli_status;
     }
 
+    if (cli.RequestedREPL()) {
+        REPL repl;
+        repl.Run();
+        return 0;
+    }
+
     const auto source_path = std::string(cli.SourceFile());
 
     Lexer lexer;
@@ -18,7 +25,7 @@ int main(const int argc, char** argv) {
         return ExitCode(Exit::Lexer_TokenizationFailed);
     }
 
-    if (cli.TokenPrintRequested()) {
+    if (cli.RequestedTokenPrint()) {
         lexer.PrintTokens();
     }
 }

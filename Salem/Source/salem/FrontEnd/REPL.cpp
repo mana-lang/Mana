@@ -6,13 +6,20 @@
 
 namespace salem {
 
-void REPL::Start() {
+void REPL::Run() {
     std::string input;
     Lexer lexer;
 
     while (input != "exit") {
         std::cout << PROMPT;
-        std::cin >> input;
+        std::getline(std::cin, input);
+
+        if (input.back() != '\n') {
+            input.push_back('\n');
+        }
+        lexer.TokenizeLine(input);
+        lexer.PrintTokens();
+        input.clear();
     }
 }
 

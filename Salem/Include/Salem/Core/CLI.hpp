@@ -14,6 +14,7 @@ constexpr auto SALEM_VERSION_STR = "0.0.1p";
     struct Flags {
         bool show_version = false;
         bool print_tokens = false;
+        bool run_repl = false;
     };
 
     class Interface {
@@ -29,8 +30,8 @@ constexpr auto SALEM_VERSION_STR = "0.0.1p";
 
         SALEM_NODISCARD auto ProcessArgs() const -> int;
         SALEM_NODISCARD auto SourceFile() const -> std::string_view;
-        SALEM_NODISCARD auto TokenPrintRequested() const -> bool;
-
+        SALEM_NODISCARD auto RequestedTokenPrint() const -> bool;
+        SALEM_NODISCARD auto RequestedREPL() const -> bool;
 
     };
 
