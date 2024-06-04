@@ -1,8 +1,8 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
 
-#include <Salem/FrontEnd/Lexer.hpp>
-#include <Salem/Core/TypeAliases.hpp>
+#include <salem/frontend/lexer.hpp>
+#include <salem/core/type_aliases.hpp>
 
 template<class T>
 concept StringLike = std::is_convertible_v<T, std::string_view>;
@@ -12,8 +12,8 @@ auto Concatenate(String first, Rest... rest) {
     return std::string(first) + std::string(rest...);
 }
 
-using enum salem::Token::Type;
-using TokenStream = std::vector<salem::Token>;
+using enum salem::token::token_type;
+using TokenStream = std::vector<salem::token>;
 auto StripNewlinesFromTokens(const TokenStream& base_tokens) -> TokenStream {
     auto tokens = decltype(base_tokens){};
     tokens.reserve(base_tokens.size());
@@ -29,10 +29,10 @@ auto StripNewlinesFromTokens(const TokenStream& base_tokens) -> TokenStream {
 
 constexpr auto LEXER_TESTING_PATH = "Samples/Lexing/";
 TEST_CASE("Basic Lexing", "[lex][token]") {
-    salem::Lexer lexer;
-    REQUIRE(lexer.TokenizeFile(Concatenate(LEXER_TESTING_PATH, "Basic.mn")));
+    salem::lexer lexer;
+    REQUIRE(lexer.tokenize_file(Concatenate(LEXER_TESTING_PATH, "Basic.mn")));
 
-    const auto tokens = StripNewlinesFromTokens(lexer.RelinquishTokens());
+    const auto tokens = StripNewlinesFromTokens(lexer.relinquish_tokens_tokens());
     REQUIRE(tokens.size() == 16);
 
     SECTION("Tokens are being processed") {
@@ -90,10 +90,10 @@ TEST_CASE("Basic Lexing", "[lex][token]") {
 
 const auto KEYWORD_TESTING_PATH = Concatenate(LEXER_TESTING_PATH, "Keywords/");
 TEST_CASE("Lexing Keywords", "[lex][token][keyword]") {
-    salem::Lexer lexer;
-    REQUIRE(lexer.TokenizeFile(Concatenate(KEYWORD_TESTING_PATH, "Datatypes.mn")));
+    salem::lexer lexer;
+    REQUIRE(lexer.tokenize_file(Concatenate(KEYWORD_TESTING_PATH, "Datatypes.mn")));
 
-    const auto datatype_tokens = StripNewlinesFromTokens(lexer.RelinquishTokens());
+    const auto datatype_tokens = StripNewlinesFromTokens(lexer.relinquish_tokens_tokens());
     REQUIRE(datatype_tokens.size() == 20);
 
     SECTION("Primitive Datatypes") {
@@ -163,10 +163,10 @@ TEST_CASE("Lexing Keywords", "[lex][token][keyword]") {
         }
     }
 
-    REQUIRE(lexer.TokenizeFile(Concatenate(KEYWORD_TESTING_PATH, "Declarations.mn")));
+    REQUIRE(lexer.tokenize_file(Concatenate(KEYWORD_TESTING_PATH, "Declarations.mn")));
 
 
-    const auto declaration_tokens = StripNewlinesFromTokens(lexer.RelinquishTokens());
+    const auto declaration_tokens = StripNewlinesFromTokens(lexer.relinquish_tokens_tokens());
     REQUIRE(declaration_tokens.size() == 16);
 
     SECTION("Declarations") {
@@ -222,10 +222,10 @@ TEST_CASE("Lexing Keywords", "[lex][token][keyword]") {
         }
     }
 
-    REQUIRE(lexer.TokenizeFile(Concatenate(KEYWORD_TESTING_PATH, "ControlFlow.mn")));
+    REQUIRE(lexer.tokenize_file(Concatenate(KEYWORD_TESTING_PATH, "ControlFlow.mn")));
 
 
-    const auto controlflow_tokens = StripNewlinesFromTokens(lexer.RelinquishTokens());
+    const auto controlflow_tokens = StripNewlinesFromTokens(lexer.relinquish_tokens_tokens());
     REQUIRE(controlflow_tokens.size() == 12);
 
     SECTION("Control Flow") {
@@ -271,10 +271,10 @@ TEST_CASE("Lexing Keywords", "[lex][token][keyword]") {
 }
 
 TEST_CASE("Lexing Operators", "[lex][token][operator]") {
-    salem::Lexer lexer;
-    REQUIRE(lexer.TokenizeFile(Concatenate(LEXER_TESTING_PATH, "Operators.mn")));
+    salem::lexer lexer;
+    REQUIRE(lexer.tokenize_file(Concatenate(LEXER_TESTING_PATH, "Operators.mn")));
 
-    const auto tokens = StripNewlinesFromTokens(lexer.RelinquishTokens());
+    const auto tokens = StripNewlinesFromTokens(lexer.relinquish_tokens_tokens());
     REQUIRE(tokens.size() == 84);
 
     SECTION("Logical Operators") {

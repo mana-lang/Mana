@@ -1,10 +1,10 @@
-#include <Salem/Core/CLI.hpp>
-#include <Salem/Core/ExitCodes.hpp>
-#include <Salem/Core/Logger.hpp>
+#include <salem/core/cli.hpp>
+#include <salem/core/exit_codes.hpp>
+#include <salem/core/logger.hpp>
 
 namespace salem::cli {
 
-Interface::Interface(const int argc, char** argv)
+commands::commands(const int argc, char** argv)
     : cli_(std::make_unique<CLI::App>("Salem, the Mana compiler.\n"))
     , argc_(argc)
     , argv_(argv) {
@@ -16,48 +16,48 @@ Interface::Interface(const int argc, char** argv)
     cli_->add_flag("-r,--repl", flags_.run_repl, "Run Mana REPL");
 }
 
-auto Interface::ProcessArgs() const -> int {
+auto commands::process_args() const -> int {
     try {
         cli_->parse(argc_, argv_);
     } catch (const CLI::ParseError& e) {
-        const auto exit_code = cli_->exit(e);
-        if (exit_code == ExitCode(Exit::Success)) {
+        const auto cli_exit = cli_->exit(e);
+        if (cli_exit == exit_code(exit::Success)) {
             const std::string helparg(argv_[1]);
             if (helparg == "--help" || helparg == "-h") {
-                return ExitCode(Exit::CLI_HelpArgUsed);
+                return exit_code(exit::CLI_HelpArgUsed);
             }
         }
-        return exit_code;
+        return cli_exit;
     }
 
     if (flags_.show_version) {
-        Log("{}", SALEM_VERSION_STR);
-        return ExitCode(Exit::Success);
+        log("{}", SALEM_VERSION_STR);
+        return exit_code(exit::Success);
     }
 
     if (flags_.run_repl) {
-        return ExitCode(Exit::Success);
+        return exit_code(exit::Success);
     }
 
     if (options_.src_file == MANA_INVALID_SRC) {
-        Log(LogLevel::Error, "Missing source file.\nRun with --help for more information.");
-        return ExitCode(Exit::CLI_MissingSrcFile);
+        log(log_level::Error, "Missing source file.\nRun with --help for more information.");
+        return exit_code(exit::CLI_MissingSrcFile);
     }
 
-    Log(LogLevel::Debug, "Source path: {}\n", options_.src_file);
+    log(log_level::Debug, "Source path: {}\n", options_.src_file);
 
-    return ExitCode(Exit::Success);
+    return exit_code(exit::Success);
 }
 
-auto Interface::SourceFile() const -> std::string_view {
+auto commands::source_file() const -> std::string_view {
     return options_.src_file;
 }
 
-auto Interface::RequestedTokenPrint() const -> bool {
+auto commands::requested_token_print() const -> bool {
     return flags_.print_tokens;
 }
 
-auto Interface::RequestedREPL() const -> bool {
+auto commands::requested_repl() const -> bool {
     return flags_.run_repl;
 }
 

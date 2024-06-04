@@ -1,25 +1,23 @@
 #pragma once
 
-#include <Salem/Core/TypeAliases.hpp>
+#include <salem/core/type_aliases.hpp>
 
 #include <string>
 
 namespace salem {
-
-struct TextPosition {
+struct text_position {
     u64 line;
     u64 column;
 };
 
-struct Token {
-    enum class Type;
-
-    Type type;
+enum class token_type;
+struct token {
+    token_type type;
     std::string contents;
-    TextPosition position;
+    text_position position;
 };
 
-enum class Token::Type {
+enum class token_type {
     Int,
     Float,
 
@@ -122,5 +120,4 @@ enum class Token::Type {
 
     Unknown,
 };
-
-}  // namespace salem
+} // namespace salem

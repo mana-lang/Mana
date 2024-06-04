@@ -12,18 +12,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\CLI11\CLI11.hpp" />
-    <ClInclude Include="Include\Salem\Core\CLI.hpp" />
-    <ClInclude Include="Include\Salem\Core\Logger.hpp" />
-    <ClInclude Include="Include\Salem\Core\TypeAliases.hpp" />
-    <ClInclude Include="Include\Salem\FrontEnd\Lexer.hpp" />
-    <ClInclude Include="Include\Salem\FrontEnd\REPL.hpp" />
-    <ClInclude Include="Include\Salem\FrontEnd\Token.hpp" />
-    <ClInclude Include="Include\Salem\Core\ExitCodes.hpp" />
+    <ClInclude Include="Include\salem\core\cli.hpp" />
+    <ClInclude Include="Include\salem\core\logger.hpp" />
+    <ClInclude Include="Include\salem\core\type_aliases.hpp" />
+    <ClInclude Include="Include\salem\frontend\lexer.hpp" />
+    <ClInclude Include="Include\salem\frontend\repl.hpp" />
+    <ClInclude Include="Include\salem\frontend\token.hpp" />
+    <ClInclude Include="Include\salem\core\exit_codes.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source\Salem\Core\CLI.cpp" />
-    <ClCompile Include="Source\Salem\FrontEnd\Lexer.cpp" />
-    <ClCompile Include="Source\Salem\FrontEnd\REPL.cpp">
+    <ClCompile Include="Source\salem\core\cli.cpp" />
+    <ClCompile Include="Source\salem\frontend\lexer.cpp" />
+    <ClCompile Include="Source\salem\frontend\repl.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -98,7 +98,7 @@
       <AdditionalIncludeDirectories>C:\Users\August\Documents\Projects\Software\Mana\Libs\spdlog\include;C:\Users\August\Documents\Projects\Software\Mana\Libs\Include\;C:\Users\August\Documents\Projects\Software\Mana\Salem\\Include;</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Source\Salem\Main.cpp" />
+    <ClCompile Include="Source\salem\Main.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

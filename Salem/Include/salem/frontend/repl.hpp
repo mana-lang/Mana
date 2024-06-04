@@ -1,13 +1,10 @@
 #pragma once
 
 namespace salem {
-
 constexpr auto PROMPT = ">>> ";
 
-class REPL {
+class repl {
 public:
-
-    void Run();
+    void run();
 };
-
 } // namespace salem

@@ -1,31 +1,30 @@
-#include <Salem/Core/Logger.hpp>
-#include <Salem/Core/CLI.hpp>
-#include <Salem/FrontEnd/Lexer.hpp>
-#include <Salem/FrontEnd/REPL.hpp>
+#include <salem/core/logger.hpp>
+#include <salem/core/cli.hpp>
+#include <salem/frontend/lexer.hpp>
+#include <salem/frontend/repl.hpp>
 
 int main(const int argc, char** argv) {
-    using namespace salem;
-    const cli::Interface cli(argc, argv);
+    const salem::cli::commands commands(argc, argv);
 
-    const int cli_status = cli.ProcessArgs();
-    if (cli_status != ExitCode(Exit::Success)) {
+    const int cli_status = commands.process_args();
+    if (cli_status != exit_code(salem::exit::Success)) {
         return cli_status;
     }
 
-    if (cli.RequestedREPL()) {
-        REPL repl;
-        repl.Run();
+    if (commands.requested_repl()) {
+        salem::repl repl;
+        repl.run();
         return 0;
     }
 
-    const auto source_path = std::string(cli.SourceFile());
+    const auto source_path = std::string(commands.source_file());
 
-    Lexer lexer;
-    if (not lexer.TokenizeFile(source_path)) {
-        return ExitCode(Exit::Lexer_TokenizationFailed);
+    salem::lexer lexer;
+    if (not lexer.tokenize_file(source_path)) {
+        return exit_code(salem::exit::LEX_TokenizationFailed);
     }
 
-    if (cli.RequestedTokenPrint()) {
-        lexer.PrintTokens();
+    if (commands.requested_token_print()) {
+        lexer.print_tokens();
     }
 }
