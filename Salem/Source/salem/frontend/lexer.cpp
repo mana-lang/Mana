@@ -248,7 +248,7 @@ bool lexer::lex_numbers(const std::string_view current_line) {
     // FLOAT = INT.[0-9]+
     // if we encounter a dot, it can't be an int
     if (current_line[cursor_] != '.') {
-        add_token(token_type::Int, std::move(buffer));
+        add_token(token_type::Lit_Int, std::move(buffer));
         return true;
     }
 
@@ -257,7 +257,7 @@ bool lexer::lex_numbers(const std::string_view current_line) {
 
     eat_digits();
 
-    add_token(token_type::Float, std::move(buffer));
+    add_token(token_type::Lit_Float, std::move(buffer));
     return true;
 }
 
@@ -353,10 +353,10 @@ bool lexer::lex_operators(const std::string_view current_line) {
         token_type = Op_ExplicitCopy;
         break;
     case '\"':
-        token_type = Sym_StringLiteral;
+        token_type = Lit_String;
         break;
     case '\'':
-        token_type = Sym_CharLiteral;
+        token_type = Lit_Char;
         break;
 
     default:

@@ -3,6 +3,7 @@
 #include <salem/core/type_aliases.hpp>
 
 #include <string>
+#include <vector>
 
 namespace salem {
 struct text_position {
@@ -12,15 +13,14 @@ struct text_position {
 
 enum class token_type;
 struct token {
-    token_type type;
-    std::string contents;
+    token_type type_;
+    std::string value_;
     text_position position;
 };
 
-enum class token_type {
-    Int,
-    Float,
+using token_stream = std::vector<token>;
 
+enum class token_type {
     Identifier,
 
     Op_Plus,
@@ -59,8 +59,10 @@ enum class token_type {
     Op_ExplicitCopy,
     Op_ExplicitMove,
 
-    Sym_StringLiteral,
-    Sym_CharLiteral,
+    Lit_String,
+    Lit_Char,
+    Lit_Int,
+    Lit_Float,
 
     KW_i8,
     KW_i16,
@@ -119,5 +121,6 @@ enum class token_type {
     Eof,
 
     Unknown,
+    _Module_, // special token, auto-inserted
 };
 } // namespace salem

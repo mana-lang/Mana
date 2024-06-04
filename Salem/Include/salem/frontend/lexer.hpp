@@ -8,6 +8,7 @@
 #include <filesystem>
 
 namespace salem {
+
 class lexer {
 public:
     lexer();
@@ -17,7 +18,7 @@ public:
     void print_tokens() const;
     void clear();
 
-    SALEM_NODISCARD std::vector<token>&& relinquish_tokens_tokens();
+    SALEM_NODISCARD token_stream&& relinquish_tokens_tokens();
 
 private:
     SALEM_NODISCARD bool lex_identifiers(std::string_view current_line);
@@ -36,8 +37,7 @@ private:
     u64 cursor_;
     u64 line_number_;
 
-    std::vector<token> token_stream_;
+    token_stream token_stream_;
 };
-} // namespace salem
 
-//#endif
+} // namespace salem
