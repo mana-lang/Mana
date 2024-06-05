@@ -15,7 +15,7 @@
     <ClInclude Include="Include\salem\core\cli.hpp" />
     <ClInclude Include="Include\salem\core\logger.hpp" />
     <ClInclude Include="Include\salem\core\type_aliases.hpp" />
-    <ClInclude Include="Include\salem\frontend\ast.h" />
+    <ClInclude Include="Include\salem\frontend\ast.hpp" />
     <ClInclude Include="Include\salem\frontend\lexer.hpp" />
     <ClInclude Include="Include\salem\frontend\parser.hpp" />
     <ClInclude Include="Include\salem\frontend\repl.hpp" />

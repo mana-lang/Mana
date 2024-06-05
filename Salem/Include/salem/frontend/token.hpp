@@ -7,8 +7,8 @@
 
 namespace salem {
 struct text_position {
-    u64 line;
-    u64 column;
+    i64 line;
+    i64 column;
 };
 
 enum class token_type;

@@ -121,7 +121,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)Libs\Catch2\lib\;$(SolutionDir)\Salem\.Build\.BuildFiles\$(Configuration)\;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Catch2d.lib;Catch2Maind.lib;Lexer.obj;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Catch2d.lib;Catch2Maind.lib;lexer.obj;parser.obj;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -146,6 +146,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Tests\catch2_main.cpp" />
     <ClCompile Include="Tests\test_parsing.cpp" />
     <ClCompile Include="Tests\test_lexing.cpp" />
   </ItemGroup>

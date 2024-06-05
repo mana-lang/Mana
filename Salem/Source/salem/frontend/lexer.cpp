@@ -22,7 +22,7 @@ void lexer::tokenize_line(const std::string_view current_line) {
     }
     cursor_ = 0;
 
-    const auto line_size = current_line.size();
+    const auto line_size = static_cast<i64>(current_line.size());
     while (cursor_ < line_size) {
         if (is_comment(current_line[cursor_])) {
             break;
@@ -76,15 +76,27 @@ void lexer::add_eof() {
     );
 }
 
-bool lexer::tokenize_file(const std::filesystem::path& path_to_file) {
-    token_stream_.clear();
-
-    std::ifstream file(path_to_file);
+bool lexer::tokenize_file(const std::filesystem::path& file_path) {
+    std::ifstream file(file_path);
     if (not file.is_open()) {
         log(log_level::Error, "Failed to open file at '{}'",
-            path_to_file.string());
+            file_path.string());
         return false;
     }
+
+    token_stream_.clear();
+    line_number_ = -1;
+    cursor_ = -1;
+
+    add_token(
+        token_type::_module_,
+        file_path.filename().replace_extension("").string()
+    );
+
+    line_number_ = 0;
+    cursor_ = 0;
+
+    //token_stream_.emplace_back( text_position(-1, -1));
 
     std::string current_line;
     while (std::getline(file, current_line)) {
@@ -93,8 +105,6 @@ bool lexer::tokenize_file(const std::filesystem::path& path_to_file) {
     }
 
     add_eof();
-    line_number_ = 0;
-    cursor_ = 0;
     return true;
 }
 
@@ -125,7 +135,7 @@ void lexer::clear() {
     token_stream_.clear();
 }
 
-auto lexer::relinquish_tokens_tokens() -> std::vector<token>&& {
+auto lexer::relinquish_tokens() -> std::vector<token>&& {
     return std::move(token_stream_);
 }
 
@@ -167,7 +177,7 @@ bool lexer::lex_strings(std::string_view current_line) {
     }
 
     while (true) {
-        if (++cursor_ >= current_line.size()) {
+        if (static_cast<usize>(++cursor_) >= current_line.size()) {
             // next token should always be newline or string literal
             log(log_level::Warn, "Unexpected EOF while lexing string literal");
             add_token(token_type::Unknown, std::move(buffer));

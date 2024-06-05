@@ -15,11 +15,11 @@ public:
     lexer();
 
     void tokenize_line(std::string_view current_line);
-    bool tokenize_file(const std::filesystem::path& path_to_file);
+    bool tokenize_file(const std::filesystem::path& file_path);
     void print_tokens() const;
     void clear();
 
-    SALEM_NODISCARD token_stream&& relinquish_tokens_tokens();
+    SALEM_NODISCARD token_stream&& relinquish_tokens();
 
 private:
     SALEM_NODISCARD bool lex_identifiers(std::string_view current_line);
@@ -39,8 +39,8 @@ private:
     void add_eof();
 
 private:
-    u64 cursor_;
-    u64 line_number_;
+    i64 cursor_;
+    i64 line_number_;
 
     token_stream token_stream_;
 };

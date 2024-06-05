@@ -11,6 +11,8 @@ struct node {
     rule rule_;
     token_stream tokens_;
     std::vector<std::unique_ptr<node>> subnodes_;
+
+    node();
 };
 
 enum class rule {
@@ -67,4 +69,11 @@ enum class rule {
     UDT_Body,
     UDT_Init,
 };
+
+inline node::node()
+    : rule_(rule::Undefined)
+    , tokens_({})
+    //, subnodes_({})
+{}
+
 }// namespace salem

@@ -8,7 +8,7 @@ parser::parser(const token_stream&& tokens)
       , ast_({})
       , cursor_(0) {}
 
-void parser::parse() {
+bool parser::parse() {
     const auto top_token = tokens_.front().type_;
     if (top_token != token_type::_module_) {
         log(
@@ -16,7 +16,7 @@ void parser::parse() {
             "Improper token stream format. Top-level token was: {}",
             magic_enum::enum_name(top_token)
         );
-        return;
+        return false;
     }
 
     ast_.rule_ = ast::rule::Module;
@@ -24,6 +24,16 @@ void parser::parse() {
 
     cursor_ = 0;
     while (progress_ast(ast_));
+
+    return true;
+}
+
+auto parser::view_ast() const -> const ast::node& {
+    return ast_;
+}
+
+auto parser::view_tokens() const -> const token_stream& {
+    return tokens_;
 }
 
 bool parser::progress_ast(ast::node& node) {
@@ -33,6 +43,8 @@ bool parser::progress_ast(ast::node& node) {
         result = false;
     }
 
+    /// TODO: remove
+    ++cursor_;
     // switch (tokens_[++cursor_].type_) {
     //     using enum token_type;
     //

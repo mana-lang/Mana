@@ -2,7 +2,7 @@
 
 #include <salem/core/type_aliases.hpp>
 #include <salem/frontend/token.hpp>
-#include <salem/frontend/ast.h>
+#include <salem/frontend/ast.hpp>
 
 #include <vector>
 
@@ -20,8 +20,12 @@ private:
     usize cursor_;
 
 public:
-    explicit parser(const std::vector<token>&& tokens);
-    void parse();
+    explicit parser(const token_stream&& tokens);
+    bool parse();
+
+    /// TODO: fix ownership issues with ast nodes
+    SALEM_NODISCARD auto view_ast() const -> const ast::node&;
+    SALEM_NODISCARD auto view_tokens() const -> const token_stream&;
 
 private:
     bool progress_ast(ast::node& node);
