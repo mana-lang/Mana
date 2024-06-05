@@ -3,7 +3,7 @@
 #include <salem/core/logger.hpp>
 
 namespace salem {
-parser::parser(const std::vector<token>&& tokens)
+parser::parser(const token_stream&& tokens)
     : tokens_(tokens)
       , ast_({})
       , cursor_(0) {}

@@ -71,7 +71,8 @@ void lexer::add_eof() {
     token_stream_.emplace_back(
         EOF_TOKEN.type_,
         EOF_TOKEN.text_,
-        text_position{line_number_, cursor_ + 1}
+        text_position{line_number_, cursor_ + 2} // display EOF tokens as being
+                                                 // out of bounds of file contents
     );
 }
 
@@ -185,6 +186,7 @@ bool lexer::lex_strings(std::string_view current_line) {
         buffer.push_back(current_char);
 
         if (current_char == '\'' || current_char == '\"') {
+            ++cursor_;
             break;
         }
     }
@@ -416,11 +418,7 @@ bool lexer::lex_operators(const std::string_view current_line) {
         token_type = Op_ExplicitCopy;
         break;
     case '\"':
-        //token_type = Lit_String;
-        return lex_strings(current_line);
-
     case '\'':
-        //token_type = Lit_Char;
         return lex_strings(current_line);
 
     default:
