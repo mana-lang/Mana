@@ -3,6 +3,8 @@
 #include <salem/frontend/lexer.hpp>
 #include <salem/frontend/repl.hpp>
 
+
+/// TODO: implement error sink
 int main(const int argc, char** argv) {
     const salem::cli::commands commands(argc, argv);
 

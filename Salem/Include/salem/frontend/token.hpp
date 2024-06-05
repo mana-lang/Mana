@@ -14,11 +14,9 @@ struct text_position {
 enum class token_type;
 struct token {
     token_type type_;
-    std::string value_;
+    std::string text_;
     text_position position;
 };
-
-using token_stream = std::vector<token>;
 
 enum class token_type {
     Identifier,
@@ -121,6 +119,14 @@ enum class token_type {
     Eof,
 
     Unknown,
-    _Module_, // special token, auto-inserted
+    _module_, // special token, auto-inserted
 };
+
+using token_stream = std::vector<token>;
+static const auto EOF_TOKEN = token {
+    .type_ = token_type::Eof,
+    .text_ = "EOF",
+    .position = {}
+};
+
 } // namespace salem

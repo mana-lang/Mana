@@ -51,10 +51,26 @@ void lexer::tokenize_line(const std::string_view current_line) {
     add_token(token_type::Newline, "\n");
 }
 
-void lexer::add_token(const token_type type, std::string&& contents) {
+void lexer::add_token(const token_type type, std::string&& text) {
     token_stream_.emplace_back(
         type,
-        std::move(contents),
+        std::move(text),
+        text_position{line_number_, cursor_ + 1}
+    );
+}
+
+void lexer::add_token(token_type type, std::string& text) {
+    token_stream_.emplace_back(
+        type,
+        text,
+        text_position{line_number_, cursor_ + 1}
+    );
+}
+
+void lexer::add_eof() {
+    token_stream_.emplace_back(
+        EOF_TOKEN.type_,
+        EOF_TOKEN.text_,
         text_position{line_number_, cursor_ + 1}
     );
 }
@@ -75,7 +91,7 @@ bool lexer::tokenize_file(const std::filesystem::path& path_to_file) {
         tokenize_line(current_line);
     }
 
-    add_token(token_type::Eof, "EOF");
+    add_eof();
     line_number_ = 0;
     cursor_ = 0;
     return true;
@@ -128,6 +144,53 @@ bool lexer::lex_identifiers(const std::string_view current_line) {
     }
 
     return false;
+}
+
+// only to be entered when current char is " or '
+bool lexer::lex_strings(std::string_view current_line) {
+    std::string buffer;
+    buffer.push_back(current_line[cursor_]);
+
+    token_type literal_type;
+    switch (current_line[cursor_]) {
+    case '\"':
+        literal_type = token_type::Lit_String;
+        break;
+    case '\'':
+        literal_type = token_type::Lit_Char;
+        break;
+    default:
+        log(log_level::Error, "Erroneous call to string lexer");
+        add_token(token_type::Unknown, std::move(buffer));
+        return false;
+    }
+
+    while (true) {
+        if (++cursor_ >= current_line.size()) {
+            // next token should always be newline or string literal
+            log(log_level::Warn, "Unexpected EOF while lexing string literal");
+            add_token(token_type::Unknown, std::move(buffer));
+            add_eof();
+            return false;
+        }
+
+        const char current_char = current_line[cursor_];
+
+        if (current_char == '\n' || (
+                current_char == '\\' &&
+                current_line[cursor_ + 1] == 'n'
+            )       // strings must close on the line they're started
+        ) { return false; }
+
+        buffer.push_back(current_char);
+
+        if (current_char == '\'' || current_char == '\"') {
+            break;
+        }
+    }
+
+    add_token(literal_type, std::move(buffer));
+    return true;
 }
 
 bool lexer::match_keyword(std::string& ident_buffer) {
@@ -353,11 +416,12 @@ bool lexer::lex_operators(const std::string_view current_line) {
         token_type = Op_ExplicitCopy;
         break;
     case '\"':
-        token_type = Lit_String;
-        break;
+        //token_type = Lit_String;
+        return lex_strings(current_line);
+
     case '\'':
-        token_type = Lit_Char;
-        break;
+        //token_type = Lit_Char;
+        return lex_strings(current_line);
 
     default:
         return false;

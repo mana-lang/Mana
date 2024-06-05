@@ -9,6 +9,7 @@
 
 namespace salem {
 
+/// TODO: add string matching
 class lexer {
 public:
     lexer();
@@ -22,6 +23,7 @@ public:
 
 private:
     SALEM_NODISCARD bool lex_identifiers(std::string_view current_line);
+    SALEM_NODISCARD bool lex_strings(std::string_view current_line);
     SALEM_NODISCARD bool lex_numbers(std::string_view current_line);
     SALEM_NODISCARD bool lex_operators(std::string_view current_line);
     void lex_unknown(std::string_view current_line);
@@ -31,7 +33,10 @@ private:
     SALEM_NODISCARD bool is_whitespace(char c) const;
     SALEM_NODISCARD bool is_comment(char c) const;
 
-    void add_token(token_type type, std::string&& contents);
+    void add_token(token_type type, std::string&& text);
+    void add_token(token_type type, std::string& text);
+
+    void add_eof();
 
 private:
     u64 cursor_;

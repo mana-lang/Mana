@@ -146,12 +146,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Tests\Test_Lexing.cpp" />
+    <ClCompile Include="Tests\test_parsing.cpp" />
+    <ClCompile Include="Tests\test_lexing.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Salem\Salem.vcxproj">
       <Project>{594245d1-0001-4fc9-96e3-c9a945db69e4}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Tests\common.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

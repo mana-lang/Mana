@@ -10,7 +10,7 @@ parser::parser(const std::vector<token>&& tokens)
 
 void parser::parse() {
     const auto top_token = tokens_.front().type_;
-    if (top_token != token_type::_Module_) {
+    if (top_token != token_type::_module_) {
         log(
             log_level::Error,
             "Improper token stream format. Top-level token was: {}",

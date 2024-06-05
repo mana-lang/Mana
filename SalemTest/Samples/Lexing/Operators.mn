@@ -69,11 +69,11 @@ x = ~y
 # explicit ref [72]
 x = &y
 
-# string literal symbol [74] && [77]
+# string literal [74]
 "hello world"
 
-# character literal symbol [78] && [80]
+# character literal symbol [75]
 'f'
 
-# verbal logical not [81]
+# verbal logical not [76]
 not x
