@@ -1,0 +1,8 @@
+# import-statement
+import std.io as io
+
+# function-decl
+fn main() {
+    # module-member-access call-expr
+    io.println("Hello world!")
+}

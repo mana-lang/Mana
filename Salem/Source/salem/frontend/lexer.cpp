@@ -48,7 +48,7 @@ void lexer::tokenize_line(const std::string_view current_line) {
         lex_unknown(current_line);
     }
 
-    add_token(token_type::Newline, "\n");
+    add_token(token_type::Terminator, "\n");
 }
 
 void lexer::add_token(const token_type type, std::string&& text) {
@@ -119,7 +119,7 @@ void lexer::print_tokens() const {
     log(log_level::Debug, "--- Printing Token Stream ---\n");
 
     for (const auto& [type, contents, position] : token_stream_) {
-        if (type == token_type::Newline) {
+        if (type == token_type::Terminator) {
             log(log_level::Info, "[L: {} | C: {}] {}: \\n",
                 position.line, position.column, magic_enum::enum_name(type));
             continue;
@@ -361,7 +361,7 @@ bool lexer::lex_operators(const std::string_view current_line) {
         token_type = Op_Minus;
         break;
     case '*':
-        token_type = Op_Asterisk;
+        token_type = Op_Star;
         break;
     case '/':
         token_type = Op_FwdSlash;

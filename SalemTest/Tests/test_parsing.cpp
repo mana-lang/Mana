@@ -27,7 +27,7 @@ TEST_CASE("Parser", "[parse][ast]") {
         using namespace salem::ast;
         SECTION("AST root is properly formed") {
             CHECK_FALSE(ast_root.tokens_.empty());
-            CHECK(ast_root.subnodes_.empty());
+            CHECK(ast_root.branches_.empty());
             REQUIRE(ast_root.rule_ == rule::Module);
             REQUIRE(ast_root.tokens_[0].text_ == "00-building-blocks");
         }

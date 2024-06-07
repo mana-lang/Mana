@@ -18,12 +18,12 @@ struct token {
     text_position position;
 };
 
-enum class token_type {
+enum class token_type : u64 {
     Identifier,
 
     Op_Plus,
     Op_Minus,
-    Op_Asterisk,
+    Op_Star,
     Op_FwdSlash,
 
     Op_Colon,
@@ -115,7 +115,7 @@ enum class token_type {
     KW_break,
     KW_skip,
 
-    Newline,
+    Terminator,
     Eof,
 
     Unknown,

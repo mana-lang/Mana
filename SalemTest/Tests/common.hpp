@@ -13,14 +13,13 @@ auto concatenate(String first, Rest... rest) {
 inline auto strip_redundant(const salem::token_stream& base_tokens) -> salem::token_stream {
     auto tokens = decltype(base_tokens){};
     tokens.reserve(base_tokens.size());
+
     for (const auto& t : base_tokens) {
-        if (t.type_ == salem::token_type::Newline
-            || t.type_ == salem::token_type::_module_
-        ) {
+        using enum salem::token_type;
+        if (t.type_ == Terminator || t.type_ == _module_) {
             continue;
         }
         tokens.push_back(t);
     }
-
     return tokens;
 }
