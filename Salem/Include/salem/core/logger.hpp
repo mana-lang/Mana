@@ -41,7 +41,7 @@ class internal_log_ {
 
     template <typename... Args>
     friend void log(log_level level, const char* msg, Args&&... args);
-    friend i64 log_counter(log_level level);
+    friend i64  log_counter(log_level level);
 
     internal_log_() = default;
 
@@ -51,7 +51,9 @@ class internal_log_ {
 
             logger_->set_pattern("%^%v%$");
             logger_->set_level(
-                static_cast<spdlog::level::level_enum>(SALEM_LOG_LEVEL));
+                               static_cast<spdlog::level::level_enum>(
+                                   SALEM_LOG_LEVEL)
+                              );
             //logger->log(static_cast<spdlog::level::level_enum>(LogLevel::Info), "--- Salem v{}\n", SALEM_VERSION_STR);
 
             logger_->set_pattern("%^<%n>%$ %v");
@@ -60,7 +62,7 @@ class internal_log_ {
         }
     }
 
-    inline static bool was_initialized_{false};
+    inline static bool   was_initialized_{false};
     inline static logger logger_{spdlog::stdout_color_st("Salem")};
 
     inline static struct counters {
@@ -104,8 +106,10 @@ void log(const log_level level, const char* msg, Args&&... args) {
         ++internal_log_::counters_.errors;
         break;
     case Critical:
-        internal_log_::logger_->critical(runtime_msg,
-                                         std::forward<Args>(args)...);
+        internal_log_::logger_->critical(
+                                         runtime_msg,
+                                         std::forward<Args>(args)...
+                                        );
         internal_log_::logger_->critical("Shutting down.");
         throw std::runtime_error("Critical error");
     case Off:
@@ -138,8 +142,10 @@ inline i64 log_counter(const log_level level) {
     case Error:
         return errors;
     case Critical:
-        log(Error,
-            "Critical errors always throw, so this path should never happen.");
+        log(
+            Error,
+            "Critical errors always throw, so this path should never happen."
+           );
         return exit_code(exit::LOG_LogCounterIllegalPath);
     case Off:
         return 0;

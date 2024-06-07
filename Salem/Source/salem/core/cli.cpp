@@ -13,6 +13,7 @@ commands::commands(const int argc, char** argv)
 
     cli_->add_flag("-v,--version", flags_.show_version, "Current Salem version");
     cli_->add_flag("-t,--tokens", flags_.print_tokens, "Print lexer tokens post-tokenization");
+    cli_->add_flag("-a,--ast", flags_.print_ast, "Print AST post-parse");
     cli_->add_flag("-r,--repl", flags_.run_repl, "Run Mana REPL");
 }
 
@@ -55,6 +56,10 @@ auto commands::source_file() const -> std::string_view {
 
 auto commands::requested_token_print() const -> bool {
     return flags_.print_tokens;
+}
+
+auto commands::requested_ast_print() const -> bool {
+    return flags_.print_ast;
 }
 
 auto commands::requested_repl() const -> bool {

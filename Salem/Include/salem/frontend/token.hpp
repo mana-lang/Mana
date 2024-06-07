@@ -11,10 +11,11 @@ struct text_position {
     i64 column;
 };
 
-enum class token_type;
+enum class token_type : u64;
+
 struct token {
-    token_type type_;
-    std::string text_;
+    token_type    type_;
+    std::string   text_;
     text_position position;
 };
 
@@ -122,11 +123,10 @@ enum class token_type : u64 {
     _module_, // special token, auto-inserted
 };
 
-using token_stream = std::vector<token>;
-static const auto EOF_TOKEN = token {
+using token_stream          = std::vector<token>;
+static const auto EOF_TOKEN = token{
     .type_ = token_type::Eof,
     .text_ = "EOF",
     .position = {}
 };
-
 } // namespace salem

@@ -14,5 +14,4 @@ enum class exit {
 consteval int exit_code(exit exit_code) {
     return static_cast<int>(exit_code);
 }
-
 } // namespace salem

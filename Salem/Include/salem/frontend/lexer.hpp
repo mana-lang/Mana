@@ -8,7 +8,6 @@
 #include <filesystem>
 
 namespace salem {
-
 /// TODO: add string matching
 class lexer {
 public:
@@ -26,7 +25,7 @@ private:
     SALEM_NODISCARD bool lex_strings(std::string_view current_line);
     SALEM_NODISCARD bool lex_numbers(std::string_view current_line);
     SALEM_NODISCARD bool lex_operators(std::string_view current_line);
-    void lex_unknown(std::string_view current_line);
+    void                 lex_unknown(std::string_view current_line);
 
     SALEM_NODISCARD bool match_keyword(std::string& ident_buffer);
 
@@ -44,5 +43,4 @@ private:
 
     token_stream token_stream_;
 };
-
 } // namespace salem

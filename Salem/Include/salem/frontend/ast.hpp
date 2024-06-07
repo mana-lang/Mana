@@ -6,22 +6,20 @@
 #include <salem/frontend/token.hpp>
 
 namespace salem::ast {
-
 struct node;
 using node_ptr = std::unique_ptr<node>;
 
 enum class rule;
+
 struct node {
-    rule rule_;
-    token_stream tokens_;
+    rule                  rule_;
+    token_stream          tokens_;
     std::vector<node_ptr> branches_;
 
     node();
 
-    SALEM_NODISCARD auto new_branch(const rule branch_rule) -> const node_ptr& {
-        const auto& new_branch = branches_.emplace_back(std::make_unique<node>());
-        new_branch->rule_ = branch_rule;
-        return new_branch;
+    SALEM_NODISCARD const node_ptr& new_branch() {
+        return branches_.emplace_back(std::make_unique<node>());
     }
 };
 
@@ -33,7 +31,7 @@ enum class rule {
     EofReached,
 
     Declaration,
-    Decl_Import,
+    Import_Decl,
     Decl_Module,
     Decl_Access,
     Decl_Function,
@@ -84,8 +82,5 @@ enum class rule {
 
 inline node::node()
     : rule_(rule::Undefined)
-    , tokens_({})
-    //, subnodes_({})
-{}
-
-}// namespace salem
+    , tokens_({}) {}
+} // namespace salem

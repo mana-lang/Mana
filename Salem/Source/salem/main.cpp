@@ -1,6 +1,7 @@
 #include <salem/core/logger.hpp>
 #include <salem/core/cli.hpp>
 #include <salem/frontend/lexer.hpp>
+#include <salem/frontend/parser.hpp>
 #include <salem/frontend/repl.hpp>
 
 
@@ -37,5 +38,11 @@ int main(const int argc, char** argv) {
 
     if (commands.requested_token_print()) {
         lexer.print_tokens();
+    }
+
+    salem::parser parser(lexer.relinquish_tokens());
+    if (commands.requested_ast_print()) {
+        parser.parse();
+        parser.print_ast();
     }
 }

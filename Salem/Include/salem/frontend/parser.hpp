@@ -7,7 +7,6 @@
 #include <vector>
 
 namespace salem {
-
 struct token_range {
     usize size_;
     usize offset_;
@@ -19,16 +18,18 @@ struct token_range {
 class parser {
 private:
     token_stream tokens_;
-    ast::node ast_;
-    usize cursor_;
+    ast::node    ast_;
+    usize        cursor_;
 
 public:
     explicit parser(const token_stream&& tokens);
-    bool parse();
+    bool     parse();
 
-    /// TODO: fix ownership issues with ast nodes
     SALEM_NODISCARD auto view_ast() const -> const ast::node&;
     SALEM_NODISCARD auto view_tokens() const -> const token_stream&;
+
+    void print_ast() const;
+    void print_ast(const ast::node& root, std::string prepend = "") const;
 
 private:
     SALEM_NODISCARD bool is_primitive(token_type token) const;
@@ -41,18 +42,15 @@ private:
 
     bool progress_ast(ast::node& node);
 
-    void add_tokens_until(ast::node& node, const token_type delimiter);
-    void add_token_to(ast::node& node);
-    void transmit_tokens(ast::node& from, ast::node& to, token_range range);
-    void transmit_tokens(ast::node& from, ast::node& to);
+    void add_tokens_until(ast::node& node, token_type delimiter);
+    void add_token_to(ast::node& node) const;
+    void transmit_tokens(ast::node& from, ast::node& to, token_range range) const;
+    void transmit_tokens(ast::node& from, const ast::node& to) const;
 
     void match_import_decl(ast::node& import_decl);
     void match_import_alias(ast::node& import_alias);
     void match_import_access(ast::node& import_access);
-    void match_terminator(ast::node& terminator);
 
     void match_stmt_init(ast::node& node);
-
 };
-
 } // namespace salem

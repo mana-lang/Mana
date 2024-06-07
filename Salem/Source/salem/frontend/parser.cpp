@@ -38,6 +38,41 @@ auto parser::view_tokens() const -> const token_stream& {
     return tokens_;
 }
 
+void parser::print_ast() const {
+    log(log_level::Info, "Printing AST for module \'{}\'", ast_.tokens_[0].text_);
+    print_ast(ast_);
+}
+
+void parser::print_ast(const node& root, std::string prepend) const {
+    log(log_level::Info, "{}[{}]", prepend, magic_enum::enum_name(root.rule_));
+
+    prepend.append("==== ");
+
+    if (not root.branches_.empty()) {
+        for (const auto& n : root.branches_) {
+            print_ast(*n, prepend);
+        }
+    }
+
+    std::ranges::replace(prepend, '=', '-');
+
+    for (const auto& t: root.tokens_) {
+        if (t.type_ == token_type::Terminator) {
+            continue;
+        }
+        log(log_level::Info,
+            "{} [{}] -> {}",
+            prepend,
+            magic_enum::enum_name(t.type_),
+            t.text_
+        );
+    }
+
+    if (root.tokens_.size() > 1) {
+        log(log_level::Info, "");
+    }
+}
+
 bool parser::is_primitive(const token_type token) const {
     switch (token) {
         using enum token_type;
@@ -82,11 +117,11 @@ bool parser::progress_ast(node& node) {
         result = false;
     }
 
-    switch (next_token()) {
+    switch (next_token().type_) {
         using enum token_type;
 
     case KW_import:
-        match_import_decl(*node.new_branch(rule::Decl_Import));
+        match_import_decl(*node.new_branch());
         break;
 
     default:
@@ -104,7 +139,7 @@ void parser::add_tokens_until(node& node, const token_type delimiter) {
     }
 }
 
-void parser::add_token_to(node& node) {
+void parser::add_token_to(node& node) const {
     if (cursor_ < tokens_.size()) {
         node.tokens_.push_back(current_token());
     }
@@ -112,7 +147,7 @@ void parser::add_token_to(node& node) {
 
 /// TODO: Make transmit functions take reference to token_stream instead
 void parser::transmit_tokens(node& sender, node& receiver,
-                            token_range range) {
+                            token_range range) const {
     const auto [size, offset] = range;
 
     if (size + offset > sender.tokens_.size()) {
@@ -125,11 +160,10 @@ void parser::transmit_tokens(node& sender, node& receiver,
 
     for (usize i = 0; i < size; ++i) {
         receiver.tokens_.emplace_back(sender.tokens_[offset]);
-
     }
 }
 
-void parser::transmit_tokens(node& sender, node& receiver) {
+void parser::transmit_tokens(node& sender, const node& receiver) const {
     auto receive = receiver.tokens_;
     for (const auto& send : sender.tokens_) {
         receive.push_back(send);
@@ -138,8 +172,9 @@ void parser::transmit_tokens(node& sender, node& receiver) {
     sender.tokens_.clear();
 }
 
-// import_decl   ::= import_module import_access import_alias?
+// import_decl   ::= KW_IMPORT IDENTIFIER import_access import_alias?
 void parser::match_import_decl(node& import_decl) {
+    import_decl.rule_ = rule::Import_Decl;
     add_token_to(import_decl);
 
     if (next_token().type_ != token_type::Identifier) {
@@ -150,10 +185,10 @@ void parser::match_import_decl(node& import_decl) {
         );
     }
 
-    match_import_access(*import_decl.new_branch(rule::Import_Access));
+    match_import_access(*import_decl.new_branch());
 
     if (next_token().type_ == token_type::KW_as) {
-        match_import_alias(*import_decl.new_branch(rule::Import_Alias));
+        match_import_alias(*import_decl.new_branch());
     }
 
     if (next_token().type_ != token_type::Terminator) {
@@ -162,24 +197,6 @@ void parser::match_import_decl(node& import_decl) {
             current_token().text_,
             magic_enum::enum_name(current_token().type_)
         );
-    }
-
-
-
-    while (true) {
-        switch (next_token().type_) {
-            using enum token_type;
-
-        case KW_as:
-
-        case Identifier:
-        case Op_Period:
-            add_token_to(import_decl);
-            continue;
-        default:
-                break;
-        }
-        break;
     }
 }
 
@@ -190,51 +207,48 @@ void parser::match_import_alias(node& import_alias) {
 
     using enum token_type;
 
-    if (peek_token().type_ == Op_Star) {
-        ++cursor_;
-        add_token_to(import_alias);
-        return;
-    }
+    while (true) {
+        if (peek_token().type_ == Op_Star) {
+            ++cursor_;
+            add_token_to(import_alias);
+            return;
+        }
 
-    // next token is guaranteed to not be star
-    if (next_token().type_ != Identifier) {
-        log(log_level::Error,
-            "Incorrect import alias: Expected 'Identifier', got '{}' ({})",
-            current_token().text_,
-            magic_enum::enum_name(current_token().type_)
-        );
-    }
+        // next token is guaranteed to not be op_star
+        if (next_token().type_ != Identifier) {
+            log(log_level::Error,
+                "Incorrect import alias: Expected 'Identifier', got '{}' ({})",
+                current_token().text_,
+                magic_enum::enum_name(current_token().type_)
+            );
+        }
 
-    match_import_access(*import_alias.new_branch(rule::Import_Alias));
+        match_import_access(*import_alias.new_branch());
+    }
 }
 
-// import_access ::= (OP_PERIOD IDENTIFIER)*
+// import_access ::= IDENTIFIER (OP_PERIOD IDENTIFIER)*
 void parser::match_import_access(node& import_access) {
+    import_access.rule_ = rule::Import_Access;
     add_token_to(import_access);
 
-    while (true) {
-        switch (next_token().type_) {
-            using enum token_type;
+    // unwrap imported modules early since we can
+    switch (next_token().type_) {
+        using enum token_type;
 
-        case Identifier:
-        case Op_Period:
-            add_token_to(import_access);
-            continue;
+    case Identifier:
+        match_import_access(import_access);
+        return;
+    case Op_Period:
+        match_import_access(*import_access.new_branch());
+        return;
 
-        default:
-            break;
-        }
-        break;
+    default:
+        return;
     }
     // rewind cursor by 1 as current token
     // is unknown, and may be consumed by anything
-    --cursor_;
-}
-
-void parser::match_terminator(node& terminator) {
-    add_token_to(terminator);
-
-
+    //--cursor_;
 }
 
 void parser::match_stmt_init(node& node) {
