@@ -16,14 +16,14 @@ struct token_range {
 // for their rule has already been matched.
 // progress_ast() is where this matching process starts
 class parser {
-private:
     token_stream tokens_;
     ast::node    ast_;
     usize        cursor_;
 
 public:
     explicit parser(const token_stream&& tokens);
-    bool     parse();
+
+    SALEM_NODISCARD auto parse() -> bool;
 
     SALEM_NODISCARD auto view_ast() const -> const ast::node&;
     SALEM_NODISCARD auto view_tokens() const -> const token_stream&;
@@ -32,7 +32,7 @@ public:
     void print_ast(const ast::node& root, std::string prepend = "") const;
 
 private:
-    SALEM_NODISCARD bool is_primitive(token_type token) const;
+    SALEM_NODISCARD auto is_primitive(token_type token) const -> bool;
 
     SALEM_NODISCARD auto peek_token() const -> const token&;
     SALEM_NODISCARD auto current_token() const -> const token&;
@@ -40,17 +40,25 @@ private:
     // advances token cursor
     SALEM_NODISCARD auto next_token() -> const token&;
 
-    bool progress_ast(ast::node& node);
+    auto progress_ast(ast::node& node) -> bool;
 
     void add_tokens_until(ast::node& node, token_type delimiter);
-    void add_token_to(ast::node& node) const;
-    void transmit_tokens(ast::node& from, ast::node& to, token_range range) const;
+    void add_current_token_to(ast::node& node) const;
+
     void transmit_tokens(ast::node& from, const ast::node& to) const;
+    void transmit_tokens(ast::node&  from,
+                         ast::node&  to,
+                         token_range range) const;
+
+    // matchers
+    void match_decl(ast::node& decl);
 
     void match_import_decl(ast::node& import_decl);
     void match_import_alias(ast::node& import_alias);
     void match_import_access(ast::node& import_access);
 
-    void match_stmt_init(ast::node& node);
+    void match_module_decl(ast::node& module_decl);
+    void match_access_spec(ast::node& access_specifier) const;
+    void match_access_decl(ast::node& access_decl);
 };
 } // namespace salem

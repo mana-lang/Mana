@@ -1,5 +1,8 @@
-# import-statement
+# import-decl
 import std.io as io
+
+# module-decl
+public module Hello:
 
 # function-decl
 fn main() {

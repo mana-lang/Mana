@@ -32,7 +32,7 @@ enum class rule {
 
     Declaration,
     Import_Decl,
-    Decl_Module,
+    Module_Decl,
     Decl_Access,
     Decl_Function,
     Decl_Global,
@@ -42,6 +42,7 @@ enum class rule {
     Import_Alias,
 
     AccessSpec,
+    AccessDecl,
 
     Param_List,
     Param,
