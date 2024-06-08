@@ -24,7 +24,7 @@ bool parser::parse() {
     ast_.rule_ = rule::Module;
     ast_.tokens_.push_back(tokens_.front());
 
-    cursor_ = 0;
+    cursor_ = 1;
     while (progress_ast(ast_)) {}
 
     return true;
@@ -115,25 +115,20 @@ auto parser::current_token() const -> const token& {
 }
 
 bool parser::progress_ast(node& node) {
-    bool result = true;
-
     // quit without processing eof
     if (cursor_ + 1 >= tokens_.size() - 1) {
-        result = false;
+        return false;
     }
 
-    switch (next_token().type_) {
-        using enum token_type;
+    match_decl(node);
 
-    case KW_import:
-        match_import_decl(*node.new_branch());
-        break;
+    return true;
+}
 
-    default:
-        add_current_token_to(node);
-    }
-
-    return result;
+void parser::match_undefined(node& undefined_node) {
+    undefined_node.rule_ = rule::Undefined;
+    add_current_token_to(undefined_node);
+    ++cursor_;
 }
 
 void parser::add_tokens_until(node& node, const token_type delimiter) {
@@ -179,21 +174,35 @@ void parser::transmit_tokens(node& sender, const node& receiver) const {
 }
 
 void parser::match_decl(node& decl) {
-    const auto token = current_token().type_;
-    switch (token) {
+    switch (current_token().type_) {
         using enum token_type;
 
+    case Terminator:
+        break; // terminators only serve as delimiters for now
+
     case KW_import:
-        match_import_decl(decl);
+        match_import_decl(*decl.new_branch());
         break;
+
+    case KW_public:
+    case KW_private:
+        match_access_decl(*decl.new_branch());
+        break;
+    case KW_module:
+        match_module_decl(*decl.new_branch());
+        break;
+    
     default:
+        match_undefined(*decl.new_branch());
         log(log_level::Error,
-            "Cannot initiate statement with {} [{}]",
+            "Cannot initiate declaration with '{}' [{}]",
             current_token().text_,
             magic_enum::enum_name(current_token().type_)
            );
-
     }
+
+    // always advance cursor, tokens will get added to undefined that way
+    ++cursor_;
 }
 
 // import_decl   ::= KW_IMPORT IDENTIFIER import_access import_alias?
@@ -272,31 +281,27 @@ void parser::match_import_access(node& import_access) {
     }
 }
 
+// may be only be entered after 'access_spec'
 // module_decl ::= access_spec? KW_MODULE IDENTIFIER OP_COLON
 void parser::match_module_decl(node& module_decl) {
     module_decl.rule_ = rule::Module_Decl;
     add_current_token_to(module_decl);
-
-    match_access_spec(*module_decl.new_branch());
-    if (module_decl.branches_.back()->rule_ != rule::AccessSpec) {
-        module_decl.branches_.pop_back();
-    }
 
     if (next_token().type_ != token_type::Identifier) {
         log(log_level::Error,
             // really should implement that error sink already
             "Incorrect module declaration. Expected 'Identifier', got {} [{}]",
             current_token().text_,
-            current_token().type_
+            magic_enum::enum_name(current_token().type_)
            );
         module_decl.rule_ = rule::Mistake;
     }
 
     if (next_token().type_ != token_type::Op_Colon) {
         log(log_level::Error,
-            "Incorrect module declaration. Expected ':', got {} [{}]",
+            "Incorrect module declaration. Expected ':', got '{}' [{}]",
             current_token().text_,
-            current_token().type_
+            magic_enum::enum_name(current_token().type_)
            );
         module_decl.rule_ = rule::Mistake;
     }
@@ -328,20 +333,28 @@ void parser::match_access_decl(node& access_decl) {
         log(log_level::Error,
             "Incorrect access declaration. Expected 'AccessSpec', got {} [{}]",
             current_token().text_,
-            current_token().type_
+            magic_enum::enum_name(current_token().type_)
            );
         return;
     }
 
-    if (next_token().type_ == token_type::Identifier) {
+
+    using enum token_type;
+    const auto t = next_token().type_;
+    if (t == Identifier) {
         add_current_token_to(access_decl);
     }
+    else if (t == KW_module) {
+        // assumption of access_decl was wrong, so reorient to module_decl
+        match_module_decl(access_decl);
+        return;
+    }
 
-    if (next_token().type_ != token_type::Op_Colon) {
+    if (t != Op_Colon) {
         log(log_level::Error,
-            "Incorrect access declaration. Expected ':', got {} [{}]",
+            "Incorrect access declaration. Expected ':', got '{}' [{}]",
             current_token().text_,
-            current_token().type_
+            magic_enum::enum_name(current_token().type_)
            );
         return;
     }

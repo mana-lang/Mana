@@ -42,7 +42,11 @@ int main(const int argc, char** argv) {
 
     salem::parser parser(lexer.relinquish_tokens());
     if (commands.requested_ast_print()) {
-        parser.parse();
-        parser.print_ast();
+        if (parser.parse()) {
+            parser.print_ast();
+        }
+        else {
+            log(salem::log_level::Error, "Failed to parse file");
+        }
     }
 }

@@ -40,8 +40,6 @@ private:
     // advances token cursor
     SALEM_NODISCARD auto next_token() -> const token&;
 
-    auto progress_ast(ast::node& node) -> bool;
-
     void add_tokens_until(ast::node& node, token_type delimiter);
     void add_current_token_to(ast::node& node) const;
 
@@ -50,13 +48,18 @@ private:
                          ast::node&  to,
                          token_range range) const;
 
+    auto progress_ast(ast::node& node) -> bool;
+
     // matchers
+    void match_undefined(ast::node& undefined_node);
     void match_decl(ast::node& decl);
 
+    // -- imports
     void match_import_decl(ast::node& import_decl);
     void match_import_alias(ast::node& import_alias);
     void match_import_access(ast::node& import_access);
 
+    // -- modules
     void match_module_decl(ast::node& module_decl);
     void match_access_spec(ast::node& access_specifier) const;
     void match_access_decl(ast::node& access_decl);
