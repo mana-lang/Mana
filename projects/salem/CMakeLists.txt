@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(salem)
+project(mana)
 
 include(FetchContent)
 
@@ -50,8 +50,8 @@ add_compile_definitions($<$<CONFIG:RelWithDebInfo>:SALEM_DEBUG>)
 
 add_compile_definitions(SALEM_NODISCARD=[[nodiscard]])
 add_compile_definitions(SALEM_VER_MAJOR=${CMAKE_PROJECT_VERSION_MAJOR})
-add_compile_definitions(SALEM_VER_MAJOR=${CMAKE_PROJECT_VERSION_MINOR})
-add_compile_definitions(SALEM_VER_MAJOR=${CMAKE_PROJECT_VERSION_PATCH})
+add_compile_definitions(SALEM_VER_MINOR=${CMAKE_PROJECT_VERSION_MINOR})
+add_compile_definitions(SALEM_VER_PATCH=${CMAKE_PROJECT_VERSION_PATCH})
 
 add_compile_definitions(SALEM_VER_STRING="${CMAKE_PROJECT_VERSION}")
 
@@ -61,5 +61,3 @@ add_custom_command(
     ${PROJECT_SOURCE_DIR}/assets
     ${PROJECT_BINARY_DIR}/assets/
 )
-
-add_subdirectory(tests)

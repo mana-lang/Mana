@@ -1,5 +1,5 @@
-#include <iostream>
+#include <salem/core/cli.hpp>
 
 int main() {
-    std::cout << "welp here we go again\n";
+    salem::log("Test");
 }
