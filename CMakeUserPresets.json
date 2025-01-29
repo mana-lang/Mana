@@ -27,7 +27,7 @@
       {
         "name": "salem-debug",
         "displayName": "Salem Debug",
-        "description": "inshambles emoji",
+        "description": "Debug Salem",
         "inherits": [
             "salem-base",
             "salem-debug-base"
@@ -36,7 +36,7 @@
             {
         "name": "salem-release",
         "displayName": "Salem Release",
-        "description": "everything is gonna be ok",
+        "description": "Optimized Build",
         "inherits": [
             "salem-base",
             "salem-release-base"
@@ -48,6 +48,11 @@
         "name": "salem-test-debug",
         "displayName": "Salem Test Debug",
         "configurePreset": "salem-debug"
+      },
+      {
+        "name": "salem-test-release",
+        "displayName": "Salem Test Release",
+        "configurePreset": "salem-release"
       }
     ],
     "buildPresets": [
