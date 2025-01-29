@@ -1,18 +1,6 @@
 [
 {
   "directory": "E:/Dev/mana/.build/debug",
-  "command": "C:\\Dev\\C++\\mingw64\\bin\\c++.exe -DSALEM_DEBUG -DSALEM_NODISCARD=[[nodiscard]] -DSALEM_VER_MAJOR=\"\" -DSALEM_VER_MINOR=\"\" -DSALEM_VER_PATCH=\"\" -DSALEM_VER_STRING=\\\"\\\" -DSPDLOG_COMPILED_LIB -IE:/Dev/mana/projects/salem/include -IE:/Dev/mana/.build/debug/_deps/spdlog-src/include -g -std=gnu++23 -o projects\\salem\\CMakeFiles\\salem.dir\\src\\salem\\main.cpp.obj -c E:\\Dev\\mana\\projects\\salem\\src\\salem\\main.cpp",
-  "file": "E:\\Dev\\mana\\projects\\salem\\src\\salem\\main.cpp",
-  "output": "projects\\salem\\CMakeFiles\\salem.dir\\src\\salem\\main.cpp.obj"
-},
-{
-  "directory": "E:/Dev/mana/.build/debug",
-  "command": "C:\\Dev\\C++\\mingw64\\bin\\c++.exe -DSALEM_DEBUG -DSALEM_NODISCARD=[[nodiscard]] -DSALEM_VER_MAJOR=\"\" -DSALEM_VER_MINOR=\"\" -DSALEM_VER_PATCH=\"\" -DSALEM_VER_STRING=\\\"\\\" -DSPDLOG_COMPILED_LIB -IE:/Dev/mana/projects/salem/include -IE:/Dev/mana/.build/debug/_deps/spdlog-src/include -g -std=gnu++23 -o projects\\salem\\CMakeFiles\\salem_api.dir\\src\\salem\\main.cpp.obj -c E:\\Dev\\mana\\projects\\salem\\src\\salem\\main.cpp",
-  "file": "E:\\Dev\\mana\\projects\\salem\\src\\salem\\main.cpp",
-  "output": "projects\\salem\\CMakeFiles\\salem_api.dir\\src\\salem\\main.cpp.obj"
-},
-{
-  "directory": "E:/Dev/mana/.build/debug",
   "command": "C:\\Dev\\C++\\mingw64\\bin\\c++.exe -DSPDLOG_COMPILED_LIB -IE:/Dev/mana/.build/debug/_deps/spdlog-src/include -g -std=c++23 -o _deps\\spdlog-build\\CMakeFiles\\spdlog.dir\\src\\spdlog.cpp.obj -c E:\\Dev\\mana\\.build\\debug\\_deps\\spdlog-src\\src\\spdlog.cpp",
   "file": "E:\\Dev\\mana\\.build\\debug\\_deps\\spdlog-src\\src\\spdlog.cpp",
   "output": "_deps\\spdlog-build\\CMakeFiles\\spdlog.dir\\src\\spdlog.cpp.obj"
@@ -52,12 +40,6 @@
   "command": "C:\\Dev\\C++\\mingw64\\bin\\c++.exe -DSPDLOG_COMPILED_LIB -IE:/Dev/mana/.build/debug/_deps/spdlog-src/include -g -std=c++23 -o _deps\\spdlog-build\\CMakeFiles\\spdlog.dir\\src\\bundled_fmtlib_format.cpp.obj -c E:\\Dev\\mana\\.build\\debug\\_deps\\spdlog-src\\src\\bundled_fmtlib_format.cpp",
   "file": "E:\\Dev\\mana\\.build\\debug\\_deps\\spdlog-src\\src\\bundled_fmtlib_format.cpp",
   "output": "_deps\\spdlog-build\\CMakeFiles\\spdlog.dir\\src\\bundled_fmtlib_format.cpp.obj"
-},
-{
-  "directory": "E:/Dev/mana/.build/debug",
-  "command": "C:\\Dev\\C++\\mingw64\\bin\\c++.exe -DSPDLOG_COMPILED_LIB -IE:/Dev/mana/projects/tests/include -IE:/Dev/mana/.build/debug/_deps/catch2-src/src/catch2/.. -IE:/Dev/mana/.build/debug/_deps/catch2-build/generated-includes -IE:/Dev/mana/projects/salem/include -IE:/Dev/mana/.build/debug/_deps/spdlog-src/include -g -std=gnu++23 -o projects\\tests\\CMakeFiles\\salem-tests.dir\\tests\\lexing.cpp.obj -c E:\\Dev\\mana\\projects\\tests\\tests\\lexing.cpp",
-  "file": "E:\\Dev\\mana\\projects\\tests\\tests\\lexing.cpp",
-  "output": "projects\\tests\\CMakeFiles\\salem-tests.dir\\tests\\lexing.cpp.obj"
 },
 {
   "directory": "E:/Dev/mana/.build/debug",
@@ -694,5 +676,23 @@
   "command": "C:\\Dev\\C++\\mingw64\\bin\\c++.exe -IE:/Dev/mana/.build/debug/_deps/catch2-src/src/catch2/.. -IE:/Dev/mana/.build/debug/_deps/catch2-build/generated-includes -g -std=gnu++23 -ffile-prefix-map=E:/Dev/mana/.build/debug/_deps/catch2-src/= -o _deps\\catch2-build\\src\\CMakeFiles\\Catch2WithMain.dir\\catch2\\internal\\catch_main.cpp.obj -c E:\\Dev\\mana\\.build\\debug\\_deps\\catch2-src\\src\\catch2\\internal\\catch_main.cpp",
   "file": "E:\\Dev\\mana\\.build\\debug\\_deps\\catch2-src\\src\\catch2\\internal\\catch_main.cpp",
   "output": "_deps\\catch2-build\\src\\CMakeFiles\\Catch2WithMain.dir\\catch2\\internal\\catch_main.cpp.obj"
+},
+{
+  "directory": "E:/Dev/mana/.build/debug",
+  "command": "C:\\Dev\\C++\\mingw64\\bin\\c++.exe -DSALEM_DEBUG -DSALEM_NODISCARD=[[nodiscard]] -DSALEM_VER_MAJOR=\"\" -DSALEM_VER_MINOR=\"\" -DSALEM_VER_PATCH=\"\" -DSALEM_VER_STRING=\\\"\\\" -DSPDLOG_COMPILED_LIB -IE:/Dev/mana/projects/salem/include -IE:/Dev/mana/.build/debug/_deps/spdlog-src/include -g -std=gnu++23 -o projects\\salem\\CMakeFiles\\salem.dir\\src\\salem\\main.cpp.obj -c E:\\Dev\\mana\\projects\\salem\\src\\salem\\main.cpp",
+  "file": "E:\\Dev\\mana\\projects\\salem\\src\\salem\\main.cpp",
+  "output": "projects\\salem\\CMakeFiles\\salem.dir\\src\\salem\\main.cpp.obj"
+},
+{
+  "directory": "E:/Dev/mana/.build/debug",
+  "command": "C:\\Dev\\C++\\mingw64\\bin\\c++.exe -DSALEM_DEBUG -DSALEM_NODISCARD=[[nodiscard]] -DSALEM_VER_MAJOR=\"\" -DSALEM_VER_MINOR=\"\" -DSALEM_VER_PATCH=\"\" -DSALEM_VER_STRING=\\\"\\\" -DSPDLOG_COMPILED_LIB -IE:/Dev/mana/projects/salem/include -IE:/Dev/mana/.build/debug/_deps/spdlog-src/include -g -std=gnu++23 -o projects\\salem\\CMakeFiles\\salem_api.dir\\src\\salem\\main.cpp.obj -c E:\\Dev\\mana\\projects\\salem\\src\\salem\\main.cpp",
+  "file": "E:\\Dev\\mana\\projects\\salem\\src\\salem\\main.cpp",
+  "output": "projects\\salem\\CMakeFiles\\salem_api.dir\\src\\salem\\main.cpp.obj"
+},
+{
+  "directory": "E:/Dev/mana/.build/debug",
+  "command": "C:\\Dev\\C++\\mingw64\\bin\\c++.exe -DSALEM_DEBUG -DSALEM_NODISCARD=[[nodiscard]] -DSALEM_VER_MAJOR=\"\" -DSALEM_VER_MINOR=\"\" -DSALEM_VER_PATCH=\"\" -DSALEM_VER_STRING=\\\"\\\" -DSPDLOG_COMPILED_LIB -IE:/Dev/mana/projects/salem/tests/include -IE:/Dev/mana/.build/debug/_deps/catch2-src/src/catch2/.. -IE:/Dev/mana/.build/debug/_deps/catch2-build/generated-includes -IE:/Dev/mana/projects/salem/include -IE:/Dev/mana/.build/debug/_deps/spdlog-src/include -g -std=gnu++23 -o projects\\salem\\tests\\CMakeFiles\\salem-tests.dir\\tests\\lexing.cpp.obj -c E:\\Dev\\mana\\projects\\salem\\tests\\tests\\lexing.cpp",
+  "file": "E:\\Dev\\mana\\projects\\salem\\tests\\tests\\lexing.cpp",
+  "output": "projects\\salem\\tests\\CMakeFiles\\salem-tests.dir\\tests\\lexing.cpp.obj"
 }
 ]

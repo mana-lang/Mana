@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(salem)
+project(mana)
 
 enable_testing()
 
@@ -51,5 +51,3 @@ add_custom_command(
     ${PROJECT_SOURCE_DIR}/assets
     ${PROJECT_BINARY_DIR}/assets/
 )
-
-add_subdirectory(tests)
