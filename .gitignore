@@ -4,6 +4,8 @@
 # clangd cache
 .cache/ 
 
+CMakeUserPresets.json
+
 .vs/
 .idea/
 .Build/
