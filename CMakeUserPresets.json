@@ -1,0 +1,60 @@
+{
+    "version": 8,
+    "cmakeMinimumRequired": {
+      "major": 3,
+      "minor": 28,
+      "patch": 0
+    },
+    "include": [
+        "CMakePresets.json"
+    ],
+    "configurePresets": [
+      {
+        "name": "salem-base",
+        "hidden": true,
+        "displayName": "Salem",
+        "description": "help i need sleep.",
+        "generator": "Ninja",
+        "cacheVariables": {
+            "CMAKE_MAKE_PROGRAM": "C:/Dev/C++/ninja/ninja.exe",
+            "CMAKE_EXPORT_COMPILE_COMMANDS": true
+        },
+        "environment": {
+            "CXX": "C:/Dev/C++/mingw64/bin/c++.exe",
+            "CC": "C:/Dev/C++/mingw64/bin/gcc.exe"
+        }
+      },
+      {
+        "name": "salem-debug",
+        "displayName": "Salem Debug",
+        "description": "inshambles emoji",
+        "inherits": [
+            "salem-base",
+            "salem-debug-base"
+        ]
+      },
+            {
+        "name": "salem-release",
+        "displayName": "Salem Release",
+        "description": "everything is gonna be ok",
+        "inherits": [
+            "salem-base",
+            "salem-release-base"
+        ]
+      }
+    ],
+    "testPresets": [
+      {
+        "name": "salem-test-debug",
+        "displayName": "Salem Test Debug",
+        "configurePreset": "salem-debug"
+      }
+    ],
+    "buildPresets": [
+      {
+        "name": "salem-build",
+        "displayName": "Salem Build",
+        "configurePreset": "salem-base"
+      }
+    ]
+}
