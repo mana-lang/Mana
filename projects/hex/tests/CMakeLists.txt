@@ -12,7 +12,6 @@ target_include_directories(hex-tests PRIVATE include/)
 target_link_libraries(hex-tests PRIVATE
     Catch2::Catch2WithMain
     hex::hex
-    spdlog::spdlog
 )
 
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)

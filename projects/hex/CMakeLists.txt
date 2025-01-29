@@ -38,3 +38,5 @@ target_compile_definitions(hex PUBLIC HEX_VER_MINOR=${PROJECT_VERSION_MINOR})
 target_compile_definitions(hex PUBLIC HEX_VER_PATCH=${PROJECT_VERSION_PATCH})
 
 target_compile_definitions(hex PUBLIC HEX_VER_STRING="${PROJECT_VERSION}")
+
+add_subdirectory(tests)
