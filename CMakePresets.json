@@ -1,0 +1,51 @@
+{
+    "version": 8,
+    "cmakeMinimumRequired": {
+      "major": 3,
+      "minor": 28,
+      "patch": 0
+    },
+    "configurePresets": [
+      {
+        "name": "salem",
+        "hidden":true,
+        "displayName": "Salem",
+        "description": "Default build using Ninja generator",
+        "generator": "Ninja",
+        "binaryDir": "${sourceDir}\\.build\\default",
+        "cacheVariables": {
+            "CMAKE_MAKE_PROGRAM": "C:/Dev/C++/ninja/ninja.exe"
+        },
+        "environment": {
+            "CXX": "C:/Dev/C++/mingw64/bin/c++.exe",
+            "CC": "C:/Dev/C++/mingw64/bin/gcc.exe"
+        }
+      },
+      {
+        "name": "salem-debug",
+        "displayName": "Salem Debug",
+        "description": "Debug build using Ninja generator",
+        "inherits": "salem",
+        "binaryDir": "${sourceDir}\\.build\\debug",
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Debug"
+      }
+      },
+      {
+        "name": "salem-release",
+        "displayName": "Salem Release",
+        "description": "Release build using Ninja generator",
+        "inherits": "salem",
+        "binaryDir": "${sourceDir}\\.build\\release",
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Release"
+      }
+      }
+    ],
+    "buildPresets": [
+      {
+        "name": "salem-build",
+        "configurePreset": "salem"
+      }
+    ]
+  }
