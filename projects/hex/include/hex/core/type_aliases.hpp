@@ -16,4 +16,4 @@ using usize = decltype(sizeof(0));
 
 using f32 = float;
 using f64 = double;
-}
+}  // namespace hex

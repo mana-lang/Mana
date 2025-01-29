@@ -6,4 +6,4 @@ void hello_smile() {
     log("hello :)");
 }
 
-} // namespace hex
+}  // namespace hex

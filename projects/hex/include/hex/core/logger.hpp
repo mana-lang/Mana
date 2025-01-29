@@ -9,7 +9,7 @@
 #include <memory>
 
 namespace hex {
-enum class log_level : u8 {
+enum class LogLevel : u8 {
     Trace,
     Debug,
     Info,
@@ -19,29 +19,33 @@ enum class log_level : u8 {
     Off
 };
 
+#ifndef HEX_LOGGER_NAME
+#    define HEX_LOGGER_NAME "Hex"
+#endif
+
 #ifndef HEX_LOG_LEVEL
 #    if defined(HEX_VERBOSE)
-#        define HEX_LOG_LEVEL log_level::Trace
+#        define HEX_LOG_LEVEL LogLevel::Trace
 #    elif defined(HEX_DEBUG)
-#        define HEX_LOG_LEVEL log_level::Debug
+#        define HEX_LOG_LEVEL LogLevel::Debug
 #    elif defined(HEX_RELEASE)
-#        define HEX_LOG_LEVEL log_level::Info
+#        define HEX_LOG_LEVEL LogLevel::Info
 #    else
-#        define HEX_LOG_LEVEL log_level::Off
+#        define HEX_LOG_LEVEL LogLevel::Off
 #    endif
 #endif
 
 template <typename... Args>
-void log(log_level level, const char* msg, Args&&... args);
+void log(LogLevel level, const char* msg, Args&&... args);
 
-i64 log_counter(log_level level);
+i64 log_counter(LogLevel level);
 
 class internal_log_ {
     using logger = std::shared_ptr<spdlog::logger>;
 
     template <typename... Args>
-    friend void log(log_level level, const char* msg, Args&&... args);
-    friend i64  log_counter(log_level level);
+    friend void log(LogLevel level, const char* msg, Args&&... args);
+    friend i64  log_counter(LogLevel level);
 
     internal_log_() = default;
 
@@ -49,19 +53,16 @@ class internal_log_ {
         if (!was_initialized_) {
             was_initialized_ = true;
 
-            logger_->set_pattern("%^%v%$");
             logger_->set_level(static_cast<spdlog::level::level_enum>(HEX_LOG_LEVEL));
-            // logger->log(static_cast<spdlog::level::level_enum>(LogLevel::Info),
-            // "--- Salem v{}\n", HEX_VERSION_STR);
-
             logger_->set_pattern("%^<%n>%$ %v");
 
             counters_ = {};
         }
     }
 
-    inline static bool   was_initialized_ {false};
-    inline static logger logger_ {spdlog::stdout_color_st("Salem")};
+    inline static bool        was_initialized_ {false};
+    inline static std::string logger_name_ {HEX_LOGGER_NAME};
+    inline static logger      logger_ {spdlog::stdout_color_mt(logger_name_)};
 
     inline static struct counters {
         i64 trace;
@@ -73,7 +74,7 @@ class internal_log_ {
 };
 
 template <typename... Args>
-void log(const log_level level, const char* msg, Args&&... args) {
+void log(const LogLevel level, const char* msg, Args&&... args) {
     if (!internal_log_::was_initialized_) {
         internal_log_::init();
     }
@@ -81,7 +82,7 @@ void log(const log_level level, const char* msg, Args&&... args) {
     const auto runtime_msg = fmt::runtime(msg);
 
     switch (level) {
-        using enum log_level;
+        using enum LogLevel;
 
     case Trace:
         internal_log_::logger_->trace(runtime_msg, std::forward<Args>(args)...);
@@ -109,21 +110,19 @@ void log(const log_level level, const char* msg, Args&&... args) {
         throw std::runtime_error("Critical error");
     case Off:
         break;
-        // default:
-        //     internal_log_::logger_->error("You really shouldn't have come here.");
     }
 }
 
 template <typename... Args>
 void log(const char* msg, Args&&... args) {
-    log(log_level::Info, msg, std::forward<Args>(args)...);
+    log(LogLevel::Info, msg, std::forward<Args>(args)...);
 }
 
-inline i64 log_counter(const log_level level) {
+inline i64 log_counter(const LogLevel level) {
     const auto& [trace, debug, info, warnings, errors] = internal_log_::counters_;
 
     switch (level) {
-        using enum log_level;
+        using enum LogLevel;
 
     case Trace:
         return trace;

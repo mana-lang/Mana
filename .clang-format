@@ -103,7 +103,7 @@ IfMacros:
   - KJ_IF_MAYBE
 IncludeBlocks: Preserve
 IncludeCategories:
-  - Regex: '^<sylk/'
+  - Regex: '^(<(hex|salem)/)'
     Priority: 1
     CaseSensitive: false
   - Regex: '^(<(magic_enum|glm|glad|stb|KHR)/)'

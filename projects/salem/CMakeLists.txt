@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(salem)
+project(salem VERSION 0.0.1)
 
 enable_testing()
 
@@ -34,16 +34,16 @@ target_link_libraries(salem_api PUBLIC ${SALEM_LIBS})
 add_library(salem::salem ALIAS salem_api)
 
 
-add_compile_definitions($<$<CONFIG:Debug>:SALEM_DEBUG>)
-add_compile_definitions($<$<CONFIG:Release>:SALEM_RELEASE>)
-add_compile_definitions($<$<CONFIG:RelWithDebInfo>:SALEM_DEBUG>)
+target_compile_definitions(salem PRIVATE $<$<CONFIG:Debug>:SALEM_DEBUG>)
+target_compile_definitions(salem PRIVATE $<$<CONFIG:Release>:SALEM_RELEASE>)
+target_compile_definitions(salem PRIVATE $<$<CONFIG:RelWithDebInfo>:SALEM_DEBUG>)
 
-add_compile_definitions(SALEM_NODISCARD=[[nodiscard]])
-add_compile_definitions(SALEM_VER_MAJOR=${CMAKE_PROJECT_VERSION_MAJOR})
-add_compile_definitions(SALEM_VER_MINOR=${CMAKE_PROJECT_VERSION_MINOR})
-add_compile_definitions(SALEM_VER_PATCH=${CMAKE_PROJECT_VERSION_PATCH})
+target_compile_definitions(salem PRIVATE SALEM_NODISCARD=[[nodiscard]])
+target_compile_definitions(salem PRIVATE SALEM_VER_MAJOR=${PROJECT_VERSION_MAJOR})
+target_compile_definitions(salem PRIVATE SALEM_VER_MINOR=${PROJECT_VERSION_MINOR})
+target_compile_definitions(salem PRIVATE SALEM_VER_PATCH=${PROJECT_VERSION_PATCH})
 
-add_compile_definitions(SALEM_VER_STRING="${CMAKE_PROJECT_VERSION}")
+target_compile_definitions(salem PRIVATE SALEM_VER_STRING="${PROJECT_VERSION}")
 
 add_custom_command(
     TARGET salem POST_BUILD
