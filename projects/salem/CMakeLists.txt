@@ -12,7 +12,7 @@ set(SALEM_INCLUDES
 )
 
 set(SALEM_LIBS
-    spdlog::spdlog
+    hex::hex
 )
 
 set(EXT_INCLUDES

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace salem {
+namespace hex {
 enum class exit {
     Success,
     CriticalError,

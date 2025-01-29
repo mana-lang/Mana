@@ -1,5 +1,5 @@
-#include <salem/core/cli.hpp>
+#include <hex/core/cli.hpp>
 
 int main() {
-    salem::log("Test");
+    hex::hello_smile();
 }

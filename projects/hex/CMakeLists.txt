@@ -1,17 +1,17 @@
 cmake_minimum_required(VERSION 3.28)
-project(mana)
+project(hex VERSION 0.0.1)
 
 enable_testing()
 
-set(SALEM_SOURCES
-    src/salem/main.cpp
+set(HEX_SOURCES
+    src/hex/core/cli.cpp
 )
 
-set(SALEM_INCLUDES
+set(HEX_INCLUDES
     include/
 )
 
-set(SALEM_LIBS
+set(HEX_LIBS
     spdlog::spdlog
 )
 
@@ -23,31 +23,19 @@ set(EXT_SOURCES
 
 )
 
-add_executable(salem)
-target_sources(salem PRIVATE ${SALEM_SOURCES})
-target_include_directories(salem PRIVATE ${SALEM_INCLUDES})
-target_link_libraries(salem PRIVATE ${SALEM_LIBS})
-
-add_library(salem_api STATIC ${SALEM_SOURCES})
-target_include_directories(salem_api PUBLIC ${SALEM_INCLUDES})
-target_link_libraries(salem_api PUBLIC ${SALEM_LIBS})
-add_library(salem::salem ALIAS salem_api)
+add_library(hex_api STATIC ${HEX_SOURCES})
+target_include_directories(hex_api PUBLIC ${HEX_INCLUDES})
+target_link_libraries(hex_api PUBLIC ${HEX_LIBS})
+add_library(hex::hex ALIAS hex_api)
 
 
-add_compile_definitions($<$<CONFIG:Debug>:SALEM_DEBUG>)
-add_compile_definitions($<$<CONFIG:Release>:SALEM_RELEASE>)
-add_compile_definitions($<$<CONFIG:RelWithDebInfo>:SALEM_DEBUG>)
+add_compile_definitions($<$<CONFIG:Debug>:HEX_DEBUG>)
+add_compile_definitions($<$<CONFIG:Release>:HEX_RELEASE>)
+add_compile_definitions($<$<CONFIG:RelWithDebInfo>:HEX_DEBUG>)
 
-add_compile_definitions(SALEM_NODISCARD=[[nodiscard]])
-add_compile_definitions(SALEM_VER_MAJOR=${CMAKE_PROJECT_VERSION_MAJOR})
-add_compile_definitions(SALEM_VER_MINOR=${CMAKE_PROJECT_VERSION_MINOR})
-add_compile_definitions(SALEM_VER_PATCH=${CMAKE_PROJECT_VERSION_PATCH})
+add_compile_definitions(HEX_NODISCARD=[[nodiscard]])
+add_compile_definitions(HEX_VER_MAJOR=${CMAKE_PROJECT_VERSION_MAJOR})
+add_compile_definitions(HEX_VER_MINOR=${CMAKE_PROJECT_VERSION_MINOR})
+add_compile_definitions(HEX_VER_PATCH=${CMAKE_PROJECT_VERSION_PATCH})
 
-add_compile_definitions(SALEM_VER_STRING="${CMAKE_PROJECT_VERSION}")
-
-add_custom_command(
-    TARGET salem POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${PROJECT_SOURCE_DIR}/assets
-    ${PROJECT_BINARY_DIR}/assets/
-)
+add_compile_definitions(HEX_VER_STRING="${CMAKE_PROJECT_VERSION}")

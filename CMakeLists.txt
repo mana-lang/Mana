@@ -27,3 +27,4 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 add_subdirectory(projects/salem)
+add_subdirectory(projects/hex)

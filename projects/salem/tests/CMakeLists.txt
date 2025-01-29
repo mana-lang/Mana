@@ -12,6 +12,7 @@ target_include_directories(salem-tests PRIVATE include/)
 target_link_libraries(salem-tests PRIVATE
     Catch2::Catch2WithMain
     salem::salem
+    spdlog::spdlog
 )
 
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)

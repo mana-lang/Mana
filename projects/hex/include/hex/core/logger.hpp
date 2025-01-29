@@ -3,12 +3,12 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include <salem/core/exit_codes.hpp>
-#include <salem/core/type_aliases.hpp>
+#include <hex/core/exit_codes.hpp>
+#include <hex/core/type_aliases.hpp>
 
 #include <memory>
 
-namespace salem {
+namespace hex {
 enum class log_level : u8 {
     Trace,
     Debug,
@@ -19,15 +19,15 @@ enum class log_level : u8 {
     Off
 };
 
-#ifndef SALEM_LOG_LEVEL
-#    if defined(SALEM_VERBOSE)
-#        define SALEM_LOG_LEVEL log_level::Trace
-#    elif defined(SALEM_DEBUG)
-#        define SALEM_LOG_LEVEL log_level::Debug
-#    elif defined(SALEM_RELEASE)
-#        define SALEM_LOG_LEVEL log_level::Info
+#ifndef HEX_LOG_LEVEL
+#    if defined(HEX_VERBOSE)
+#        define HEX_LOG_LEVEL log_level::Trace
+#    elif defined(HEX_DEBUG)
+#        define HEX_LOG_LEVEL log_level::Debug
+#    elif defined(HEX_RELEASE)
+#        define HEX_LOG_LEVEL log_level::Info
 #    else
-#        define SALEM_LOG_LEVEL log_level::Off
+#        define HEX_LOG_LEVEL log_level::Off
 #    endif
 #endif
 
@@ -50,9 +50,9 @@ class internal_log_ {
             was_initialized_ = true;
 
             logger_->set_pattern("%^%v%$");
-            logger_->set_level(static_cast<spdlog::level::level_enum>(SALEM_LOG_LEVEL));
+            logger_->set_level(static_cast<spdlog::level::level_enum>(HEX_LOG_LEVEL));
             // logger->log(static_cast<spdlog::level::level_enum>(LogLevel::Info),
-            // "--- Salem v{}\n", SALEM_VERSION_STR);
+            // "--- Salem v{}\n", HEX_VERSION_STR);
 
             logger_->set_pattern("%^<%n>%$ %v");
 
@@ -144,4 +144,4 @@ inline i64 log_counter(const log_level level) {
 
     return exit_code(exit::LOG_LogCounterExhausted);
 }
-}  // namespace salem
+}  // namespace hex
