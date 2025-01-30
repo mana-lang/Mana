@@ -4,7 +4,7 @@ project(hex VERSION 0.0.1)
 enable_testing()
 
 set(HEX_SOURCES
-    src/hex/core/cli.cpp
+    src/hex/ast/lexer.cpp
 )
 
 set(HEX_INCLUDES
@@ -24,7 +24,7 @@ set(EXT_SOURCES
 )
 
 add_library(hex STATIC ${HEX_SOURCES})
-target_include_directories(hex PUBLIC ${HEX_INCLUDES})
+target_include_directories(hex PUBLIC ${HEX_INCLUDES} ${EXT_INCLUDES})
 target_link_libraries(hex PUBLIC ${HEX_LIBS})
 add_library(hex::hex ALIAS hex)
 

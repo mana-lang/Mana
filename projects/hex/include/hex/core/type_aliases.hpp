@@ -16,4 +16,6 @@ using usize = decltype(sizeof(0));
 
 using f32 = float;
 using f64 = double;
+
+#define HEX_NODISCARD_W(REASON) [[nodiscard(REASON)]]
 }  // namespace hex

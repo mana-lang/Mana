@@ -36,7 +36,7 @@ enum class LogLevel : u8 {
 #endif
 
 template <typename... Args>
-void log(LogLevel level, const char* msg, Args&&... args);
+void Log(LogLevel level, const char* msg, Args&&... args);
 
 i64 log_counter(LogLevel level);
 
@@ -44,7 +44,7 @@ class Internal_Log_ {
     using Logger = std::shared_ptr<spdlog::logger>;
 
     template <typename... Args>
-    friend void log(LogLevel level, const char* msg, Args&&... args);
+    friend void Log(LogLevel level, const char* msg, Args&&... args);
     friend i64  log_counter(LogLevel level);
 
     Internal_Log_() = default;
@@ -74,7 +74,7 @@ class Internal_Log_ {
 };
 
 template <typename... Args>
-void log(const LogLevel level, const char* msg, Args&&... args) {
+void Log(const LogLevel level, const char* msg, Args&&... args) {
     if (!Internal_Log_::was_initialized_) {
         Internal_Log_::init();
     }
@@ -115,7 +115,7 @@ void log(const LogLevel level, const char* msg, Args&&... args) {
 
 template <typename... Args>
 void log(const char* msg, Args&&... args) {
-    log(LogLevel::Info, msg, std::forward<Args>(args)...);
+    Log(LogLevel::Info, msg, std::forward<Args>(args)...);
 }
 
 inline i64 log_counter(LogLevel level) {
@@ -135,7 +135,7 @@ inline i64 log_counter(LogLevel level) {
     case Error:
         return errors;
     case Critical:
-        log(Error, "Critical errors always throw, so this path should never happen.");
+        Log(Error, "Critical errors always throw, so this path should never happen.");
         return exit_code(exit::LOG_LogCounterIllegalPath);
     case Off:
         return 0;
