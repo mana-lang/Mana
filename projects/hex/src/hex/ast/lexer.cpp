@@ -135,11 +135,12 @@ HEX_NODISCARD bool Lexer::LexedIdentifier(std::string_view line) {
 // only to be entered when current char is " or '
 HEX_NODISCARD bool Lexer::LexedString(std::string_view line) {
     std::string buffer;
-    char        current = line[cursor_];
-    buffer.push_back(current);
+
+    char current_char = line[cursor_];
+    buffer.push_back(current_char);
 
     TokenType literal_type;
-    switch (current) {
+    switch (current_char) {
     case '\"':
         literal_type = TokenType::Lit_String;
         break;
@@ -161,16 +162,17 @@ HEX_NODISCARD bool Lexer::LexedString(std::string_view line) {
             return false;
         }
 
-        current = line[cursor_];  // need to update
+        current_char = line[cursor_];  // need to update
 
-        if (current == '\n' || (current == '\\' && line[cursor_ + 1] == 'n')) {
+        if (current_char == '\n' ||
+            (current_char == '\\' && line[cursor_ + 1] == 'n')) {
             // strings must close on the line they're started
             return false;
         }
 
-        buffer.push_back(current);
+        buffer.push_back(current_char);
 
-        if (current == '\'' || current == '\"') {
+        if (current_char == '\'' || current_char == '\"') {
             ++cursor_;
             break;
         }
@@ -180,17 +182,229 @@ HEX_NODISCARD bool Lexer::LexedString(std::string_view line) {
     return true;
 }
 
-HEX_NODISCARD bool Lexer::LexedNumber(std::string_view line) {}
+HEX_NODISCARD bool Lexer::LexedNumber(std::string_view line) {
+    const bool is_negative = line[cursor_] == '-' && std::isdigit(line[cursor_ + 1]);
+    if (not is_negative && not std::isdigit(line[cursor_])) {
+        return false;
+    }
 
-HEX_NODISCARD bool Lexer::LexedOperator(std::string_view line) {}
+    // Confirmed digit, consume char
+    std::string buffer;
+    buffer.push_back(line[cursor_++]);
 
-void Lexer::LexUnknown(std::string_view line) {}
+    // INT = ^[-?0-9]+
+    const auto eat_digits = [&] {
+        while (std::isdigit(line[cursor_])) {
+            buffer.push_back(line[cursor_++]);
+        }
+    };
 
-HEX_NODISCARD bool Lexer::MatchedKeyword(std::string& identifier_buffer) {}
+    eat_digits();
 
-HEX_NODISCARD bool Lexer::IsWhitespace(char c) const {}
+    // FLOAT = INT.[0-9]+
+    // if we encounter a dot, it can't be an int
+    if (line[cursor_] != '.') {
+        AddToken(TokenType::Lit_Int, std::move(buffer));
+        return true;
+    }
 
-HEX_NODISCARD bool Lexer::IsComment(char c) const {}
+    // have to eat the dot first
+    buffer.push_back(line[cursor_++]);
+    eat_digits();
+
+    AddToken(TokenType::Lit_Float, std::move(buffer));
+    return true;
+}
+
+HEX_NODISCARD bool Lexer::LexedOperator(std::string_view line) {
+    const auto current = line[cursor_];
+    const auto next    = line[cursor_ + 1];
+    TokenType  token_type;
+
+    switch (current) {
+        using enum TokenType;
+
+    case '=':
+        if (next == '=') {
+            token_type = Op_Equality;  // ==
+            break;
+        }
+        token_type = Op_Assign;
+        break;
+    case '+':
+        token_type = Op_Plus;
+        break;
+    case '-':
+        if (next == '>') {
+            token_type = Op_Arrow;  // ->
+            break;
+        }
+        token_type = Op_Minus;
+        break;
+    case '*':
+        token_type = Op_Star;
+        break;
+    case '/':
+        token_type = Op_FwdSlash;
+        break;
+    case ':':
+        if (next == ':') {
+            token_type = Op_ModuleElementAccess;  // ::
+            break;
+        }
+        token_type = Op_Colon;
+        break;
+    case ',':
+        token_type = Op_Comma;
+        break;
+    case '{':
+        token_type = Op_BraceLeft;
+        break;
+    case '}':
+        token_type = Op_BraceRight;
+        break;
+    case '(':
+        token_type = Op_ParenLeft;
+        break;
+    case ')':
+        token_type = Op_ParenRight;
+        break;
+    case '[':
+        token_type = Op_BracketLeft;
+        break;
+    case ']':
+        token_type = Op_BracketRight;
+        break;
+    case '.':
+        token_type = Op_Period;
+        break;
+    case '!':
+        if (next == '=') {
+            token_type = Op_NotEqual;  // !=
+            break;
+        }
+        token_type = Op_LogicalNot;
+        break;
+    case '<':
+        if (next == '=') {
+            token_type = Op_LessEqual;  // <=
+            break;
+        }
+        token_type = Op_LessThan;
+        break;
+    case '>':
+        if (next == '=') {
+            token_type = Op_GreaterEqual;  // >=
+            break;
+        }
+        token_type = Op_GreaterThan;
+        break;
+    case '&':
+        token_type = Op_ExplicitRef;
+        break;
+    case '~':
+        token_type = Op_ExplicitMove;
+        break;
+    case '$':
+        token_type = Op_ExplicitCopy;
+        break;
+    case '\"':
+    case '\'':
+        return LexedString(line);
+
+    default:
+        return false;
+    }
+
+    std::string buffer(1, current);
+
+    switch (token_type) {
+        using enum TokenType;
+
+    case Op_ModuleElementAccess:
+    case Op_Equality:
+    case Op_NotEqual:
+    case Op_LessEqual:
+    case Op_GreaterEqual:
+        [[fallthrough]];
+    case Op_Arrow:
+        buffer.push_back(next);
+        ++cursor_;
+        break;
+
+    default:
+        break;
+    }
+
+    AddToken(token_type, std::move(buffer));
+    ++cursor_;
+
+    return true;
+}
+
+void Lexer::LexUnknown(std::string_view line) {
+    std::string buffer;
+    while (not IsWhitespace(line[cursor_])) {
+        buffer.push_back(line[cursor_++]);
+    }
+
+    if (not buffer.empty()) {
+        AddToken(TokenType::Unknown, std::move(buffer));
+    }
+}
+
+// we take a string ref because we have a string that
+// we'd otherwise need to construct from a stringview anyway
+HEX_NODISCARD bool Lexer::MatchedKeyword(std::string& identifier_buffer) {
+    using KeywordMap = std::unordered_map<std::string, TokenType>;
+
+    using enum TokenType;
+    static const KeywordMap keyword_map = {
+        {"i8", KW_i8},           {"i16", KW_i16},       {"i32", KW_i32},
+        {"i64", KW_i64},         {"i128", KW_i128},
+
+        {"u8", KW_u8},           {"u16", KW_u16},       {"u32", KW_u32},
+        {"u64", KW_u64},         {"u128", KW_u128},
+
+        {"f32", KW_f32},         {"f64", KW_f64},
+
+        {"byte", KW_byte},       {"char", KW_char},     {"string", KW_string},
+        {"bool", KW_bool},       {"void", KW_void},
+
+        {"data", KW_data},       {"fn", KW_fn},         {"mut", KW_mut},
+        {"raw", KW_raw},         {"const", KW_const},   {"override", KW_override},
+
+        {"pack", KW_pack},       {"struct", KW_struct}, {"enum", KW_enum},
+        {"generic", KW_generic},
+
+        {"module", KW_module},   {"public", KW_public}, {"private", KW_private},
+        {"import", KW_import},   {"as", KW_as},
+
+        {"return", KW_return},   {"true", KW_true},     {"false", KW_false},
+        {"if", KW_if},           {"else", KW_else},     {"match", KW_match},
+
+        {"loop", KW_loop},       {"while", KW_while},   {"for", KW_for},
+        {"break", KW_break},     {"skip", KW_skip},
+
+        {"and", Op_LogicalAnd},  {"or", Op_LogicalOr},  {"not", Op_LogicalNot},
+    };
+
+    if (const auto keyword = keyword_map.find(identifier_buffer);
+        keyword != keyword_map.end()) {
+        AddToken(keyword->second, std::move(identifier_buffer));
+        return true;
+    }
+
+    return false;
+}
+
+HEX_NODISCARD bool Lexer::IsWhitespace(char c) const {
+    return c == ' ' || c == '\0' || c == '\n' || c == '\r' || c == '\t';
+}
+
+HEX_NODISCARD bool Lexer::IsComment(char c) const {
+    return c == '#';
+}
 
 void Lexer::AddToken(TokenType type, std::string& text) {
     token_stream_.emplace_back(
