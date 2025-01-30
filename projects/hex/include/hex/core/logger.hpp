@@ -40,14 +40,14 @@ void log(LogLevel level, const char* msg, Args&&... args);
 
 i64 log_counter(LogLevel level);
 
-class internal_log_ {
-    using logger = std::shared_ptr<spdlog::logger>;
+class Internal_Log_ {
+    using Logger = std::shared_ptr<spdlog::logger>;
 
     template <typename... Args>
     friend void log(LogLevel level, const char* msg, Args&&... args);
     friend i64  log_counter(LogLevel level);
 
-    internal_log_() = default;
+    Internal_Log_() = default;
 
     static void init() {
         if (!was_initialized_) {
@@ -62,9 +62,9 @@ class internal_log_ {
 
     inline static bool        was_initialized_ {false};
     inline static std::string logger_name_ {HEX_LOGGER_NAME};
-    inline static logger      logger_ {spdlog::stdout_color_mt(logger_name_)};
+    inline static Logger      logger_ {spdlog::stdout_color_mt(logger_name_)};
 
-    inline static struct counters {
+    inline static struct {
         i64 trace;
         i64 debug;
         i64 info;
@@ -75,8 +75,8 @@ class internal_log_ {
 
 template <typename... Args>
 void log(const LogLevel level, const char* msg, Args&&... args) {
-    if (!internal_log_::was_initialized_) {
-        internal_log_::init();
+    if (!Internal_Log_::was_initialized_) {
+        Internal_Log_::init();
     }
 
     const auto runtime_msg = fmt::runtime(msg);
@@ -85,29 +85,29 @@ void log(const LogLevel level, const char* msg, Args&&... args) {
         using enum LogLevel;
 
     case Trace:
-        internal_log_::logger_->trace(runtime_msg, std::forward<Args>(args)...);
-        ++internal_log_::counters_.trace;
+        Internal_Log_::logger_->trace(runtime_msg, std::forward<Args>(args)...);
+        ++Internal_Log_::counters_.trace;
         break;
     case Debug:
-        internal_log_::logger_->debug(runtime_msg, std::forward<Args>(args)...);
-        ++internal_log_::counters_.debug;
+        Internal_Log_::logger_->debug(runtime_msg, std::forward<Args>(args)...);
+        ++Internal_Log_::counters_.debug;
         break;
     case Info:
-        internal_log_::logger_->info(runtime_msg, std::forward<Args>(args)...);
-        ++internal_log_::counters_.info;
+        Internal_Log_::logger_->info(runtime_msg, std::forward<Args>(args)...);
+        ++Internal_Log_::counters_.info;
         break;
     case Warn:
-        internal_log_::logger_->warn(runtime_msg, std::forward<Args>(args)...);
-        ++internal_log_::counters_.warnings;
+        Internal_Log_::logger_->warn(runtime_msg, std::forward<Args>(args)...);
+        ++Internal_Log_::counters_.warnings;
         break;
     case Error:
-        internal_log_::logger_->error(runtime_msg, std::forward<Args>(args)...);
-        ++internal_log_::counters_.errors;
+        Internal_Log_::logger_->error(runtime_msg, std::forward<Args>(args)...);
+        ++Internal_Log_::counters_.errors;
         break;
     case Critical:
-        internal_log_::logger_->critical(runtime_msg, std::forward<Args>(args)...);
-        internal_log_::logger_->critical("Shutting down.");
-        throw std::runtime_error("Critical error");
+        Internal_Log_::logger_->critical(runtime_msg, std::forward<Args>(args)...);
+        Internal_Log_::logger_->critical("Shutting down.");
+        throw std::runtime_error("Critical error");  // not a fan of this
     case Off:
         break;
     }
@@ -118,8 +118,8 @@ void log(const char* msg, Args&&... args) {
     log(LogLevel::Info, msg, std::forward<Args>(args)...);
 }
 
-inline i64 log_counter(const LogLevel level) {
-    const auto& [trace, debug, info, warnings, errors] = internal_log_::counters_;
+inline i64 log_counter(LogLevel level) {
+    const auto& [trace, debug, info, warnings, errors] = Internal_Log_::counters_;
 
     switch (level) {
         using enum LogLevel;
