@@ -115,7 +115,7 @@ HEX_NODISCARD TokenStream&& Lexer::RelinquishTokens() {
 }
 
 // ID = ^[a-zA-Z_][a-zA-Z0-9_]+
-HEX_NODISCARD bool Lexer::LexedIdentifier(std::string_view line) {
+HEX_NODISCARD bool Lexer::LexedIdentifier(const std::string_view line) {
     if (char current = line[cursor_]; current == '_' || std::isalpha(current)) {
         std::string buffer;
         while (current == '_' || std::isalnum(current)) {
@@ -133,7 +133,7 @@ HEX_NODISCARD bool Lexer::LexedIdentifier(std::string_view line) {
 }
 
 // only to be entered when current char is " or '
-HEX_NODISCARD bool Lexer::LexedString(std::string_view line) {
+HEX_NODISCARD bool Lexer::LexedString(const std::string_view line) {
     std::string buffer;
 
     char current_char = line[cursor_];
@@ -182,8 +182,9 @@ HEX_NODISCARD bool Lexer::LexedString(std::string_view line) {
     return true;
 }
 
-HEX_NODISCARD bool Lexer::LexedNumber(std::string_view line) {
+HEX_NODISCARD bool Lexer::LexedNumber(const std::string_view line) {
     const bool is_negative = line[cursor_] == '-' && std::isdigit(line[cursor_ + 1]);
+
     if (not is_negative && not std::isdigit(line[cursor_])) {
         return false;
     }
@@ -216,7 +217,7 @@ HEX_NODISCARD bool Lexer::LexedNumber(std::string_view line) {
     return true;
 }
 
-HEX_NODISCARD bool Lexer::LexedOperator(std::string_view line) {
+HEX_NODISCARD bool Lexer::LexedOperator(const std::string_view line) {
     const auto current = line[cursor_];
     const auto next    = line[cursor_ + 1];
     TokenType  token_type;
@@ -342,7 +343,7 @@ HEX_NODISCARD bool Lexer::LexedOperator(std::string_view line) {
     return true;
 }
 
-void Lexer::LexUnknown(std::string_view line) {
+void Lexer::LexUnknown(const std::string_view line) {
     std::string buffer;
     while (not IsWhitespace(line[cursor_])) {
         buffer.push_back(line[cursor_++]);
@@ -398,11 +399,11 @@ HEX_NODISCARD bool Lexer::MatchedKeyword(std::string& identifier_buffer) {
     return false;
 }
 
-HEX_NODISCARD bool Lexer::IsWhitespace(char c) const {
+HEX_NODISCARD bool Lexer::IsWhitespace(const char c) const {
     return c == ' ' || c == '\0' || c == '\n' || c == '\r' || c == '\t';
 }
 
-HEX_NODISCARD bool Lexer::IsComment(char c) const {
+HEX_NODISCARD bool Lexer::IsComment(const char c) const {
     return c == '#';
 }
 
