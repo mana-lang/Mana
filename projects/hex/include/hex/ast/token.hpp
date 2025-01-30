@@ -1,3 +1,5 @@
+#pragma once
+
 #include <hex/core/type_aliases.hpp>
 
 #include <string>
@@ -9,16 +11,6 @@ struct TextPosition {
     i64 line;
     i64 column;
 };
-
-enum class TokenType : u64;
-
-struct Token {
-    TokenType    type;
-    std::string  text;
-    TextPosition position;
-};
-
-using TokenStream = std::vector<Token>;
 
 enum class TokenType : u64 {
     Identifier,
@@ -124,7 +116,19 @@ enum class TokenType : u64 {
     _module_,  // special token, auto-inserted
 };
 
+struct Token {
+    TokenType    type;
+    std::string  text;
+    TextPosition position;
+};
+
+using TokenStream = std::vector<Token>;
+
 static const auto
-    TOKEN_EOF = Token {.type = TokenType::Eof, .text = "EOF", .position = {}};
+    TOKEN_EOF = Token {
+        .type = TokenType::Eof,
+        .text = "EOF",
+        .position = {}
+    };
 
 }  // namespace hex

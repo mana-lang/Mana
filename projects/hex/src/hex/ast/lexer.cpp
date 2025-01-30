@@ -116,11 +116,11 @@ HEX_NODISCARD TokenStream&& Lexer::RelinquishTokens() {
 
 // ID = ^[a-zA-Z_][a-zA-Z0-9_]+
 HEX_NODISCARD bool Lexer::LexedIdentifier(std::string_view line) {
-    if (const char current = line[cursor_]; current == '_' || std::isalpha(current)) {
+    if (char current = line[cursor_]; current == '_' || std::isalpha(current)) {
         std::string buffer;
         while (current == '_' || std::isalnum(current)) {
             buffer.push_back(current);
-            ++cursor_;
+            current = line[++cursor_];
         }
 
         if (not MatchedKeyword(buffer)) {
@@ -145,7 +145,7 @@ HEX_NODISCARD bool Lexer::LexedString(std::string_view line) {
         literal_type = TokenType::Lit_String;
         break;
     case '\'':
-        literal_type = TokenType::Lit_String;
+        literal_type = TokenType::Lit_Char;
         break;
     default:
         Log(LogLevel::Error, "Improper call to LexedString");
