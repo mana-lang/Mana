@@ -4,19 +4,20 @@ project(hex VERSION 0.0.1)
 enable_testing()
 
 set(HEX_SOURCES
-    src/hex/ast/lexer.cpp
+        src/hex/ast/lexer.cpp
+        src/hex/ast/parser.cpp
 )
 
 set(HEX_INCLUDES
-    include/
+        include/
 )
 
 set(HEX_LIBS
-    spdlog::spdlog
+        spdlog::spdlog
 )
 
 set(EXT_INCLUDES
-    ext/include/
+        ext/include/
 )
 
 set(EXT_SOURCES
@@ -24,7 +25,11 @@ set(EXT_SOURCES
 )
 
 add_library(hex STATIC ${HEX_SOURCES})
-target_include_directories(hex PUBLIC ${HEX_INCLUDES} ${EXT_INCLUDES})
+
+target_include_directories(hex PUBLIC
+        ${HEX_INCLUDES}
+        ${EXT_INCLUDES}
+)
 target_link_libraries(hex PUBLIC ${HEX_LIBS})
 add_library(hex::hex ALIAS hex)
 

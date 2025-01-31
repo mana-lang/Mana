@@ -38,14 +38,14 @@ enum class LogLevel : u8 {
 template <typename... Args>
 void Log(LogLevel level, const char* msg, Args&&... args);
 
-i64 log_counter(LogLevel level);
+i64 LogCounter(LogLevel level);
 
 class Internal_Log_ {
     using Logger = std::shared_ptr<spdlog::logger>;
 
     template <typename... Args>
     friend void Log(LogLevel level, const char* msg, Args&&... args);
-    friend i64  log_counter(LogLevel level);
+    friend i64  LogCounter(LogLevel level);
 
     Internal_Log_() = default;
 
@@ -114,11 +114,16 @@ void Log(const LogLevel level, const char* msg, Args&&... args) {
 }
 
 template <typename... Args>
-void log(const char* msg, Args&&... args) {
+void Log(const char* msg, Args&&... args) {
     Log(LogLevel::Info, msg, std::forward<Args>(args)...);
 }
 
-inline i64 log_counter(LogLevel level) {
+template <typename... Args>
+void LogErr(const char* msg, Args&&... args) {
+    Log(LogLevel::Error, msg, std::forward<Args>(args)...);
+}
+
+inline i64 LogCounter(const LogLevel level) {
     const auto& [trace, debug, info, warnings, errors] = Internal_Log_::counters_;
 
     switch (level) {

@@ -20,7 +20,7 @@ string
 bool
 
 # empty type
-void
+null
 
 # function type, technically not a keyword
 ()

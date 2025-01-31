@@ -76,7 +76,7 @@ enum class TokenType : u64 {
     KW_string,
 
     KW_bool,
-    KW_void,
+    KW_null,
 
     KW_data,
     KW_fn,

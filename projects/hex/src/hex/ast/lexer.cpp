@@ -370,7 +370,8 @@ HEX_NODISCARD bool Lexer::MatchedKeyword(std::string& identifier_buffer) {
         {"f32", KW_f32},         {"f64", KW_f64},
 
         {"byte", KW_byte},       {"char", KW_char},     {"string", KW_string},
-        {"bool", KW_bool},       {"void", KW_void},
+
+        {"bool", KW_bool},       {"null", KW_null},
 
         {"data", KW_data},       {"fn", KW_fn},         {"mut", KW_mut},
         {"raw", KW_raw},         {"const", KW_const},   {"override", KW_override},

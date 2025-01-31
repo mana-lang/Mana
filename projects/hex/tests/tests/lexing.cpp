@@ -7,7 +7,7 @@ constexpr auto LEXER_TESTING_PATH = "assets/samples/lexing/";
 TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
     using enum hex::TokenType;
 
-    SECTION("Core", "Minimal functionality test") {
+    SECTION("Core", "Core functionality test") {
         hex::Lexer lexer;
         REQUIRE(lexer.Tokenize(Concatenate(LEXER_TESTING_PATH, "basic.mn")));
 
@@ -132,8 +132,8 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
                 CHECK(datatypetokens[15].type == KW_bool);
                 CHECK(datatypetokens[15].text == "bool");
 
-                CHECK(datatypetokens[16].type == KW_void);
-                CHECK(datatypetokens[16].text == "void");
+                CHECK(datatypetokens[16].type == KW_null);
+                CHECK(datatypetokens[16].text == "null");
 
                 CHECK(datatypetokens[17].type == Op_ParenLeft);
                 CHECK(datatypetokens[17].text == "(");
