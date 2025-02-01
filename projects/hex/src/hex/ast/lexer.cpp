@@ -409,19 +409,27 @@ HEX_NODISCARD bool Lexer::IsComment(const char c) const {
 }
 
 void Lexer::AddToken(TokenType type, std::string& text) {
+    const i64 column_pos = cursor_ + 1 - static_cast<i64>(text.length());
     token_stream_.emplace_back(
         type,
         text,
         TextPosition {
             .line   = line_number_,
-            .column = cursor_ + 1  // column counts from 1
+            .column = column_pos,  // column counts from 1
         }
     );
 }
 
 void Lexer::AddToken(TokenType type, std::string&& text) {
-    token_stream_
-        .emplace_back(type, std::move(text), TextPosition {.line = line_number_, .column = cursor_ + 1});
+    const i64 column_pos = cursor_ + 1 - static_cast<i64>(text.length());
+    token_stream_.emplace_back(
+        type,
+        std::move(text),
+        TextPosition {
+            .line = line_number_,
+            .column = column_pos
+        }
+    );
 }
 
 void Lexer::AddEOF() {

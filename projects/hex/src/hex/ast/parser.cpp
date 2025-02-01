@@ -181,11 +181,8 @@ bool Parser::Matched_Literal(Node& node) {
         using enum TokenType;
 
     case Lit_Int:
-        [[fallthrough]];
     case Lit_Float:
-        [[fallthrough]]
     case Lit_Char:
-        [[fallthrough]];
     case Lit_String:
         AddCurrentTokenTo(node);
         break;

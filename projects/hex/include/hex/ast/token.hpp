@@ -6,12 +6,6 @@
 #include <vector>
 
 namespace hex {
-
-struct TextPosition {
-    i64 line;
-    i64 column;
-};
-
 enum class TokenType : u64 {
     Identifier,
 
@@ -116,19 +110,30 @@ enum class TokenType : u64 {
     _module_,  // special token, auto-inserted
 };
 
+struct TextPosition {
+    i64 line;
+    i64 column;
+
+    bool operator==(const TextPosition& other) const {
+        return line == other.line && column == other.column;
+    }
+};
+
 struct Token {
     TokenType    type;
     std::string  text;
     TextPosition position;
+
+    bool operator==(const Token& other) const {
+        return type == other.type
+            && position == other.position
+            && text == other.text;
+    }
 };
 
 using TokenStream = std::vector<Token>;
 
 static const auto
-    TOKEN_EOF = Token {
-        .type = TokenType::Eof,
-        .text = "EOF",
-        .position = {}
-    };
+    TOKEN_EOF = Token {.type = TokenType::Eof, .text = "EOF", .position = {}};
 
 }  // namespace hex
