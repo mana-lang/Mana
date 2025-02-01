@@ -49,6 +49,9 @@ enum class TokenType : u64 {
     Lit_Char,
     Lit_Int,
     Lit_Float,
+    Lit_null,
+    Lit_true,
+    Lit_false,
 
     KW_i8,
     KW_i16,
@@ -68,9 +71,7 @@ enum class TokenType : u64 {
     KW_byte,
     KW_char,
     KW_string,
-
     KW_bool,
-    KW_null,
 
     KW_data,
     KW_fn,
@@ -91,8 +92,6 @@ enum class TokenType : u64 {
     KW_as,
 
     KW_return,
-    KW_true,
-    KW_false,
     KW_if,
     KW_else,
     KW_match,
@@ -125,9 +124,7 @@ struct Token {
     TextPosition position;
 
     bool operator==(const Token& other) const {
-        return type == other.type
-            && position == other.position
-            && text == other.text;
+        return type == other.type && position == other.position && text == other.text;
     }
 };
 

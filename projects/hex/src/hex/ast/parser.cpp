@@ -91,7 +91,7 @@ bool Parser::IsPrimitive(TokenType token_type) const {
     case KW_char:
     case KW_string:
     case KW_byte:
-    case KW_null:
+    case Lit_null:
         return true;
 
     default:
@@ -175,8 +175,6 @@ bool Parser::Matched_Expression(Node& node) {
 
 // literal = number | string | KW_true | KW_false | KW_null
 bool Parser::Matched_Literal(Node& node) {
-    node.rule = Rule::Literal;
-
     switch (CurrentToken().type) {
         using enum TokenType;
 
@@ -184,14 +182,15 @@ bool Parser::Matched_Literal(Node& node) {
     case Lit_Float:
     case Lit_Char:
     case Lit_String:
+    case Lit_true:
+    case Lit_false:
+    case Lit_null:
+        node.rule = Rule::Literal;
         AddCurrentTokenTo(node);
-        break;
+        return true;
     default:
         return false;
     }
-
-
-    return true;
 }
 
 void Parser::Match_Undefined(Node& this_node) {

@@ -52,6 +52,21 @@ TEST_CASE("Parser", "[parse][ast]") {
                     .text     = "'z'",
                     .position = {5, 1},
                 },
+                {
+                    .type     = hex::TokenType::Lit_true,
+                    .text     = "true",
+                    .position = {6, 1},
+                },
+                {
+                    .type     = hex::TokenType::Lit_false,
+                    .text     = "false",
+                    .position = {7, 1},
+                },
+                {
+                    .type     = hex::TokenType::Lit_null,
+                    .text     = "null",
+                    .position = {8, 1},
+                },
             };
             const auto& branches {ast_root.branches};
             for (int i = 0; i < branches.size(); ++i) {

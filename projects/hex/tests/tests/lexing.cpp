@@ -132,7 +132,7 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
                 CHECK(datatypetokens[15].type == KW_bool);
                 CHECK(datatypetokens[15].text == "bool");
 
-                CHECK(datatypetokens[16].type == KW_null);
+                CHECK(datatypetokens[16].type == Lit_null);
                 CHECK(datatypetokens[16].text == "null");
 
                 CHECK(datatypetokens[17].type == Op_ParenLeft);
@@ -211,10 +211,10 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
                 CHECK(controlflow_tokens[0].type == KW_return);
                 CHECK(controlflow_tokens[0].text == "return");
 
-                CHECK(controlflow_tokens[1].type == KW_true);
+                CHECK(controlflow_tokens[1].type == Lit_true);
                 CHECK(controlflow_tokens[1].text == "true");
 
-                CHECK(controlflow_tokens[2].type == KW_false);
+                CHECK(controlflow_tokens[2].type == Lit_false);
                 CHECK(controlflow_tokens[2].text == "false");
 
                 CHECK(controlflow_tokens[3].type == KW_if);
