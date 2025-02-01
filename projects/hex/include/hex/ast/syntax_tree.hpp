@@ -21,6 +21,7 @@ struct BinaryExpr final : Expr {
 
 enum class Rule {
     Undefined,
+
     Module,
 
     Expression,
@@ -28,6 +29,8 @@ enum class Rule {
     Literal,
     String,
     Number,
+
+    Unary,
 
     // Mistake,
     // ReachedEOF,

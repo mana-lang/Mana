@@ -1,4 +1,4 @@
-# Literals
+# Literals [0]
 27     # <r: Literal, t: Lit_Int, v: "27">
 7.27   # <r: Literal, t: Lit_Float, v: "7.27">
 "Blue" # <r: Literal, t: Lit_String, v: "\"Blue\"">
@@ -6,6 +6,11 @@
 true   # <r: Literal, t: Lit_true, v: "true">
 false  # <r: Literal, t: Lit_false, v: "false'">
 null   # <r: Literal, t: Lit_null, v: "null">
-## INCOMPLETE ##
 
-# Expressions
+# Unaries [7]
+-6      # <r: Unary, t: [Op_Minus, Lit_Int], v: ["-", "6"]>
+-45.795 # <r: Unary, t: [Op_Minus, Lit_Float], v: ["-", "45.795"]>
+!true   # <r: Unary, t: [Op_LogicalNot, Lit_true], v: ["-", "45.795"]>
+
+
+## INCOMPLETE ##

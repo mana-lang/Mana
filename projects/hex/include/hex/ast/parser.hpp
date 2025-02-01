@@ -35,11 +35,13 @@ public:
 private:
   HEX_NODISCARD bool IsPrimitive(TokenType token_type) const;
 
-  HEX_NODISCARD auto PeekNextToken() const -> const Token&;
   HEX_NODISCARD auto CurrentToken() const -> const Token&;
+  HEX_NODISCARD auto PeekNextToken() const -> const Token&;
   HEX_NODISCARD auto NextToken() -> const Token&;
+  HEX_NODISCARD auto CycleToken() -> const Token&;
 
   void AddTokensTo(ast::Node& node, TokenType delimiter);
+  void AddTokensTo(ast::Node& node, i64 count);
   void AddCurrentTokenTo(ast::Node& node) const;
 
   void TransmitTokens(ast::Node& from, ast::Node& to) const;
@@ -52,8 +54,8 @@ private:
   // void Match_Statement(ast::Node& node);
   bool Matched_Expression(ast::Node& node);
   bool Matched_Literal(ast::Node& node);
+  bool Matched_Unary(ast::Node& node);
 
-  void Match_Undefined(ast::Node& node);
 };
 
 } // namespace hex

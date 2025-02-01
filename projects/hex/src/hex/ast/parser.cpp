@@ -34,6 +34,10 @@ bool Parser::Parse() {
     cursor_ = 1;
     while (ProgressedAST(ast_)) {}
 
+    if (CurrentToken().type != TokenType::Eof) {
+        LogErr("It appears we did not parse the entire file.");
+        return true; // TODO: handle this error and return false instead
+    }
     return true;
 }
 
@@ -91,7 +95,6 @@ bool Parser::IsPrimitive(TokenType token_type) const {
     case KW_char:
     case KW_string:
     case KW_byte:
-    case Lit_null:
         return true;
 
     default:
@@ -99,23 +102,41 @@ bool Parser::IsPrimitive(TokenType token_type) const {
     }
 }
 
-auto Parser::PeekNextToken() const -> const Token& {
-    return tokens_[cursor_ + 1];
-}
-
 auto Parser::CurrentToken() const -> const Token& {
     return tokens_[cursor_];
+}
+
+auto Parser::PeekNextToken() const -> const Token& {
+    return tokens_[cursor_ + 1];
 }
 
 auto Parser::NextToken() -> const Token& {
     return tokens_[++cursor_];
 }
 
-void Parser::AddTokensTo(Node& node, TokenType delimiter) {
-    while (CurrentToken().type != delimiter) {
-        if (not ProgressedAST(node)) {
-            return;
-        }
+auto Parser::CycleToken() -> const Token& {
+    return tokens_[cursor_++];
+}
+
+// this function makes no fucking sense
+// void Parser::AddTokensTo(Node& node, TokenType delimiter) {
+//     while (CurrentToken().type != delimiter) {
+//         if (not ProgressedAST(node)) {
+//             return;
+//         }
+//     }
+// }
+
+// inclusive
+void Parser::AddTokensTo(Node& node, const TokenType delimiter) {
+    do {
+        node.tokens.push_back(CycleToken());
+    } while (CurrentToken().type != delimiter);
+}
+
+void Parser::AddTokensTo(Node& node, const i64 count) {
+    for (i64 i = 0; i < count; ++i) {
+        node.tokens.push_back(CycleToken());
     }
 }
 
@@ -126,6 +147,7 @@ void Parser::AddCurrentTokenTo(Node& node) const {
 }
 
 // TODO: Make transmit functions take reference to token_stream instead
+// also: make these make sense
 void Parser::TransmitTokens(Node& sender, Node& receiver) const {
     auto receive = receiver.tokens;  // why are we receiving to a temporary??
     for (const auto& send : sender.tokens) {
@@ -165,12 +187,13 @@ bool Parser::ProgressedAST(Node& node) {
     return matched_something;
 }
 
+// expressions can recurse, but are always non-terminal
 bool Parser::Matched_Expression(Node& node) {
     auto& expr = node.NewBranch();
-    expr.rule = Rule::Expression;
+    expr.rule  = Rule::Expression;
 
-    // expressions can recurse, but are always non-terminal
-    return Matched_Literal(expr.NewBranch());
+    auto& next_node = expr.NewBranch();
+    return Matched_Unary(next_node) || Matched_Literal(next_node);
 }
 
 // literal = number | string | KW_true | KW_false | KW_null
@@ -193,8 +216,30 @@ bool Parser::Matched_Literal(Node& node) {
     }
 }
 
-void Parser::Match_Undefined(Node& this_node) {
-    this_node.rule = Rule::Undefined;
-    AddCurrentTokenTo(this_node);
+// unary = ("-" | "!") expr
+bool Parser::Matched_Unary(Node& node) {
+    using enum TokenType;
+    switch (CurrentToken().type) {
+    case Op_Minus:
+    case Op_LogicalNot:
+        switch (PeekNextToken().type) {
+        case Lit_Int:
+        case Lit_Float:
+        case Lit_true:
+        case Lit_false:
+            node.rule = Rule::Unary;
+            AddTokensTo(node, 2);
+            return true;
+
+        default:
+            return false;
+        }
+
+        // TODO: care that this path may be indicative of an error
+        // that's for future me to resolve
+        default:
+            return false;
+    }
 }
+
 }  // namespace hex
