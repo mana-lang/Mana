@@ -6,33 +6,28 @@
 #include <vector>
 
 namespace hex::ast {
-struct Expr {};
-
-struct BinaryExpr final : Expr {
-    Expr* left_;
-    Expr* right_;
-    Token op_;
-
-    BinaryExpr(Expr* left, const Token& op, Expr* right)
-        : left_(left)
-        , right_(right)
-        , op_(op) {}
-};
-
 enum class Rule {
     Undefined,
+    Mistake,
 
     Module,
 
     Expression,
 
+    Grouping,
+    Primary,
     Literal,
     String,
     Number,
 
     Unary,
+    Factor,
+    Term,
+    Comparison,
+    Equality,
 
-    // Mistake,
+
+
     // ReachedEOF,
     //
     // Declaration,
@@ -97,6 +92,10 @@ struct Node {
 
     HEX_NODISCARD Node& NewBranch() {
         return *branches.emplace_back(std::make_unique<Node>());
+    }
+
+    void PopBranch() {
+        branches.pop_back();
     }
 };
 

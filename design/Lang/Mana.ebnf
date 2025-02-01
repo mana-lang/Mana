@@ -40,6 +40,7 @@ literal = number
 
 unary = ("-" | "!") expr ;
 binary = expr operator expr ;
+grouping = "(" expr ")" ;
 operator = OP_PLUS
          | OP_MINUS
          | OP_STAR

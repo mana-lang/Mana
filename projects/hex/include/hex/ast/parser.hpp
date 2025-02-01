@@ -38,11 +38,12 @@ private:
   HEX_NODISCARD auto CurrentToken() const -> const Token&;
   HEX_NODISCARD auto PeekNextToken() const -> const Token&;
   HEX_NODISCARD auto NextToken() -> const Token&;
-  HEX_NODISCARD auto CycleToken() -> const Token&;
+  HEX_NODISCARD auto GetAndCycleToken() -> const Token&;
 
   void AddTokensTo(ast::Node& node, TokenType delimiter);
   void AddTokensTo(ast::Node& node, i64 count);
   void AddCurrentTokenTo(ast::Node& node) const;
+  void AddCycledTokenTo(ast::Node& node);
 
   void TransmitTokens(ast::Node& from, ast::Node& to) const;
   void TransmitTokens(ast::Node& from, ast::Node& to, TokenRange range) const;
@@ -51,10 +52,15 @@ private:
 
 
   // Matchers
-  // void Match_Statement(ast::Node& node);
   bool Matched_Expression(ast::Node& node);
-  bool Matched_Literal(ast::Node& node);
+
+  bool Matched_Primary(ast::Node& node);
+
+  bool Matched_Literal();
   bool Matched_Unary(ast::Node& node);
+
+  bool Matched_BinaryExpr(ast::Node& node);
+  bool Matched_Grouping(ast::Node& node);
 
 };
 

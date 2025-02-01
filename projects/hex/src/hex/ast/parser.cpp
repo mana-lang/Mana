@@ -36,7 +36,7 @@ bool Parser::Parse() {
 
     if (CurrentToken().type != TokenType::Eof) {
         LogErr("It appears we did not parse the entire file.");
-        return true; // TODO: handle this error and return false instead
+        return true;  // TODO: handle this error and return false instead
     }
     return true;
 }
@@ -114,35 +114,32 @@ auto Parser::NextToken() -> const Token& {
     return tokens_[++cursor_];
 }
 
-auto Parser::CycleToken() -> const Token& {
+auto Parser::GetAndCycleToken() -> const Token& {
     return tokens_[cursor_++];
 }
-
-// this function makes no fucking sense
-// void Parser::AddTokensTo(Node& node, TokenType delimiter) {
-//     while (CurrentToken().type != delimiter) {
-//         if (not ProgressedAST(node)) {
-//             return;
-//         }
-//     }
-// }
 
 // inclusive
 void Parser::AddTokensTo(Node& node, const TokenType delimiter) {
     do {
-        node.tokens.push_back(CycleToken());
+        node.tokens.push_back(GetAndCycleToken());
     } while (CurrentToken().type != delimiter);
 }
 
 void Parser::AddTokensTo(Node& node, const i64 count) {
     for (i64 i = 0; i < count; ++i) {
-        node.tokens.push_back(CycleToken());
+        node.tokens.push_back(GetAndCycleToken());
     }
 }
 
 void Parser::AddCurrentTokenTo(Node& node) const {
     if (cursor_ < tokens_.size()) {
         node.tokens.push_back(CurrentToken());
+    }
+}
+
+void Parser::AddCycledTokenTo(Node& node) {
+    if (cursor_ < tokens_.size()) {
+        node.tokens.push_back(GetAndCycleToken());
     }
 }
 
@@ -189,15 +186,53 @@ bool Parser::ProgressedAST(Node& node) {
 
 // expressions can recurse, but are always non-terminal
 bool Parser::Matched_Expression(Node& node) {
-    auto& expr = node.NewBranch();
-    expr.rule  = Rule::Expression;
+    const bool matched_something = Matched_Primary(node);
 
-    auto& next_node = expr.NewBranch();
-    return Matched_Unary(next_node) || Matched_Literal(next_node);
+    if (not matched_something) {
+        node.PopBranch();
+    }
+
+    return matched_something;
+}
+
+bool Parser::Matched_Primary(Node& node) {
+    if (CurrentToken().type == TokenType::Op_ParenLeft) {
+        auto& grouping = node.NewBranch();
+        grouping.rule  = Rule::Grouping;
+        AddCycledTokenTo(grouping);
+
+        if (Matched_Expression(grouping)) {
+            if (grouping.branches.size() > 1) {
+                LogErr("Grouping may not contain more than one expression");
+                grouping.rule = Rule::Mistake;
+                return false;
+            }
+            if (CurrentToken().type == TokenType::Op_ParenRight) {
+                AddCycledTokenTo(grouping);
+
+                if (grouping.branches.size() < 1) {
+                    LogErr("Grouping must contain at least one expression");
+                    return false;
+                }
+
+                // guaranteed to be valid expression by now
+                return true;
+            }
+        }
+    }
+
+    if (not Matched_Literal()) {
+        return false;
+    }
+
+    auto& primary {node.NewBranch()};
+    primary.rule = Rule::Primary;
+    AddCycledTokenTo(primary);
+    return true;
 }
 
 // literal = number | string | KW_true | KW_false | KW_null
-bool Parser::Matched_Literal(Node& node) {
+bool Parser::Matched_Literal() {
     switch (CurrentToken().type) {
         using enum TokenType;
 
@@ -207,10 +242,9 @@ bool Parser::Matched_Literal(Node& node) {
     case Lit_String:
     case Lit_true:
     case Lit_false:
-    case Lit_null:
-        node.rule = Rule::Literal;
-        AddCurrentTokenTo(node);
+    case Lit_null: {
         return true;
+    }
     default:
         return false;
     }
@@ -226,20 +260,30 @@ bool Parser::Matched_Unary(Node& node) {
         case Lit_Int:
         case Lit_Float:
         case Lit_true:
-        case Lit_false:
-            node.rule = Rule::Unary;
-            AddTokensTo(node, 2);
+        case Lit_false: {
+            auto& new_node = node.NewBranch();
+            new_node.rule  = Rule::Unary;
+            AddTokensTo(new_node, 2);
             return true;
+        }
 
         default:
             return false;
         }
 
-        // TODO: care that this path may be indicative of an error
-        // that's for future me to resolve
-        default:
-            return false;
+    // TODO: care that this path may be indicative of an error
+    // that's for future me to resolve
+    default:
+        return false;
     }
+}
+
+bool Parser::Matched_BinaryExpr(Node& node) {
+    return false;
+}
+
+bool Parser::Matched_Grouping(Node& node) {
+    return false;
 }
 
 }  // namespace hex
