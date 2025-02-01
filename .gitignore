@@ -1,6 +1,12 @@
 # Prerequisites
 *.d
 
+# clangd cache
+.cache/ 
+
+CMakeUserPresets.json
+compile_commands.json
+
 .vs/
 .idea/
 .Build/
