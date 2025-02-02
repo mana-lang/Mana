@@ -2,6 +2,7 @@
 
 #include <hex/ast/token.hpp>
 
+#include <hex/core/logger.hpp>
 #include <memory>
 #include <vector>
 
@@ -103,11 +104,33 @@ struct Node {
     }
 
     void RemoveBranchFromTail(const i64 idx) {
-        branches.erase(branches.begin() + idx);
+        branches.erase(branches.end() - idx);
     }
 
     HEX_NODISCARD bool IsRoot() const {
         return parent == nullptr;
+    }
+
+    void AcquireBranch(Node& from, const i64 index) {
+        branches.emplace_back(from.branches[index]);
+        from.RemoveBranch(index);
+    }
+
+    void AcquireBranches(Node& from, const i64 start, const i64 end) {
+        for (i64 i = start; i <= end; ++i) {
+            branches.emplace_back(from.branches[i]);
+        }
+
+        // erase removes up to the penultimate element, but we want inclusive removal
+        from.branches.erase(from.branches.begin() + start, from.branches.begin() + end + 1);
+    }
+
+    void AcquireBranches(Node& from, const i64 start) {
+        for (i64 i = start; i < branches.size(); ++i) {
+            branches.emplace_back(from.branches[i]);
+        }
+
+        from.branches.erase(from.branches.begin() + start, from.branches.end());
     }
 
 private:

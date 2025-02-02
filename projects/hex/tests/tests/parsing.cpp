@@ -6,6 +6,7 @@
 
 constexpr auto PARSER_TESTING_PATH = "assets/samples/parsing/";
 using namespace hex;
+
 TEST_CASE("Parser", "[parse][ast]") {
     SECTION("Core", "Core functionality test") {
         Lexer lexer;
@@ -120,10 +121,9 @@ TEST_CASE("Parser", "[parse][ast]") {
                 },
             };
 
-            
             constexpr i64 start {7};
-            const usize total_unaries {expected_tokens.size() / 2};
-            
+            const usize   total_unaries {expected_tokens.size() / 2};
+
             for (i64 i = 0; i < total_unaries; ++i) {
                 REQUIRE(ast.branches[start + i]->rule == Rule::Unary);
             }
@@ -174,7 +174,6 @@ TEST_CASE("Parser", "[parse][ast]") {
                 },
             };
 
-            
             static constexpr i64 start {10};
             static constexpr i64 total_groupings {3};
             for (i64 i = 0; i < total_groupings; ++i) {
@@ -189,11 +188,10 @@ TEST_CASE("Parser", "[parse][ast]") {
                 REQUIRE(ast.branches[current]->tokens[1].type == parens[1].type);
                 REQUIRE(ast.branches[current]->tokens[1].text == parens[1].text);
 
-                REQUIRE(
-                    ast.branches[current]->branches[0]->tokens[0] == expected_tokens[i]
-                );
+                REQUIRE(ast.branches[current]->branches[0]->tokens[0] == expected_tokens[i]);
             }
 
+            // !(!false)
             REQUIRE(ast.branches[13]->rule == Rule::Unary);
             REQUIRE(ast.branches[13]->branches[0]->rule == Rule::Grouping);
             REQUIRE(ast.branches[13]->branches[0]->branches[0]->rule == Rule::Unary);
@@ -202,6 +200,93 @@ TEST_CASE("Parser", "[parse][ast]") {
 
         SECTION("Factors") {
             REQUIRE(ast.branches.size() >= 15);
+
+            SECTION("Two-operand expressions") {
+                const TokenStream expected_tokens {
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"26"},
+                        .position {22, 1},
+                    },
+                    {
+                        .type {TokenType::Op_Asterisk},
+                        .text {"*"},
+                        .position {22, 4},
+                    },
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"2"},
+                        .position {22, 6},
+                    },
+                };
+
+                // 26 * 2
+                REQUIRE(ast.branches[14]->rule == Rule::Factor);
+                REQUIRE(ast.branches[14]->tokens.size() == 1);
+                REQUIRE(ast.branches[14]->tokens[0] == expected_tokens[1]);
+
+                REQUIRE(ast.branches[14]->branches.size() == 2);
+                REQUIRE(ast.branches[14]->branches[0]->tokens.size() == 1);
+                REQUIRE(ast.branches[14]->branches[1]->tokens.size() == 1);
+
+                REQUIRE(ast.branches[14]->branches[0]->tokens[0] == expected_tokens[0]);
+                REQUIRE(ast.branches[14]->branches[1]->tokens[0] == expected_tokens[2]);
+            }
+
+            // SECTION("Multi-operand expressions") {
+            //     const TokenStream expected_tokens {
+            //         {
+            //             .type {TokenType::Lit_Int},
+            //             .text {"943"},
+            //             .position {23, 1},
+            //         },
+            //         {
+            //             .type {TokenType::Op_FwdSlash},
+            //             .text {"/"},
+            //             .position {23, 5},
+            //         },
+            //         {
+            //             .type {TokenType::Lit_Float},
+            //             .text {"27.54"},
+            //             .position {23, 7},
+            //         },
+            //         {
+            //             .type {TokenType::Op_Asterisk},
+            //             .text {"*"},
+            //             .position {23, 13},
+            //         },
+            //         {
+            //             .type {TokenType::Lit_Float},
+            //             .text {"12.95"},
+            //             .position {23, 15},
+            //         },
+            //         {
+            //             .type {TokenType::Op_FwdSlash},
+            //             .text {"/"},
+            //             .position {23, 21},
+            //         },
+            //         {
+            //             .type {TokenType::Lit_Int},
+            //             .text {"599"},
+            //             .position {23, 23},
+            //         },
+            //         {
+            //             .type {TokenType::Op_FwdSlash},
+            //             .text {"/"},
+            //             .position {23, 27},
+            //         },
+            //         {
+            //             .type {TokenType::Lit_Int},
+            //             .text {"2"},
+            //             .position {23, 29},
+            //         },
+            //     };
+            //
+            //     // 943 / 27.54 * 12.95 / 599 / 2
+            //     REQUIRE(ast.branches[15]->rule == Rule::Factor);
+            //     REQUIRE(ast.branches[15]->tokens.size() == 1);
+            //     REQUIRE(ast.branches[15]->tokens[0] == expected_tokens[1]);
+            // }
         }
     }
 }

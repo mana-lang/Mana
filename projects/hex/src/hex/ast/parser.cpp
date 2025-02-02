@@ -295,8 +295,7 @@ bool Parser::Matched_Factor(Node& node) {
         return false;
     }
 
-    const auto c = CurrentToken().type;
-    switch (c) {
+    switch (CurrentToken().type) {
         using enum TokenType;
 
     case Op_FwdSlash:
@@ -311,12 +310,8 @@ bool Parser::Matched_Factor(Node& node) {
         auto& factor {node.NewBranch(Rule::Factor)};
         factor.tokens.push_back(tokens_[op_cursor]);
 
-        factor.branches.emplace_back(node.branches[node.branches.size() - 3]); // lhs
-        factor.branches.emplace_back(node.branches[node.branches.size() - 2]); // rhs
-        node.branches[node.branches.size() - 3] = node.branches.back(); // copy factor to lhs for pop_back
-
-        node.RemoveBranch(node.branches.size() - 3);
-        node.RemoveBranch(node.branches.size() - 2);
+        const auto lhs = node.branches.size() - 3;
+        factor.AcquireBranches(node, lhs, lhs + 1);
     }
     default:
         break;
