@@ -57,26 +57,37 @@ void Parser::PrintAST() const {
 }
 
 void Parser::PrintAST(const Node& root, std::string prepend) const {
+    if (root.rule == Rule::Module) {
+        Log("[Module] -> {}", root.tokens[0].text);
+        goto next_node;
+    }
+
     Log("{}[{}]", prepend, magic_enum::enum_name(root.rule));
 
     prepend.append("== ");
 
+    if (not root.tokens.empty()) {
+
+        std::ranges::replace(prepend, '=', '-');
+
+        for (const auto& [type, text, position] : root.tokens) {
+            if (type == TokenType::Terminator) {
+                continue;
+            }
+            Log("{} [{}] -> {}", prepend, magic_enum::enum_name(type), text);
+        }
+
+        std::ranges::replace(prepend, '-', '=');
+    }
+
+    next_node:
     if (not root.branches.empty()) {
         for (const auto& node : root.branches) {
             PrintAST(*node, prepend);
         }
     }
 
-    std::ranges::replace(prepend, '=', '-');
-
-    for (const auto& [type, text, position] : root.tokens) {
-        if (type == TokenType::Terminator) {
-            continue;
-        }
-        Log("{} [{}] -> {}", prepend, magic_enum::enum_name(type), text);
-    }
-
-    if (root.tokens.size() > 1) {
+    if (not root.branches.empty() && root.IsRoot()) {
         Log("");
     }
 }
@@ -145,16 +156,7 @@ void Parser::AddCycledTokenTo(Node& node) {
     }
 }
 
-// TODO: Make transmit functions take reference to token_stream instead
-// also: make these make sense
 void Parser::TransmitTokens(TokenStream& sender, TokenStream& receiver) const {
-    // auto receive = receiver.tokens;  // why are we receiving to a temporary??
-    // for (const auto& send : sender.tokens) {
-    //     receive.push_back(send);
-    // }
-    //
-    // sender.tokens.clear();
-
     for (const auto& send : sender) {
         receiver.push_back(send);
     }
@@ -313,10 +315,8 @@ bool Parser::Matched_Factor(Node& node) {
         factor.branches.emplace_back(node.branches[node.branches.size() - 2]); // rhs
         node.branches[node.branches.size() - 3] = node.branches.back(); // copy factor to lhs for pop_back
 
-        // we may be able to avoid doing something like this
-        // once we've written a custom data structure
-        node.branches.pop_back();
-        node.branches.pop_back();
+        node.RemoveBranch(node.branches.size() - 3);
+        node.RemoveBranch(node.branches.size() - 2);
     }
     default:
         break;
