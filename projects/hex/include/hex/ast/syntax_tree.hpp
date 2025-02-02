@@ -12,13 +12,11 @@ enum class Rule {
 
     Module,
 
+
     Expression,
 
     Grouping,
-    Primary,
     Literal,
-    String,
-    Number,
 
     Unary,
     Factor,
@@ -80,18 +78,18 @@ enum class Rule {
 };
 
 struct Node {
-    using NodePtr = std::unique_ptr<Node>;
+    using NodePtr = std::shared_ptr<Node>;
 
     Rule                 rule;
     TokenStream          tokens;
     std::vector<NodePtr> branches;
 
-    Node()
-        : rule(Rule::Undefined)
-        , tokens({}) {}
+    explicit Node(const Rule r)
+    : rule(r)
+    , tokens({}) {}
 
-    HEX_NODISCARD Node& NewBranch() {
-        return *branches.emplace_back(std::make_unique<Node>());
+    HEX_NODISCARD Node& NewBranch(const Rule rule = Rule::Undefined) {
+        return *branches.emplace_back(std::make_unique<Node>(rule));
     }
 
     void PopBranch() {

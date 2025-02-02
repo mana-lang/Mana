@@ -45,19 +45,21 @@ private:
   void AddCurrentTokenTo(ast::Node& node) const;
   void AddCycledTokenTo(ast::Node& node);
 
-  void TransmitTokens(ast::Node& from, ast::Node& to) const;
+  void TransmitTokens(TokenStream& from, TokenStream& to) const;
   void TransmitTokens(ast::Node& from, ast::Node& to, TokenRange range) const;
 
   bool ProgressedAST(ast::Node& node);
 
 
   // Matchers
-  bool Matched_Expression(ast::Node& node);
+  HEX_NODISCARD bool Matched_Expression(ast::Node& node);
 
-  bool Matched_Primary(ast::Node& node);
+  HEX_NODISCARD bool Matched_Primary(ast::Node& node);
+  HEX_NODISCARD bool Matched_Unary(ast::Node& node);
+  HEX_NODISCARD bool Matched_Factor(ast::Node& node);
 
-  bool Matched_Literal();
-  bool Matched_Unary(ast::Node& node);
+  HEX_NODISCARD bool Is_Literal(TokenType token);
+
 
   bool Matched_BinaryExpr(ast::Node& node);
   bool Matched_Grouping(ast::Node& node);

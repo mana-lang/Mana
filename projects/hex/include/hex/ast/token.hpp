@@ -11,7 +11,7 @@ enum class TokenType : u64 {
 
     Op_Plus,
     Op_Minus,
-    Op_Star,
+    Op_Asterisk,
     Op_FwdSlash,
 
     Op_Colon,

@@ -244,7 +244,7 @@ HEX_NODISCARD bool Lexer::LexedOperator(const std::string_view line) {
         token_type = Op_Minus;
         break;
     case '*':
-        token_type = Op_Star;
+        token_type = Op_Asterisk;
         break;
     case '/':
         token_type = Op_FwdSlash;

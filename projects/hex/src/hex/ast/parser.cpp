@@ -10,11 +10,13 @@ using namespace ast;
 
 Parser::Parser(const TokenStream&& tokens)
     : tokens_ {tokens}
-    , cursor_ {} {}
+    , cursor_ {}
+    , ast_ {Rule::Undefined} {}
 
 Parser::Parser(const TokenStream& tokens)
     : tokens_ {tokens}
-    , cursor_ {} {}
+    , cursor_ {}
+    , ast_ {Rule::Undefined} {}
 
 bool Parser::Parse() {
     const auto& top_token = tokens_.front();
@@ -145,13 +147,19 @@ void Parser::AddCycledTokenTo(Node& node) {
 
 // TODO: Make transmit functions take reference to token_stream instead
 // also: make these make sense
-void Parser::TransmitTokens(Node& sender, Node& receiver) const {
-    auto receive = receiver.tokens;  // why are we receiving to a temporary??
-    for (const auto& send : sender.tokens) {
-        receive.push_back(send);
+void Parser::TransmitTokens(TokenStream& sender, TokenStream& receiver) const {
+    // auto receive = receiver.tokens;  // why are we receiving to a temporary??
+    // for (const auto& send : sender.tokens) {
+    //     receive.push_back(send);
+    // }
+    //
+    // sender.tokens.clear();
+
+    for (const auto& send : sender) {
+        receiver.push_back(send);
     }
 
-    sender.tokens.clear();
+    sender.clear();
 }
 
 void Parser::TransmitTokens(Node& sender, Node& receiver, TokenRange range) const {
@@ -175,27 +183,27 @@ bool Parser::ProgressedAST(Node& node) {
 
     if (CurrentToken().type == TokenType::Terminator) {
         ++cursor_;
-        return true;
     }
 
     const bool matched_something = Matched_Expression(node);
 
-    ++cursor_;
     return matched_something;
 }
 
-// expressions can recurse, but are always non-terminal
 bool Parser::Matched_Expression(Node& node) {
-    const bool matched_something = Matched_Primary(node);
+    const bool matched_something = Matched_Factor(node) || Matched_Unary(node) || Matched_Primary(node);
 
-    if (not matched_something) {
-        node.PopBranch();
+    return matched_something;
+}
+
+// primary  = literal | grouping
+// grouping = "(" expr ")"
+bool Parser::Matched_Primary(Node& node) {
+    if (CurrentToken().type == TokenType::Terminator) {
+        ++cursor_;
+        return true;
     }
 
-    return matched_something;
-}
-
-bool Parser::Matched_Primary(Node& node) {
     if (CurrentToken().type == TokenType::Op_ParenLeft) {
         auto& grouping = node.NewBranch();
         grouping.rule  = Rule::Grouping;
@@ -221,30 +229,30 @@ bool Parser::Matched_Primary(Node& node) {
         }
     }
 
-    if (not Matched_Literal()) {
+    if (not Is_Literal(CurrentToken().type)) {
         return false;
     }
 
     auto& primary {node.NewBranch()};
-    primary.rule = Rule::Primary;
+    primary.rule = Rule::Literal;
     AddCycledTokenTo(primary);
     return true;
 }
 
 // literal = number | string | KW_true | KW_false | KW_null
-bool Parser::Matched_Literal() {
-    switch (CurrentToken().type) {
+bool Parser::Is_Literal(TokenType token) {
+    switch (token) {
         using enum TokenType;
 
     case Lit_Int:
     case Lit_Float:
     case Lit_Char:
     case Lit_String:
+
     case Lit_true:
     case Lit_false:
-    case Lit_null: {
+    case Lit_null:
         return true;
-    }
     default:
         return false;
     }
@@ -252,30 +260,68 @@ bool Parser::Matched_Literal() {
 
 // unary = ("-" | "!") expr
 bool Parser::Matched_Unary(Node& node) {
-    using enum TokenType;
     switch (CurrentToken().type) {
-    case Op_Minus:
-    case Op_LogicalNot:
-        switch (PeekNextToken().type) {
-        case Lit_Int:
-        case Lit_Float:
-        case Lit_true:
-        case Lit_false: {
-            auto& new_node = node.NewBranch();
-            new_node.rule  = Rule::Unary;
-            AddTokensTo(new_node, 2);
-            return true;
-        }
+        using enum TokenType;
 
-        default:
+    case Op_Minus:
+    case Op_LogicalNot: {
+        auto& unary {node.NewBranch(Rule::Unary)};
+
+        AddCycledTokenTo(unary);
+        if (not Matched_Unary(unary)) {
+            if (not Matched_Primary(unary)) {
+                LogErr("Expected primary expression.");
+                node.PopBranch();  // dangle should be okay since we immediately return
+            } else
+                break;
+
+            return false;
+        }
+        break;
+    }
+
+    default:
+        return Matched_Primary(node);
+    }
+
+    return true;
+}
+
+// factor = unary ( ('/' | '*') unary )*
+bool Parser::Matched_Factor(Node& node) {
+    if (not Matched_Unary(node)) {
+        return false;
+    }
+
+    const auto c = CurrentToken().type;
+    switch (c) {
+        using enum TokenType;
+
+    case Op_FwdSlash:
+    case Op_Asterisk: {
+        const auto op_cursor = cursor_++;
+
+        if (not Matched_Unary(node)) {
+            LogErr("Expected expression.");
             return false;
         }
 
-    // TODO: care that this path may be indicative of an error
-    // that's for future me to resolve
-    default:
-        return false;
+        auto& factor {node.NewBranch(Rule::Factor)};
+        factor.tokens.push_back(tokens_[op_cursor]);
+
+        factor.branches.emplace_back(node.branches[node.branches.size() - 3]); // lhs
+        factor.branches.emplace_back(node.branches[node.branches.size() - 2]); // rhs
+        node.branches[node.branches.size() - 3] = node.branches.back(); // copy factor to lhs for pop_back
+
+        // we may be able to avoid doing something like this
+        // once we've written a custom data structure
+        node.branches.pop_back();
+        node.branches.pop_back();
     }
+    default:
+        break;
+    }
+    return true;
 }
 
 bool Parser::Matched_BinaryExpr(Node& node) {

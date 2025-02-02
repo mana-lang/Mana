@@ -5,23 +5,23 @@
 #include "common.hpp"
 
 constexpr auto PARSER_TESTING_PATH = "assets/samples/parsing/";
-
+using namespace hex;
 TEST_CASE("Parser", "[parse][ast]") {
     SECTION("Core", "Core functionality test") {
-        hex::Lexer lexer;
+        Lexer lexer;
         REQUIRE(lexer.Tokenize(Concatenate(PARSER_TESTING_PATH, "atoms.mn")));
 
-        hex::Parser parser(lexer.RelinquishTokens());
+        Parser parser(lexer.RelinquishTokens());
         CHECK(parser.Parse());
         const auto& tokens {parser.ViewTokens()};
         const auto& ast {parser.ViewAST()};
 
         SECTION("Parsing step succeeded") {
             REQUIRE_FALSE(tokens.empty());
-            REQUIRE(tokens[0].type == hex::TokenType::_module_);
+            REQUIRE(tokens[0].type == TokenType::_module_);
         }
 
-        using namespace hex::ast;
+        using namespace ast;
         SECTION("AST root is properly formed") {
             CHECK_FALSE(ast.tokens.empty());
             REQUIRE(ast.rule == Rule::Module);
@@ -33,47 +33,47 @@ TEST_CASE("Parser", "[parse][ast]") {
         SECTION("Primaries are correctly evaluated") {
             CHECK_FALSE(ast.branches.empty());
 
-            hex::TokenStream expected_tokens {
+            TokenStream expected_tokens {
                 {
-                    .type {hex::TokenType::Lit_Int},
+                    .type {TokenType::Lit_Int},
                     .text {"27"},
                     .position {2, 1},
                 },
                 {
-                    .type {hex::TokenType::Lit_Float},
+                    .type {TokenType::Lit_Float},
                     .text {"7.27"},
                     .position {3, 1},
                 },
                 {
-                    .type {hex::TokenType::Lit_String},
+                    .type {TokenType::Lit_String},
                     .text {"\"Blue\""},
                     .position {4, 1},
                 },
                 {
-                    .type {hex::TokenType::Lit_Char},
+                    .type {TokenType::Lit_Char},
                     .text {"'z'"},
                     .position {5, 1},
                 },
                 {
-                    .type {hex::TokenType::Lit_true},
+                    .type {TokenType::Lit_true},
                     .text {"true"},
                     .position {6, 1},
                 },
                 {
-                    .type {hex::TokenType::Lit_false},
+                    .type {TokenType::Lit_false},
                     .text {"false"},
                     .position {7, 1},
                 },
                 {
-                    .type {hex::TokenType::Lit_null},
+                    .type {TokenType::Lit_null},
                     .text {"null"},
                     .position {8, 1},
                 },
             };
 
-            static constexpr hex::i64 total_literals = 7;
+            static constexpr i64 total_literals = 7;
             for (int i = 0; i < total_literals; ++i) {
-                REQUIRE(ast.branches[i]->rule == Rule::Primary);
+                REQUIRE(ast.branches[i]->rule == Rule::Literal);
 
                 REQUIRE(ast.branches[i]->tokens.size() == 1);
                 REQUIRE(ast.branches[i]->branches.size() == 0);
@@ -82,41 +82,100 @@ TEST_CASE("Parser", "[parse][ast]") {
             }
         }
 
-        SECTION("Groupings") {
+        SECTION("Unaries") {
             REQUIRE(ast.branches.size() >= 10);
 
-            const hex::TokenStream parens {
+            TokenStream expected_tokens {
+                {
+                    .type     = TokenType::Op_Minus,
+                    .text     = "-",
+                    .position = {11, 1},
+                },
+                {
+                    .type     = TokenType::Lit_Int,
+                    .text     = "6",
+                    .position = {11, 2},
+                },
+
+                {
+                    .type     = TokenType::Op_Minus,
+                    .text     = "-",
+                    .position = {12, 1},
+                },
+                {
+                    .type     = TokenType::Lit_Float,
+                    .text     = "45.795",
+                    .position = {12, 2},
+                },
+
+                {
+                    .type     = TokenType::Op_LogicalNot,
+                    .text     = "!",
+                    .position = {13, 1},
+                },
+                {
+                    .type     = TokenType::Lit_true,
+                    .text     = "true",
+                    .position = {13, 2},
+                },
+            };
+
+            
+            constexpr i64 start {7};
+            const usize total_unaries {expected_tokens.size() / 2};
+            
+            for (i64 i = 0; i < total_unaries; ++i) {
+                REQUIRE(ast.branches[start + i]->rule == Rule::Unary);
+            }
+
+            // "-6"
+            REQUIRE(ast.branches[7]->tokens[0] == expected_tokens[0]);
+            REQUIRE(ast.branches[7]->branches[0]->tokens[0] == expected_tokens[1]);
+
+            // "-45.795"
+            REQUIRE(ast.branches[8]->tokens[0] == expected_tokens[2]);
+            REQUIRE(ast.branches[8]->branches[0]->tokens[0] == expected_tokens[3]);
+
+            // "!true"
+            REQUIRE(ast.branches[9]->tokens[0] == expected_tokens[4]);
+            REQUIRE(ast.branches[9]->branches[0]->tokens[0] == expected_tokens[5]);
+        }
+
+        SECTION("Groupings") {
+            REQUIRE(ast.branches.size() >= 14);
+
+            const TokenStream parens {
                 // we don't check these against position
                 {
-                    .type {hex::TokenType::Op_ParenLeft},
+                    .type {TokenType::Op_ParenLeft},
                     .text {"("},
                 },
                 {
-                    .type {hex::TokenType::Op_ParenRight},
+                    .type {TokenType::Op_ParenRight},
                     .text {")"},
                 },
             };
 
-            const hex::TokenStream expected_tokens {
+            const TokenStream expected_tokens {
                 {
-                    .type {hex::TokenType::Lit_Int},
+                    .type {TokenType::Lit_Int},
                     .text {"94"},
                     .position {16, 2},
                 },
                 {
-                    .type {hex::TokenType::Lit_false},
+                    .type {TokenType::Lit_false},
                     .text {"false"},
                     .position {17, 2},
                 },
                 {
-                    .type {hex::TokenType::Lit_Float},
+                    .type {TokenType::Lit_Float},
                     .text {"34.853"},
                     .position {18, 2},
                 },
             };
 
-            using namespace hex;
-            static constexpr i64 start {7};
+            
+            static constexpr i64 start {10};
             static constexpr i64 total_groupings {3};
             for (i64 i = 0; i < total_groupings; ++i) {
                 const auto current {start + i};
@@ -134,58 +193,15 @@ TEST_CASE("Parser", "[parse][ast]") {
                     ast.branches[current]->branches[0]->tokens[0] == expected_tokens[i]
                 );
             }
+
+            REQUIRE(ast.branches[13]->rule == Rule::Unary);
+            REQUIRE(ast.branches[13]->branches[0]->rule == Rule::Grouping);
+            REQUIRE(ast.branches[13]->branches[0]->branches[0]->rule == Rule::Unary);
+            REQUIRE(ast.branches[13]->branches[0]->branches[0]->branches[0]->rule == Rule::Literal);
         }
 
-        // SECTION("Unaries") {
-        //     REQUIRE(ast.branches.size() >= 10);
-        //
-        //     hex::TokenStream expected_tokens {
-        //         {
-        //             .type     = hex::TokenType::Op_Minus,
-        //             .text     = "-",
-        //             .position = {11, 1},
-        //         },
-        //         {
-        //             .type     = hex::TokenType::Lit_Int,
-        //             .text     = "6",
-        //             .position = {11, 2},
-        //         },
-        //
-        //         {
-        //             .type     = hex::TokenType::Op_Minus,
-        //             .text     = "-",
-        //             .position = {12, 1},
-        //         },
-        //         {
-        //             .type     = hex::TokenType::Lit_Float,
-        //             .text     = "45.795",
-        //             .position = {12, 2},
-        //         },
-        //
-        //         {
-        //             .type     = hex::TokenType::Op_LogicalNot,
-        //             .text     = "!",
-        //             .position = {13, 1},
-        //         },
-        //         {
-        //             .type     = hex::TokenType::Lit_true,
-        //             .text     = "true",
-        //             .position = {13, 2},
-        //         },
-        //     };
-        //
-        //     using namespace hex;
-        //     static constexpr i64 Start = 7;
-        //     static constexpr i64 TotalUnaries = 3;
-        //     i64 ctr = 0;
-        //     for (i64 i = 0; i < TotalUnaries; ++i) {
-        //         REQUIRE(ast.branches[Start + i]->branches[0]->rule ==
-        //         Rule::Unary); REQUIRE(ast.branches[Start +
-        //         i]->branches[0]->tokens[0] == expected_tokens[i + ctr]);
-        //         REQUIRE(ast.branches[Start
-        //         + i]->branches[0]->tokens[1] == expected_tokens[i + ctr + 1]);
-        //         ++ctr;
-        //     }
-        // }
+        SECTION("Factors") {
+            REQUIRE(ast.branches.size() >= 15);
+        }
     }
 }

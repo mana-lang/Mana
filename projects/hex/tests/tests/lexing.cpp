@@ -295,7 +295,7 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
             CHECK(tokens[42].type == Op_Minus);
             CHECK(tokens[42].text == "-");
 
-            CHECK(tokens[45].type == Op_Star);
+            CHECK(tokens[45].type == Op_Asterisk);
             CHECK(tokens[45].text == "*");
 
             CHECK(tokens[48].type == Op_FwdSlash);
