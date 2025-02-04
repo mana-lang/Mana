@@ -67,7 +67,6 @@ void Parser::PrintAST(const Node& root, std::string prepend) const {
     prepend.append("== ");
 
     if (not root.tokens.empty()) {
-
         std::ranges::replace(prepend, '=', '-');
 
         for (const auto& [type, text, position] : root.tokens) {
@@ -80,7 +79,7 @@ void Parser::PrintAST(const Node& root, std::string prepend) const {
         std::ranges::replace(prepend, '-', '=');
     }
 
-    next_node:
+next_node:
     if (not root.branches.empty()) {
         for (const auto& node : root.branches) {
             PrintAST(*node, prepend);
@@ -193,7 +192,9 @@ bool Parser::ProgressedAST(Node& node) {
 }
 
 bool Parser::Matched_Expression(Node& node) {
-    const bool matched_something = Matched_Factor(node) || Matched_Unary(node) || Matched_Primary(node);
+    const bool matched_something = Matched_Factor(node) || Matched_Unary(node) ||
+                                   Matched_Primary(node);
+    //
 
     return matched_something;
 }
@@ -248,6 +249,7 @@ bool Parser::Is_Literal(TokenType token) {
 
     case Lit_Int:
     case Lit_Float:
+
     case Lit_Char:
     case Lit_String:
 
@@ -290,28 +292,78 @@ bool Parser::Matched_Unary(Node& node) {
 }
 
 // factor = unary ( ('/' | '*') unary )*
+bool Is_Factor(const TokenType token) {
+    switch (token) {
+        using enum TokenType;
+
+    case Op_FwdSlash:
+    case Op_Asterisk:
+        return true;
+    default:
+        return false;
+    }
+}
+
 bool Parser::Matched_Factor(Node& node) {
     if (not Matched_Unary(node)) {
+        return false;
+    }
+
+    if (not Is_Factor(CurrentToken().type)) {
+        return true;
+    }
+    auto& factor = node.NewBranch(Rule::Factor);
+    factor.tokens.push_back(tokens_[cursor_++]);
+
+    factor.AcquireBranchOf(node, node.branches.size() - 2);
+    const auto factor_index = node.branches.size() - 1;
+
+    if (not Matched_Unary(node)) {
+            LogErr("Expected expression (Factor)");
+        return false;
+    }
+
+    bool ret = true;
+    while (Is_Factor(CurrentToken().type)) {
+        factor.tokens.push_back(tokens_[cursor_++]);
+        if (not Matched_Unary(node)) {
+            LogErr("Incomplete expression (Factor)");
+            factor.rule = Rule::Mistake;
+
+            ret = false;
+        }
+    }
+    factor.AcquireBranchesOf(node, factor_index + 1);
+
+    return ret; //
+
+    factor.branches[1]
+    factor.tokens[1]
+    factor.branches[2]
+}
+
+bool Parser::Matched_Term(ast::Node& node) {
+    if (not Matched_Factor(node)) {
         return false;
     }
 
     switch (CurrentToken().type) {
         using enum TokenType;
 
-    case Op_FwdSlash:
-    case Op_Asterisk: {
+    case Op_Minus:
+    case Op_Plus: {
         const auto op_cursor = cursor_++;
 
-        if (not Matched_Unary(node)) {
-            LogErr("Expected expression.");
+        if (not Matched_Factor(node)) {
+            LogErr("Expected expression (Term)");
             return false;
         }
 
-        auto& factor {node.NewBranch(Rule::Factor)};
-        factor.tokens.push_back(tokens_[op_cursor]);
+        auto& term {node.NewBranch(Rule::Term)};
+        term.tokens.push_back(tokens_[op_cursor]);
 
         const auto lhs = node.branches.size() - 3;
-        factor.AcquireBranches(node, lhs, lhs + 1);
+        term.AcquireBranchesOf(node, lhs, lhs + 1);
     }
     default:
         break;
@@ -320,10 +372,6 @@ bool Parser::Matched_Factor(Node& node) {
 }
 
 bool Parser::Matched_BinaryExpr(Node& node) {
-    return false;
-}
-
-bool Parser::Matched_Grouping(Node& node) {
     return false;
 }
 

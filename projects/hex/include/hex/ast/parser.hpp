@@ -57,13 +57,12 @@ private:
   HEX_NODISCARD bool Matched_Primary(ast::Node& node);
   HEX_NODISCARD bool Matched_Unary(ast::Node& node);
   HEX_NODISCARD bool Matched_Factor(ast::Node& node);
+  HEX_NODISCARD bool Matched_Term(ast::Node& node);
 
   HEX_NODISCARD bool Is_Literal(TokenType token);
 
 
-  bool Matched_BinaryExpr(ast::Node& node);
-  bool Matched_Grouping(ast::Node& node);
-
+  HEX_NODISCARD  bool Matched_BinaryExpr(ast::Node& node);
 };
 
 } // namespace hex

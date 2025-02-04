@@ -111,26 +111,57 @@ struct Node {
         return parent == nullptr;
     }
 
-    void AcquireBranch(Node& from, const i64 index) {
-        branches.emplace_back(from.branches[index]);
-        from.RemoveBranch(index);
+    void AcquireBranchOf(Node& target, const i64 index) {
+#ifdef HEX_DEBUG
+        if (target.branches[index].get() == this) {
+            LogErr("Can not acquire branches of self");
+            return;
+        }
+#endif
+
+        branches.emplace_back(target.branches[index]);
+        target.RemoveBranch(index);
     }
 
-    void AcquireBranches(Node& from, const i64 start, const i64 end) {
+    void AcquireBranchesOf(Node& target, const i64 start, const i64 end) {
         for (i64 i = start; i <= end; ++i) {
-            branches.emplace_back(from.branches[i]);
+#ifdef HEX_DEBUG
+            if (target.branches[i].get() == this) {
+                LogErr("Can not acquire branches of self");
+                return;
+            }
+#endif
+
+            branches.emplace_back(target.branches[i]);
         }
 
         // erase removes up to the penultimate element, but we want inclusive removal
-        from.branches.erase(from.branches.begin() + start, from.branches.begin() + end + 1);
+        target.branches.erase(target.branches.begin() + start, target.branches.begin() + end + 1);
     }
 
-    void AcquireBranches(Node& from, const i64 start) {
-        for (i64 i = start; i < branches.size(); ++i) {
-            branches.emplace_back(from.branches[i]);
-        }
+    void AcquireBranchesOf(Node& target, const i64 start) {
+        for (i64 i = start; i < target.branches.size(); ++i) {
+#ifdef HEX_DEBUG
+            if (target.branches[i].get() == this) {
+                LogErr("Can not acquire branches of self");
+                return;
+            }
+#endif
 
-        from.branches.erase(from.branches.begin() + start, from.branches.end());
+            branches.emplace_back(target.branches[i]);
+        }
+        target.branches.erase(target.branches.begin() + start, target.branches.end());
+    }
+
+    void AcquireTailBranchOf(Node& target) {
+#ifdef HEX_DEBUG
+        if (target.branches.back().get() == this) {
+            LogErr("Can not acquire branches of self");
+            return;
+        }
+#endif
+        branches.emplace_back(target.branches.back());
+        target.branches.erase(target.branches.end() - 1);
     }
 
 private:
