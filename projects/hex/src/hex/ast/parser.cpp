@@ -335,11 +335,7 @@ bool Parser::Matched_Factor(Node& node) {
     }
     factor.AcquireBranchesOf(node, factor_index + 1);
 
-    return ret; //
-
-    factor.branches[1]
-    factor.tokens[1]
-    factor.branches[2]
+    return ret;
 }
 
 bool Parser::Matched_Term(ast::Node& node) {

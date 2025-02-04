@@ -10,10 +10,12 @@ using namespace hex;
 TEST_CASE("Parser", "[parse][ast]") {
     SECTION("Core", "Core functionality test") {
         Lexer lexer;
+
         REQUIRE(lexer.Tokenize(Concatenate(PARSER_TESTING_PATH, "atoms.mn")));
 
         Parser parser(lexer.RelinquishTokens());
-        CHECK(parser.Parse());
+        REQUIRE(parser.Parse());
+
         const auto& tokens {parser.ViewTokens()};
         const auto& ast {parser.ViewAST()};
 
@@ -192,10 +194,11 @@ TEST_CASE("Parser", "[parse][ast]") {
             }
 
             // !(!false)
-            REQUIRE(ast.branches[13]->rule == Rule::Unary);
-            REQUIRE(ast.branches[13]->branches[0]->rule == Rule::Grouping);
-            REQUIRE(ast.branches[13]->branches[0]->branches[0]->rule == Rule::Unary);
-            REQUIRE(ast.branches[13]->branches[0]->branches[0]->branches[0]->rule == Rule::Literal);
+            const auto& unary = ast.branches[13];
+            REQUIRE(unary->rule == Rule::Unary);
+            REQUIRE(unary->branches[0]->rule == Rule::Grouping);
+            REQUIRE(unary->branches[0]->branches[0]->rule == Rule::Unary);
+            REQUIRE(unary->branches[0]->branches[0]->branches[0]->rule == Rule::Literal);
         }
 
         SECTION("Factors") {
@@ -221,72 +224,93 @@ TEST_CASE("Parser", "[parse][ast]") {
                 };
 
                 // 26 * 2
-                REQUIRE(ast.branches[14]->rule == Rule::Factor);
-                REQUIRE(ast.branches[14]->tokens.size() == 1);
-                REQUIRE(ast.branches[14]->tokens[0] == expected_tokens[1]);
+                const auto& factor = ast.branches[14];
+                REQUIRE(factor->rule == Rule::Factor);
+                REQUIRE(factor->tokens.size() == 1);
+                REQUIRE(factor->tokens[0] == expected_tokens[1]);
 
-                REQUIRE(ast.branches[14]->branches.size() == 2);
-                REQUIRE(ast.branches[14]->branches[0]->tokens.size() == 1);
-                REQUIRE(ast.branches[14]->branches[1]->tokens.size() == 1);
+                REQUIRE(factor->branches.size() == 2);
+                REQUIRE(factor->branches[0]->tokens.size() == 1);
+                REQUIRE(factor->branches[1]->tokens.size() == 1);
 
-                REQUIRE(ast.branches[14]->branches[0]->tokens[0] == expected_tokens[0]);
-                REQUIRE(ast.branches[14]->branches[1]->tokens[0] == expected_tokens[2]);
+                REQUIRE(factor->branches[0]->tokens[0] == expected_tokens[0]);
+                REQUIRE(factor->branches[1]->tokens[0] == expected_tokens[2]);
             }
 
-            // SECTION("Multi-operand expressions") {
-            //     const TokenStream expected_tokens {
-            //         {
-            //             .type {TokenType::Lit_Int},
-            //             .text {"943"},
-            //             .position {23, 1},
-            //         },
-            //         {
-            //             .type {TokenType::Op_FwdSlash},
-            //             .text {"/"},
-            //             .position {23, 5},
-            //         },
-            //         {
-            //             .type {TokenType::Lit_Float},
-            //             .text {"27.54"},
-            //             .position {23, 7},
-            //         },
-            //         {
-            //             .type {TokenType::Op_Asterisk},
-            //             .text {"*"},
-            //             .position {23, 13},
-            //         },
-            //         {
-            //             .type {TokenType::Lit_Float},
-            //             .text {"12.95"},
-            //             .position {23, 15},
-            //         },
-            //         {
-            //             .type {TokenType::Op_FwdSlash},
-            //             .text {"/"},
-            //             .position {23, 21},
-            //         },
-            //         {
-            //             .type {TokenType::Lit_Int},
-            //             .text {"599"},
-            //             .position {23, 23},
-            //         },
-            //         {
-            //             .type {TokenType::Op_FwdSlash},
-            //             .text {"/"},
-            //             .position {23, 27},
-            //         },
-            //         {
-            //             .type {TokenType::Lit_Int},
-            //             .text {"2"},
-            //             .position {23, 29},
-            //         },
-            //     };
-            //
-            //     // 943 / 27.54 * 12.95 / 599 / 2
-            //     REQUIRE(ast.branches[15]->rule == Rule::Factor);
-            //     REQUIRE(ast.branches[15]->tokens.size() == 1);
-            //     REQUIRE(ast.branches[15]->tokens[0] == expected_tokens[1]);
-            // }
+            SECTION("Multi-operand expressions") {
+                const TokenStream expected_tokens {
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"943"},
+                        .position {23, 1},
+                    },
+                    {
+                        .type {TokenType::Op_FwdSlash},
+                        .text {"/"},
+                        .position {23, 5},
+                    },
+                    {
+                        .type {TokenType::Lit_Float},
+                        .text {"27.54"},
+                        .position {23, 7},
+                    },
+                    {
+                        .type {TokenType::Op_Asterisk},
+                        .text {"*"},
+                        .position {23, 13},
+                    },
+                    {
+                        .type {TokenType::Lit_Float},
+                        .text {"12.95"},
+                        .position {23, 15},
+                    },
+                    {
+                        .type {TokenType::Op_FwdSlash},
+                        .text {"/"},
+                        .position {23, 21},
+                    },
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"599"},
+                        .position {23, 23},
+                    },
+                    {
+                        .type {TokenType::Op_FwdSlash},
+                        .text {"/"},
+                        .position {23, 27},
+                    },
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"2"},
+                        .position {23, 29},
+                    },
+                    {
+                        .type {TokenType::Op_Asterisk},
+                        .text {"*"},
+                        .position {23, 31},
+                    },
+                    {
+                        .type {TokenType::Lit_Float},
+                        .text {"94.323"},
+                        .position {23, 33},
+                    },
+                };
+
+                // 943 / 27.54 * 12.95 / 599 / 2 * 94.323
+                const auto& factor = ast.branches[15];
+                REQUIRE(factor->rule == Rule::Factor);
+                REQUIRE(factor->tokens.size() == 5);
+
+                for (i64 i = 1; const auto& token : factor->tokens) {
+                    CHECK(token == expected_tokens[i]);
+                    i += 2;
+                }
+
+                for (i64 i = 0; const auto& branch : factor->branches) {
+                    CHECK(branch->tokens[0] == expected_tokens[i]);
+                    i += 2;
+                }
+            }
         }
     }
 }
