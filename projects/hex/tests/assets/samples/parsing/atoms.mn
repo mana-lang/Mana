@@ -33,4 +33,11 @@ null
 72 >= 125
 953 <= 24 < 12 > 2384.5 >= false
 
+# Equality [23]
+true == false
+94 != 94
+
+# Expr [25]
+83 == -24 + 94 / (3 * (12 - 34)) < 85 >= 120 != !false
+
 ## INCOMPLETE ##

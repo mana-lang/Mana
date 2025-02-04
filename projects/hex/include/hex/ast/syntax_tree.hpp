@@ -120,6 +120,7 @@ struct Node {
 #endif
 
         branches.emplace_back(target.branches[index]);
+        branches.back()->parent = this;
         target.RemoveBranch(index);
     }
 
@@ -133,6 +134,7 @@ struct Node {
 #endif
 
             branches.emplace_back(target.branches[i]);
+            branches.back()->parent = this;
         }
 
         // erase removes up to the penultimate element, but we want inclusive removal
@@ -149,6 +151,7 @@ struct Node {
 #endif
 
             branches.emplace_back(target.branches[i]);
+            branches.back()->parent = this;
         }
         target.branches.erase(target.branches.begin() + start, target.branches.end());
     }
@@ -161,6 +164,7 @@ struct Node {
         }
 #endif
         branches.emplace_back(target.branches.back());
+        branches.back()->parent = this;
         target.branches.erase(target.branches.end() - 1);
     }
 

@@ -58,6 +58,7 @@ private:
     HEX_NODISCARD bool Matched_Factor(ast::Node& node);
     HEX_NODISCARD bool Matched_Term(ast::Node& node);
     HEX_NODISCARD bool Matched_Comparison(ast::Node& node);
+    HEX_NODISCARD bool Matched_Equality(ast::Node& node);
 
     using MatcherFnPtr   = bool (Parser::*)(ast::Node&);
     using OpCheckerFnPtr = bool (*)(TokenType);

@@ -192,10 +192,10 @@ bool Parser::ProgressedAST(Node& node) {
 }
 
 bool Parser::Matched_Expression(Node& node) {
-    const bool matched_something = Matched_Comparison(node) || Matched_Term(node) || Matched_Factor(node) ||
-                                   Matched_Unary(node) || Matched_Primary(node);
+    // const bool matched_something = Matched_Comparison(node) || Matched_Term(node) || Matched_Factor(node) ||
+    //                                Matched_Unary(node) || Matched_Primary(node);
 
-    return matched_something;
+    return Matched_Equality(node); //
 }
 
 // literal = number | string | KW_true | KW_false | KW_null
@@ -340,6 +340,22 @@ bool Is_ComparisonOp(const TokenType token) {
 
 bool Parser::Matched_Comparison(Node& node) {
     return Matched_BinaryExpr(node, Is_ComparisonOp, Matched_Term, Rule::Comparison);
+}
+
+bool Is_EqualityOp(const TokenType token) {
+    switch (token) {
+        using enum TokenType;
+
+    case Op_Equality:
+    case Op_NotEqual:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool Parser::Matched_Equality(Node& node) {
+    return Matched_BinaryExpr(node, Is_EqualityOp, Matched_Comparison, Rule::Equality);
 }
 
 bool Parser::Matched_BinaryExpr(
