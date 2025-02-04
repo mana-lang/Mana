@@ -1,14 +1,14 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "common.hpp"
-#include <hex/ast/lexer.hpp>
+#include <sigil/ast/lexer.hpp>
 
 constexpr auto LEXER_TESTING_PATH = "assets/samples/lexing/";
 TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
-    using enum hex::TokenType;
+    using enum sigil::TokenType;
 
     SECTION("Core", "Core functionality test") {
-        hex::Lexer lexer;
+        sigil::Lexer lexer;
         REQUIRE(lexer.Tokenize(Concatenate(LEXER_TESTING_PATH, "basic.mn")));
 
         const auto tokens = StripRedundant(lexer.RelinquishTokens());
@@ -70,7 +70,7 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
 
     const auto keyword_path = Concatenate(LEXER_TESTING_PATH, "keywords/");
     SECTION("Keyword lexing") {
-        hex::Lexer lexer;
+        sigil::Lexer lexer;
         REQUIRE(lexer.Tokenize(Concatenate(keyword_path, "datatypes.mn")));
 
         const auto datatypetokens = StripRedundant(lexer.RelinquishTokens());
@@ -249,7 +249,7 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
     }
 
     SECTION("Operator lexing") {
-        hex::Lexer lexer;
+        sigil::Lexer lexer;
         REQUIRE(lexer.Tokenize(Concatenate(LEXER_TESTING_PATH, "operators.mn")));
 
         const auto tokens = StripRedundant(lexer.RelinquishTokens());

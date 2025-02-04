@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace hex {
+namespace sigil {
 using i8  = std::int8_t;
 using i16 = std::int16_t;
 using i32 = std::int32_t;
@@ -17,5 +17,5 @@ using usize = decltype(sizeof(0));
 using f32 = float;
 using f64 = double;
 
-#define HEX_NODISCARD_W(REASON) [[nodiscard(REASON)]]
+#define SIGIL_NODISCARD_W(REASON) [[nodiscard(REASON)]]
 }  // namespace hex

@@ -1,6 +1,6 @@
-#include <hex/ast/parse_tree.hpp>
+#include <sigil/ast/parse_tree.hpp>
 
-namespace hex::ast {
+namespace sigil::ast {
 
 Node::Node(const Rule r)
     : rule {r}
@@ -27,12 +27,12 @@ void Node::RemoveBranchFromTail(const i64 idx) {
     branches.erase(branches.end() - idx);
 }
 
-HEX_NODISCARD bool Node::IsRoot() const {
+SIGIL_NODISCARD bool Node::IsRoot() const {
     return parent == nullptr;
 }
 
 void Node::AcquireBranchOf(Node& target, const i64 index) {
-#ifdef HEX_DEBUG
+#ifdef SIGIL_DEBUG
     if (target.branches[index].get() == this) {
         LogErr("Can not acquire branches of self");
         return;
@@ -46,7 +46,7 @@ void Node::AcquireBranchOf(Node& target, const i64 index) {
 
 void Node::AcquireBranchesOf(Node& target, const i64 start, const i64 end) {
     for (i64 i = start; i <= end; ++i) {
-#ifdef HEX_DEBUG
+#ifdef SIGIL_DEBUG
         if (target.branches[i].get() == this) {
             LogErr("Can not acquire branches of self");
             return;
@@ -62,7 +62,7 @@ void Node::AcquireBranchesOf(Node& target, const i64 start, const i64 end) {
 
 void Node::AcquireBranchesOf(Node& target, const i64 start) {
     for (i64 i = start; i < target.branches.size(); ++i) {
-#ifdef HEX_DEBUG
+#ifdef SIGIL_DEBUG
         if (target.branches[i].get() == this) {
             LogErr("Can not acquire branches of self");
             return;
@@ -75,7 +75,7 @@ void Node::AcquireBranchesOf(Node& target, const i64 start) {
 }
 
 void Node::AcquireTailBranchOf(Node& target) {
-#ifdef HEX_DEBUG
+#ifdef SIGIL_DEBUG
     if (target.branches.back().get() == this) {
         LogErr("Can not acquire branches of self");
         return;

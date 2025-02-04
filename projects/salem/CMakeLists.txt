@@ -12,7 +12,7 @@ set(SALEM_INCLUDES
 )
 
 set(SALEM_LIBS
-    hex::hex
+    sigil::sigil
 )
 
 set(EXT_INCLUDES

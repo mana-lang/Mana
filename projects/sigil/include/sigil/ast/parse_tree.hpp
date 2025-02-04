@@ -1,12 +1,12 @@
 #pragma once
 
-#include <hex/ast/token.hpp>
-#include <hex/core/logger.hpp>
+#include <sigil/ast/token.hpp>
+#include <sigil/core/logger.hpp>
 
 #include <memory>
 #include <vector>
 
-namespace hex::ast {
+namespace sigil::ast {
 enum class Rule : i64 {
     Undefined,
     Mistake,
@@ -76,13 +76,13 @@ struct Node {
     explicit Node(Rule r = Rule::Undefined);
     explicit Node(Node* p, Rule r = Rule::Undefined);
 
-    HEX_NODISCARD Node& NewBranch(Rule new_rule = Rule::Undefined);
+    SIGIL_NODISCARD Node& NewBranch(Rule new_rule = Rule::Undefined);
 
     void PopBranch();
     void RemoveBranch(i64 idx);
     void RemoveBranchFromTail(i64 idx);
 
-    HEX_NODISCARD bool IsRoot() const;
+    SIGIL_NODISCARD bool IsRoot() const;
 
     void AcquireBranchOf(Node& target, i64 index);
     void AcquireBranchesOf(Node& target, i64 start, i64 end);
@@ -94,4 +94,4 @@ private:
     Node* parent;
 };
 
-}  // namespace hex::ast
+}  // namespace sigil::ast

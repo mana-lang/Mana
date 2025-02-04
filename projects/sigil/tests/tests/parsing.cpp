@@ -1,11 +1,11 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include <hex/ast/lexer.hpp>
-#include <hex/ast/parser.hpp>
+#include <sigil/ast/lexer.hpp>
+#include <sigil/ast/parser.hpp>
 #include "common.hpp"
 
 constexpr auto PARSER_TESTING_PATH = "assets/samples/parsing/";
-using namespace hex;
+using namespace sigil;
 
 // remind me to never test like this again
 TEST_CASE("Expression Parsing", "[parse][ast]") {

@@ -3,12 +3,12 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include <hex/core/exit_codes.hpp>
-#include <hex/core/type_aliases.hpp>
+#include <sigil/core/exit_codes.hpp>
+#include <sigil/core/type_aliases.hpp>
 
 #include <memory>
 
-namespace hex {
+namespace sigil {
 enum class LogLevel : u8 {
     Trace,
     Debug,
@@ -19,19 +19,19 @@ enum class LogLevel : u8 {
     Off
 };
 
-#ifndef HEX_LOGGER_NAME
-#    define HEX_LOGGER_NAME "Hex"
+#ifndef SIGIL_LOGGER_NAME
+#    define SIGIL_LOGGER_NAME "Hex"
 #endif
 
-#ifndef HEX_LOG_LEVEL
-#    if defined(HEX_VERBOSE)
-#        define HEX_LOG_LEVEL LogLevel::Trace
-#    elif defined(HEX_DEBUG)
-#        define HEX_LOG_LEVEL LogLevel::Debug
-#    elif defined(HEX_RELEASE)
-#        define HEX_LOG_LEVEL LogLevel::Info
+#ifndef SIGIL_LOG_LEVEL
+#    if defined(SIGIL_VERBOSE)
+#        define SIGIL_LOG_LEVEL LogLevel::Trace
+#    elif defined(SIGIL_DEBUG)
+#        define SIGIL_LOG_LEVEL LogLevel::Debug
+#    elif defined(SIGIL_RELEASE)
+#        define SIGIL_LOG_LEVEL LogLevel::Info
 #    else
-#        define HEX_LOG_LEVEL LogLevel::Off
+#        define SIGIL_LOG_LEVEL LogLevel::Off
 #    endif
 #endif
 
@@ -53,7 +53,7 @@ class Internal_Log_ {
         if (!was_initialized_) {
             was_initialized_ = true;
 
-            logger_->set_level(static_cast<spdlog::level::level_enum>(HEX_LOG_LEVEL));
+            logger_->set_level(static_cast<spdlog::level::level_enum>(SIGIL_LOG_LEVEL));
             logger_->set_pattern("%^<%n>%$ %v");
 
             counters_ = {};
@@ -61,7 +61,7 @@ class Internal_Log_ {
     }
 
     inline static bool        was_initialized_ {false};
-    inline static std::string logger_name_ {HEX_LOGGER_NAME};
+    inline static std::string logger_name_ {SIGIL_LOGGER_NAME};
     inline static Logger      logger_ {spdlog::stdout_color_mt(logger_name_)};
 
     inline static struct {
@@ -148,4 +148,4 @@ inline i64 LogCounter(const LogLevel level) {
 
     return exit_code(exit::LOG_LogCounterExhausted);
 }
-}  // namespace hex
+}  // namespace sigil

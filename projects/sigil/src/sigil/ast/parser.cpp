@@ -1,13 +1,12 @@
-#include <hex/ast/parser.hpp>
-#include <hex/core/logger.hpp>
+#include <sigil/ast/parser.hpp>
+#include <sigil/core/logger.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
 #include <algorithm>
 #include <fstream>
-#include <iostream>
 
-namespace hex {
+namespace sigil {
 using namespace ast;
 
 Parser::Parser(const TokenStream&& tokens)
@@ -66,7 +65,6 @@ void Parser::EmitAST(const std::string_view file_name) const {
 std::string Parser::EmitAST(const Node& root, std::string prepend) const {
     std::string ret = "";
     if (root.rule == Rule::Module) {
-        // Log("[Module] -> {}", root.tokens[0].text);
         ret = fmt::format("[Module] -> {}\n\n", root.tokens[0].text);
 
     } else {
@@ -405,4 +403,4 @@ bool Parser::MatchedBinaryExpr(
 
     return ret;
 }
-}  // namespace hex
+}  // namespace sigil

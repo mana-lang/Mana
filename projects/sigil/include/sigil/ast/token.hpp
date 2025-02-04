@@ -1,11 +1,11 @@
 #pragma once
 
-#include <hex/core/type_aliases.hpp>
+#include <sigil/core/type_aliases.hpp>
 
 #include <string>
 #include <vector>
 
-namespace hex {
+namespace sigil {
 enum class TokenType : i64 {
     Identifier,
 

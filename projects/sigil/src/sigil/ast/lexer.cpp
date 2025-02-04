@@ -1,5 +1,5 @@
-#include <hex/ast/lexer.hpp>
-#include <hex/core/logger.hpp>
+#include <sigil/ast/lexer.hpp>
+#include <sigil/core/logger.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
@@ -8,7 +8,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace hex {
+namespace sigil {
 
 Lexer::Lexer()
     : cursor_ {0}
@@ -115,12 +115,12 @@ void Lexer::clear() {
     token_stream_.clear();
 }
 
-HEX_NODISCARD TokenStream&& Lexer::RelinquishTokens() {
+SIGIL_NODISCARD TokenStream&& Lexer::RelinquishTokens() {
     return std::move(token_stream_);
 }
 
 // ID = ^[a-zA-Z_][a-zA-Z0-9_]+
-HEX_NODISCARD bool Lexer::LexedIdentifier(const std::string_view line) {
+SIGIL_NODISCARD bool Lexer::LexedIdentifier(const std::string_view line) {
     if (char current = line[cursor_]; current == '_' || std::isalpha(current)) {
         std::string buffer;
         while (current == '_' || std::isalnum(current)) {
@@ -138,7 +138,7 @@ HEX_NODISCARD bool Lexer::LexedIdentifier(const std::string_view line) {
 }
 
 // only to be entered when current char is " or '
-HEX_NODISCARD bool Lexer::LexedString(const std::string_view line) {
+SIGIL_NODISCARD bool Lexer::LexedString(const std::string_view line) {
     std::string buffer;
 
     char current_char = line[cursor_];
@@ -187,7 +187,7 @@ HEX_NODISCARD bool Lexer::LexedString(const std::string_view line) {
     return true;
 }
 
-HEX_NODISCARD bool Lexer::LexedNumber(const std::string_view line) {
+SIGIL_NODISCARD bool Lexer::LexedNumber(const std::string_view line) {
     if (not std::isdigit(line[cursor_])) {
         return false;
     }
@@ -218,7 +218,7 @@ HEX_NODISCARD bool Lexer::LexedNumber(const std::string_view line) {
     return true;
 }
 
-HEX_NODISCARD bool Lexer::LexedOperator(const std::string_view line) {
+SIGIL_NODISCARD bool Lexer::LexedOperator(const std::string_view line) {
     const auto current = line[cursor_];
     const auto next    = line[cursor_ + 1];
     TokenType  token_type;
@@ -358,7 +358,7 @@ void Lexer::LexUnknown(const std::string_view line) {
 
 // we take a string ref because we have a string that
 // we'd otherwise need to construct from a stringview anyway
-HEX_NODISCARD bool Lexer::MatchedKeyword(std::string& identifier_buffer) {
+SIGIL_NODISCARD bool Lexer::MatchedKeyword(std::string& identifier_buffer) {
     using KeywordMap = std::unordered_map<std::string, TokenType>;
 
     using enum TokenType;
@@ -402,11 +402,11 @@ HEX_NODISCARD bool Lexer::MatchedKeyword(std::string& identifier_buffer) {
     return false;
 }
 
-HEX_NODISCARD bool Lexer::IsWhitespace(const char c) const {
+SIGIL_NODISCARD bool Lexer::IsWhitespace(const char c) const {
     return c == ' ' || c == '\0' || c == '\n' || c == '\r' || c == '\t';
 }
 
-HEX_NODISCARD bool Lexer::IsComment(const char c) const {
+SIGIL_NODISCARD bool Lexer::IsComment(const char c) const {
     return c == '#';
 }
 
@@ -439,4 +439,4 @@ void Lexer::AddEOF() {
         }
     );
 }
-}  // namespace hex
+}  // namespace sigil

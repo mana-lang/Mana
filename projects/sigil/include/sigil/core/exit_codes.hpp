@@ -1,6 +1,6 @@
 #pragma once
 
-namespace hex {
+namespace sigil {
 enum class exit {
     Success,
     CriticalError,
