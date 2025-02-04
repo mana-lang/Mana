@@ -57,12 +57,11 @@ private:
     HEX_NODISCARD bool Matched_Unary(ast::Node& node);
     HEX_NODISCARD bool Matched_Factor(ast::Node& node);
     HEX_NODISCARD bool Matched_Term(ast::Node& node);
+    HEX_NODISCARD bool Matched_Comparison(ast::Node& node);
 
     using MatcherFnPtr   = bool (Parser::*)(ast::Node&);
     using OpCheckerFnPtr = bool (*)(TokenType);
-    HEX_NODISCARD bool Matched_Binary(ast::Node& node, OpCheckerFnPtr is_valid_operator, MatcherFnPtr matched_operand, ast::Rule rule);
-
-    HEX_NODISCARD bool Is_Literal(TokenType token);
+    HEX_NODISCARD bool Matched_BinaryExpr(ast::Node& node, OpCheckerFnPtr is_valid_operator, MatcherFnPtr matched_operand, ast::Rule rule);
 };
 
 }  // namespace hex

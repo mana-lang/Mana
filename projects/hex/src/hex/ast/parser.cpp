@@ -191,23 +191,31 @@ bool Parser::ProgressedAST(Node& node) {
     return matched_something;
 }
 
-bool Is_TermOp(TokenType token) {
+bool Parser::Matched_Expression(Node& node) {
+    const bool matched_something = Matched_Comparison(node) || Matched_Term(node) || Matched_Factor(node) ||
+                                   Matched_Unary(node) || Matched_Primary(node);
+
+    return matched_something;
+}
+
+// literal = number | string | KW_true | KW_false | KW_null
+bool Is_Literal(const TokenType token) {
     switch (token) {
         using enum TokenType;
 
-    case Op_Minus:
-    case Op_Plus:
+    case Lit_Int:
+    case Lit_Float:
+
+    case Lit_Char:
+    case Lit_String:
+
+    case Lit_true:
+    case Lit_false:
+    case Lit_null:
         return true;
     default:
         return false;
     }
-}
-
-bool Parser::Matched_Expression(Node& node) {
-    const bool matched_something = Matched_Term(node) ||
-                                   Matched_Factor(node) || Matched_Unary(node) || Matched_Primary(node);
-
-    return matched_something;
 }
 
 // primary  = literal | grouping
@@ -253,26 +261,6 @@ bool Parser::Matched_Primary(Node& node) {
     return true;
 }
 
-// literal = number | string | KW_true | KW_false | KW_null
-bool Parser::Is_Literal(TokenType token) {
-    switch (token) {
-        using enum TokenType;
-
-    case Lit_Int:
-    case Lit_Float:
-
-    case Lit_Char:
-    case Lit_String:
-
-    case Lit_true:
-    case Lit_false:
-    case Lit_null:
-        return true;
-    default:
-        return false;
-    }
-}
-
 // unary = ("-" | "!") expr
 bool Parser::Matched_Unary(Node& node) {
     switch (CurrentToken().type) {
@@ -316,117 +304,51 @@ bool Is_FactorOp(const TokenType token) {
 
 // factor = unary ( ('/' | '*') unary )*
 bool Parser::Matched_Factor(Node& node) {
-    if (not Matched_Unary(node)) {
-        return false;
-    }
+    return Matched_BinaryExpr(node, Is_FactorOp, Matched_Unary, Rule::Factor);
+}
 
-    if (not Is_FactorOp(CurrentToken().type)) {
+bool Is_TermOp(const TokenType token) {
+    switch (token) {
+        using enum TokenType;
+
+    case Op_Minus:
+    case Op_Plus:
         return true;
-    }
-    auto& factor = node.NewBranch(Rule::Factor);
-    factor.tokens.push_back(tokens_[cursor_++]);
-
-    factor.AcquireBranchOf(node, node.branches.size() - 2);
-    const auto factor_index = node.branches.size() - 1;
-
-    if (not Matched_Unary(node)) {
-        LogErr("Expected expression (Factor)");
+    default:
         return false;
     }
-
-    bool ret = true;
-    while (Is_FactorOp(CurrentToken().type)) {
-        factor.tokens.push_back(tokens_[cursor_++]);
-        if (not Matched_Unary(node)) {
-            LogErr("Incomplete expression (Factor)");
-            factor.rule = Rule::Mistake;
-
-            ret = false;
-        }
-    }
-    factor.AcquireBranchesOf(node, factor_index + 1);
-
-    return ret;
 }
 
 // term = factor ( ('-' | '+') factor)*
-bool Parser::Matched_Term(ast::Node& node) {
-    if (not Matched_Factor(node)) {
-        return false;
-    }
-
-    if (not Is_TermOp(CurrentToken().type)) {
-        return true;
-    }
-    auto& term = node.NewBranch(Rule::Term);
-    term.tokens.push_back(tokens_[cursor_++]);
-
-    term.AcquireBranchOf(node, node.branches.size() - 2);
-    const auto term_index = node.branches.size() - 1;
-
-    if (not Matched_Factor(node)) {
-        LogErr("Expected expression (Term)");
-        return false;
-    }
-
-    bool ret = true;
-    while (Is_TermOp(CurrentToken().type)) {
-        term.tokens.push_back(tokens_[cursor_++]);
-        if (not Matched_Factor(node)) {
-            LogErr("Incomplete expression (Term)");
-            term.rule = Rule::Mistake;
-
-            ret = false;
-        }
-    }
-    term.AcquireBranchesOf(node, term_index + 1);
-
-    return ret;
+bool Parser::Matched_Term(Node& node) {
+    return Matched_BinaryExpr(node, Is_TermOp, Matched_Factor, Rule::Term);
 }
 
-// bool Parser::Matched_Binary(ast::Node& node, OpCheckerFnPtr is_valid_operator, ast::Rule operand_rule, ast::Rule node_rule) {
-//     if (not(this->*matched_operand)(node)) {
-//         return false;
-//     }
-//
-//     if (not is_valid_operator(CurrentToken().type)) {
-//         return true;
-//     }
-//
-//     auto& binary_expr = node.NewBranch(rule);
-//     binary_expr.tokens.push_back(tokens_[cursor_++]);
-//
-//     binary_expr.AcquireBranchOf(node, node.branches.size() - 2);
-//     const auto expr_index = node.branches.size() - 1;
-//
-//     if (not(this->*matched_operand)(node)) {
-//         LogErr("Expected expression");
-//         return false;
-//     }
-//
-//     bool ret = true;
-//     while (is_valid_operator(CurrentToken().type)) {
-//         binary_expr.tokens.push_back(tokens_[cursor_++]);
-//         if (not(this->*matched_operand)(node)) {
-//             LogErr("Incomplete expression");
-//             binary_expr.rule = Rule::Mistake;
-//
-//             ret = false;
-//         }
-//     }
-//     binary_expr.AcquireBranchesOf(node, expr_index + 1);
-//
-//     return ret;
-//
-// }
+bool Is_ComparisonOp(const TokenType token) {
+    switch (token) {
+        using enum TokenType;
 
-bool Parser::Matched_Binary(
+    case Op_GreaterThan:
+    case Op_GreaterEqual:
+    case Op_LessThan:
+    case Op_LessEqual:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool Parser::Matched_Comparison(Node& node) {
+    return Matched_BinaryExpr(node, Is_ComparisonOp, Matched_Term, Rule::Comparison);
+}
+
+bool Parser::Matched_BinaryExpr(
     Node&                node,
     const OpCheckerFnPtr is_valid_operator,
     const MatcherFnPtr   matched_operand,
     const Rule           rule
 ) {
-    if (not(this->*matched_operand)(node)) {
+    if (not (this->*matched_operand)(node)) {
         return false;
     }
 
@@ -435,20 +357,21 @@ bool Parser::Matched_Binary(
     }
 
     auto& binary_expr = node.NewBranch(rule);
-    binary_expr.tokens.push_back(tokens_[cursor_++]);
+    AddCycledTokenTo(binary_expr);
 
     binary_expr.AcquireBranchOf(node, node.branches.size() - 2);
     const auto expr_index = node.branches.size() - 1;
 
-    if (not(this->*matched_operand)(node)) {
+    if (not (this->*matched_operand)(node)) {
         LogErr("Expected expression");
         return false;
     }
 
     bool ret = true;
     while (is_valid_operator(CurrentToken().type)) {
-        binary_expr.tokens.push_back(tokens_[cursor_++]);
-        if (not(this->*matched_operand)(node)) {
+        AddCycledTokenTo(binary_expr);
+
+        if (not (this->*matched_operand)(node)) {
             LogErr("Incomplete expression");
             binary_expr.rule = Rule::Mistake;
 
