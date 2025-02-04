@@ -580,5 +580,136 @@ TEST_CASE("Parser", "[parse][ast]") {
                 }
             }
         }
+
+        SECTION("Comparisons") {
+            REQUIRE(ast.branches.size() >= 23);
+
+            SECTION("Two-operand expressions") {
+                const TokenStream expected_tokens {
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"55"},
+                        .position {32, 1},
+                    },
+                    {
+                        .type {TokenType::Op_GreaterThan},
+                        .text {">"},
+                        .position {32, 4},
+                    },
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"23"},
+                        .position {32, 6},
+                    },
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"72"},
+                        .position {33, 1},
+                    },
+                    {
+                        .type {TokenType::Op_GreaterEqual},
+                        .text {">="},
+                        .position {33, 4},
+                    },
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"125"},
+                        .position {33, 7},
+                    },
+                };
+
+                // 55 > 23
+                const auto& cmp = ast.branches[20];
+                REQUIRE(cmp->rule == Rule::Comparison);
+                REQUIRE(cmp->tokens.size() == 1);
+                REQUIRE(cmp->tokens[0] == expected_tokens[1]);
+
+                REQUIRE(cmp->branches.size() == 2);
+                REQUIRE(cmp->branches[0]->tokens.size() == 1);
+                REQUIRE(cmp->branches[1]->tokens.size() == 1);
+
+                REQUIRE(cmp->branches[0]->tokens[0] == expected_tokens[0]);
+                REQUIRE(cmp->branches[1]->tokens[0] == expected_tokens[2]);
+
+                // 72 >= 125
+                const auto& cmp2 = ast.branches[21];
+                REQUIRE(cmp2->rule == Rule::Comparison);
+                REQUIRE(cmp2->tokens.size() == 1);
+                REQUIRE(cmp2->tokens[0] == expected_tokens[4]);
+
+                REQUIRE(cmp2->branches.size() == 2);
+                REQUIRE(cmp2->branches[0]->tokens.size() == 1);
+                REQUIRE(cmp2->branches[1]->tokens.size() == 1);
+
+                REQUIRE(cmp2->branches[0]->tokens[0] == expected_tokens[3]);
+                REQUIRE(cmp2->branches[1]->tokens[0] == expected_tokens[5]);
+            }
+
+            SECTION("Multi-operand expressions") {
+                const TokenStream expected_tokens {
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"953"},
+                        .position {34, 1},
+                    },
+                    {
+                        .type {TokenType::Op_LessEqual},
+                        .text {"<="},
+                        .position {34, 5},
+                    },
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"24"},
+                        .position {34, 8},
+                    },
+                    {
+                        .type {TokenType::Op_LessThan},
+                        .text {"<"},
+                        .position {34, 11},
+                    },
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"12"},
+                        .position {34, 13},
+                    },
+                    {
+                        .type {TokenType::Op_GreaterThan},
+                        .text {">"},
+                        .position {34, 16},
+                    },
+                    {
+                        .type {TokenType::Lit_Float},
+                        .text {"2384.5"},
+                        .position {34, 18},
+                    },
+                    {
+                        .type {TokenType::Op_GreaterEqual},
+                        .text {">="},
+                        .position {34, 25},
+                    },
+                    {
+                        .type {TokenType::Lit_false},
+                        .text {"false"},
+                        .position {34, 28},
+                    },
+                };
+
+                // 953 <= 24 < 12 > 2384.5 >= false
+                const auto& cmp = ast.branches[22];
+                REQUIRE(cmp->rule == Rule::Comparison);
+                REQUIRE(cmp->tokens.size() == 4);
+                REQUIRE(cmp->branches.size() == 5);
+
+                for (i64 i = 1; const auto& token : cmp->tokens) {
+                    CHECK(token == expected_tokens[i]);
+                    i += 2;
+                }
+
+                for (i64 i = 0; const auto& branch : cmp->branches) {
+                    CHECK(branch->tokens[0] == expected_tokens[i]);
+                    i += 2;
+                }
+            }
+        }
     }
 }
