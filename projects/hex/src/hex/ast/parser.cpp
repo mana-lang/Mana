@@ -59,27 +59,25 @@ void Parser::PrintAST() const {
 void Parser::PrintAST(const Node& root, std::string prepend) const {
     if (root.rule == Rule::Module) {
         Log("[Module] -> {}", root.tokens[0].text);
-        goto next_node;
-    }
+    } else {
+        Log("{}[{}]", prepend, magic_enum::enum_name(root.rule));
 
-    Log("{}[{}]", prepend, magic_enum::enum_name(root.rule));
+        prepend.append("== ");
 
-    prepend.append("== ");
+        if (not root.tokens.empty()) {
+            std::ranges::replace(prepend, '=', '-');
 
-    if (not root.tokens.empty()) {
-        std::ranges::replace(prepend, '=', '-');
-
-        for (const auto& [type, text, position] : root.tokens) {
-            if (type == TokenType::Terminator) {
-                continue;
+            for (const auto& [type, text, position] : root.tokens) {
+                if (type == TokenType::Terminator) {
+                    continue;
+                }
+                Log("{} [{}] -> {}", prepend, magic_enum::enum_name(type), text);
             }
-            Log("{} [{}] -> {}", prepend, magic_enum::enum_name(type), text);
-        }
 
-        std::ranges::replace(prepend, '-', '=');
+            std::ranges::replace(prepend, '-', '=');
+        }
     }
 
-next_node:
     if (not root.branches.empty()) {
         for (const auto& node : root.branches) {
             PrintAST(*node, prepend);
@@ -195,7 +193,7 @@ bool Parser::Matched_Expression(Node& node) {
     // const bool matched_something = Matched_Comparison(node) || Matched_Term(node) || Matched_Factor(node) ||
     //                                Matched_Unary(node) || Matched_Primary(node);
 
-    return Matched_Equality(node); //
+    return Matched_Equality(node);  //
 }
 
 // literal = number | string | KW_true | KW_false | KW_null
@@ -364,7 +362,7 @@ bool Parser::Matched_BinaryExpr(
     const MatcherFnPtr   matched_operand,
     const Rule           rule
 ) {
-    if (not (this->*matched_operand)(node)) {
+    if (not(this->*matched_operand)(node)) {
         return false;
     }
 
@@ -378,7 +376,7 @@ bool Parser::Matched_BinaryExpr(
     binary_expr.AcquireBranchOf(node, node.branches.size() - 2);
     const auto expr_index = node.branches.size() - 1;
 
-    if (not (this->*matched_operand)(node)) {
+    if (not(this->*matched_operand)(node)) {
         LogErr("Expected expression");
         return false;
     }
@@ -387,7 +385,7 @@ bool Parser::Matched_BinaryExpr(
     while (is_valid_operator(CurrentToken().type)) {
         AddCycledTokenTo(binary_expr);
 
-        if (not (this->*matched_operand)(node)) {
+        if (not(this->*matched_operand)(node)) {
             LogErr("Incomplete expression");
             binary_expr.rule = Rule::Mistake;
 
