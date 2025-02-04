@@ -43,4 +43,11 @@ target_compile_definitions(hex PUBLIC HEX_VER_PATCH=${PROJECT_VERSION_PATCH})
 
 target_compile_definitions(hex PUBLIC HEX_VER_STRING="${PROJECT_VERSION}")
 
+add_custom_command(
+        TARGET hex POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/assets
+        ${PROJECT_BINARY_DIR}/assets/
+)
+
 add_subdirectory(tests)

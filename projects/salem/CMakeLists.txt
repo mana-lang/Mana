@@ -48,7 +48,7 @@ target_compile_definitions(salem PRIVATE SALEM_VER_STRING="${PROJECT_VERSION}")
 add_custom_command(
         TARGET salem POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${PROJECT_SOURCE_DIR}/assets
+        ${CMAKE_SOURCE_DIR}/assets
         ${PROJECT_BINARY_DIR}/assets/
 )
 
