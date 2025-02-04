@@ -1,68 +1,68 @@
 #pragma once
 
-#include <hex/core/type_aliases.hpp>
-#include <hex/ast/token.hpp>
 #include <hex/ast/syntax_tree.hpp>
+#include <hex/ast/token.hpp>
+#include <hex/core/type_aliases.hpp>
 
 #include <vector>
 
 namespace hex {
 struct TokenRange {
-  i64 breadth;
-  i64 offset;
+    i64 breadth;
+    i64 offset;
 };
 
 // NOTE: match_ functions all assume that the initial token(s)
 // for their rule has already been matched.
 // progress_ast() is where this matching process starts
 class Parser {
-  TokenStream tokens_;
-  i64 cursor_;
-  ast::Node ast_;
+    TokenStream tokens_;
+    i64         cursor_;
+    ast::Node   ast_;
 
 public:
-  explicit Parser(const TokenStream&& tokens);
-  explicit Parser(const TokenStream& tokens);
+    explicit Parser(const TokenStream&& tokens);
+    explicit Parser(const TokenStream& tokens);
 
-  HEX_NODISCARD bool Parse();
+    HEX_NODISCARD bool Parse();
 
-  HEX_NODISCARD auto ViewAST() const -> const ast::Node&;
-  HEX_NODISCARD auto ViewTokens() const -> const TokenStream&;
+    HEX_NODISCARD auto ViewAST() const -> const ast::Node&;
+    HEX_NODISCARD auto ViewTokens() const -> const TokenStream&;
 
-  void PrintAST() const;
-  void PrintAST(const ast::Node& root, std::string prepend = "") const;
+    void PrintAST() const;
+    void PrintAST(const ast::Node& root, std::string prepend = "") const;
 
 private:
-  HEX_NODISCARD bool IsPrimitive(TokenType token_type) const;
+    HEX_NODISCARD bool IsPrimitive(TokenType token_type) const;
 
-  HEX_NODISCARD auto CurrentToken() const -> const Token&;
-  HEX_NODISCARD auto PeekNextToken() const -> const Token&;
-  HEX_NODISCARD auto NextToken() -> const Token&;
-  HEX_NODISCARD auto GetAndCycleToken() -> const Token&;
+    HEX_NODISCARD auto CurrentToken() const -> const Token&;
+    HEX_NODISCARD auto PeekNextToken() const -> const Token&;
+    HEX_NODISCARD auto NextToken() -> const Token&;
+    HEX_NODISCARD auto GetAndCycleToken() -> const Token&;
 
-  void AddTokensTo(ast::Node& node, TokenType delimiter);
-  void AddTokensTo(ast::Node& node, i64 count);
-  void AddCurrentTokenTo(ast::Node& node) const;
-  void AddCycledTokenTo(ast::Node& node);
+    void AddTokensTo(ast::Node& node, TokenType delimiter);
+    void AddTokensTo(ast::Node& node, i64 count);
+    void AddCurrentTokenTo(ast::Node& node) const;
+    void AddCycledTokenTo(ast::Node& node);
 
-  void TransmitTokens(TokenStream& from, TokenStream& to) const;
-  void TransmitTokens(ast::Node& from, ast::Node& to, TokenRange range) const;
+    void TransmitTokens(TokenStream& from, TokenStream& to) const;
+    void TransmitTokens(ast::Node& from, ast::Node& to, TokenRange range) const;
 
-  bool ProgressedAST(ast::Node& node);
+    bool ProgressedAST(ast::Node& node);
 
+    // Matchers
+    HEX_NODISCARD bool Matched_Expression(ast::Node& node);
 
-  // Matchers
-  HEX_NODISCARD bool Matched_Expression(ast::Node& node);
+    HEX_NODISCARD bool Matched_Primary(ast::Node& node);
+    HEX_NODISCARD bool Matched_Unary(ast::Node& node);
+    HEX_NODISCARD bool Matched_Factor(ast::Node& node);
+    HEX_NODISCARD bool Matched_Term(ast::Node& node);
 
-  HEX_NODISCARD bool Matched_Primary(ast::Node& node);
-  HEX_NODISCARD bool Matched_Unary(ast::Node& node);
-  HEX_NODISCARD bool Matched_Factor(ast::Node& node);
-  HEX_NODISCARD bool Matched_Term(ast::Node& node);
+    using MatcherFnPtr   = bool (Parser::*)(ast::Node&);
+    using OpCheckerFnPtr = bool (*)(TokenType);
+    HEX_NODISCARD bool Matched_Binary(ast::Node& node, OpCheckerFnPtr is_valid_operator, MatcherFnPtr matched_operand, ast::Rule rule);
 
-  HEX_NODISCARD bool Is_Literal(TokenType token);
-
-
-  HEX_NODISCARD  bool Matched_BinaryExpr(ast::Node& node);
+    HEX_NODISCARD bool Is_Literal(TokenType token);
 };
 
-} // namespace hex
+}  // namespace hex
