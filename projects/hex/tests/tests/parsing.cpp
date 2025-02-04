@@ -390,5 +390,195 @@ TEST_CASE("Parser", "[parse][ast]") {
                 }
             }
         }
+
+        SECTION("Terms") {
+            REQUIRE(ast.branches.size() >= 20);
+
+            SECTION("Two-operand expressions") {
+                const TokenStream expected_tokens {
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"63"},
+                        .position {27, 1},
+                    },
+                    {
+                        .type {TokenType::Op_Plus},
+                        .text {"+"},
+                        .position {27, 4},
+                    },
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"12"},
+                        .position {27, 6},
+                    },
+                };
+
+                // 63 + 12
+                const auto& term = ast.branches[17];
+                REQUIRE(term->rule == Rule::Term);
+                REQUIRE(term->tokens.size() == 1);
+                REQUIRE(term->tokens[0] == expected_tokens[1]);
+
+                REQUIRE(term->branches.size() == 2);
+                REQUIRE(term->branches[0]->tokens.size() == 1);
+                REQUIRE(term->branches[1]->tokens.size() == 1);
+
+                REQUIRE(term->branches[0]->tokens[0] == expected_tokens[0]);
+                REQUIRE(term->branches[1]->tokens[0] == expected_tokens[2]);
+            }
+
+            SECTION("Multi-operand expressions") {
+                const TokenStream expected_tokens {
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"358"},
+                        .position {28, 1},
+                    },
+                    {
+                        .type {TokenType::Op_Minus},
+                        .text {"-"},
+                        .position {28, 5},
+                    },
+                    {
+                        .type {TokenType::Lit_Float},
+                        .text {"54.91"},
+                        .position {28, 7},
+                    },
+                    {
+                        .type {TokenType::Op_Plus},
+                        .text {"+"},
+                        .position {28, 13},
+                    },
+                    {
+                        .type {TokenType::Lit_Float},
+                        .text {"263.12"},
+                        .position {28, 15},
+                    },
+                    {
+                        .type {TokenType::Op_Minus},
+                        .text {"-"},
+                        .position {28, 22},
+                    },
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"958"},
+                        .position {28, 24},
+                    },
+                    {
+                        .type {TokenType::Op_Minus},
+                        .text {"-"},
+                        .position {28, 28},
+                    },
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"23"},
+                        .position {28, 30},
+                    },
+                    {
+                        .type {TokenType::Op_Plus},
+                        .text {"+"},
+                        .position {28, 33},
+                    },
+                    {
+                        .type {TokenType::Lit_Float},
+                        .text {"6.37"},
+                        .position {28, 35},
+                    },
+                };
+
+                // 358 - 54.91 + 263.12 - 958 - 23 + 6.37
+                const auto& factor = ast.branches[18];
+                REQUIRE(factor->rule == Rule::Term);
+                REQUIRE(factor->tokens.size() == 5);
+                REQUIRE(factor->branches.size() == 6);
+
+                for (i64 i = 1; const auto& token : factor->tokens) {
+                    CHECK(token == expected_tokens[i]);
+                    i += 2;
+                }
+
+                for (i64 i = 0; const auto& branch : factor->branches) {
+                    CHECK(branch->tokens[0] == expected_tokens[i]);
+                    i += 2;
+                }
+            }
+
+            SECTION("Grouped expresssions") {
+                const TokenStream expected_tokens {
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"97"},
+                        .position {29, 1},
+                    },
+                    {
+                        .type {TokenType::Op_Plus},
+                        .text {"+"},
+                        .position {29, 4},
+                    },
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"40"},
+                        .position {29, 8},
+                    },
+                    {
+                        .type {TokenType::Op_Minus},
+                        .text {"-"},
+                        .position {29, 11},
+                    },
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"17"},
+                        .position {29, 13},
+                    },
+                    {
+                        .type {TokenType::Op_Plus},
+                        .text {"+"},
+                        .position {29, 17},
+                    },
+                    {
+                        .type {TokenType::Lit_Float},
+                        .text {"5.2"},
+                        .position {29, 19},
+                    },
+                };
+
+                // 97 + ((40 - 17) + 5.2)
+                const auto& term = ast.branches[19];
+                REQUIRE(term->rule == Rule::Term);
+                REQUIRE(term->tokens.size() == 1);
+                REQUIRE(term->branches.size() == 2);
+
+                // 97
+                REQUIRE(term->branches[0]->rule == Rule::Literal);
+                CHECK(term->branches[0]->tokens[0] == expected_tokens[0]);
+
+                // +
+                CHECK(term->tokens[0] == expected_tokens[1]);
+
+                // ((40 - 17) + 5.2)
+                const auto& rhs = term->branches[1];
+                REQUIRE(rhs->rule == Rule::Grouping);
+                REQUIRE(rhs->branches.size() == 1);
+                REQUIRE(rhs->tokens.size() == 2);
+                CHECK(rhs->tokens[0].type == TokenType::Op_ParenLeft);
+                CHECK(rhs->tokens[1].type == TokenType::Op_ParenRight);
+
+                // (40 - 17) + 5.2
+                const auto& inner_term = rhs->branches[0];
+                REQUIRE(inner_term->rule == Rule::Term);
+                CHECK(inner_term->tokens[0] == expected_tokens[5]);
+                REQUIRE(inner_term->branches[0]->rule == Rule::Grouping);
+                REQUIRE(inner_term->branches[0]->branches[0]->rule == Rule::Term);
+
+                // 40 - 17
+                const auto& innermost_term = inner_term->branches[0]->branches[0];
+
+                REQUIRE(innermost_term->branches.size() == 2);
+                for (i64 i = 0; i < 2; ++i) {
+                    CHECK(innermost_term->branches[i]->rule == Rule::Literal);
+                    CHECK(innermost_term->branches[i]->tokens[0] == expected_tokens[2 + i * 2]);
+                }
+            }
+        }
     }
 }
