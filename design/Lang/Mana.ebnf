@@ -23,20 +23,23 @@ OP_GREATER_EQUAL = ">=" ;
 
 
 // rules
-expr = literal
-     | unary
-     | binary
-     | grouping 
-     ;
+expr       = equality                                 ;
+equality   = comparison (  ('!=' | '==') comparison)* ;
+comparison = term ( ('>' | '>=' | '<' | '<=') term)*  ;
+term       = factor ( ('-' | '+') factor)*      ;
+factor     = unary ( ('/' | '*') unary )*             ;
+unary      = ('!' | '-') unary | primary              ;
+primary    = literal | grouping                       ; 
+grouping   = "(" expr ")"                             ;
+literal    = number
+           | string
+           | "true"
+           | "false"
+           | "null"
+           ;
 
-number = INT | FLOAT ;
+number = INT | FLOAT        ;
 string = STRING | STRING_CH ;
-literal = number
-        | string
-        | "true"
-        | "false"
-        | "null"
-        ;
 
 unary = ("-" | "!") expr ;
 binary = expr operator expr ;
@@ -51,3 +54,5 @@ operator = OP_PLUS
          | OP_GREATER_THAN
          | OP_GREATER_EQUAL
          ;
+
+

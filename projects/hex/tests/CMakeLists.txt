@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.28)
 project(hex)
 
 add_executable(hex-tests
-        tests/lexing.cpp
         tests/parsing.cpp
+        tests/lexing.cpp
         # tests/error_reporting.cpp
 )
 

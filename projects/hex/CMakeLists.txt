@@ -6,6 +6,7 @@ enable_testing()
 set(HEX_SOURCES
         src/hex/ast/lexer.cpp
         src/hex/ast/parser.cpp
+        src/hex/ast/parse_tree.cpp
 )
 
 set(HEX_INCLUDES

@@ -61,9 +61,14 @@ bool Lexer::Tokenize(const std::filesystem::path& file_path) {
 
     token_stream_.clear();
 
-    line_number_ = -1;
-    cursor_      = -1;
-    AddToken(TokenType::_module_, file_path.filename().replace_extension("").string());
+    token_stream_.emplace_back(
+        TokenType::_module_,
+        file_path.filename().replace_extension("").string(),
+        TextPosition {
+            .line   = -1,
+            .column = -1,
+        }
+    );
 
     line_number_ = 0;
     cursor_      = 0;
@@ -183,15 +188,11 @@ HEX_NODISCARD bool Lexer::LexedString(const std::string_view line) {
 }
 
 HEX_NODISCARD bool Lexer::LexedNumber(const std::string_view line) {
-    const bool is_negative = line[cursor_] == '-' && std::isdigit(line[cursor_ + 1]);
-
-    if (not is_negative && not std::isdigit(line[cursor_])) {
+    if (not std::isdigit(line[cursor_])) {
         return false;
     }
 
-    // Confirmed digit, consume char
     std::string buffer;
-    buffer.push_back(line[cursor_++]);
 
     // INT = ^[-?0-9]+
     const auto eat_digits = [&] {
@@ -243,7 +244,7 @@ HEX_NODISCARD bool Lexer::LexedOperator(const std::string_view line) {
         token_type = Op_Minus;
         break;
     case '*':
-        token_type = Op_Star;
+        token_type = Op_Asterisk;
         break;
     case '/':
         token_type = Op_FwdSlash;
@@ -337,8 +338,9 @@ HEX_NODISCARD bool Lexer::LexedOperator(const std::string_view line) {
         break;
     }
 
-    AddToken(token_type, std::move(buffer));
     ++cursor_;
+    AddToken(token_type, std::move(buffer));
+
 
     return true;
 }
@@ -382,7 +384,7 @@ HEX_NODISCARD bool Lexer::MatchedKeyword(std::string& identifier_buffer) {
         {"module", KW_module},   {"public", KW_public}, {"private", KW_private},
         {"import", KW_import},   {"as", KW_as},
 
-        {"return", KW_return},   {"true", Lit_true},     {"false", Lit_false},
+        {"return", KW_return},   {"true", Lit_true},    {"false", Lit_false},
         {"if", KW_if},           {"else", KW_else},     {"match", KW_match},
 
         {"loop", KW_loop},       {"while", KW_while},   {"for", KW_for},
@@ -422,14 +424,8 @@ void Lexer::AddToken(TokenType type, std::string& text) {
 
 void Lexer::AddToken(TokenType type, std::string&& text) {
     const i64 column_pos = cursor_ + 1 - static_cast<i64>(text.length());
-    token_stream_.emplace_back(
-        type,
-        std::move(text),
-        TextPosition {
-            .line = line_number_,
-            .column = column_pos
-        }
-    );
+    token_stream_
+        .emplace_back(type, std::move(text), TextPosition {.line = line_number_, .column = column_pos});
 }
 
 void Lexer::AddEOF() {
@@ -437,9 +433,9 @@ void Lexer::AddEOF() {
         TOKEN_EOF.type,
         TOKEN_EOF.text,
         TextPosition {
-            .line   = line_number_,
-            .column = cursor_ +
-                      2  // display EOF tokens as being out of bounds of file contents
+            .line   = line_number_ + 1,
+            .column = -1,
+            // display EOF tokens as being out of bounds of file contents
         }
     );
 }

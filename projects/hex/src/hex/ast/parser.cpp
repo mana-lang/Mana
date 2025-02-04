@@ -4,17 +4,21 @@
 #include <magic_enum/magic_enum.hpp>
 
 #include <algorithm>
+#include <fstream>
+#include <iostream>
 
 namespace hex {
 using namespace ast;
 
 Parser::Parser(const TokenStream&& tokens)
     : tokens_ {tokens}
-    , cursor_ {} {}
+    , cursor_ {}
+    , ast_ {Rule::Undefined} {}
 
 Parser::Parser(const TokenStream& tokens)
     : tokens_ {tokens}
-    , cursor_ {} {}
+    , cursor_ {}
+    , ast_ {Rule::Undefined} {}
 
 bool Parser::Parse() {
     const auto& top_token = tokens_.front();
@@ -34,6 +38,10 @@ bool Parser::Parse() {
     cursor_ = 1;
     while (ProgressedAST(ast_)) {}
 
+    if (CurrentToken().type != TokenType::Eof) {
+        // LogErr("It appears we did not parse the entire file.");
+        return true;  // TODO: handle this error and return false instead
+    }
     return true;
 }
 
@@ -46,36 +54,54 @@ auto Parser::ViewTokens() const -> const TokenStream& {
 }
 
 void Parser::PrintAST() const {
-    Log("Printing AST for module '{}'", ast_.tokens[0].text);
-    PrintAST(ast_);
+    Log("Printing AST for module '{}'\n\n{}", ast_.tokens[0].text, EmitAST(ast_));
 }
 
-void Parser::PrintAST(const Node& root, std::string prepend) const {
-    Log("{}[{}]", prepend, magic_enum::enum_name(root.rule));
+void Parser::EmitAST(const std::string_view file_name) const {
+    std::ofstream out {std::string(file_name)};
 
-    prepend.append("== ");
+    out << EmitAST(ast_);
+}
+
+std::string Parser::EmitAST(const Node& root, std::string prepend) const {
+    std::string ret = "";
+    if (root.rule == Rule::Module) {
+        // Log("[Module] -> {}", root.tokens[0].text);
+        ret = fmt::format("[Module] -> {}\n\n", root.tokens[0].text);
+
+    } else {
+        ret.append(fmt::format("{}[{}]\n", prepend, magic_enum::enum_name(root.rule)));
+
+        prepend.append("== ");
+
+        if (not root.tokens.empty()) {
+            std::ranges::replace(prepend, '=', '-');
+
+            for (const auto& [type, text, position] : root.tokens) {
+                if (type == TokenType::Terminator) {
+                    continue;
+                }
+                ret.append(fmt::format("{} [{}] -> {}\n", prepend, magic_enum::enum_name(type), text));
+            }
+
+            std::ranges::replace(prepend, '-', '=');
+        }
+    }
 
     if (not root.branches.empty()) {
         for (const auto& node : root.branches) {
-            PrintAST(*node, prepend);
+            ret.append(EmitAST(*node, prepend));
         }
     }
 
-    std::ranges::replace(prepend, '=', '-');
-
-    for (const auto& [type, text, position] : root.tokens) {
-        if (type == TokenType::Terminator) {
-            continue;
-        }
-        Log("{} [{}] -> {}", prepend, magic_enum::enum_name(type), text);
+    if (not root.branches.empty() && root.IsRoot()) {
+        ret.append("\n");
     }
 
-    if (root.tokens.size() > 1) {
-        Log("");
-    }
+    return ret;
 }
 
-bool Parser::IsPrimitive(TokenType token_type) const {
+bool IsPrimitive(const TokenType token_type) {
     switch (token_type) {
         using enum TokenType;
 
@@ -91,7 +117,6 @@ bool Parser::IsPrimitive(TokenType token_type) const {
     case KW_char:
     case KW_string:
     case KW_byte:
-    case Lit_null:
         return true;
 
     default:
@@ -99,23 +124,32 @@ bool Parser::IsPrimitive(TokenType token_type) const {
     }
 }
 
-auto Parser::PeekNextToken() const -> const Token& {
-    return tokens_[cursor_ + 1];
-}
-
 auto Parser::CurrentToken() const -> const Token& {
     return tokens_[cursor_];
+}
+
+auto Parser::PeekNextToken() const -> const Token& {
+    return tokens_[cursor_ + 1];
 }
 
 auto Parser::NextToken() -> const Token& {
     return tokens_[++cursor_];
 }
 
-void Parser::AddTokensTo(Node& node, TokenType delimiter) {
-    while (CurrentToken().type != delimiter) {
-        if (not ProgressedAST(node)) {
-            return;
-        }
+auto Parser::GetAndCycleToken() -> const Token& {
+    return tokens_[cursor_++];
+}
+
+// inclusive
+void Parser::AddTokensTo(Node& node, const TokenType delimiter) {
+    do {
+        node.tokens.push_back(GetAndCycleToken());
+    } while (CurrentToken().type != delimiter);
+}
+
+void Parser::AddTokensTo(Node& node, const i64 count) {
+    for (i64 i = 0; i < count; ++i) {
+        node.tokens.push_back(GetAndCycleToken());
     }
 }
 
@@ -125,14 +159,18 @@ void Parser::AddCurrentTokenTo(Node& node) const {
     }
 }
 
-// TODO: Make transmit functions take reference to token_stream instead
-void Parser::TransmitTokens(Node& sender, Node& receiver) const {
-    auto receive = receiver.tokens;  // why are we receiving to a temporary??
-    for (const auto& send : sender.tokens) {
-        receive.push_back(send);
+void Parser::AddCycledTokenTo(Node& node) {
+    if (cursor_ < tokens_.size()) {
+        node.tokens.push_back(GetAndCycleToken());
+    }
+}
+
+void Parser::TransmitTokens(TokenStream& sender, TokenStream& receiver) const {
+    for (const auto& send : sender) {
+        receiver.push_back(send);
     }
 
-    sender.tokens.clear();
+    sender.clear();
 }
 
 void Parser::TransmitTokens(Node& sender, Node& receiver, TokenRange range) const {
@@ -156,45 +194,215 @@ bool Parser::ProgressedAST(Node& node) {
 
     if (CurrentToken().type == TokenType::Terminator) {
         ++cursor_;
-        return true;
     }
 
-    const bool matched_something = Matched_Expression(node);
+    const bool Matchedsomething = MatchedExpression(node);
 
-    ++cursor_;
-    return matched_something;
+    return Matchedsomething;
 }
 
-bool Parser::Matched_Expression(Node& node) {
-    auto& expr = node.NewBranch();
-    expr.rule = Rule::Expression;
-
-    // expressions can recurse, but are always non-terminal
-    return Matched_Literal(expr.NewBranch());
+bool Parser::MatchedExpression(Node& node) {
+    return MatchedEquality(node);
 }
 
 // literal = number | string | KW_true | KW_false | KW_null
-bool Parser::Matched_Literal(Node& node) {
-    switch (CurrentToken().type) {
+bool IsLiteral(const TokenType token) {
+    switch (token) {
         using enum TokenType;
 
     case Lit_Int:
     case Lit_Float:
+
     case Lit_Char:
     case Lit_String:
+
     case Lit_true:
     case Lit_false:
     case Lit_null:
-        node.rule = Rule::Literal;
-        AddCurrentTokenTo(node);
         return true;
     default:
         return false;
     }
 }
 
-void Parser::Match_Undefined(Node& this_node) {
-    this_node.rule = Rule::Undefined;
-    AddCurrentTokenTo(this_node);
+// primary  = literal | grouping
+// grouping = "(" expr ")"
+bool Parser::MatchedPrimary(Node& node) {
+    if (CurrentToken().type == TokenType::Terminator) {
+        ++cursor_;
+        return true;
+    }
+
+    if (CurrentToken().type == TokenType::Op_ParenLeft) {
+        auto& grouping = node.NewBranch();
+        grouping.rule  = Rule::Grouping;
+        AddCycledTokenTo(grouping);
+
+        if (MatchedExpression(grouping)) {
+            if (grouping.branches.size() > 1) {
+                LogErr("Grouping may not contain more than one expression");
+                grouping.rule = Rule::Mistake;
+                return false;
+            }
+            if (CurrentToken().type == TokenType::Op_ParenRight) {
+                AddCycledTokenTo(grouping);
+
+                if (grouping.branches.size() < 1) {
+                    LogErr("Grouping must contain at least one expression");
+                    return false;
+                }
+
+                // guaranteed to be valid expression by now
+                return true;
+            }
+        }
+    }
+
+    if (not IsLiteral(CurrentToken().type)) {
+        return false;
+    }
+
+    auto& primary {node.NewBranch()};
+    primary.rule = Rule::Literal;
+    AddCycledTokenTo(primary);
+    return true;
+}
+
+// unary = ("-" | "!") expr
+bool Parser::MatchedUnary(Node& node) {
+    switch (CurrentToken().type) {
+        using enum TokenType;
+
+    case Op_Minus:
+    case Op_LogicalNot: {
+        auto& unary {node.NewBranch(Rule::Unary)};
+
+        AddCycledTokenTo(unary);
+        if (not MatchedUnary(unary)) {
+            if (not MatchedPrimary(unary)) {
+                LogErr("Expected primary expression.");
+                node.PopBranch();  // dangle should be okay since we immediately return
+            } else
+                break;
+
+            return false;
+        }
+        break;
+    }
+
+    default:
+        return MatchedPrimary(node);
+    }
+
+    return true;
+}
+
+bool IsFactorOp(const TokenType token) {
+    switch (token) {
+        using enum TokenType;
+
+    case Op_FwdSlash:
+    case Op_Asterisk:
+        return true;
+    default:
+        return false;
+    }
+}
+
+// factor = unary ( ('/' | '*') unary )*
+bool Parser::MatchedFactor(Node& node) {
+    return MatchedBinaryExpr(node, IsFactorOp, MatchedUnary, Rule::Factor);
+}
+
+bool IsTermOp(const TokenType token) {
+    switch (token) {
+        using enum TokenType;
+
+    case Op_Minus:
+    case Op_Plus:
+        return true;
+    default:
+        return false;
+    }
+}
+
+// term = factor ( ('-' | '+') factor)*
+bool Parser::MatchedTerm(Node& node) {
+    return MatchedBinaryExpr(node, IsTermOp, MatchedFactor, Rule::Term);
+}
+
+bool IsComparisonOp(const TokenType token) {
+    switch (token) {
+        using enum TokenType;
+
+    case Op_GreaterThan:
+    case Op_GreaterEqual:
+    case Op_LessThan:
+    case Op_LessEqual:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool Parser::MatchedComparison(Node& node) {
+    return MatchedBinaryExpr(node, IsComparisonOp, MatchedTerm, Rule::Comparison);
+}
+
+bool IsEqualityOp(const TokenType token) {
+    switch (token) {
+        using enum TokenType;
+
+    case Op_Equality:
+    case Op_NotEqual:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool Parser::MatchedEquality(Node& node) {
+    return MatchedBinaryExpr(node, IsEqualityOp, MatchedComparison, Rule::Equality);
+}
+
+bool Parser::MatchedBinaryExpr(
+    Node&                node,
+    const OpCheckerFnPtr Isvalid_operator,
+    const MatcherFnPtr   Matchedoperand,
+    const Rule           rule
+) {
+    if (not(this->*Matchedoperand)(node)) {
+        return false;
+    }
+
+    if (not Isvalid_operator(CurrentToken().type)) {
+        return true;
+    }
+
+    auto& binary_expr = node.NewBranch(rule);
+    AddCycledTokenTo(binary_expr);
+
+    binary_expr.AcquireBranchOf(node, node.branches.size() - 2);
+    const auto expr_index = node.branches.size() - 1;
+
+    if (not(this->*Matchedoperand)(node)) {
+        LogErr("Expected expression");
+        return false;
+    }
+
+    bool ret = true;
+    while (Isvalid_operator(CurrentToken().type)) {
+        AddCycledTokenTo(binary_expr);
+
+        if (not(this->*Matchedoperand)(node)) {
+            LogErr("Incomplete expression");
+            binary_expr.rule = Rule::Mistake;
+
+            ret = false;
+        }
+    }
+    binary_expr.AcquireBranchesOf(node, expr_index + 1);
+
+    return ret;
 }
 }  // namespace hex

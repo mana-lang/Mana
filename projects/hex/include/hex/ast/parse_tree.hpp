@@ -1,35 +1,29 @@
 #pragma once
 
 #include <hex/ast/token.hpp>
+#include <hex/core/logger.hpp>
 
 #include <memory>
 #include <vector>
 
 namespace hex::ast {
-struct Expr {};
-
-struct BinaryExpr final : Expr {
-    Expr* left_;
-    Expr* right_;
-    Token op_;
-
-    BinaryExpr(Expr* left, const Token& op, Expr* right)
-        : left_(left)
-        , right_(right)
-        , op_(op) {}
-};
-
-enum class Rule {
+enum class Rule : i64 {
     Undefined,
+    Mistake,
+
     Module,
 
     Expression,
 
+    Grouping,
     Literal,
-    String,
-    Number,
 
-    // Mistake,
+    Unary,
+    Factor,
+    Term,
+    Comparison,
+    Equality,
+
     // ReachedEOF,
     //
     // Declaration,
@@ -56,16 +50,7 @@ enum class Rule {
     // Statement,
     // Return,
     // Assignment,
-    //
-
-    // Expr_Operand,
-    // Expr_Infix,
-    // Expr_FunctionCall,
-    //
     // Arguments,
-    //
-
-    //
     // MemberAccess,
     //
     // CompoundAssignment,
@@ -82,19 +67,31 @@ enum class Rule {
 };
 
 struct Node {
-    using NodePtr = std::unique_ptr<Node>;
+    using NodePtr = std::shared_ptr<Node>;
 
     Rule                 rule;
     TokenStream          tokens;
     std::vector<NodePtr> branches;
 
-    Node()
-        : rule(Rule::Undefined)
-        , tokens({}) {}
+    explicit Node(Rule r = Rule::Undefined);
+    explicit Node(Node* p, Rule r = Rule::Undefined);
 
-    HEX_NODISCARD Node& NewBranch() {
-        return *branches.emplace_back(std::make_unique<Node>());
-    }
+    HEX_NODISCARD Node& NewBranch(Rule new_rule = Rule::Undefined);
+
+    void PopBranch();
+    void RemoveBranch(i64 idx);
+    void RemoveBranchFromTail(i64 idx);
+
+    HEX_NODISCARD bool IsRoot() const;
+
+    void AcquireBranchOf(Node& target, i64 index);
+    void AcquireBranchesOf(Node& target, i64 start, i64 end);
+    void AcquireBranchesOf(Node& target, i64 start);
+    void AcquireTailBranchOf(Node& target);
+
+private:
+    // not intended to be used; this is just to identify a root node that isn't a module node
+    Node* parent;
 };
 
 }  // namespace hex::ast

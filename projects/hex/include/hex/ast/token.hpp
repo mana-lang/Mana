@@ -6,12 +6,12 @@
 #include <vector>
 
 namespace hex {
-enum class TokenType : u64 {
+enum class TokenType : i64 {
     Identifier,
 
     Op_Plus,
     Op_Minus,
-    Op_Star,
+    Op_Asterisk,
     Op_FwdSlash,
 
     Op_Colon,
