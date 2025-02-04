@@ -4,6 +4,8 @@
 #include <magic_enum/magic_enum.hpp>
 
 #include <algorithm>
+#include <fstream>
+#include <iostream>
 
 namespace hex {
 using namespace ast;
@@ -52,16 +54,23 @@ auto Parser::ViewTokens() const -> const TokenStream& {
 }
 
 void Parser::PrintAST() const {
-    Log("Printing AST for module '{}'", ast_.tokens[0].text);
-    PrintAST(ast_);
+    Log("Printing AST for module '{}'\n\n{}", ast_.tokens[0].text, EmitAST(ast_));
 }
 
-void Parser::PrintAST(const Node& root, std::string prepend) const {
+void Parser::EmitAST(const std::string_view file_name) const {
+    std::ofstream out {std::string(file_name)};
+
+    out << EmitAST(ast_);
+}
+
+std::string Parser::EmitAST(const Node& root, std::string prepend) const {
+    std::string ret = "";
     if (root.rule == Rule::Module) {
-        Log("[Module] -> {}", root.tokens[0].text);
+        // Log("[Module] -> {}", root.tokens[0].text);
+        ret = fmt::format("[Module] -> {}\n\n", root.tokens[0].text);
 
     } else {
-        Log("{}[{}]", prepend, magic_enum::enum_name(root.rule));
+        ret.append(fmt::format("{}[{}]\n", prepend, magic_enum::enum_name(root.rule)));
 
         prepend.append("== ");
 
@@ -72,7 +81,7 @@ void Parser::PrintAST(const Node& root, std::string prepend) const {
                 if (type == TokenType::Terminator) {
                     continue;
                 }
-                Log("{} [{}] -> {}", prepend, magic_enum::enum_name(type), text);
+                ret.append(fmt::format("{} [{}] -> {}\n", prepend, magic_enum::enum_name(type), text));
             }
 
             std::ranges::replace(prepend, '-', '=');
@@ -81,13 +90,15 @@ void Parser::PrintAST(const Node& root, std::string prepend) const {
 
     if (not root.branches.empty()) {
         for (const auto& node : root.branches) {
-            PrintAST(*node, prepend);
+            ret.append(EmitAST(*node, prepend));
         }
     }
 
     if (not root.branches.empty() && root.IsRoot()) {
-        Log("");
+        ret.append("\n");
     }
+
+    return ret;
 }
 
 bool IsPrimitive(const TokenType token_type) {

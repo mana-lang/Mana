@@ -27,9 +27,11 @@ public:
     HEX_NODISCARD auto ViewTokens() const -> const TokenStream&;
 
     void PrintAST() const;
-    void PrintAST(const ast::Node& root, std::string prepend = "") const;
+    void EmitAST(std::string_view file_name = "Mana.ast") const;
 
 private:
+    HEX_NODISCARD std::string EmitAST(const ast::Node& root, std::string prepend = "") const;
+
     HEX_NODISCARD auto CurrentToken() const -> const Token&;
     HEX_NODISCARD auto PeekNextToken() const -> const Token&;
     HEX_NODISCARD auto NextToken() -> const Token&;
@@ -55,9 +57,14 @@ private:
     HEX_NODISCARD bool MatchedComparison(ast::Node& node);
     HEX_NODISCARD bool MatchedEquality(ast::Node& node);
 
-    using MatcherFnPtr   = bool (Parser::*)(ast::Node&);
+    using MatcherFnPtr   = bool   (Parser::*)(ast::Node&);
     using OpCheckerFnPtr = bool (*)(TokenType);
-    HEX_NODISCARD bool MatchedBinaryExpr(ast::Node& node, OpCheckerFnPtr is_valid_operator, MatcherFnPtr matched_operand, ast::Rule rule);
+    HEX_NODISCARD bool          MatchedBinaryExpr(
+                 ast::Node&     node,
+                 OpCheckerFnPtr is_valid_operator,
+                 MatcherFnPtr   matched_operand,
+                 ast::Rule      rule
+             );
 };
 
 }  // namespace hex
