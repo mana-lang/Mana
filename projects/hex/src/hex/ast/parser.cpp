@@ -59,6 +59,7 @@ void Parser::PrintAST() const {
 void Parser::PrintAST(const Node& root, std::string prepend) const {
     if (root.rule == Rule::Module) {
         Log("[Module] -> {}", root.tokens[0].text);
+
     } else {
         Log("{}[{}]", prepend, magic_enum::enum_name(root.rule));
 
@@ -89,7 +90,7 @@ void Parser::PrintAST(const Node& root, std::string prepend) const {
     }
 }
 
-bool Parser::IsPrimitive(TokenType token_type) const {
+bool IsPrimitive(const TokenType token_type) {
     switch (token_type) {
         using enum TokenType;
 
@@ -184,20 +185,17 @@ bool Parser::ProgressedAST(Node& node) {
         ++cursor_;
     }
 
-    const bool matched_something = Matched_Expression(node);
+    const bool Matchedsomething = MatchedExpression(node);
 
-    return matched_something;
+    return Matchedsomething;
 }
 
-bool Parser::Matched_Expression(Node& node) {
-    // const bool matched_something = Matched_Comparison(node) || Matched_Term(node) || Matched_Factor(node) ||
-    //                                Matched_Unary(node) || Matched_Primary(node);
-
-    return Matched_Equality(node);  //
+bool Parser::MatchedExpression(Node& node) {
+    return MatchedEquality(node);
 }
 
 // literal = number | string | KW_true | KW_false | KW_null
-bool Is_Literal(const TokenType token) {
+bool IsLiteral(const TokenType token) {
     switch (token) {
         using enum TokenType;
 
@@ -218,7 +216,7 @@ bool Is_Literal(const TokenType token) {
 
 // primary  = literal | grouping
 // grouping = "(" expr ")"
-bool Parser::Matched_Primary(Node& node) {
+bool Parser::MatchedPrimary(Node& node) {
     if (CurrentToken().type == TokenType::Terminator) {
         ++cursor_;
         return true;
@@ -229,7 +227,7 @@ bool Parser::Matched_Primary(Node& node) {
         grouping.rule  = Rule::Grouping;
         AddCycledTokenTo(grouping);
 
-        if (Matched_Expression(grouping)) {
+        if (MatchedExpression(grouping)) {
             if (grouping.branches.size() > 1) {
                 LogErr("Grouping may not contain more than one expression");
                 grouping.rule = Rule::Mistake;
@@ -249,7 +247,7 @@ bool Parser::Matched_Primary(Node& node) {
         }
     }
 
-    if (not Is_Literal(CurrentToken().type)) {
+    if (not IsLiteral(CurrentToken().type)) {
         return false;
     }
 
@@ -260,7 +258,7 @@ bool Parser::Matched_Primary(Node& node) {
 }
 
 // unary = ("-" | "!") expr
-bool Parser::Matched_Unary(Node& node) {
+bool Parser::MatchedUnary(Node& node) {
     switch (CurrentToken().type) {
         using enum TokenType;
 
@@ -269,8 +267,8 @@ bool Parser::Matched_Unary(Node& node) {
         auto& unary {node.NewBranch(Rule::Unary)};
 
         AddCycledTokenTo(unary);
-        if (not Matched_Unary(unary)) {
-            if (not Matched_Primary(unary)) {
+        if (not MatchedUnary(unary)) {
+            if (not MatchedPrimary(unary)) {
                 LogErr("Expected primary expression.");
                 node.PopBranch();  // dangle should be okay since we immediately return
             } else
@@ -282,13 +280,13 @@ bool Parser::Matched_Unary(Node& node) {
     }
 
     default:
-        return Matched_Primary(node);
+        return MatchedPrimary(node);
     }
 
     return true;
 }
 
-bool Is_FactorOp(const TokenType token) {
+bool IsFactorOp(const TokenType token) {
     switch (token) {
         using enum TokenType;
 
@@ -301,11 +299,11 @@ bool Is_FactorOp(const TokenType token) {
 }
 
 // factor = unary ( ('/' | '*') unary )*
-bool Parser::Matched_Factor(Node& node) {
-    return Matched_BinaryExpr(node, Is_FactorOp, Matched_Unary, Rule::Factor);
+bool Parser::MatchedFactor(Node& node) {
+    return MatchedBinaryExpr(node, IsFactorOp, MatchedUnary, Rule::Factor);
 }
 
-bool Is_TermOp(const TokenType token) {
+bool IsTermOp(const TokenType token) {
     switch (token) {
         using enum TokenType;
 
@@ -318,11 +316,11 @@ bool Is_TermOp(const TokenType token) {
 }
 
 // term = factor ( ('-' | '+') factor)*
-bool Parser::Matched_Term(Node& node) {
-    return Matched_BinaryExpr(node, Is_TermOp, Matched_Factor, Rule::Term);
+bool Parser::MatchedTerm(Node& node) {
+    return MatchedBinaryExpr(node, IsTermOp, MatchedFactor, Rule::Term);
 }
 
-bool Is_ComparisonOp(const TokenType token) {
+bool IsComparisonOp(const TokenType token) {
     switch (token) {
         using enum TokenType;
 
@@ -336,11 +334,11 @@ bool Is_ComparisonOp(const TokenType token) {
     }
 }
 
-bool Parser::Matched_Comparison(Node& node) {
-    return Matched_BinaryExpr(node, Is_ComparisonOp, Matched_Term, Rule::Comparison);
+bool Parser::MatchedComparison(Node& node) {
+    return MatchedBinaryExpr(node, IsComparisonOp, MatchedTerm, Rule::Comparison);
 }
 
-bool Is_EqualityOp(const TokenType token) {
+bool IsEqualityOp(const TokenType token) {
     switch (token) {
         using enum TokenType;
 
@@ -352,21 +350,21 @@ bool Is_EqualityOp(const TokenType token) {
     }
 }
 
-bool Parser::Matched_Equality(Node& node) {
-    return Matched_BinaryExpr(node, Is_EqualityOp, Matched_Comparison, Rule::Equality);
+bool Parser::MatchedEquality(Node& node) {
+    return MatchedBinaryExpr(node, IsEqualityOp, MatchedComparison, Rule::Equality);
 }
 
-bool Parser::Matched_BinaryExpr(
+bool Parser::MatchedBinaryExpr(
     Node&                node,
-    const OpCheckerFnPtr is_valid_operator,
-    const MatcherFnPtr   matched_operand,
+    const OpCheckerFnPtr Isvalid_operator,
+    const MatcherFnPtr   Matchedoperand,
     const Rule           rule
 ) {
-    if (not(this->*matched_operand)(node)) {
+    if (not(this->*Matchedoperand)(node)) {
         return false;
     }
 
-    if (not is_valid_operator(CurrentToken().type)) {
+    if (not Isvalid_operator(CurrentToken().type)) {
         return true;
     }
 
@@ -376,16 +374,16 @@ bool Parser::Matched_BinaryExpr(
     binary_expr.AcquireBranchOf(node, node.branches.size() - 2);
     const auto expr_index = node.branches.size() - 1;
 
-    if (not(this->*matched_operand)(node)) {
+    if (not(this->*Matchedoperand)(node)) {
         LogErr("Expected expression");
         return false;
     }
 
     bool ret = true;
-    while (is_valid_operator(CurrentToken().type)) {
+    while (Isvalid_operator(CurrentToken().type)) {
         AddCycledTokenTo(binary_expr);
 
-        if (not(this->*matched_operand)(node)) {
+        if (not(this->*Matchedoperand)(node)) {
             LogErr("Incomplete expression");
             binary_expr.rule = Rule::Mistake;
 
