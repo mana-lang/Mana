@@ -1,0 +1,47 @@
+# declares datapoint (immutable variable)
+data
+
+# function declarator, replaces 'data' declaration
+# uniquely both a declarator and type specifier
+fn
+
+# amends a data/function declaration to make it mutable
+# semantics vary between normal datapoints and functions
+mut
+
+# compile-time constant declarator, replaces 'data' declaration
+# works on functions as well. must be explicitly annotated
+const
+
+# decays a type to its POD ('raw') form
+# has special semantics for specific data types like arrays
+raw
+
+# automatic-alignment UDT declarator
+pack
+
+# manual-alignment UDT declarator
+struct
+
+# strongly typed, nominal, extensible enumerated type declarator
+enum
+
+# module/submodule declarator
+module
+
+# module access specifiers
+public
+private
+
+# declares a foreign module to be exposed in current module
+import
+
+# generic type declarator
+generic
+
+# specifier to extend/overrule method functionality
+# prefix to fn, only works on pre-defined methods
+override
+
+# import aliasing
+as

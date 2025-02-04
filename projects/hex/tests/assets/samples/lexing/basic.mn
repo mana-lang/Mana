@@ -1,0 +1,6 @@
+data x = 5
+10.783  # a comment, as well as a float
+
+data add = () {
+    x + y
+}

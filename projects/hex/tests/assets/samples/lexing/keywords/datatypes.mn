@@ -1,0 +1,26 @@
+# signed integral types
+i8 i16 i32 i64 i128
+
+# unsigned integral types
+u8 u16 u32 u64 u128
+
+# floating point types
+f32 f64
+
+# u8 alias
+byte
+
+# utf-8 unicode scalar value type
+char
+
+# char array container type
+string
+
+# strongly typed boolean
+bool
+
+# empty type
+null
+
+# function type, technically not a keyword
+()

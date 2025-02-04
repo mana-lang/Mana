@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(sigil VERSION 0.0.1)
+project(sigil VERSION 0.1.0)
 
 enable_testing()
 
@@ -18,7 +18,7 @@ set(SIGIL_LIBS
 )
 
 set(EXT_INCLUDES
-        ext/include/
+        ../.ext/include/
 )
 
 set(EXT_SOURCES
