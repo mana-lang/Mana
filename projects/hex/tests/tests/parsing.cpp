@@ -202,7 +202,7 @@ TEST_CASE("Parser", "[parse][ast]") {
         }
 
         SECTION("Factors") {
-            REQUIRE(ast.branches.size() >= 15);
+            REQUIRE(ast.branches.size() >= 17);
 
             SECTION("Two-operand expressions") {
                 const TokenStream expected_tokens {
@@ -300,6 +300,7 @@ TEST_CASE("Parser", "[parse][ast]") {
                 const auto& factor = ast.branches[15];
                 REQUIRE(factor->rule == Rule::Factor);
                 REQUIRE(factor->tokens.size() == 5);
+                REQUIRE(factor->branches.size() == 6);
 
                 for (i64 i = 1; const auto& token : factor->tokens) {
                     CHECK(token == expected_tokens[i]);
@@ -309,6 +310,83 @@ TEST_CASE("Parser", "[parse][ast]") {
                 for (i64 i = 0; const auto& branch : factor->branches) {
                     CHECK(branch->tokens[0] == expected_tokens[i]);
                     i += 2;
+                }
+            }
+
+            SECTION("Grouped expresssions") {
+                const TokenStream expected_tokens {
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"5"},
+                        .position {24, 1},
+                    },
+                    {
+                        .type {TokenType::Op_Asterisk},
+                        .text {"*"},
+                        .position {24, 3},
+                    },
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"27"},
+                        .position {24, 7},
+                    },
+                    {
+                        .type {TokenType::Op_FwdSlash},
+                        .text {"/"},
+                        .position {24, 10},
+                    },
+                    {
+                        .type {TokenType::Lit_Int},
+                        .text {"5"},
+                        .position {24, 12},
+                    },
+                    {
+                        .type {TokenType::Op_Asterisk},
+                        .text {"*"},
+                        .position {24, 15},
+                    },
+                    {
+                        .type {TokenType::Lit_Float},
+                        .text {"2.5"},
+                        .position {24, 17},
+                    },
+                };
+
+                // 5 * ((27 / 5) * 2.5)
+                const auto& factor = ast.branches[16];
+                REQUIRE(factor->rule == Rule::Factor);
+                REQUIRE(factor->tokens.size() == 1);
+                REQUIRE(factor->branches.size() == 2);
+
+                // 5
+                REQUIRE(factor->branches[0]->rule == Rule::Literal);
+                CHECK(factor->branches[0]->tokens[0] == expected_tokens[0]);
+
+                // *
+                CHECK(factor->tokens[0] == expected_tokens[1]);
+
+                // ((27 / 5) * 2.5)
+                const auto& rhs = factor->branches[1];
+                REQUIRE(rhs->rule == Rule::Grouping);
+                REQUIRE(rhs->branches.size() == 1);
+                REQUIRE(rhs->tokens.size() == 2);
+                CHECK(rhs->tokens[0].type == TokenType::Op_ParenLeft);
+                CHECK(rhs->tokens[1].type == TokenType::Op_ParenRight);
+
+                // (27 / 5) * 2.5
+                const auto& inner_factor = rhs->branches[0];
+                REQUIRE(inner_factor->rule == Rule::Factor);
+                CHECK(inner_factor->tokens[0] == expected_tokens[5]);
+                REQUIRE(inner_factor->branches[0]->rule == Rule::Grouping);
+                REQUIRE(inner_factor->branches[0]->branches[0]->rule == Rule::Factor);
+
+                // 27 / 5
+                const auto& innermost_factor = inner_factor->branches[0]->branches[0];
+
+                REQUIRE(innermost_factor->branches.size() == 2);
+                for (i64 i = 0; i < 2; ++i) {
+                    CHECK(innermost_factor->branches[i]->rule == Rule::Literal);
+                    CHECK(innermost_factor->branches[i]->tokens[0] == expected_tokens[2 + i * 2]);
                 }
             }
         }
