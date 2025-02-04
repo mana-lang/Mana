@@ -7,11 +7,12 @@
 constexpr auto PARSER_TESTING_PATH = "assets/samples/parsing/";
 using namespace hex;
 
-TEST_CASE("Parser", "[parse][ast]") {
+// remind me to never test like this again
+TEST_CASE("Expression Parsing", "[parse][ast]") {
     SECTION("Core", "Core functionality test") {
         Lexer lexer;
 
-        REQUIRE(lexer.Tokenize(Concatenate(PARSER_TESTING_PATH, "atoms.mn")));
+        REQUIRE(lexer.Tokenize(Concatenate(PARSER_TESTING_PATH, "expressions.mn")));
 
         Parser parser(lexer.RelinquishTokens());
         REQUIRE(parser.Parse());
@@ -28,7 +29,7 @@ TEST_CASE("Parser", "[parse][ast]") {
         SECTION("AST root is properly formed") {
             CHECK_FALSE(ast.tokens.empty());
             REQUIRE(ast.rule == Rule::Module);
-            REQUIRE(ast.tokens[0].text == "atoms");
+            REQUIRE(ast.tokens[0].text == "expressions");
         }
 
         parser.PrintAST();
@@ -710,6 +711,227 @@ TEST_CASE("Parser", "[parse][ast]") {
                     i += 2;
                 }
             }
+        }
+
+        SECTION("Equality") {
+            REQUIRE(ast.branches.size() >= 25);
+
+            const TokenStream expected_tokens {
+                {
+                    .type {TokenType::Lit_true},
+                    .text {"true"},
+                    .position {37, 1},
+                },
+                {
+                    .type {TokenType::Op_Equality},
+                    .text {"=="},
+                    .position {37, 6},
+                },
+                {
+                    .type {TokenType::Lit_false},
+                    .text {"false"},
+                    .position {37, 9},
+                },
+                {
+                    .type {TokenType::Lit_Int},
+                    .text {"94"},
+                    .position {38, 1},
+                },
+                {
+                    .type {TokenType::Op_NotEqual},
+                    .text {"!="},
+                    .position {38, 4},
+                },
+                {
+                    .type {TokenType::Lit_Int},
+                    .text {"94"},
+                    .position {38, 7},
+                },
+            };
+
+            // true == false
+            const auto& equality = ast.branches[23];
+            REQUIRE(equality->rule == Rule::Equality);
+            REQUIRE(equality->tokens.size() == 1);
+            REQUIRE(equality->tokens[0] == expected_tokens[1]);
+
+            REQUIRE(equality->branches.size() == 2);
+            REQUIRE(equality->branches[0]->tokens.size() == 1);
+            REQUIRE(equality->branches[1]->tokens.size() == 1);
+
+            REQUIRE(equality->branches[0]->tokens[0] == expected_tokens[0]);
+            REQUIRE(equality->branches[1]->tokens[0] == expected_tokens[2]);
+
+            // 94 != 94
+            const auto& equality2 = ast.branches[24];
+            REQUIRE(equality2->rule == Rule::Equality);
+            REQUIRE(equality2->tokens.size() == 1);
+            REQUIRE(equality2->tokens[0] == expected_tokens[4]);
+
+            REQUIRE(equality2->branches.size() == 2);
+            REQUIRE(equality2->branches[0]->tokens.size() == 1);
+            REQUIRE(equality2->branches[1]->tokens.size() == 1);
+
+            REQUIRE(equality2->branches[0]->tokens[0] == expected_tokens[3]);
+            REQUIRE(equality2->branches[1]->tokens[0] == expected_tokens[5]);
+        }
+
+        SECTION("Multi-expression") {
+            REQUIRE(ast.branches.size() >= 26);
+            const TokenStream expected_tokens {
+                {
+                    .type {TokenType::Lit_Int},
+                    .text {"83"},
+                    .position {41, 1},
+                },
+                {
+                    .type {TokenType::Op_Equality},
+                    .text {"=="},
+                    .position {41, 4},
+                },
+                {
+                    .type {TokenType::Lit_Int},
+                    .text {"24"},
+                    .position {41, 8},
+                },
+                {
+                    .type {TokenType::Op_Plus},
+                    .text {"+"},
+                    .position {41, 11},
+                },
+                {
+                    .type {TokenType::Lit_Int},
+                    .text {"94"},
+                    .position {41, 13},
+                },
+                {
+                    .type {TokenType::Op_FwdSlash},
+                    .text {"/"},
+                    .position {41, 16},
+                },
+                {
+                    .type {TokenType::Lit_Int},
+                    .text {"3"},
+                    .position {41, 19},
+                },
+                {
+                    .type {TokenType::Op_Asterisk},
+                    .text {"*"},
+                    .position {41, 21},
+                },
+                {
+                    .type {TokenType::Lit_Int},
+                    .text {"12"},
+                    .position {41, 24},
+                },
+                {
+                    .type {TokenType::Op_Minus},
+                    .text {"-"},
+                    .position {41, 27},
+                },
+                {
+                    .type {TokenType::Lit_Int},
+                    .text {"34"},
+                    .position {41, 29},
+                },
+                {
+                    .type {TokenType::Op_LessThan},
+                    .text {"<"},
+                    .position {41, 34},
+                },
+                {
+                    .type {TokenType::Lit_Float},
+                    .text {"85.32"},
+                    .position {41, 36},
+                },
+                {
+                    .type {TokenType::Op_GreaterEqual},
+                    .text {">="},
+                    .position {41, 42},
+                },
+                {
+                    .type {TokenType::Lit_Int},
+                    .text {"120"},
+                    .position {41, 45},
+                },
+                {
+                    .type {TokenType::Op_NotEqual},
+                    .text {"!="},
+                    .position {41, 49},
+                },
+                {
+                    .type {TokenType::Op_LogicalNot},
+                    .text {"!"},
+                    .position {41, 52},
+                },
+                {
+                    .type {TokenType::Lit_false},
+                    .text {"false"},
+                    .position {41, 53},
+                },
+            };
+
+            // 83 == -24 + 94 / (3 * (12 - 34)) < 85.32 >= 120 != !false;
+            const auto& expr = ast.branches[25];
+            REQUIRE(expr->rule == Rule::Equality);
+
+            // eq -> lit | cmp | unary
+            REQUIRE(expr->branches.size() == 3);
+
+            // lit '==' cmp '!=' unary
+            REQUIRE(expr->tokens.size() == 2);
+            CHECK(expr->tokens[0] == expected_tokens[1]); // ==
+            CHECK(expr->tokens[1] == expected_tokens[15]); // !=
+
+            // 83
+            REQUIRE(expr->branches[0]->rule == Rule::Literal);
+            REQUIRE(expr->branches[0]->tokens[0] == expected_tokens[0]); // 83
+
+            // -24 + 94 / (3 * (12 - 34)) < 85.32 >= 120
+            REQUIRE(expr->branches[1]->rule == Rule::Comparison);
+            const auto& cmp = expr->branches[1];
+            REQUIRE(cmp->branches.size() == 3);
+
+            // term '<' lit_float '>=' lit_int
+            CHECK(cmp->tokens[0] == expected_tokens[11]); // <
+            CHECK(cmp->tokens[1] == expected_tokens[13]); // >=
+
+            // -24 + 94 / (3 * (12 - 34))
+            REQUIRE(cmp->branches[0]->rule == Rule::Term);
+            CHECK(cmp->branches[0]->tokens[0] == expected_tokens[3]); // +
+
+            // -24
+            REQUIRE(cmp->branches[0]->branches[0]->rule == Rule::Unary);
+            CHECK(cmp->branches[0]->branches[0]->tokens[0].type == TokenType::Op_Minus);
+            CHECK(cmp->branches[0]->branches[0]->branches[0]->tokens[0] == expected_tokens[2]); // 24
+
+            // 94 / (3 * (12 - 34))
+            REQUIRE(cmp->branches[0]->branches[1]->rule == Rule::Factor);
+            const auto& outer_factor = cmp->branches[0]->branches[1];
+            CHECK(outer_factor->tokens[0] == expected_tokens[5]); // /
+            CHECK(outer_factor->branches[0]->tokens[0] == expected_tokens[4]); // 94
+
+            // (3 * (12 - 34))
+            REQUIRE(outer_factor->branches[1]->rule == Rule::Grouping);
+
+            // 3 * (12 - 34)
+            REQUIRE(outer_factor->branches[1]->branches[0]->rule == Rule::Factor);
+            const auto& inner_factor = outer_factor->branches[1]->branches[0];
+            REQUIRE(inner_factor->branches[1]->rule == Rule::Grouping);
+            CHECK(inner_factor->branches[0]->tokens[0] == expected_tokens[6]); // 3
+            CHECK(inner_factor->tokens[0] == expected_tokens[7]); // 3
+
+            // 12 - 34
+            REQUIRE(inner_factor->branches[1]->branches[0]->rule == Rule::Term);
+            const auto& inner_term = inner_factor->branches[1]->branches[0];
+            CHECK(inner_term->tokens[0] == expected_tokens[9]); // -
+            CHECK(inner_term->branches[0]->tokens[0] == expected_tokens[8]); // 12
+            CHECK(inner_term->branches[1]->tokens[0] == expected_tokens[10]); // 34
+
+            // !false
+            REQUIRE(expr->branches[2]->rule == Rule::Unary);
+            CHECK(expr->branches[2]->tokens[0] == expected_tokens[16]); // !
+            CHECK(expr->branches[2]->branches[0]->tokens[0] == expected_tokens[17]); // false
         }
     }
 }
