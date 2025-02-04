@@ -1,0 +1,79 @@
+# comment! [no index]
+
+# member access [index 1]
+x.y
+
+# type annotation [index 4]
+x: i32
+
+# module element access [index 7]
+Math::Vector
+
+# assignment [index 10]
+x = 12
+
+# logical-not [index 12]
+!x
+
+# equality [index 15]
+x == y
+
+# not-equal [index 18]
+x != y
+
+# less-than [index 21]
+x < y
+
+# greater-than [index 24]
+x > y
+
+# less or equal [27]
+x <= y
+
+# greater or equal [30]
+x >= y
+
+# short-circuiting logical AND [33]
+x and y
+
+# short-circuiting logical OR  [36]
+x or y
+
+# plus [39]
+x + y
+
+# minus [42]
+x - y
+
+# asterisk [45]
+x * y
+
+# fwd-slash [48]
+x / y
+
+# association / pointer / address [51]
+x->y
+
+# braces-brackets-parens [53~58]
+{}[]()
+
+# argument separator [60]
+x, y
+
+# explicit copy [64]
+x = $y
+
+# explicit move / loop inclusion [68]
+x = ~y
+
+# explicit ref [72]
+x = &y
+
+# string literal [74]
+"hello world"
+
+# character literal symbol [75]
+'f'
+
+# verbal logical not [76]
+not x

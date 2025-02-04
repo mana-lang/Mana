@@ -4,19 +4,19 @@ project(salem VERSION 0.0.1)
 enable_testing()
 
 set(SALEM_SOURCES
-    src/salem/main.cpp
+        src/salem/main.cpp
 )
 
 set(SALEM_INCLUDES
-    include/
+        include/
 )
 
 set(SALEM_LIBS
-    hex::hex
+        sigil::sigil
 )
 
 set(EXT_INCLUDES
-    ext/include/
+        ../.ext/include/
 )
 
 set(EXT_SOURCES
@@ -46,10 +46,10 @@ target_compile_definitions(salem PRIVATE SALEM_VER_PATCH=${PROJECT_VERSION_PATCH
 target_compile_definitions(salem PRIVATE SALEM_VER_STRING="${PROJECT_VERSION}")
 
 add_custom_command(
-    TARGET salem POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${PROJECT_SOURCE_DIR}/assets
-    ${PROJECT_BINARY_DIR}/assets/
+        TARGET salem POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/assets
+        ${PROJECT_BINARY_DIR}/assets/
 )
 
 add_subdirectory(tests)

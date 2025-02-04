@@ -4,9 +4,7 @@ project(hex VERSION 0.0.1)
 enable_testing()
 
 set(HEX_SOURCES
-        src/hex/ast/lexer.cpp
-        src/hex/ast/parser.cpp
-        src/hex/ast/parse_tree.cpp
+        src/hex/main.cpp
 )
 
 set(HEX_INCLUDES
@@ -14,11 +12,11 @@ set(HEX_INCLUDES
 )
 
 set(HEX_LIBS
-        spdlog::spdlog
+
 )
 
 set(EXT_INCLUDES
-        ext/include/
+        ../.ext/include/
 )
 
 set(EXT_SOURCES
@@ -44,5 +42,12 @@ target_compile_definitions(hex PUBLIC HEX_VER_MINOR=${PROJECT_VERSION_MINOR})
 target_compile_definitions(hex PUBLIC HEX_VER_PATCH=${PROJECT_VERSION_PATCH})
 
 target_compile_definitions(hex PUBLIC HEX_VER_STRING="${PROJECT_VERSION}")
+
+add_custom_command(
+        TARGET hex POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/assets
+        ${PROJECT_BINARY_DIR}/assets/
+)
 
 add_subdirectory(tests)
