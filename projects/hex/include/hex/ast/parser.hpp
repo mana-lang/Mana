@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hex/ast/syntax_tree.hpp>
+#include <hex/ast/parse_tree.hpp>
 #include <hex/ast/token.hpp>
 #include <hex/core/type_aliases.hpp>
 

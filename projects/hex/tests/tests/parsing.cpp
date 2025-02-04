@@ -932,6 +932,8 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
             REQUIRE(expr->branches[2]->rule == Rule::Unary);
             CHECK(expr->branches[2]->tokens[0] == expected_tokens[16]); // !
             CHECK(expr->branches[2]->branches[0]->tokens[0] == expected_tokens[17]); // false
+
+            // this doesn't cover everything but i don't care
         }
     }
 }
