@@ -2,15 +2,15 @@
 #include <hex/core/logger.hpp>
 
 int main(const int argc, char** argv) {
-    hex::CommandLineSettings cmline;
+    hex::CommandLineSettings cli;
 
-    cmline.Populate(argc, argv);
+    cli.Populate(argc, argv);
 
-    if (cmline.ShouldSayHi()) {
+    if (cli.ShouldSayHi()) {
         hex::Log("Hiii :3c");
     }
 
-    const std::string_view s = cmline.Opt();
+    const std::string_view s = cli.Opt();
     if (not s.empty()) {
         hex::Log("I dunno what to do with {}, but it sure looks important!", s);
     }
