@@ -20,7 +20,7 @@ enum class LogLevel : u8 {
 };
 
 #ifndef HEX_LOGGER_NAME
-#    define HEX_LOGGER_NAME "Sigil"
+#    define HEX_LOGGER_NAME "Hex"
 #endif
 
 #ifndef HEX_LOG_LEVEL
