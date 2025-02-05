@@ -13,7 +13,7 @@ set(HEX_INCLUDES
 )
 
 set(HEX_LIBS
-
+        spdlog::spdlog
 )
 
 set(EXT_INCLUDES

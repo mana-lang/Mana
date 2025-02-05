@@ -2,11 +2,12 @@
 
 #include <sigil/ast/parse_tree.hpp>
 #include <sigil/ast/token.hpp>
-#include <sigil/core/type_aliases.hpp>
+#include <mana/type_aliases.hpp>
 
 #include <vector>
 
 namespace sigil {
+using namespace mana::aliases;
 struct TokenRange {
     i64 breadth;
     i64 offset;
@@ -59,12 +60,13 @@ private:
 
     using MatcherFnPtr   = bool (Parser::*)(ast::Node&);
     using OpCheckerFnPtr = bool (*)(TokenType);
-    SIGIL_NODISCARD bool          MatchedBinaryExpr(
-                 ast::Node&     node,
-                 OpCheckerFnPtr is_valid_operator,
-                 MatcherFnPtr   matched_operand,
-                 ast::Rule      rule
-             );
+
+    SIGIL_NODISCARD bool MatchedBinaryExpr(
+        ast::Node&     node,
+        OpCheckerFnPtr is_valid_operator,
+        MatcherFnPtr   matched_operand,
+        ast::Rule      rule
+    );
 };
 
 }  // namespace sigil

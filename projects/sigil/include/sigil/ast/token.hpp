@@ -1,11 +1,12 @@
 #pragma once
 
-#include <sigil/core/type_aliases.hpp>
+#include <mana/type_aliases.hpp>
 
 #include <string>
 #include <vector>
 
 namespace sigil {
+using namespace mana::aliases;
 enum class TokenType : i64 {
     Identifier,
 
