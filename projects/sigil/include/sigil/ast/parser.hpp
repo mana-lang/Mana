@@ -13,9 +13,9 @@ struct TokenRange {
 };
 
 class Parser {
-    TokenStream tokens_;
-    i64         cursor_;
-    ast::Node   ast_;
+    TokenStream tokens;
+    i64         cursor;
+    ast::Node   ast;
 
 public:
     explicit Parser(const TokenStream&& tokens);
@@ -57,7 +57,7 @@ private:
     SIGIL_NODISCARD bool MatchedComparison(ast::Node& node);
     SIGIL_NODISCARD bool MatchedEquality(ast::Node& node);
 
-    using MatcherFnPtr   = bool   (Parser::*)(ast::Node&);
+    using MatcherFnPtr   = bool (Parser::*)(ast::Node&);
     using OpCheckerFnPtr = bool (*)(TokenType);
     SIGIL_NODISCARD bool          MatchedBinaryExpr(
                  ast::Node&     node,

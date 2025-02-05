@@ -40,10 +40,10 @@ private:
     void AddEOF();
 
 private:
-    i64 cursor_;
-    i64 line_number_;
+    i64 cursor;
+    i64 line_number;
 
-    TokenStream token_stream_;
+    TokenStream token_stream;
 };
 
 }  // namespace sigil

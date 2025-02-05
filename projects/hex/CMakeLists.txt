@@ -5,6 +5,7 @@ enable_testing()
 
 set(HEX_SOURCES
         src/hex/main.cpp
+        src/hex/core/cli.cpp
 )
 
 set(HEX_INCLUDES
