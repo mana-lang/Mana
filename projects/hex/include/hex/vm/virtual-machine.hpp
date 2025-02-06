@@ -34,6 +34,8 @@ public:
 
     void BinOp();
 
+    Value StackTop() const;
+
 private:
     Slice* slice {nullptr};
     u8*    ip {nullptr};

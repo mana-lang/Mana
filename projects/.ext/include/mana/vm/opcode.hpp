@@ -6,10 +6,15 @@ namespace mana::vm {
 using namespace mana::literals;
 
 enum class Op : u8 {
-    Return = 22,
+    Return,
 
     Constant,
     Negate,
+
+    Add,
+    Sub,
+    Div,
+    Mul,
 };
 
 }  // namespace mana::vm

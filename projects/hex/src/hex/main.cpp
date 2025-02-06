@@ -32,9 +32,10 @@ void PrintBytecode(const Slice& c) {
             ++i;
             break;
         case Negate:
-            EmitSimple(i, op);
-            ++i;
-            break;
+        case Add:
+        case Sub:
+        case Div:
+        case Mul:
         case Return:
             EmitSimple(i, op);
             break;
@@ -57,7 +58,14 @@ int main(const int argc, char** argv) {
 
     slice.Write(Op::Constant, a);
     slice.Write(Op::Constant, b);
-    slice.Write(Op::Negate, b);
+    slice.Write(Op::Add);
+    slice.Write(Op::Negate);
+    slice.Write(Op::Constant, slice.AddConstant(-12.2));
+    slice.Write(Op::Mul);
+    slice.Write(Op::Constant, slice.AddConstant(3));
+    slice.Write(Op::Div);
+    slice.Write(Op::Constant, b);
+    slice.Write(Op::Sub);
     slice.Write(Op::Return);
 
     PrintBytecode(slice);

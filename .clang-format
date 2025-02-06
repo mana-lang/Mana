@@ -33,7 +33,7 @@ AlignConsecutiveMacros:
   AlignCompound: true
   PadOperators: true
 
-AlignEscapedNewlines: Right
+AlignEscapedNewlines: Left
 AlignOperands: Align
 AlignTrailingComments: true
 AllowAllArgumentsOnNextLine: false

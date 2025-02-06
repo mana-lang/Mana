@@ -26,24 +26,50 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
     return Run();
 }
 
+#define BIN_OP(x)        \
+    {                    \
+        Value b = Pop(); \
+        Value a = Pop(); \
+        Push(a x b);     \
+    }
+
+#ifdef HEX_DEBUG
+#    define LOG_STACK_TOP(x) Log(x, StackTop())
+#else
+#    define LOG_STACK_TOP(x)
+#endif
+
 InterpretResult VirtualMachine::Run() {
     while (true) {
         switch (static_cast<Op>(*ip++)) {
         case Op::Constant: {
-            Value constant = slice->ConstantAt(*ip++);
-            Log("push | {}", constant);
-            Push(constant);
+            Push(slice->ConstantAt(*ip++));
+            LOG_STACK_TOP("push:  {}");
             break;
         }
-        case Op::Negate: {
-            const Value c = -Pop();
-            Push(c);
-            ip++;
-            Log("neg  | {}", c);
+        case Op::Negate:
+            Push(-Pop());
+            LOG_STACK_TOP("neg:   {}");
             break;
-        }
+        case Op::Add:
+            BIN_OP(+);
+            LOG_STACK_TOP("add:   {}");
+            break;
+        case Op::Sub:
+            BIN_OP(-);
+            LOG_STACK_TOP("sub:   {}");
+            break;
+        case Op::Div:
+            BIN_OP(/);
+            LOG_STACK_TOP("div:   {}");
+            break;
+        case Op::Mul:
+            BIN_OP(*);
+            LOG_STACK_TOP("mul:   {}");
+            break;
         case Op::Return:
-            Log("{}", Pop());
+            Log("");
+            Log("ret {}", Pop());
             return InterpretResult::OK;
         default:
             return InterpretResult::RuntimeError;
@@ -51,9 +77,12 @@ InterpretResult VirtualMachine::Run() {
     }
 }
 
-void VirtualMachine::BinOp() {
-    Value b = Pop();
-    Value a = Pop();
-    Push()
+Value VirtualMachine::StackTop() const {
+    if (stack_top == &stack[0]) {
+        LogErr("StackTop could not be printed as stack is empty.");
+        return 0.0;
+    }
+
+    return *(stack_top - 1);
 }
 }  // namespace hex
