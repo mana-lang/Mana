@@ -36,7 +36,15 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
     slice = next_slice;
     ip    = &slice->Code()[0];
 
-    static void* dispatch_table[] = {&&op_return, &&op_constant, &&op_negate, &&op_add, &&op_sub, &&op_div, &&op_mul};
+    static const std::array dispatch_table {
+        &&op_return,
+        &&op_constant,
+        &&op_negate,
+        &&op_add,
+        &&op_sub,
+        &&op_div,
+        &&op_mul,
+    };
 
 #define DISPATCH() goto* dispatch_table[*ip++]
 
