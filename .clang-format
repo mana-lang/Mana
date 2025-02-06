@@ -3,7 +3,7 @@ Language: Cpp
 
 AccessModifierOffset: -4
 AlignAfterOpenBracket: BlockIndent
-AlignArrayOfStructures: None
+AlignArrayOfStructures: Left
 
 AlignConsecutiveAssignments:
   Enabled: true
@@ -33,7 +33,7 @@ AlignConsecutiveMacros:
   AlignCompound: true
   PadOperators: true
 
-AlignEscapedNewlines: Right
+AlignEscapedNewlines: Left
 AlignOperands: Align
 AlignTrailingComments: true
 AllowAllArgumentsOnNextLine: false
@@ -72,7 +72,8 @@ BraceWrapping:
   SplitEmptyFunction: false
   SplitEmptyRecord: false
   SplitEmptyNamespace: false
-BreakBeforeBinaryOperators: None
+BreakAdjacentStringLiterals: true
+BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeConceptDeclarations: Always
 BreakInheritanceList: BeforeComma
 BreakBeforeTernaryOperators: true
@@ -189,7 +190,7 @@ SpacesInParentheses: false
 SpacesInSquareBrackets: false
 SpaceBeforeSquareBrackets: false
 BitFieldColonSpacing: Both
-Standard: Auto
+Standard: c++20
 
 TabWidth: 8
 UseCRLF: false

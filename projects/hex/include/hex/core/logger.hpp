@@ -8,7 +8,8 @@
 
 #include <memory>
 
-namespace sigil {
+namespace hex {
+using namespace mana::literals;
 enum class LogLevel : u8 {
     Trace,
     Debug,
@@ -19,19 +20,19 @@ enum class LogLevel : u8 {
     Off
 };
 
-#ifndef SIGIL_LOGGER_NAME
-#    define SIGIL_LOGGER_NAME "Sigil"
+#ifndef HEX_LOGGER_NAME
+#    define HEX_LOGGER_NAME "Hex"
 #endif
 
-#ifndef SIGIL_LOG_LEVEL
-#    if defined(SIGIL_VERBOSE)
-#        define SIGIL_LOG_LEVEL LogLevel::Trace
-#    elif defined(SIGIL_DEBUG)
-#        define SIGIL_LOG_LEVEL LogLevel::Debug
-#    elif defined(SIGIL_RELEASE)
-#        define SIGIL_LOG_LEVEL LogLevel::Info
+#ifndef HEX_LOG_LEVEL
+#    if defined(HEX_VERBOSE)
+#        define HEX_LOG_LEVEL LogLevel::Trace
+#    elif defined(HEX_DEBUG)
+#        define HEX_LOG_LEVEL LogLevel::Debug
+#    elif defined(HEX_RELEASE)
+#        define HEX_LOG_LEVEL LogLevel::Info
 #    else
-#        define SIGIL_LOG_LEVEL LogLevel::Off
+#        define HEX_LOG_LEVEL LogLevel::Off
 #    endif
 #endif
 
@@ -53,7 +54,7 @@ class Internal_Log_ {
         if (!was_initialized) {
             was_initialized = true;
 
-            logger->set_level(static_cast<spdlog::level::level_enum>(SIGIL_LOG_LEVEL));
+            logger->set_level(static_cast<spdlog::level::level_enum>(HEX_LOG_LEVEL));
             logger->set_pattern("%^<%n>%$ %v");
 
             counters = {};
@@ -61,7 +62,7 @@ class Internal_Log_ {
     }
 
     inline static bool        was_initialized {false};
-    inline static std::string logger_name {SIGIL_LOGGER_NAME};
+    inline static std::string logger_name {HEX_LOGGER_NAME};
     inline static Logger      logger {spdlog::stdout_color_mt(logger_name)};
 
     inline static struct {
@@ -148,4 +149,4 @@ inline i64 LogCounter(const LogLevel level) {
 
     return exit_code(mana::Exit::LOG_LogCounterExhausted);
 }
-}  // namespace sigil
+}  // namespace hex

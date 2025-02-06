@@ -1,11 +1,12 @@
 #pragma once
 
-#include <sigil/core/type_aliases.hpp>
+#include <mana/literals.hpp>
 
 #include <string>
 #include <vector>
 
 namespace sigil {
+using namespace mana::literals;
 enum class TokenType : i64 {
     Identifier,
 
@@ -130,7 +131,6 @@ struct Token {
 
 using TokenStream = std::vector<Token>;
 
-static const auto
-    TOKEN_EOF = Token {.type = TokenType::Eof, .text = "EOF", .position = {}};
+static const auto TOKEN_EOF = Token {.type = TokenType::Eof, .text = "EOF", .position = {}};
 
-}  // namespace hex
+}  // namespace sigil

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sigil/core/type_aliases.hpp>
+#include <mana/literals.hpp>
 #include <sigil/ast/token.hpp>
 
 #include <filesystem>
@@ -9,6 +9,7 @@
 #include <vector>
 
 namespace sigil {
+using namespace mana::literals;
 
 class Lexer {
 public:
@@ -40,10 +41,10 @@ private:
     void AddEOF();
 
 private:
-    i64 cursor_;
-    i64 line_number_;
+    i64 cursor;
+    i64 line_number;
 
-    TokenStream token_stream_;
+    TokenStream token_stream;
 };
 
 }  // namespace sigil

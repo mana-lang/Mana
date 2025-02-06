@@ -10,17 +10,17 @@ namespace sigil {
 using namespace ast;
 
 Parser::Parser(const TokenStream&& tokens)
-    : tokens_ {tokens}
-    , cursor_ {}
-    , ast_ {Rule::Undefined} {}
+    : tokens {tokens}
+    , cursor {}
+    , ast {Rule::Undefined} {}
 
 Parser::Parser(const TokenStream& tokens)
-    : tokens_ {tokens}
-    , cursor_ {}
-    , ast_ {Rule::Undefined} {}
+    : tokens {tokens}
+    , cursor {}
+    , ast {Rule::Undefined} {}
 
 bool Parser::Parse() {
-    const auto& top_token = tokens_.front();
+    const auto& top_token = tokens.front();
 
     if (top_token.type != TokenType::_module_) {
         LogErr(
@@ -31,11 +31,11 @@ bool Parser::Parse() {
         return false;
     }
 
-    ast_.rule = Rule::Module;
-    ast_.tokens.push_back(tokens_.front());
+    ast.rule = Rule::Module;
+    ast.tokens.push_back(tokens.front());
 
-    cursor_ = 1;
-    while (ProgressedAST(ast_)) {}
+    cursor = 1;
+    while (ProgressedAST(ast)) {}
 
     if (CurrentToken().type != TokenType::Eof) {
         // LogErr("It appears we did not parse the entire file.");
@@ -45,21 +45,21 @@ bool Parser::Parse() {
 }
 
 auto Parser::ViewAST() const -> const Node& {
-    return ast_;
+    return ast;
 }
 
 auto Parser::ViewTokens() const -> const TokenStream& {
-    return tokens_;
+    return tokens;
 }
 
 void Parser::PrintAST() const {
-    Log("Printing AST for module '{}'\n\n{}", ast_.tokens[0].text, EmitAST(ast_));
+    Log("Printing AST for module '{}'\n\n{}", ast.tokens[0].text, EmitAST(ast));
 }
 
 void Parser::EmitAST(const std::string_view file_name) const {
     std::ofstream out {std::string(file_name)};
 
-    out << EmitAST(ast_);
+    out << EmitAST(ast);
 }
 
 std::string Parser::EmitAST(const Node& root, std::string prepend) const {
@@ -123,19 +123,19 @@ bool IsPrimitive(const TokenType token_type) {
 }
 
 auto Parser::CurrentToken() const -> const Token& {
-    return tokens_[cursor_];
+    return tokens[cursor];
 }
 
 auto Parser::PeekNextToken() const -> const Token& {
-    return tokens_[cursor_ + 1];
+    return tokens[cursor + 1];
 }
 
 auto Parser::NextToken() -> const Token& {
-    return tokens_[++cursor_];
+    return tokens[++cursor];
 }
 
 auto Parser::GetAndCycleToken() -> const Token& {
-    return tokens_[cursor_++];
+    return tokens[cursor++];
 }
 
 // inclusive
@@ -152,13 +152,13 @@ void Parser::AddTokensTo(Node& node, const i64 count) {
 }
 
 void Parser::AddCurrentTokenTo(Node& node) const {
-    if (cursor_ < tokens_.size()) {
+    if (cursor < tokens.size()) {
         node.tokens.push_back(CurrentToken());
     }
 }
 
 void Parser::AddCycledTokenTo(Node& node) {
-    if (cursor_ < tokens_.size()) {
+    if (cursor < tokens.size()) {
         node.tokens.push_back(GetAndCycleToken());
     }
 }
@@ -186,17 +186,16 @@ void Parser::TransmitTokens(Node& sender, Node& receiver, TokenRange range) cons
 
 bool Parser::ProgressedAST(Node& node) {
     // don't process eof (final token) before quitting
-    if (cursor_ + 1 >= tokens_.size() - 1) {
+    if (cursor + 1 >= tokens.size() - 1) {
         return false;
     }
 
+    // we're not using terminators yet
     if (CurrentToken().type == TokenType::Terminator) {
-        ++cursor_;
+        ++cursor;
     }
 
-    const bool Matchedsomething = MatchedExpression(node);
-
-    return Matchedsomething;
+    return MatchedExpression(node);
 }
 
 bool Parser::MatchedExpression(Node& node) {
@@ -227,7 +226,7 @@ bool IsLiteral(const TokenType token) {
 // grouping = "(" expr ")"
 bool Parser::MatchedPrimary(Node& node) {
     if (CurrentToken().type == TokenType::Terminator) {
-        ++cursor_;
+        ++cursor;
         return true;
     }
 
@@ -365,15 +364,15 @@ bool Parser::MatchedEquality(Node& node) {
 
 bool Parser::MatchedBinaryExpr(
     Node&                node,
-    const OpCheckerFnPtr Isvalid_operator,
-    const MatcherFnPtr   Matchedoperand,
+    const OpCheckerFnPtr is_valid_operator,
+    const MatcherFnPtr   matched_operand,
     const Rule           rule
 ) {
-    if (not(this->*Matchedoperand)(node)) {
+    if (not(this->*matched_operand)(node)) {
         return false;
     }
 
-    if (not Isvalid_operator(CurrentToken().type)) {
+    if (not is_valid_operator(CurrentToken().type)) {
         return true;
     }
 
@@ -383,16 +382,16 @@ bool Parser::MatchedBinaryExpr(
     binary_expr.AcquireBranchOf(node, node.branches.size() - 2);
     const auto expr_index = node.branches.size() - 1;
 
-    if (not(this->*Matchedoperand)(node)) {
+    if (not(this->*matched_operand)(node)) {
         LogErr("Expected expression");
         return false;
     }
 
     bool ret = true;
-    while (Isvalid_operator(CurrentToken().type)) {
+    while (is_valid_operator(CurrentToken().type)) {
         AddCycledTokenTo(binary_expr);
 
-        if (not(this->*Matchedoperand)(node)) {
+        if (not(this->*matched_operand)(node)) {
             LogErr("Incomplete expression");
             binary_expr.rule = Rule::Mistake;
 

@@ -1,12 +1,13 @@
 #pragma once
 
+#include <mana/literals.hpp>
 #include <sigil/ast/token.hpp>
-#include <sigil/core/logger.hpp>
 
 #include <memory>
 #include <vector>
 
 namespace sigil::ast {
+using namespace mana::literals;
 enum class Rule : i64 {
     Undefined,
     Mistake,
@@ -73,8 +74,8 @@ struct Node {
     TokenStream          tokens;
     std::vector<NodePtr> branches;
 
-    explicit Node(Rule r = Rule::Undefined);
-    explicit Node(Node* p, Rule r = Rule::Undefined);
+    explicit Node(Rule rule = Rule::Undefined);
+    explicit Node(Node* parent, Rule rule = Rule::Undefined);
 
     SIGIL_NODISCARD Node& NewBranch(Rule new_rule = Rule::Undefined);
 

@@ -1,4 +1,5 @@
-#include <sigil/ast/parse_tree.hpp>
+#include <sigil/ast/parse-tree.hpp>
+#include <sigil/core/logger.hpp>
 
 namespace sigil::ast {
 
@@ -11,7 +12,7 @@ Node::Node(Node* p, const Rule r)
     , parent {p} {}
 
 Node& Node::NewBranch(const Rule new_rule) {
-    // because the module node is the root, it's actually useless to list it as a parent
+    // because the module node is the root, it's useless to list it as a parent
     return *branches.emplace_back(std::make_shared<Node>(rule == Rule::Module ? nullptr : this, new_rule));
 }
 
@@ -85,4 +86,4 @@ void Node::AcquireTailBranchOf(Node& target) {
     branches.back()->parent = this;
     target.branches.erase(target.branches.end() - 1);
 }
-}  // namespace hex::ast
+}  // namespace sigil::ast

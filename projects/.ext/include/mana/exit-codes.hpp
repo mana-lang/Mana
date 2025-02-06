@@ -1,7 +1,7 @@
 #pragma once
 
-namespace sigil {
-enum class exit {
+namespace mana {
+enum class Exit {
     Success,
     CriticalError,
     LOG_LogCounterExhausted,
@@ -11,7 +11,7 @@ enum class exit {
     LEX_TokenizationFailed,
 };
 
-consteval int exit_code(exit exit_code) {
+consteval int exit_code(Exit exit_code) {
     return static_cast<int>(exit_code);
 }
 
