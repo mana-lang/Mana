@@ -18,28 +18,26 @@ enum class InterpretResult {
 };
 
 class VirtualMachine {
-public:
-    VirtualMachine();
-
-    void ResetStack();
-
-    void Push(Value value);
-
-    Value Pop();
-
-    InterpretResult Interpret(Slice* next_slice);
-
-    void BinOp();
-
-    Value StackTop() const;
-
-private:
     Slice* slice {nullptr};
     u8*    ip {nullptr};
 
     std::vector<Value> stack {};
 
     Value* stack_top {nullptr};
+
+public:
+    VirtualMachine();
+
+    InterpretResult Interpret(Slice* next_slice);
+
+private:
+    void ResetStack();
+
+    void Push(Value value);
+
+    Value Pop();
+
+    Value StackTop() const;
 };
 
 }  // namespace hex

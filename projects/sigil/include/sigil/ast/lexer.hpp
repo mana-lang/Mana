@@ -1,6 +1,6 @@
 #pragma once
 
-#include <mana/type_aliases.hpp>
+#include <mana/literals.hpp>
 #include <sigil/ast/token.hpp>
 
 #include <filesystem>
@@ -9,7 +9,8 @@
 #include <vector>
 
 namespace sigil {
-using namespace mana::aliases;
+using namespace mana::literals;
+
 class Lexer {
 public:
     Lexer();

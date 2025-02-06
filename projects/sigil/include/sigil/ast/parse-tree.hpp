@@ -1,13 +1,13 @@
 #pragma once
 
+#include <mana/literals.hpp>
 #include <sigil/ast/token.hpp>
-#include <mana/type_aliases.hpp>
 
 #include <memory>
 #include <vector>
 
 namespace sigil::ast {
-using namespace mana::aliases;
+using namespace mana::literals;
 enum class Rule : i64 {
     Undefined,
     Mistake,

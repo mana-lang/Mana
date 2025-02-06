@@ -21,7 +21,7 @@ public:
     auto Code() const -> const std::vector<u8>&;
     auto Code() -> std::vector<u8>&;
 
-    HEX_NODISCARD Value ConstantAt(i64 idx) const;
+    HEX_NODISCARD Value ConstantAt(i64 index) const;
 
 private:
     std::vector<u8>    code;

@@ -24,8 +24,8 @@ auto Slice::Code() -> std::vector<u8>& {
     return code;
 }
 
-Value Slice::ConstantAt(const i64 idx) const {
-    return constants[idx];
+Value Slice::ConstantAt(const i64 index) const {
+    return constants[index];
 }
 
 }  // namespace hex

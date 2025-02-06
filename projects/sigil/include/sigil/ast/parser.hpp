@@ -1,13 +1,14 @@
 #pragma once
 
-#include <sigil/ast/parse_tree.hpp>
+#include <mana/literals.hpp>
+#include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/token.hpp>
-#include <mana/type_aliases.hpp>
 
 #include <vector>
 
 namespace sigil {
-using namespace mana::aliases;
+using namespace mana::literals;
+
 struct TokenRange {
     i64 breadth;
     i64 offset;

@@ -1,4 +1,4 @@
-#include <sigil/ast/parse_tree.hpp>
+#include <sigil/ast/parse-tree.hpp>
 #include <sigil/core/logger.hpp>
 
 namespace sigil::ast {
@@ -86,4 +86,4 @@ void Node::AcquireTailBranchOf(Node& target) {
     branches.back()->parent = this;
     target.branches.erase(target.branches.end() - 1);
 }
-}  // namespace hex::ast
+}  // namespace sigil::ast
