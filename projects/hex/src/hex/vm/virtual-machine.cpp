@@ -2,20 +2,31 @@
 #include <hex/vm/virtual-machine.hpp>
 
 namespace hex {
-VirtualMachine::VirtualMachine()
-    : stack_top(&stack[0]) {}
+VirtualMachine::VirtualMachine() {
+    stack.reserve(256);
+    stack_top = stack.data();
+}
 
 void VirtualMachine::ResetStack() {
-    stack_top = &stack[0];
+    stack_top = stack.data();
 }
 
 void VirtualMachine::Push(const Value value) {
+    if (stack_top == &stack.back()) {
+        stack.reserve(stack.capacity() * 2);
+    }
+
     *stack_top = value;
     ++stack_top;
 }
 
 Value VirtualMachine::Pop() {
-    --stack_top;
+    if (stack_top != &stack.front()) {
+        --stack_top;
+    } else {
+        LogErr("Attempted to pop from empty stack.");
+    }
+
     return *stack_top;
 }
 
@@ -34,9 +45,9 @@ Value VirtualMachine::Pop() {
 
 InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
     slice = next_slice;
-    ip    = &slice->Code()[0];
+    ip    = slice->Code().data();
 
-    static const std::array dispatch_table {
+    constexpr std::array dispatch_table {
         &&op_return,
         &&op_constant,
         &&op_negate,
@@ -61,7 +72,7 @@ op_constant:
     DISPATCH();
 
 op_negate:
-    Push(-Pop());
+    *(stack_top - 1) *= -1;
     LOG_STACK_TOP("neg:   {}");
     DISPATCH();
 
@@ -90,8 +101,8 @@ op_mul:
 }
 
 Value VirtualMachine::StackTop() const {
-    if (stack_top == &stack[0]) {
-        LogErr("StackTop could not be printed as stack is empty.");
+    if (stack_top == &stack.front()) {
+        LogErr("Attempted to read from empty stack");
         return 0.0;
     }
 

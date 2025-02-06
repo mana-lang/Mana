@@ -1,10 +1,11 @@
 #pragma once
 
 #include <hex/vm/slice.hpp>
+
 #include <mana/literals.hpp>
 #include <mana/vm/opcode.hpp>
 
-#include <array>
+#include <vector>
 
 namespace hex {
 using namespace mana::literals;
@@ -15,8 +16,6 @@ enum class InterpretResult {
     CompileError,
     RuntimeError,
 };
-
-constexpr i64 Stack_Max = 256;
 
 class VirtualMachine {
 public:
@@ -38,7 +37,7 @@ private:
     Slice* slice {nullptr};
     u8*    ip {nullptr};
 
-    std::array<Value, Stack_Max> stack {};
+    std::vector<Value> stack {};
 
     Value* stack_top {nullptr};
 };
