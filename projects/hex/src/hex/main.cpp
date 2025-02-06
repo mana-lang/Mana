@@ -46,9 +46,32 @@ enum class InterpretResult {
     RuntimeError,
 };
 
+constexpr i64 Stack_Max = 256;
+
 class VirtualMachine {
 public:
-    InterpretResult interpret(Slice* next_slice) {
+    VirtualMachine()
+        : stack_top(&stack[0]) {}
+
+    void ResetStack() {
+        stack_top = &stack[0];
+    }
+
+    void Push(const Value value) {
+        *stack_top = value;
+        ++stack_top;
+    }
+
+    Value Pop() {
+        if (stack_top != &stack[0]) {
+            --stack_top;
+            return *stack_top;
+        }
+
+        return 0.0;
+    }
+
+    InterpretResult Interpret(Slice* next_slice) {
         slice = next_slice;
         ip    = &slice->Code()[0];
 
@@ -60,11 +83,12 @@ public:
             switch (const auto instruction = static_cast<Op>(*ip++)) {
             case Op::Constant: {
                 Value constant = slice->ConstantAt(*ip++);
-                Log("Constant: {}", constant);
+                Log("push | {}", constant);
+                Push(constant);
                 break;
             }
             case Op::Return:
-                Log("Returning.");
+                Log("pop | {}", Pop());
                 return InterpretResult::OK;
             default:
                 return InterpretResult::RuntimeError;
@@ -75,6 +99,10 @@ public:
 private:
     Slice* slice {nullptr};
     u8*    ip {nullptr};
+
+    std::array<Value, Stack_Max> stack {};
+
+    Value* stack_top {nullptr};
 };
 
 }  // namespace hex
@@ -88,12 +116,17 @@ int main(const int argc, char** argv) {
     const u8 b = slice.AddConstant(2.4);
     slice.Write(Op::Constant, a);
     slice.Write(Op::Constant, b);
-    // slice.Write(Op::Return);
+    slice.Write(Op::Return);
 
-    // PrintBytecode(chunk);
+    PrintBytecode(slice);
+
+    hex::Log("");
 
     hex::VirtualMachine vm;
-    hex::Log("Interpret Result: {}", magic_enum::enum_name(vm.interpret(&slice)));
+
+    auto result = magic_enum::enum_name(vm.Interpret(&slice));
+    hex::Log("");
+    hex::Log("Interpret Result: {}", result);
 
     hex::CommandLineSettings cli(argc, argv);
     cli.Populate();
