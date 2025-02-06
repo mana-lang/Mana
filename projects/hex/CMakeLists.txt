@@ -7,7 +7,8 @@ set(HEX_SOURCES
         src/hex/main.cpp
         src/hex/core/cli.cpp
 
-        src/hex/slice.cpp
+        src/hex/vm/slice.cpp
+        src/hex/vm/virtual-machine.cpp
 )
 
 set(HEX_INCLUDES

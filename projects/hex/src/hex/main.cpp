@@ -1,6 +1,7 @@
 #include <hex/core/cli.hpp>
 #include <hex/core/logger.hpp>
-#include <hex/slice.hpp>
+#include <hex/vm/slice.hpp>
+#include <hex/vm/virtual-machine.hpp>
 
 #include <mana/vm/opcode.hpp>
 
@@ -16,22 +17,26 @@ void EmitConstant(i64 offset, Value constant) {
     Log("{:04} | {} | {}", offset, magic_enum::enum_name(Op::Constant), constant);
 }
 
-void EmitSimple(i64 offset) {
-    Log("{:04} | {}", offset, magic_enum::enum_name(Op::Return));
+void EmitSimple(i64 offset, const Op op) {
+    Log("{:04} | {}", offset, magic_enum::enum_name(op));
 }
 
 void PrintBytecode(const Slice& c) {
     const auto& code = c.Code();
 
     for (i64 i = 0; i < code.size(); ++i) {
-        switch (static_cast<Op>(code[i])) {
+        switch (const auto op = static_cast<Op>(code[i])) {
             using enum Op;
         case Constant:
             EmitConstant(i, c.ConstantAt(code[i + 1]));
             ++i;
             break;
+        case Negate:
+            EmitSimple(i, op);
+            ++i;
+            break;
         case Return:
-            EmitSimple(i);
+            EmitSimple(i, op);
             break;
         default:
             Log("???");
@@ -39,71 +44,6 @@ void PrintBytecode(const Slice& c) {
         }
     }
 }
-
-enum class InterpretResult {
-    OK,
-    CompileError,
-    RuntimeError,
-};
-
-constexpr i64 Stack_Max = 256;
-
-class VirtualMachine {
-public:
-    VirtualMachine()
-        : stack_top(&stack[0]) {}
-
-    void ResetStack() {
-        stack_top = &stack[0];
-    }
-
-    void Push(const Value value) {
-        *stack_top = value;
-        ++stack_top;
-    }
-
-    Value Pop() {
-        if (stack_top != &stack[0]) {
-            --stack_top;
-            return *stack_top;
-        }
-
-        return 0.0;
-    }
-
-    InterpretResult Interpret(Slice* next_slice) {
-        slice = next_slice;
-        ip    = &slice->Code()[0];
-
-        return Run();
-    }
-
-    InterpretResult Run() {
-        while (true) {
-            switch (const auto instruction = static_cast<Op>(*ip++)) {
-            case Op::Constant: {
-                Value constant = slice->ConstantAt(*ip++);
-                Log("push | {}", constant);
-                Push(constant);
-                break;
-            }
-            case Op::Return:
-                Log("pop | {}", Pop());
-                return InterpretResult::OK;
-            default:
-                return InterpretResult::RuntimeError;
-            }
-        }
-    }
-
-private:
-    Slice* slice {nullptr};
-    u8*    ip {nullptr};
-
-    std::array<Value, Stack_Max> stack {};
-
-    Value* stack_top {nullptr};
-};
 
 }  // namespace hex
 
@@ -114,8 +54,10 @@ int main(const int argc, char** argv) {
 
     const u8 a = slice.AddConstant(1.2);
     const u8 b = slice.AddConstant(2.4);
+
     slice.Write(Op::Constant, a);
     slice.Write(Op::Constant, b);
+    slice.Write(Op::Negate, b);
     slice.Write(Op::Return);
 
     PrintBytecode(slice);

@@ -9,6 +9,7 @@
 #include <memory>
 
 namespace hex {
+using namespace mana::literals;
 enum class LogLevel : u8 {
     Trace,
     Debug,

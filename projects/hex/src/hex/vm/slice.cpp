@@ -1,4 +1,4 @@
-#include <hex/slice.hpp>
+#include <hex/vm/slice.hpp>
 
 namespace hex {
 void Slice::Write(Op opcode) {
