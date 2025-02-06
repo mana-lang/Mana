@@ -3,7 +3,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include <mana/exit_codes.hpp>
+#include <mana/exit-codes.hpp>
 #include <mana/literals.hpp>
 
 #include <memory>
