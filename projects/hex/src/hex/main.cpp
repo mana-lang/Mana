@@ -1,6 +1,6 @@
-#include <hex/chunk.hpp>
 #include <hex/core/cli.hpp>
 #include <hex/core/logger.hpp>
+#include <hex/slice.hpp>
 
 #include <mana/vm/opcode.hpp>
 
@@ -20,7 +20,7 @@ void EmitSimple(i64 offset) {
     Log("{:04} | {}", offset, magic_enum::enum_name(Op::Return));
 }
 
-void PrintBytecode(const Chunk& c) {
+void PrintBytecode(const Slice& c) {
     const auto& code = c.Code();
 
     for (i64 i = 0; i < code.size(); ++i) {
@@ -39,20 +39,61 @@ void PrintBytecode(const Chunk& c) {
         }
     }
 }
+
+enum class InterpretResult {
+    OK,
+    CompileError,
+    RuntimeError,
+};
+
+class VirtualMachine {
+public:
+    InterpretResult interpret(Slice* next_slice) {
+        slice = next_slice;
+        ip    = &slice->Code()[0];
+
+        return Run();
+    }
+
+    InterpretResult Run() {
+        while (true) {
+            switch (const auto instruction = static_cast<Op>(*ip++)) {
+            case Op::Constant: {
+                Value constant = slice->ConstantAt(*ip++);
+                Log("Constant: {}", constant);
+                break;
+            }
+            case Op::Return:
+                Log("Returning.");
+                return InterpretResult::OK;
+            default:
+                return InterpretResult::RuntimeError;
+            }
+        }
+    }
+
+private:
+    Slice* slice {nullptr};
+    u8*    ip {nullptr};
+};
+
 }  // namespace hex
 
 int main(const int argc, char** argv) {
     using namespace mana::literals;
     using namespace mana::vm;
-    hex::Chunk chunk;
+    hex::Slice slice;
 
-    const u8 a = chunk.AddConstant(1.2);
-    const u8 b = chunk.AddConstant(2.4);
-    chunk.Write(Op::Constant, a);
-    chunk.Write(Op::Constant, b);
-    chunk.Write(Op::Return);
+    const u8 a = slice.AddConstant(1.2);
+    const u8 b = slice.AddConstant(2.4);
+    slice.Write(Op::Constant, a);
+    slice.Write(Op::Constant, b);
+    // slice.Write(Op::Return);
 
-    PrintBytecode(chunk);
+    // PrintBytecode(chunk);
+
+    hex::VirtualMachine vm;
+    hex::Log("Interpret Result: {}", magic_enum::enum_name(vm.interpret(&slice)));
 
     hex::CommandLineSettings cli(argc, argv);
     cli.Populate();

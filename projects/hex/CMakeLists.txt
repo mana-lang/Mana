@@ -7,7 +7,7 @@ set(HEX_SOURCES
         src/hex/main.cpp
         src/hex/core/cli.cpp
 
-        src/hex/chunk.cpp
+        src/hex/slice.cpp
 )
 
 set(HEX_INCLUDES
