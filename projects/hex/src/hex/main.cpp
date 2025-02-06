@@ -1,3 +1,4 @@
+#include <hex/chunk.hpp>
 #include <hex/core/cli.hpp>
 #include <hex/core/logger.hpp>
 
@@ -7,71 +8,43 @@
 
 #include <vector>
 
+namespace hex {
 using namespace mana::literals;
 using namespace mana::vm;
-using Value = f64;
 
-struct Chunk {
-    void Write(Op opcode) {
-        code.push_back(static_cast<u8>(opcode));
-    }
-
-    void Write(Op opcode, const u8 byte) {
-        code.push_back(static_cast<u8>(opcode));
-        code.push_back(byte);
-    }
-
-    usize AddConstant(const Value value) {
-        constants.push_back(value);
-
-        return constants.size() - 1;
-    }
-
-    auto Code() const -> const std::vector<u8>& {
-        return code;
-    }
-
-    Value ConstantAt(const i64 idx) const {
-        return constants[idx];
-    }
-
-private:
-    std::vector<u8>    code;
-    std::vector<Value> constants;
-};
-
-namespace Instruction {
-void Constant(Value constant) {
-    hex::Log("{:04} | {} | {}", static_cast<u8>(Op::Constant), magic_enum::enum_name(Op::Constant), constant);
+void EmitConstant(i64 offset, Value constant) {
+    Log("{:04} | {} | {}", offset, magic_enum::enum_name(Op::Constant), constant);
 }
 
-void Return() {
-    hex::Log("{:04} | {}", static_cast<u8>(Op::Return), magic_enum::enum_name(Op::Return));
+void EmitSimple(i64 offset) {
+    Log("{:04} | {}", offset, magic_enum::enum_name(Op::Return));
 }
 
-}  // namespace Instruction
-
-void Execute(const Chunk& c) {
+void PrintBytecode(const Chunk& c) {
     const auto& code = c.Code();
 
     for (i64 i = 0; i < code.size(); ++i) {
         switch (static_cast<Op>(code[i])) {
             using enum Op;
         case Constant:
-            Instruction::Constant(c.ConstantAt(code[++i]));
+            EmitConstant(i, c.ConstantAt(code[i + 1]));
+            ++i;
             break;
         case Return:
-            Instruction::Return();
+            EmitSimple(i);
             break;
         default:
-            hex::Log("???");
+            Log("???");
             break;
         }
     }
 }
+}  // namespace hex
 
 int main(const int argc, char** argv) {
-    Chunk chunk;
+    using namespace mana::literals;
+    using namespace mana::vm;
+    hex::Chunk chunk;
 
     const u8 a = chunk.AddConstant(1.2);
     const u8 b = chunk.AddConstant(2.4);
@@ -79,7 +52,7 @@ int main(const int argc, char** argv) {
     chunk.Write(Op::Constant, b);
     chunk.Write(Op::Return);
 
-    Execute(chunk);
+    PrintBytecode(chunk);
 
     hex::CommandLineSettings cli(argc, argv);
     cli.Populate();

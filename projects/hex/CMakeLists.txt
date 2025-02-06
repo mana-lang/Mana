@@ -6,6 +6,8 @@ enable_testing()
 set(HEX_SOURCES
         src/hex/main.cpp
         src/hex/core/cli.cpp
+
+        src/hex/chunk.cpp
 )
 
 set(HEX_INCLUDES
