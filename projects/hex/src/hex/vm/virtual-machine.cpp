@@ -30,12 +30,13 @@ Value VirtualMachine::Pop() {
     return *stack_top;
 }
 
-#define BIN_OP(x)        \
-    {                    \
-        Value b = Pop(); \
-        Value a = Pop(); \
-        Push(a x b);     \
+// clang-format off
+#define BINARY_OP(op)              \
+    {                              \
+        Value a = Pop();           \
+        *(stack_top - 1) op## = a; \
     }
+// clang-format on
 
 #ifdef HEX_DEBUG
 #    define LOG_STACK_TOP(x) Log(x, StackTop())
@@ -77,22 +78,22 @@ op_negate:
     DISPATCH();
 
 op_add:
-    BIN_OP(+);
+    BINARY_OP(+);
     LOG_STACK_TOP("add:   {}");
     DISPATCH();
 
 op_sub:
-    BIN_OP(-);
+    BINARY_OP(-);
     LOG_STACK_TOP("sub:   {}");
     DISPATCH();
 
 op_div:
-    BIN_OP(/);
+    BINARY_OP(/);
     LOG_STACK_TOP("div:   {}");
     DISPATCH();
 
 op_mul:
-    BIN_OP(*);
+    BINARY_OP(*);
     LOG_STACK_TOP("mul:   {}");
     DISPATCH();
 
