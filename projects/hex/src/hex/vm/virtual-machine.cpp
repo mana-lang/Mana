@@ -19,13 +19,6 @@ Value VirtualMachine::Pop() {
     return *stack_top;
 }
 
-InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
-    slice = next_slice;
-    ip    = &slice->Code()[0];
-
-    return Run();
-}
-
 #define BIN_OP(x)        \
     {                    \
         Value b = Pop(); \
@@ -39,42 +32,53 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
 #    define LOG_STACK_TOP(x)
 #endif
 
-InterpretResult VirtualMachine::Run() {
-    while (true) {
-        switch (static_cast<Op>(*ip++)) {
-        case Op::Constant: {
-            Push(slice->ConstantAt(*ip++));
-            LOG_STACK_TOP("push:  {}");
-            break;
-        }
-        case Op::Negate:
-            Push(-Pop());
-            LOG_STACK_TOP("neg:   {}");
-            break;
-        case Op::Add:
-            BIN_OP(+);
-            LOG_STACK_TOP("add:   {}");
-            break;
-        case Op::Sub:
-            BIN_OP(-);
-            LOG_STACK_TOP("sub:   {}");
-            break;
-        case Op::Div:
-            BIN_OP(/);
-            LOG_STACK_TOP("div:   {}");
-            break;
-        case Op::Mul:
-            BIN_OP(*);
-            LOG_STACK_TOP("mul:   {}");
-            break;
-        case Op::Return:
-            Log("");
-            Log("ret {}", Pop());
-            return InterpretResult::OK;
-        default:
-            return InterpretResult::RuntimeError;
-        }
-    }
+InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
+    slice = next_slice;
+    ip    = &slice->Code()[0];
+
+    static void* dispatch_table[] = {&&op_return, &&op_constant, &&op_negate, &&op_add, &&op_sub, &&op_div, &&op_mul};
+
+#define DISPATCH() goto* dispatch_table[*ip++]
+
+    DISPATCH();
+
+op_return:
+    Log("");
+    Log("ret {}", Pop());
+    return InterpretResult::OK;
+
+op_constant:
+    Push(slice->ConstantAt(*ip++));
+    LOG_STACK_TOP("push:  {}");
+    DISPATCH();
+
+op_negate:
+    Push(-Pop());
+    LOG_STACK_TOP("neg:   {}");
+    DISPATCH();
+
+op_add:
+    BIN_OP(+);
+    LOG_STACK_TOP("add:   {}");
+    DISPATCH();
+
+op_sub:
+    BIN_OP(-);
+    LOG_STACK_TOP("sub:   {}");
+    DISPATCH();
+
+op_div:
+    BIN_OP(/);
+    LOG_STACK_TOP("div:   {}");
+    DISPATCH();
+
+op_mul:
+    BIN_OP(*);
+    LOG_STACK_TOP("mul:   {}");
+    DISPATCH();
+
+    // currently unreachable
+    return InterpretResult::RuntimeError;
 }
 
 Value VirtualMachine::StackTop() const {

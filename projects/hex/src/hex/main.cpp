@@ -74,7 +74,7 @@ int main(const int argc, char** argv) {
 
     hex::VirtualMachine vm;
 
-    auto result = magic_enum::enum_name(vm.Interpret(&slice));
+    const auto result = magic_enum::enum_name(vm.Interpret(&slice));
     hex::Log("");
     hex::Log("Interpret Result: {}", result);
 

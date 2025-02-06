@@ -3,9 +3,8 @@
 #include "../literals.hpp"
 
 namespace mana::vm {
-using namespace mana::literals;
 
-enum class Op : u8 {
+enum class Op : literals::u8 {
     Return,
 
     Constant,

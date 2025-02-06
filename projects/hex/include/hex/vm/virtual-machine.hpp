@@ -30,8 +30,6 @@ public:
 
     InterpretResult Interpret(Slice* next_slice);
 
-    InterpretResult Run();
-
     void BinOp();
 
     Value StackTop() const;
