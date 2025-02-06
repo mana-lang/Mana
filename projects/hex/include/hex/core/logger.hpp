@@ -4,7 +4,7 @@
 #include <spdlog/spdlog.h>
 
 #include <mana/exit_codes.hpp>
-#include <mana/type_aliases.hpp>
+#include <mana/literals.hpp>
 
 #include <memory>
 

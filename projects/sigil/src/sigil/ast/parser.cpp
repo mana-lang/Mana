@@ -364,15 +364,15 @@ bool Parser::MatchedEquality(Node& node) {
 
 bool Parser::MatchedBinaryExpr(
     Node&                node,
-    const OpCheckerFnPtr Isvalid_operator,
-    const MatcherFnPtr   Matchedoperand,
+    const OpCheckerFnPtr is_valid_operator,
+    const MatcherFnPtr   matched_operand,
     const Rule           rule
 ) {
-    if (not(this->*Matchedoperand)(node)) {
+    if (not(this->*matched_operand)(node)) {
         return false;
     }
 
-    if (not Isvalid_operator(CurrentToken().type)) {
+    if (not is_valid_operator(CurrentToken().type)) {
         return true;
     }
 
@@ -382,16 +382,16 @@ bool Parser::MatchedBinaryExpr(
     binary_expr.AcquireBranchOf(node, node.branches.size() - 2);
     const auto expr_index = node.branches.size() - 1;
 
-    if (not(this->*Matchedoperand)(node)) {
+    if (not(this->*matched_operand)(node)) {
         LogErr("Expected expression");
         return false;
     }
 
     bool ret = true;
-    while (Isvalid_operator(CurrentToken().type)) {
+    while (is_valid_operator(CurrentToken().type)) {
         AddCycledTokenTo(binary_expr);
 
-        if (not(this->*Matchedoperand)(node)) {
+        if (not(this->*matched_operand)(node)) {
             LogErr("Incomplete expression");
             binary_expr.rule = Rule::Mistake;
 

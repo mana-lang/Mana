@@ -1,14 +1,17 @@
 #include <hex/core/cli.hpp>
 #include <hex/core/logger.hpp>
 
-namespace hex {
+#include <mana/literals.hpp>
 
-CommandLineSettings::CommandLineSettings()
-    : say_hi(false) {
+namespace hex {
+CommandLineSettings::CommandLineSettings(const int argc, char** argv)
+    : argc(argc)
+    , argv(argv)
+    , say_hi(false) {
     cli = std::make_unique<CLI::App>("Hex, the Mana VM");
 }
 
-i64 CommandLineSettings::Populate(const int argc, char** argv) {
+i64 CommandLineSettings::Populate() {
     cli->add_flag("-g,--greet", say_hi, "Would you like me to greet you politely? Then set this flag.");
     cli->add_option("-s, --stuff", some_opt, "I don't know what this does, but it seems important.");
 
