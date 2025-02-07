@@ -42,34 +42,15 @@ void WriteTestFile() {
     out_file.close();
 }
 
-int main(const int argc, char** argv) {
-    hex::CommandLineSettings cli(argc, argv);
+void ExecuteVM(const std::string_view exe_name) {
     namespace chrono = std::chrono;
     using namespace std::chrono_literals;
-
-    cli.Populate();
-
-    if (cli.ShouldSayHi()) {
-        hex::Log("Hiiiiiii :3c");
-        hex::Log("");
-    }
-
-    if (cli.ShouldGenTestfile()) {
-        hex::Log("Generating testfile...");
-        WriteTestFile();
-        return 0;
-    }
-
-    const std::string_view exe_name = cli.ExecutableName();
-    if (exe_name.empty()) {
-        return 0;
-    }
 
     const auto    start_file = chrono::steady_clock::now();
     std::ifstream in_file(std::string(exe_name), std::ios::binary);
     if (not in_file) {
         hex::LogErr("Failed to read file.");
-        return -1;
+        return;
     }
     in_file.seekg(0, std::ios::end);
     const auto file_size = in_file.tellg();
@@ -114,4 +95,28 @@ int main(const int argc, char** argv) {
             elapsed_file.str(),
             elapsed_deser.str(),
             elapsed_exec.str());
+}
+
+int main(const int argc, char** argv) {
+    hex::CommandLineSettings cli(argc, argv);
+
+    cli.Populate();
+
+    if (cli.ShouldSayHi()) {
+        hex::Log("Hiiiiiii :3c");
+        hex::Log("");
+    }
+
+    if (cli.ShouldGenTestfile()) {
+        hex::Log("Generating testfile...");
+        WriteTestFile();
+        return 0;
+    }
+
+    const std::string_view exe_name = cli.ExecutableName();
+    if (exe_name.empty()) {
+        return 0;
+    }
+
+    ExecuteVM(exe_name);
 }
