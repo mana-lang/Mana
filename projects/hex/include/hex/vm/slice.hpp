@@ -20,8 +20,12 @@ public:
 
     auto Code() const -> const std::vector<u8>&;
     auto Code() -> std::vector<u8>&;
+    auto Constants() const -> const std::vector<Value>&;
 
     HEX_NODISCARD Value ConstantAt(i64 index) const;
+
+    HEX_NODISCARD auto Serialize() const -> std::vector<u8>;
+    void               Deserialize(const std::vector<u8>& bytes);
 
 private:
     std::vector<u8>    code;
