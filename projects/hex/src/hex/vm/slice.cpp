@@ -1,3 +1,4 @@
+#include <hex/core/logger.hpp>
 #include <hex/vm/slice.hpp>
 
 namespace hex {
@@ -24,8 +25,63 @@ auto Slice::Code() -> std::vector<u8>& {
     return code;
 }
 
+auto Slice::Constants() const -> const std::vector<Value>& {
+    return constants;
+}
+
 Value Slice::ConstantAt(const i64 index) const {
     return constants[index];
+}
+
+// serializes a slice to a vector of unsigned char (bytes)
+// for now, the sequence is:
+// - constant pool size
+// - constant pool
+// - opcode size
+// - opcode
+auto Slice::Serialize() const -> std::vector<u8> {
+    constexpr auto size_elem = sizeof(u64);
+
+    const auto constants_count = constants.size();
+    const auto constants_bytes = sizeof(Value) * constants_count;
+
+    const auto code_count = code.size();
+    const auto code_bytes = sizeof(u8) * code_count;
+
+    // ----------------- we also need store 2 slots for array sizes
+    std::vector<u8> ret((size_elem * 2) + constants_bytes + code_bytes);
+
+    std::memcpy(ret.data(), &constants_count, size_elem);
+    std::memcpy(ret.data() + size_elem, constants.data(), constants_bytes);
+
+    const auto code_offset = size_elem + constants_bytes;
+    std::memcpy(ret.data() + code_offset, &code_count, size_elem);
+    std::memcpy(ret.data() + code_offset + size_elem, code.data(), code_bytes);
+
+    return ret;
+}
+
+// for now, this function assumes the input is actually correct
+void Slice::Deserialize(const std::vector<u8>& bytes) {
+    constants.clear();
+    code.clear();
+
+    constexpr auto size_elem = sizeof(u64);
+
+    u64 total_constants = 0;
+    std::memcpy(&total_constants, bytes.data(), size_elem);
+
+    const u64 constants_bytes = sizeof(Value) * total_constants;
+
+    constants.resize(total_constants);
+    std::memcpy(constants.data(), bytes.data() + size_elem, constants_bytes);
+
+    u64       total_code  = 0;
+    const u64 code_offset = constants_bytes + size_elem;
+    std::memcpy(&total_code, bytes.data() + code_offset, size_elem);
+
+    code.resize(total_code);
+    std::memcpy(code.data(), bytes.data() + code_offset + size_elem, total_code);
 }
 
 }  // namespace hex
