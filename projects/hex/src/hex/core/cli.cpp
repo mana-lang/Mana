@@ -1,5 +1,4 @@
 #include <hex/core/cli.hpp>
-#include <hex/core/logger.hpp>
 
 #include <mana/literals.hpp>
 
@@ -7,13 +6,15 @@ namespace hex {
 CommandLineSettings::CommandLineSettings(const int argc, char** argv)
     : argc(argc)
     , argv(argv)
-    , say_hi(false) {
+    , say_hi(false)
+    , gen_testfile(false) {
     cli = std::make_unique<CLI::App>("Hex, the Mana VM");
 }
 
 i64 CommandLineSettings::Populate() {
-    cli->add_flag("-g,--greet", say_hi, "Would you like me to greet you politely? Then set this flag.");
-    cli->add_option("-s, --stuff", some_opt, "I don't know what this does, but it seems important.");
+    cli->add_flag("-g,--greet", say_hi, "A polite greeting.");
+    cli->add_flag("-t", gen_testfile, "Generate a testfile.");
+    cli->add_option("-e, --executable", executable, "The executable to run.");
 
     try {
         cli->parse(argc, argv);
@@ -34,7 +35,11 @@ bool CommandLineSettings::ShouldSayHi() const {
     return say_hi;
 }
 
-auto CommandLineSettings::Opt() const -> std::string_view {
-    return some_opt;
+bool CommandLineSettings::ShouldGenTestfile() const {
+    return gen_testfile;
+}
+
+auto CommandLineSettings::ExecutableName() const -> std::string_view {
+    return executable;
 }
 }  // namespace hex

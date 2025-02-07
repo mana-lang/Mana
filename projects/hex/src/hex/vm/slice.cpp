@@ -76,12 +76,12 @@ void Slice::Deserialize(const std::vector<u8>& bytes) {
     constants.resize(total_constants);
     std::memcpy(constants.data(), bytes.data() + size_elem, constants_bytes);
 
-    u64       code_bytes  = 0;
+    u64       total_code  = 0;
     const u64 code_offset = constants_bytes + size_elem;
-    std::memcpy(&code_bytes, bytes.data() + code_offset, size_elem);
+    std::memcpy(&total_code, bytes.data() + code_offset, size_elem);
 
-    code.resize(code_bytes);
-    std::memcpy(code.data(), bytes.data() + code_offset + size_elem, code_bytes);
+    code.resize(total_code);
+    std::memcpy(code.data(), bytes.data() + code_offset + size_elem, total_code);
 }
 
 }  // namespace hex

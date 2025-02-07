@@ -25,6 +25,7 @@ Value VirtualMachine::Pop() {
         --stack_top;
     } else {
         LogErr("Attempted to pop from empty stack.");
+        return 0.0;
     }
 
     return *stack_top;
@@ -48,6 +49,8 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
     slice = next_slice;
     ip    = slice->Code().data();
 
+    const auto* constants = slice->Constants().data();
+
     constexpr std::array dispatch_table {
         &&op_return,
         &&op_constant,
@@ -68,7 +71,7 @@ op_return:
     return InterpretResult::OK;
 
 op_constant:
-    Push(slice->ConstantAt(*ip++));
+    Push(*(constants + *ip++));
     LOG_STACK_TOP("push:  {}");
     DISPATCH();
 
