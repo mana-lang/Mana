@@ -39,7 +39,8 @@ enum class LogLevel : u8 {
 template <typename... Args>
 void Log(LogLevel level, const char* msg, Args&&... args);
 
-i64 LogCounter(LogLevel level);
+i64  LogCounter(LogLevel level);
+void SetLogPattern(std::string_view pattern);
 
 class Internal_Log_ {
     using Logger = std::shared_ptr<spdlog::logger>;
@@ -47,6 +48,7 @@ class Internal_Log_ {
     template <typename... Args>
     friend void Log(LogLevel level, const char* msg, Args&&... args);
     friend i64  LogCounter(LogLevel level);
+    friend void SetLogPattern(std::string_view pattern);
 
     Internal_Log_() = default;
 
@@ -73,6 +75,10 @@ class Internal_Log_ {
         i64 errors;
     } counters;
 };
+
+inline void SetLogPattern(const std::string_view pattern) {
+    Internal_Log_::logger->set_pattern(std::string(pattern));
+}
 
 template <typename... Args>
 void Log(const LogLevel level, const char* msg, Args&&... args) {
