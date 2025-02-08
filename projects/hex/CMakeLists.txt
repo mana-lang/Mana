@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(hex VERSION 0.0.1)
+project(hex VERSION 0.0.10)
 
 enable_testing()
 
@@ -43,6 +43,8 @@ target_compile_definitions(hex PRIVATE $<$<CONFIG:Release>:HEX_RELEASE>)
 target_compile_definitions(hex PRIVATE $<$<CONFIG:RelWithDebInfo>:HEX_DEBUG>)
 
 target_compile_definitions(hex PRIVATE HEX_NODISCARD=[[nodiscard]])
+target_compile_definitions(hex_api PUBLIC HEX_NODISCARD=[[nodiscard]])
+
 target_compile_definitions(hex PRIVATE HEX_VER_MAJOR=${PROJECT_VERSION_MAJOR})
 target_compile_definitions(hex PRIVATE HEX_VER_MINOR=${PROJECT_VERSION_MINOR})
 target_compile_definitions(hex PRIVATE HEX_VER_PATCH=${PROJECT_VERSION_PATCH})

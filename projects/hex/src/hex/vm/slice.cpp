@@ -62,7 +62,12 @@ auto Slice::Serialize() const -> std::vector<u8> {
 }
 
 // for now, this function assumes the input is actually correct
-void Slice::Deserialize(const std::vector<u8>& bytes) {
+bool Slice::Deserialize(const std::vector<u8>& bytes) {
+    if (bytes.empty()) {
+        LogErr("Empty vector given to Slice::Deserialize");
+        return false;
+    }
+
     constants.clear();
     code.clear();
 
@@ -82,6 +87,8 @@ void Slice::Deserialize(const std::vector<u8>& bytes) {
 
     code.resize(total_code);
     std::memcpy(code.data(), bytes.data() + code_offset + size_elem, total_code);
+
+    return true;
 }
 
 }  // namespace hex

@@ -25,7 +25,7 @@ public:
     HEX_NODISCARD Value ConstantAt(i64 index) const;
 
     HEX_NODISCARD auto Serialize() const -> std::vector<u8>;
-    void               Deserialize(const std::vector<u8>& bytes);
+    bool               Deserialize(const std::vector<u8>& bytes);
 
 private:
     std::vector<u8>    code;

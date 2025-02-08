@@ -25,7 +25,7 @@ set(EXT_SOURCES
 
 )
 
-add_library(sigil STATIC ${SIGIL_SOURCES})
+add_library(sigil SHARED ${SIGIL_SOURCES})
 
 target_include_directories(sigil PUBLIC
         ${SIGIL_INCLUDES}

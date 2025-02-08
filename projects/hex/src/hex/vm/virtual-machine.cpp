@@ -61,7 +61,19 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
         &&op_mul,
     };
 
-#define DISPATCH() goto* dispatch_table[*ip++]
+    // clang-format off
+#ifdef HEX_DEBUG
+    constexpr auto err          = &&compile_error;
+    constexpr auto dispatch_max = dispatch_table.size();
+#    define DISPATCH()                                                                 \
+        {                                                                              \
+            auto  label = *ip >= 0 && *ip < dispatch_max ? dispatch_table[*ip++] : err; \
+            goto* label;                                                               \
+        }
+#else
+#    define DISPATCH() goto* dispatch_table[*ip++]
+#endif
+    // clang-format on
 
     DISPATCH();
 
@@ -100,8 +112,8 @@ op_mul:
     LOG_STACK_TOP("mul:   {}");
     DISPATCH();
 
-    // currently unreachable
-    return InterpretResult::RuntimeError;
+compile_error:
+    return InterpretResult::CompileError;
 }
 
 Value VirtualMachine::StackTop() const {
