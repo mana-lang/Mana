@@ -6,8 +6,8 @@
 #include <vector>
 
 namespace sigil {
-using namespace mana::literals;
-enum class TokenType : i64 {
+namespace ml = mana::literals;
+enum class TokenType : ml::i64 {
     Identifier,
 
     Op_Plus,
@@ -111,8 +111,8 @@ enum class TokenType : i64 {
 };
 
 struct TextPosition {
-    i64 line;
-    i64 column;
+    ml::i64 line;
+    ml::i64 column;
 
     bool operator==(const TextPosition& other) const {
         return line == other.line && column == other.column;

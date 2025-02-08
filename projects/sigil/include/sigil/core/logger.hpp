@@ -9,7 +9,9 @@
 #include <memory>
 
 namespace sigil {
-enum class LogLevel : u8 {
+namespace ml = mana::literals;
+
+enum class LogLevel : ml::u8 {
     Trace,
     Debug,
     Info,
@@ -38,14 +40,14 @@ enum class LogLevel : u8 {
 template <typename... Args>
 void Log(LogLevel level, const char* msg, Args&&... args);
 
-i64 LogCounter(LogLevel level);
+ml::i64 LogCounter(LogLevel level);
 
 class Internal_Log_ {
     using Logger = std::shared_ptr<spdlog::logger>;
 
     template <typename... Args>
-    friend void Log(LogLevel level, const char* msg, Args&&... args);
-    friend i64  LogCounter(LogLevel level);
+    friend void    Log(LogLevel level, const char* msg, Args&&... args);
+    friend ml::i64 LogCounter(LogLevel level);
 
     Internal_Log_() = default;
 
@@ -65,11 +67,11 @@ class Internal_Log_ {
     inline static Logger      logger {spdlog::stdout_color_mt(logger_name)};
 
     inline static struct {
-        i64 trace;
-        i64 debug;
-        i64 info;
-        i64 warnings;
-        i64 errors;
+        ml::i64 trace;
+        ml::i64 debug;
+        ml::i64 info;
+        ml::i64 warnings;
+        ml::i64 errors;
     } counters;
 };
 
@@ -123,7 +125,7 @@ void LogErr(const char* msg, Args&&... args) {
     Log(LogLevel::Error, msg, std::forward<Args>(args)...);
 }
 
-inline i64 LogCounter(const LogLevel level) {
+inline ml::i64 LogCounter(const LogLevel level) {
     const auto& [trace, debug, info, warnings, errors] = Internal_Log_::counters;
 
     switch (level) {

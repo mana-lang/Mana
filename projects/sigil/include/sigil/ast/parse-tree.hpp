@@ -7,8 +7,8 @@
 #include <vector>
 
 namespace sigil::ast {
-using namespace mana::literals;
-enum class Rule : i64 {
+namespace ml = mana::literals;
+enum class Rule : ml::i64 {
     Undefined,
     Mistake,
 
@@ -67,32 +67,32 @@ enum class Rule : i64 {
     // UDT_Init,
 };
 
-struct Node {
-    using NodePtr = std::shared_ptr<Node>;
+struct ParseNode {
+    using NodePtr = std::shared_ptr<ParseNode>;
 
     Rule                 rule;
     TokenStream          tokens;
     std::vector<NodePtr> branches;
 
-    explicit Node(Rule rule = Rule::Undefined);
-    explicit Node(Node* parent, Rule rule = Rule::Undefined);
+    explicit ParseNode(Rule rule = Rule::Undefined);
+    explicit ParseNode(ParseNode* parent, Rule rule = Rule::Undefined);
 
-    SIGIL_NODISCARD Node& NewBranch(Rule new_rule = Rule::Undefined);
+    SIGIL_NODISCARD ParseNode& NewBranch(Rule new_rule = Rule::Undefined);
 
     void PopBranch();
-    void RemoveBranch(i64 idx);
-    void RemoveBranchFromTail(i64 idx);
+    void RemoveBranch(ml::i64 idx);
+    void RemoveBranchFromTail(ml::i64 idx);
 
     SIGIL_NODISCARD bool IsRoot() const;
 
-    void AcquireBranchOf(Node& target, i64 index);
-    void AcquireBranchesOf(Node& target, i64 start, i64 end);
-    void AcquireBranchesOf(Node& target, i64 start);
-    void AcquireTailBranchOf(Node& target);
+    void AcquireBranchOf(ParseNode& target, ml::i64 index);
+    void AcquireBranchesOf(ParseNode& target, ml::i64 start, ml::i64 end);
+    void AcquireBranchesOf(ParseNode& target, ml::i64 start);
+    void AcquireTailBranchOf(ParseNode& target);
 
 private:
     // not intended to be used; this is just to identify a root node that isn't a module node
-    Node* parent;
+    ParseNode* parent;
 };
 
 }  // namespace sigil::ast

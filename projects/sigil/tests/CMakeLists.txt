@@ -25,3 +25,10 @@ add_custom_command(
         ${PROJECT_SOURCE_DIR}/assets
         ${PROJECT_BINARY_DIR}/assets/
 )
+
+add_custom_command(
+        TARGET sigil-tests PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${PROJECT_BINARY_DIR}/../libsigil.dll
+        ${PROJECT_BINARY_DIR}/
+)

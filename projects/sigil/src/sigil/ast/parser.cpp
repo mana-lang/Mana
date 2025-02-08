@@ -8,16 +8,17 @@
 
 namespace sigil {
 using namespace ast;
+using namespace mana::literals;
 
 Parser::Parser(const TokenStream&& tokens)
     : tokens {tokens}
     , cursor {}
-    , ast {Rule::Undefined} {}
+    , parse_tree {Rule::Undefined} {}
 
 Parser::Parser(const TokenStream& tokens)
     : tokens {tokens}
     , cursor {}
-    , ast {Rule::Undefined} {}
+    , parse_tree {Rule::Undefined} {}
 
 bool Parser::Parse() {
     const auto& top_token = tokens.front();
@@ -31,11 +32,11 @@ bool Parser::Parse() {
         return false;
     }
 
-    ast.rule = Rule::Module;
-    ast.tokens.push_back(tokens.front());
+    parse_tree.rule = Rule::Module;
+    parse_tree.tokens.push_back(tokens.front());
 
     cursor = 1;
-    while (ProgressedAST(ast)) {}
+    while (ProgressedAST(parse_tree)) {}
 
     if (CurrentToken().type != TokenType::Eof) {
         // LogErr("It appears we did not parse the entire file.");
@@ -44,25 +45,25 @@ bool Parser::Parse() {
     return true;
 }
 
-auto Parser::ViewAST() const -> const Node& {
-    return ast;
+auto Parser::ViewParseTree() const -> const ParseNode& {
+    return parse_tree;
 }
 
 auto Parser::ViewTokens() const -> const TokenStream& {
     return tokens;
 }
 
-void Parser::PrintAST() const {
-    Log("Printing AST for module '{}'\n\n{}", ast.tokens[0].text, EmitAST(ast));
+void Parser::PrintParseTree() const {
+    Log("Printing AST for module '{}'\n\n{}", parse_tree.tokens[0].text, EmitParseTree(parse_tree));
 }
 
-void Parser::EmitAST(const std::string_view file_name) const {
+void Parser::EmitParseTree(const std::string_view file_name) const {
     std::ofstream out {std::string(file_name)};
 
-    out << EmitAST(ast);
+    out << EmitParseTree(parse_tree);
 }
 
-std::string Parser::EmitAST(const Node& root, std::string prepend) const {
+std::string Parser::EmitParseTree(const ParseNode& root, std::string prepend) const {
     std::string ret = "";
     if (root.rule == Rule::Module) {
         ret = fmt::format("[Module] -> {}\n\n", root.tokens[0].text);
@@ -87,8 +88,8 @@ std::string Parser::EmitAST(const Node& root, std::string prepend) const {
     }
 
     if (not root.branches.empty()) {
-        for (const auto& node : root.branches) {
-            ret.append(EmitAST(*node, prepend));
+        for (auto& node : root.branches) {
+            ret.append(EmitParseTree(*node, prepend));
         }
     }
 
@@ -139,25 +140,25 @@ auto Parser::GetAndCycleToken() -> const Token& {
 }
 
 // inclusive
-void Parser::AddTokensTo(Node& node, const TokenType delimiter) {
+void Parser::AddTokensTo(ParseNode& node, const TokenType delimiter) {
     do {
         node.tokens.push_back(GetAndCycleToken());
     } while (CurrentToken().type != delimiter);
 }
 
-void Parser::AddTokensTo(Node& node, const i64 count) {
+void Parser::AddTokensTo(ParseNode& node, const i64 count) {
     for (i64 i = 0; i < count; ++i) {
         node.tokens.push_back(GetAndCycleToken());
     }
 }
 
-void Parser::AddCurrentTokenTo(Node& node) const {
+void Parser::AddCurrentTokenTo(ParseNode& node) const {
     if (cursor < tokens.size()) {
         node.tokens.push_back(CurrentToken());
     }
 }
 
-void Parser::AddCycledTokenTo(Node& node) {
+void Parser::AddCycledTokenTo(ParseNode& node) {
     if (cursor < tokens.size()) {
         node.tokens.push_back(GetAndCycleToken());
     }
@@ -171,7 +172,7 @@ void Parser::TransmitTokens(TokenStream& sender, TokenStream& receiver) const {
     sender.clear();
 }
 
-void Parser::TransmitTokens(Node& sender, Node& receiver, TokenRange range) const {
+void Parser::TransmitTokens(ParseNode& sender, ParseNode& receiver, TokenRange range) const {
     const auto [breadth, offset] = range;
 
     if (breadth + offset > sender.tokens.size()) {
@@ -184,7 +185,7 @@ void Parser::TransmitTokens(Node& sender, Node& receiver, TokenRange range) cons
     }
 }
 
-bool Parser::ProgressedAST(Node& node) {
+bool Parser::ProgressedAST(ParseNode& node) {
     // don't process eof (final token) before quitting
     if (cursor + 1 >= tokens.size() - 1) {
         return false;
@@ -198,7 +199,7 @@ bool Parser::ProgressedAST(Node& node) {
     return MatchedExpression(node);
 }
 
-bool Parser::MatchedExpression(Node& node) {
+bool Parser::MatchedExpression(ParseNode& node) {
     return MatchedEquality(node);
 }
 
@@ -224,7 +225,7 @@ bool IsLiteral(const TokenType token) {
 
 // primary  = literal | grouping
 // grouping = "(" expr ")"
-bool Parser::MatchedPrimary(Node& node) {
+bool Parser::MatchedPrimary(ParseNode& node) {
     if (CurrentToken().type == TokenType::Terminator) {
         ++cursor;
         return true;
@@ -266,7 +267,7 @@ bool Parser::MatchedPrimary(Node& node) {
 }
 
 // unary = ("-" | "!") expr
-bool Parser::MatchedUnary(Node& node) {
+bool Parser::MatchedUnary(ParseNode& node) {
     switch (CurrentToken().type) {
         using enum TokenType;
 
@@ -307,7 +308,7 @@ bool IsFactorOp(const TokenType token) {
 }
 
 // factor = unary ( ('/' | '*') unary )*
-bool Parser::MatchedFactor(Node& node) {
+bool Parser::MatchedFactor(ParseNode& node) {
     return MatchedBinaryExpr(node, IsFactorOp, MatchedUnary, Rule::Factor);
 }
 
@@ -324,7 +325,7 @@ bool IsTermOp(const TokenType token) {
 }
 
 // term = factor ( ('-' | '+') factor)*
-bool Parser::MatchedTerm(Node& node) {
+bool Parser::MatchedTerm(ParseNode& node) {
     return MatchedBinaryExpr(node, IsTermOp, MatchedFactor, Rule::Term);
 }
 
@@ -342,7 +343,7 @@ bool IsComparisonOp(const TokenType token) {
     }
 }
 
-bool Parser::MatchedComparison(Node& node) {
+bool Parser::MatchedComparison(ParseNode& node) {
     return MatchedBinaryExpr(node, IsComparisonOp, MatchedTerm, Rule::Comparison);
 }
 
@@ -358,12 +359,12 @@ bool IsEqualityOp(const TokenType token) {
     }
 }
 
-bool Parser::MatchedEquality(Node& node) {
+bool Parser::MatchedEquality(ParseNode& node) {
     return MatchedBinaryExpr(node, IsEqualityOp, MatchedComparison, Rule::Equality);
 }
 
 bool Parser::MatchedBinaryExpr(
-    Node&                node,
+    ParseNode&           node,
     const OpCheckerFnPtr is_valid_operator,
     const MatcherFnPtr   matched_operand,
     const Rule           rule

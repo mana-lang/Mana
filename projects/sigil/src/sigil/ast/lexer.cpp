@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 namespace sigil {
+using namespace mana::literals;
 
 Lexer::Lexer()
     : cursor {0}
@@ -85,8 +86,7 @@ bool Lexer::Tokenize(const std::filesystem::path& file_path) {
 
 void Lexer::PrintTokens() const {
     if (token_stream.empty()) {
-        Log(LogLevel::Error,
-            "Lexer token print requested, but token stream was empty.");
+        Log(LogLevel::Error, "Lexer token print requested, but token stream was empty.");
         return;
     }
 
@@ -94,19 +94,12 @@ void Lexer::PrintTokens() const {
 
     for (const auto& [type, contents, position] : token_stream) {
         if (type == TokenType::Terminator) {
-            Log(LogLevel::Info,
-                "[L: {} | C: {}] {}: \\n",
-                position.line,
-                position.column,
-                magic_enum::enum_name(type));
+            Log(LogLevel::Info, "[L: {} | C: {}] {}: \\n", position.line, position.column, magic_enum::enum_name(type)
+            );
             continue;
         }
-        Log(LogLevel::Info,
-            "[L: {} | C: {}] {}: \\n",
-            position.line,
-            position.column,
-            magic_enum::enum_name(type),
-            contents);
+        Log(LogLevel::Info, "[L: {} | C: {}] {}: \\n", position.line, position.column, magic_enum::enum_name(type), contents
+        );
     }
     Log(LogLevel::Debug, "End of token stream.\n");
 }
@@ -169,8 +162,7 @@ SIGIL_NODISCARD bool Lexer::LexedString(const std::string_view line) {
 
         current_char = line[cursor];  // need to update
 
-        if (current_char == '\n' ||
-            (current_char == '\\' && line[cursor + 1] == 'n')) {
+        if (current_char == '\n' || (current_char == '\\' && line[cursor + 1] == 'n')) {
             // strings must close on the line they're started
             return false;
         }
@@ -341,7 +333,6 @@ SIGIL_NODISCARD bool Lexer::LexedOperator(const std::string_view line) {
     ++cursor;
     AddToken(token_type, std::move(buffer));
 
-
     return true;
 }
 
@@ -363,38 +354,65 @@ SIGIL_NODISCARD bool Lexer::MatchedKeyword(std::string& identifier_buffer) {
 
     using enum TokenType;
     static const KeywordMap keyword_map = {
-        {"i8", KW_i8},           {"i16", KW_i16},       {"i32", KW_i32},
-        {"i64", KW_i64},         {"i128", KW_i128},
+        {"i8",       KW_i8        },
+        {"i16",      KW_i16       },
+        {"i32",      KW_i32       },
+        {"i64",      KW_i64       },
+        {"i128",     KW_i128      },
 
-        {"u8", KW_u8},           {"u16", KW_u16},       {"u32", KW_u32},
-        {"u64", KW_u64},         {"u128", KW_u128},
+        {"u8",       KW_u8        },
+        {"u16",      KW_u16       },
+        {"u32",      KW_u32       },
+        {"u64",      KW_u64       },
+        {"u128",     KW_u128      },
 
-        {"f32", KW_f32},         {"f64", KW_f64},
+        {"f32",      KW_f32       },
+        {"f64",      KW_f64       },
 
-        {"byte", KW_byte},       {"char", KW_char},     {"string", KW_string},
+        {"byte",     KW_byte      },
+        {"char",     KW_char      },
+        {"string",   KW_string    },
 
-        {"bool", KW_bool},       {"null", Lit_null},
+        {"bool",     KW_bool      },
+        {"null",     Lit_null     },
 
-        {"data", KW_data},       {"fn", KW_fn},         {"mut", KW_mut},
-        {"raw", KW_raw},         {"const", KW_const},   {"override", KW_override},
+        {"data",     KW_data      },
+        {"fn",       KW_fn        },
+        {"mut",      KW_mut       },
+        {"raw",      KW_raw       },
+        {"const",    KW_const     },
+        {"override", KW_override  },
 
-        {"pack", KW_pack},       {"struct", KW_struct}, {"enum", KW_enum},
-        {"generic", KW_generic},
+        {"pack",     KW_pack      },
+        {"struct",   KW_struct    },
+        {"enum",     KW_enum      },
+        {"generic",  KW_generic   },
 
-        {"module", KW_module},   {"public", KW_public}, {"private", KW_private},
-        {"import", KW_import},   {"as", KW_as},
+        {"module",   KW_module    },
+        {"public",   KW_public    },
+        {"private",  KW_private   },
+        {"import",   KW_import    },
+        {"as",       KW_as        },
 
-        {"return", KW_return},   {"true", Lit_true},    {"false", Lit_false},
-        {"if", KW_if},           {"else", KW_else},     {"match", KW_match},
+        {"return",   KW_return    },
+        {"true",     Lit_true     },
+        {"false",    Lit_false    },
+        {"if",       KW_if        },
+        {"else",     KW_else      },
+        {"match",    KW_match     },
 
-        {"loop", KW_loop},       {"while", KW_while},   {"for", KW_for},
-        {"break", KW_break},     {"skip", KW_skip},
+        {"loop",     KW_loop      },
+        {"while",    KW_while     },
+        {"for",      KW_for       },
+        {"break",    KW_break     },
+        {"skip",     KW_skip      },
 
-        {"and", Op_LogicalAnd},  {"or", Op_LogicalOr},  {"not", Op_LogicalNot},
+        {"and",      Op_LogicalAnd},
+        {"or",       Op_LogicalOr },
+        {"not",      Op_LogicalNot},
     };
 
-    if (const auto keyword = keyword_map.find(identifier_buffer);
-        keyword != keyword_map.end()) {
+    if (const auto keyword = keyword_map.find(identifier_buffer); keyword != keyword_map.end()) {
         AddToken(keyword->second, std::move(identifier_buffer));
         return true;
     }
@@ -424,8 +442,7 @@ void Lexer::AddToken(TokenType type, std::string& text) {
 
 void Lexer::AddToken(TokenType type, std::string&& text) {
     const i64 column_pos = cursor + 1 - static_cast<i64>(text.length());
-    token_stream
-        .emplace_back(type, std::move(text), TextPosition {.line = line_number, .column = column_pos});
+    token_stream.emplace_back(type, std::move(text), TextPosition {.line = line_number, .column = column_pos});
 }
 
 void Lexer::AddEOF() {

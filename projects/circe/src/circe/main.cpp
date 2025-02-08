@@ -22,7 +22,7 @@ int main() {
     }
 
     hex::Slice  slice;
-    const auto& ast = parser.ViewAST();
+    const auto& ast = parser.ViewParseTree();
 
     for (const auto& branch : ast.branches) {
         using namespace mana::vm;

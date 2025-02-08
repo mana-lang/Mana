@@ -1,11 +1,12 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include "common.hpp"
 #include <sigil/ast/lexer.hpp>
 #include <sigil/ast/parser.hpp>
-#include "common.hpp"
 
 constexpr auto PARSER_TESTING_PATH = "assets/samples/parsing/";
 using namespace sigil;
+using namespace mana::literals;
 
 // remind me to never test like this again
 TEST_CASE("Expression Parsing", "[parse][ast]") {
@@ -18,7 +19,7 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
         REQUIRE(parser.Parse());
 
         const auto& tokens {parser.ViewTokens()};
-        const auto& ast {parser.ViewAST()};
+        const auto& ast {parser.ViewParseTree()};
 
         SECTION("Parsing step succeeded") {
             REQUIRE_FALSE(tokens.empty());
@@ -32,47 +33,47 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
             REQUIRE(ast.tokens[0].text == "expressions");
         }
 
-        parser.PrintAST();
+        parser.PrintParseTree();
 
         SECTION("Primaries are correctly evaluated") {
             CHECK_FALSE(ast.branches.empty());
 
             TokenStream expected_tokens {
                 {
-                    .type {TokenType::Lit_Int},
-                    .text {"27"},
-                    .position {2, 1},
-                },
+                 .type {TokenType::Lit_Int},
+                 .text {"27"},
+                 .position {2, 1},
+                 },
                 {
-                    .type {TokenType::Lit_Float},
-                    .text {"7.27"},
-                    .position {3, 1},
-                },
+                 .type {TokenType::Lit_Float},
+                 .text {"7.27"},
+                 .position {3, 1},
+                 },
                 {
-                    .type {TokenType::Lit_String},
-                    .text {"\"Blue\""},
-                    .position {4, 1},
-                },
+                 .type {TokenType::Lit_String},
+                 .text {"\"Blue\""},
+                 .position {4, 1},
+                 },
                 {
-                    .type {TokenType::Lit_Char},
-                    .text {"'z'"},
-                    .position {5, 1},
-                },
+                 .type {TokenType::Lit_Char},
+                 .text {"'z'"},
+                 .position {5, 1},
+                 },
                 {
-                    .type {TokenType::Lit_true},
-                    .text {"true"},
-                    .position {6, 1},
-                },
+                 .type {TokenType::Lit_true},
+                 .text {"true"},
+                 .position {6, 1},
+                 },
                 {
-                    .type {TokenType::Lit_false},
-                    .text {"false"},
-                    .position {7, 1},
-                },
+                 .type {TokenType::Lit_false},
+                 .text {"false"},
+                 .position {7, 1},
+                 },
                 {
-                    .type {TokenType::Lit_null},
-                    .text {"null"},
-                    .position {8, 1},
-                },
+                 .type {TokenType::Lit_null},
+                 .text {"null"},
+                 .position {8, 1},
+                 },
             };
 
             static constexpr i64 total_literals = 7;
@@ -91,37 +92,37 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
 
             TokenStream expected_tokens {
                 {
-                    .type     = TokenType::Op_Minus,
-                    .text     = "-",
-                    .position = {11, 1},
-                },
+                 .type     = TokenType::Op_Minus,
+                 .text     = "-",
+                 .position = {11, 1},
+                 },
                 {
-                    .type     = TokenType::Lit_Int,
-                    .text     = "6",
-                    .position = {11, 2},
-                },
+                 .type     = TokenType::Lit_Int,
+                 .text     = "6",
+                 .position = {11, 2},
+                 },
 
                 {
-                    .type     = TokenType::Op_Minus,
-                    .text     = "-",
-                    .position = {12, 1},
-                },
+                 .type     = TokenType::Op_Minus,
+                 .text     = "-",
+                 .position = {12, 1},
+                 },
                 {
-                    .type     = TokenType::Lit_Float,
-                    .text     = "45.795",
-                    .position = {12, 2},
-                },
+                 .type     = TokenType::Lit_Float,
+                 .text     = "45.795",
+                 .position = {12, 2},
+                 },
 
                 {
-                    .type     = TokenType::Op_LogicalNot,
-                    .text     = "!",
-                    .position = {13, 1},
-                },
+                 .type     = TokenType::Op_LogicalNot,
+                 .text     = "!",
+                 .position = {13, 1},
+                 },
                 {
-                    .type     = TokenType::Lit_true,
-                    .text     = "true",
-                    .position = {13, 2},
-                },
+                 .type     = TokenType::Lit_true,
+                 .text     = "true",
+                 .position = {13, 2},
+                 },
             };
 
             constexpr i64 start {7};
@@ -150,31 +151,31 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
             const TokenStream parens {
                 // we don't check these against position
                 {
-                    .type {TokenType::Op_ParenLeft},
-                    .text {"("},
-                },
+                 .type {TokenType::Op_ParenLeft},
+                 .text {"("},
+                 },
                 {
-                    .type {TokenType::Op_ParenRight},
-                    .text {")"},
-                },
+                 .type {TokenType::Op_ParenRight},
+                 .text {")"},
+                 },
             };
 
             const TokenStream expected_tokens {
                 {
-                    .type {TokenType::Lit_Int},
-                    .text {"94"},
-                    .position {16, 2},
-                },
+                 .type {TokenType::Lit_Int},
+                 .text {"94"},
+                 .position {16, 2},
+                 },
                 {
-                    .type {TokenType::Lit_false},
-                    .text {"false"},
-                    .position {17, 2},
-                },
+                 .type {TokenType::Lit_false},
+                 .text {"false"},
+                 .position {17, 2},
+                 },
                 {
-                    .type {TokenType::Lit_Float},
-                    .text {"34.853"},
-                    .position {18, 2},
-                },
+                 .type {TokenType::Lit_Float},
+                 .text {"34.853"},
+                 .position {18, 2},
+                 },
             };
 
             static constexpr i64 start {10};
@@ -208,20 +209,20 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
             SECTION("Two-operand expressions") {
                 const TokenStream expected_tokens {
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"26"},
-                        .position {22, 1},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"26"},
+                     .position {22, 1},
+                     },
                     {
-                        .type {TokenType::Op_Asterisk},
-                        .text {"*"},
-                        .position {22, 4},
-                    },
+                     .type {TokenType::Op_Asterisk},
+                     .text {"*"},
+                     .position {22, 4},
+                     },
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"2"},
-                        .position {22, 6},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"2"},
+                     .position {22, 6},
+                     },
                 };
 
                 // 26 * 2
@@ -241,60 +242,60 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
             SECTION("Multi-operand expressions") {
                 const TokenStream expected_tokens {
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"943"},
-                        .position {23, 1},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"943"},
+                     .position {23, 1},
+                     },
                     {
-                        .type {TokenType::Op_FwdSlash},
-                        .text {"/"},
-                        .position {23, 5},
-                    },
+                     .type {TokenType::Op_FwdSlash},
+                     .text {"/"},
+                     .position {23, 5},
+                     },
                     {
-                        .type {TokenType::Lit_Float},
-                        .text {"27.54"},
-                        .position {23, 7},
-                    },
+                     .type {TokenType::Lit_Float},
+                     .text {"27.54"},
+                     .position {23, 7},
+                     },
                     {
-                        .type {TokenType::Op_Asterisk},
-                        .text {"*"},
-                        .position {23, 13},
-                    },
+                     .type {TokenType::Op_Asterisk},
+                     .text {"*"},
+                     .position {23, 13},
+                     },
                     {
-                        .type {TokenType::Lit_Float},
-                        .text {"12.95"},
-                        .position {23, 15},
-                    },
+                     .type {TokenType::Lit_Float},
+                     .text {"12.95"},
+                     .position {23, 15},
+                     },
                     {
-                        .type {TokenType::Op_FwdSlash},
-                        .text {"/"},
-                        .position {23, 21},
-                    },
+                     .type {TokenType::Op_FwdSlash},
+                     .text {"/"},
+                     .position {23, 21},
+                     },
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"599"},
-                        .position {23, 23},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"599"},
+                     .position {23, 23},
+                     },
                     {
-                        .type {TokenType::Op_FwdSlash},
-                        .text {"/"},
-                        .position {23, 27},
-                    },
+                     .type {TokenType::Op_FwdSlash},
+                     .text {"/"},
+                     .position {23, 27},
+                     },
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"2"},
-                        .position {23, 29},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"2"},
+                     .position {23, 29},
+                     },
                     {
-                        .type {TokenType::Op_Asterisk},
-                        .text {"*"},
-                        .position {23, 31},
-                    },
+                     .type {TokenType::Op_Asterisk},
+                     .text {"*"},
+                     .position {23, 31},
+                     },
                     {
-                        .type {TokenType::Lit_Float},
-                        .text {"94.323"},
-                        .position {23, 33},
-                    },
+                     .type {TokenType::Lit_Float},
+                     .text {"94.323"},
+                     .position {23, 33},
+                     },
                 };
 
                 // 943 / 27.54 * 12.95 / 599 / 2 * 94.323
@@ -317,40 +318,40 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
             SECTION("Grouped expresssions") {
                 const TokenStream expected_tokens {
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"5"},
-                        .position {24, 1},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"5"},
+                     .position {24, 1},
+                     },
                     {
-                        .type {TokenType::Op_Asterisk},
-                        .text {"*"},
-                        .position {24, 3},
-                    },
+                     .type {TokenType::Op_Asterisk},
+                     .text {"*"},
+                     .position {24, 3},
+                     },
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"27"},
-                        .position {24, 7},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"27"},
+                     .position {24, 7},
+                     },
                     {
-                        .type {TokenType::Op_FwdSlash},
-                        .text {"/"},
-                        .position {24, 10},
-                    },
+                     .type {TokenType::Op_FwdSlash},
+                     .text {"/"},
+                     .position {24, 10},
+                     },
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"5"},
-                        .position {24, 12},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"5"},
+                     .position {24, 12},
+                     },
                     {
-                        .type {TokenType::Op_Asterisk},
-                        .text {"*"},
-                        .position {24, 15},
-                    },
+                     .type {TokenType::Op_Asterisk},
+                     .text {"*"},
+                     .position {24, 15},
+                     },
                     {
-                        .type {TokenType::Lit_Float},
-                        .text {"2.5"},
-                        .position {24, 17},
-                    },
+                     .type {TokenType::Lit_Float},
+                     .text {"2.5"},
+                     .position {24, 17},
+                     },
                 };
 
                 // 5 * ((27 / 5) * 2.5)
@@ -398,20 +399,20 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
             SECTION("Two-operand expressions") {
                 const TokenStream expected_tokens {
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"63"},
-                        .position {27, 1},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"63"},
+                     .position {27, 1},
+                     },
                     {
-                        .type {TokenType::Op_Plus},
-                        .text {"+"},
-                        .position {27, 4},
-                    },
+                     .type {TokenType::Op_Plus},
+                     .text {"+"},
+                     .position {27, 4},
+                     },
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"12"},
-                        .position {27, 6},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"12"},
+                     .position {27, 6},
+                     },
                 };
 
                 // 63 + 12
@@ -431,60 +432,60 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
             SECTION("Multi-operand expressions") {
                 const TokenStream expected_tokens {
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"358"},
-                        .position {28, 1},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"358"},
+                     .position {28, 1},
+                     },
                     {
-                        .type {TokenType::Op_Minus},
-                        .text {"-"},
-                        .position {28, 5},
-                    },
+                     .type {TokenType::Op_Minus},
+                     .text {"-"},
+                     .position {28, 5},
+                     },
                     {
-                        .type {TokenType::Lit_Float},
-                        .text {"54.91"},
-                        .position {28, 7},
-                    },
+                     .type {TokenType::Lit_Float},
+                     .text {"54.91"},
+                     .position {28, 7},
+                     },
                     {
-                        .type {TokenType::Op_Plus},
-                        .text {"+"},
-                        .position {28, 13},
-                    },
+                     .type {TokenType::Op_Plus},
+                     .text {"+"},
+                     .position {28, 13},
+                     },
                     {
-                        .type {TokenType::Lit_Float},
-                        .text {"263.12"},
-                        .position {28, 15},
-                    },
+                     .type {TokenType::Lit_Float},
+                     .text {"263.12"},
+                     .position {28, 15},
+                     },
                     {
-                        .type {TokenType::Op_Minus},
-                        .text {"-"},
-                        .position {28, 22},
-                    },
+                     .type {TokenType::Op_Minus},
+                     .text {"-"},
+                     .position {28, 22},
+                     },
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"958"},
-                        .position {28, 24},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"958"},
+                     .position {28, 24},
+                     },
                     {
-                        .type {TokenType::Op_Minus},
-                        .text {"-"},
-                        .position {28, 28},
-                    },
+                     .type {TokenType::Op_Minus},
+                     .text {"-"},
+                     .position {28, 28},
+                     },
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"23"},
-                        .position {28, 30},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"23"},
+                     .position {28, 30},
+                     },
                     {
-                        .type {TokenType::Op_Plus},
-                        .text {"+"},
-                        .position {28, 33},
-                    },
+                     .type {TokenType::Op_Plus},
+                     .text {"+"},
+                     .position {28, 33},
+                     },
                     {
-                        .type {TokenType::Lit_Float},
-                        .text {"6.37"},
-                        .position {28, 35},
-                    },
+                     .type {TokenType::Lit_Float},
+                     .text {"6.37"},
+                     .position {28, 35},
+                     },
                 };
 
                 // 358 - 54.91 + 263.12 - 958 - 23 + 6.37
@@ -507,40 +508,40 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
             SECTION("Grouped expresssions") {
                 const TokenStream expected_tokens {
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"97"},
-                        .position {29, 1},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"97"},
+                     .position {29, 1},
+                     },
                     {
-                        .type {TokenType::Op_Plus},
-                        .text {"+"},
-                        .position {29, 4},
-                    },
+                     .type {TokenType::Op_Plus},
+                     .text {"+"},
+                     .position {29, 4},
+                     },
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"40"},
-                        .position {29, 8},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"40"},
+                     .position {29, 8},
+                     },
                     {
-                        .type {TokenType::Op_Minus},
-                        .text {"-"},
-                        .position {29, 11},
-                    },
+                     .type {TokenType::Op_Minus},
+                     .text {"-"},
+                     .position {29, 11},
+                     },
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"17"},
-                        .position {29, 13},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"17"},
+                     .position {29, 13},
+                     },
                     {
-                        .type {TokenType::Op_Plus},
-                        .text {"+"},
-                        .position {29, 17},
-                    },
+                     .type {TokenType::Op_Plus},
+                     .text {"+"},
+                     .position {29, 17},
+                     },
                     {
-                        .type {TokenType::Lit_Float},
-                        .text {"5.2"},
-                        .position {29, 19},
-                    },
+                     .type {TokenType::Lit_Float},
+                     .text {"5.2"},
+                     .position {29, 19},
+                     },
                 };
 
                 // 97 + ((40 - 17) + 5.2)
@@ -588,35 +589,35 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
             SECTION("Two-operand expressions") {
                 const TokenStream expected_tokens {
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"55"},
-                        .position {32, 1},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"55"},
+                     .position {32, 1},
+                     },
                     {
-                        .type {TokenType::Op_GreaterThan},
-                        .text {">"},
-                        .position {32, 4},
-                    },
+                     .type {TokenType::Op_GreaterThan},
+                     .text {">"},
+                     .position {32, 4},
+                     },
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"23"},
-                        .position {32, 6},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"23"},
+                     .position {32, 6},
+                     },
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"72"},
-                        .position {33, 1},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"72"},
+                     .position {33, 1},
+                     },
                     {
-                        .type {TokenType::Op_GreaterEqual},
-                        .text {">="},
-                        .position {33, 4},
-                    },
+                     .type {TokenType::Op_GreaterEqual},
+                     .text {">="},
+                     .position {33, 4},
+                     },
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"125"},
-                        .position {33, 7},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"125"},
+                     .position {33, 7},
+                     },
                 };
 
                 // 55 > 23
@@ -649,50 +650,50 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
             SECTION("Multi-operand expressions") {
                 const TokenStream expected_tokens {
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"953"},
-                        .position {34, 1},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"953"},
+                     .position {34, 1},
+                     },
                     {
-                        .type {TokenType::Op_LessEqual},
-                        .text {"<="},
-                        .position {34, 5},
-                    },
+                     .type {TokenType::Op_LessEqual},
+                     .text {"<="},
+                     .position {34, 5},
+                     },
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"24"},
-                        .position {34, 8},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"24"},
+                     .position {34, 8},
+                     },
                     {
-                        .type {TokenType::Op_LessThan},
-                        .text {"<"},
-                        .position {34, 11},
-                    },
+                     .type {TokenType::Op_LessThan},
+                     .text {"<"},
+                     .position {34, 11},
+                     },
                     {
-                        .type {TokenType::Lit_Int},
-                        .text {"12"},
-                        .position {34, 13},
-                    },
+                     .type {TokenType::Lit_Int},
+                     .text {"12"},
+                     .position {34, 13},
+                     },
                     {
-                        .type {TokenType::Op_GreaterThan},
-                        .text {">"},
-                        .position {34, 16},
-                    },
+                     .type {TokenType::Op_GreaterThan},
+                     .text {">"},
+                     .position {34, 16},
+                     },
                     {
-                        .type {TokenType::Lit_Float},
-                        .text {"2384.5"},
-                        .position {34, 18},
-                    },
+                     .type {TokenType::Lit_Float},
+                     .text {"2384.5"},
+                     .position {34, 18},
+                     },
                     {
-                        .type {TokenType::Op_GreaterEqual},
-                        .text {">="},
-                        .position {34, 25},
-                    },
+                     .type {TokenType::Op_GreaterEqual},
+                     .text {">="},
+                     .position {34, 25},
+                     },
                     {
-                        .type {TokenType::Lit_false},
-                        .text {"false"},
-                        .position {34, 28},
-                    },
+                     .type {TokenType::Lit_false},
+                     .text {"false"},
+                     .position {34, 28},
+                     },
                 };
 
                 // 953 <= 24 < 12 > 2384.5 >= false
@@ -718,35 +719,35 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
 
             const TokenStream expected_tokens {
                 {
-                    .type {TokenType::Lit_true},
-                    .text {"true"},
-                    .position {37, 1},
-                },
+                 .type {TokenType::Lit_true},
+                 .text {"true"},
+                 .position {37, 1},
+                 },
                 {
-                    .type {TokenType::Op_Equality},
-                    .text {"=="},
-                    .position {37, 6},
-                },
+                 .type {TokenType::Op_Equality},
+                 .text {"=="},
+                 .position {37, 6},
+                 },
                 {
-                    .type {TokenType::Lit_false},
-                    .text {"false"},
-                    .position {37, 9},
-                },
+                 .type {TokenType::Lit_false},
+                 .text {"false"},
+                 .position {37, 9},
+                 },
                 {
-                    .type {TokenType::Lit_Int},
-                    .text {"94"},
-                    .position {38, 1},
-                },
+                 .type {TokenType::Lit_Int},
+                 .text {"94"},
+                 .position {38, 1},
+                 },
                 {
-                    .type {TokenType::Op_NotEqual},
-                    .text {"!="},
-                    .position {38, 4},
-                },
+                 .type {TokenType::Op_NotEqual},
+                 .text {"!="},
+                 .position {38, 4},
+                 },
                 {
-                    .type {TokenType::Lit_Int},
-                    .text {"94"},
-                    .position {38, 7},
-                },
+                 .type {TokenType::Lit_Int},
+                 .text {"94"},
+                 .position {38, 7},
+                 },
             };
 
             // true == false
@@ -780,95 +781,95 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
             REQUIRE(ast.branches.size() >= 26);
             const TokenStream expected_tokens {
                 {
-                    .type {TokenType::Lit_Int},
-                    .text {"83"},
-                    .position {41, 1},
-                },
+                 .type {TokenType::Lit_Int},
+                 .text {"83"},
+                 .position {41, 1},
+                 },
                 {
-                    .type {TokenType::Op_Equality},
-                    .text {"=="},
-                    .position {41, 4},
-                },
+                 .type {TokenType::Op_Equality},
+                 .text {"=="},
+                 .position {41, 4},
+                 },
                 {
-                    .type {TokenType::Lit_Int},
-                    .text {"24"},
-                    .position {41, 8},
-                },
+                 .type {TokenType::Lit_Int},
+                 .text {"24"},
+                 .position {41, 8},
+                 },
                 {
-                    .type {TokenType::Op_Plus},
-                    .text {"+"},
-                    .position {41, 11},
-                },
+                 .type {TokenType::Op_Plus},
+                 .text {"+"},
+                 .position {41, 11},
+                 },
                 {
-                    .type {TokenType::Lit_Int},
-                    .text {"94"},
-                    .position {41, 13},
-                },
+                 .type {TokenType::Lit_Int},
+                 .text {"94"},
+                 .position {41, 13},
+                 },
                 {
-                    .type {TokenType::Op_FwdSlash},
-                    .text {"/"},
-                    .position {41, 16},
-                },
+                 .type {TokenType::Op_FwdSlash},
+                 .text {"/"},
+                 .position {41, 16},
+                 },
                 {
-                    .type {TokenType::Lit_Int},
-                    .text {"3"},
-                    .position {41, 19},
-                },
+                 .type {TokenType::Lit_Int},
+                 .text {"3"},
+                 .position {41, 19},
+                 },
                 {
-                    .type {TokenType::Op_Asterisk},
-                    .text {"*"},
-                    .position {41, 21},
-                },
+                 .type {TokenType::Op_Asterisk},
+                 .text {"*"},
+                 .position {41, 21},
+                 },
                 {
-                    .type {TokenType::Lit_Int},
-                    .text {"12"},
-                    .position {41, 24},
-                },
+                 .type {TokenType::Lit_Int},
+                 .text {"12"},
+                 .position {41, 24},
+                 },
                 {
-                    .type {TokenType::Op_Minus},
-                    .text {"-"},
-                    .position {41, 27},
-                },
+                 .type {TokenType::Op_Minus},
+                 .text {"-"},
+                 .position {41, 27},
+                 },
                 {
-                    .type {TokenType::Lit_Int},
-                    .text {"34"},
-                    .position {41, 29},
-                },
+                 .type {TokenType::Lit_Int},
+                 .text {"34"},
+                 .position {41, 29},
+                 },
                 {
-                    .type {TokenType::Op_LessThan},
-                    .text {"<"},
-                    .position {41, 34},
-                },
+                 .type {TokenType::Op_LessThan},
+                 .text {"<"},
+                 .position {41, 34},
+                 },
                 {
-                    .type {TokenType::Lit_Float},
-                    .text {"85.32"},
-                    .position {41, 36},
-                },
+                 .type {TokenType::Lit_Float},
+                 .text {"85.32"},
+                 .position {41, 36},
+                 },
                 {
-                    .type {TokenType::Op_GreaterEqual},
-                    .text {">="},
-                    .position {41, 42},
-                },
+                 .type {TokenType::Op_GreaterEqual},
+                 .text {">="},
+                 .position {41, 42},
+                 },
                 {
-                    .type {TokenType::Lit_Int},
-                    .text {"120"},
-                    .position {41, 45},
-                },
+                 .type {TokenType::Lit_Int},
+                 .text {"120"},
+                 .position {41, 45},
+                 },
                 {
-                    .type {TokenType::Op_NotEqual},
-                    .text {"!="},
-                    .position {41, 49},
-                },
+                 .type {TokenType::Op_NotEqual},
+                 .text {"!="},
+                 .position {41, 49},
+                 },
                 {
-                    .type {TokenType::Op_LogicalNot},
-                    .text {"!"},
-                    .position {41, 52},
-                },
+                 .type {TokenType::Op_LogicalNot},
+                 .text {"!"},
+                 .position {41, 52},
+                 },
                 {
-                    .type {TokenType::Lit_false},
-                    .text {"false"},
-                    .position {41, 53},
-                },
+                 .type {TokenType::Lit_false},
+                 .text {"false"},
+                 .position {41, 53},
+                 },
             };
 
             // 83 == -24 + 94 / (3 * (12 - 34)) < 85.32 >= 120 != !false;
@@ -880,12 +881,12 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
 
             // lit '==' cmp '!=' unary
             REQUIRE(expr->tokens.size() == 2);
-            CHECK(expr->tokens[0] == expected_tokens[1]); // ==
-            CHECK(expr->tokens[1] == expected_tokens[15]); // !=
+            CHECK(expr->tokens[0] == expected_tokens[1]);   // ==
+            CHECK(expr->tokens[1] == expected_tokens[15]);  // !=
 
             // 83
             REQUIRE(expr->branches[0]->rule == Rule::Literal);
-            REQUIRE(expr->branches[0]->tokens[0] == expected_tokens[0]); // 83
+            REQUIRE(expr->branches[0]->tokens[0] == expected_tokens[0]);  // 83
 
             // -24 + 94 / (3 * (12 - 34)) < 85.32 >= 120
             REQUIRE(expr->branches[1]->rule == Rule::Comparison);
@@ -893,23 +894,23 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
             REQUIRE(cmp->branches.size() == 3);
 
             // term '<' lit_float '>=' lit_int
-            CHECK(cmp->tokens[0] == expected_tokens[11]); // <
-            CHECK(cmp->tokens[1] == expected_tokens[13]); // >=
+            CHECK(cmp->tokens[0] == expected_tokens[11]);  // <
+            CHECK(cmp->tokens[1] == expected_tokens[13]);  // >=
 
             // -24 + 94 / (3 * (12 - 34))
             REQUIRE(cmp->branches[0]->rule == Rule::Term);
-            CHECK(cmp->branches[0]->tokens[0] == expected_tokens[3]); // +
+            CHECK(cmp->branches[0]->tokens[0] == expected_tokens[3]);  // +
 
             // -24
             REQUIRE(cmp->branches[0]->branches[0]->rule == Rule::Unary);
             CHECK(cmp->branches[0]->branches[0]->tokens[0].type == TokenType::Op_Minus);
-            CHECK(cmp->branches[0]->branches[0]->branches[0]->tokens[0] == expected_tokens[2]); // 24
+            CHECK(cmp->branches[0]->branches[0]->branches[0]->tokens[0] == expected_tokens[2]);  // 24
 
             // 94 / (3 * (12 - 34))
             REQUIRE(cmp->branches[0]->branches[1]->rule == Rule::Factor);
             const auto& outer_factor = cmp->branches[0]->branches[1];
-            CHECK(outer_factor->tokens[0] == expected_tokens[5]); // /
-            CHECK(outer_factor->branches[0]->tokens[0] == expected_tokens[4]); // 94
+            CHECK(outer_factor->tokens[0] == expected_tokens[5]);               // /
+            CHECK(outer_factor->branches[0]->tokens[0] == expected_tokens[4]);  // 94
 
             // (3 * (12 - 34))
             REQUIRE(outer_factor->branches[1]->rule == Rule::Grouping);
@@ -918,20 +919,20 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
             REQUIRE(outer_factor->branches[1]->branches[0]->rule == Rule::Factor);
             const auto& inner_factor = outer_factor->branches[1]->branches[0];
             REQUIRE(inner_factor->branches[1]->rule == Rule::Grouping);
-            CHECK(inner_factor->branches[0]->tokens[0] == expected_tokens[6]); // 3
-            CHECK(inner_factor->tokens[0] == expected_tokens[7]); // 3
+            CHECK(inner_factor->branches[0]->tokens[0] == expected_tokens[6]);  // 3
+            CHECK(inner_factor->tokens[0] == expected_tokens[7]);               // 3
 
             // 12 - 34
             REQUIRE(inner_factor->branches[1]->branches[0]->rule == Rule::Term);
             const auto& inner_term = inner_factor->branches[1]->branches[0];
-            CHECK(inner_term->tokens[0] == expected_tokens[9]); // -
-            CHECK(inner_term->branches[0]->tokens[0] == expected_tokens[8]); // 12
-            CHECK(inner_term->branches[1]->tokens[0] == expected_tokens[10]); // 34
+            CHECK(inner_term->tokens[0] == expected_tokens[9]);                // -
+            CHECK(inner_term->branches[0]->tokens[0] == expected_tokens[8]);   // 12
+            CHECK(inner_term->branches[1]->tokens[0] == expected_tokens[10]);  // 34
 
             // !false
             REQUIRE(expr->branches[2]->rule == Rule::Unary);
-            CHECK(expr->branches[2]->tokens[0] == expected_tokens[16]); // !
-            CHECK(expr->branches[2]->branches[0]->tokens[0] == expected_tokens[17]); // false
+            CHECK(expr->branches[2]->tokens[0] == expected_tokens[16]);               // !
+            CHECK(expr->branches[2]->branches[0]->tokens[0] == expected_tokens[17]);  // false
 
             // this doesn't cover everything but i don't care
         }
