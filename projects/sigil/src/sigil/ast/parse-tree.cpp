@@ -1,8 +1,9 @@
 #include <sigil/ast/parse-tree.hpp>
 #include <sigil/core/logger.hpp>
 
-namespace sigil::ast {
+namespace sigil {
 using namespace mana::literals;
+using namespace ast;
 
 ParseNode::ParseNode(const Rule r)
     : rule {r}
@@ -87,4 +88,4 @@ void ParseNode::AcquireTailBranchOf(ParseNode& target) {
     branches.back()->parent = this;
     target.branches.erase(target.branches.end() - 1);
 }
-}  // namespace sigil::ast
+}  // namespace sigil

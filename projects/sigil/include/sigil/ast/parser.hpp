@@ -15,9 +15,9 @@ struct TokenRange {
 };
 
 class Parser {
-    TokenStream    tokens;
-    ml::i64        cursor;
-    ast::ParseNode parse_tree;
+    TokenStream tokens;
+    ml::i64     cursor;
+    ParseNode   parse_tree;
 
 public:
     explicit Parser(const TokenStream&& tokens);
@@ -25,48 +25,48 @@ public:
 
     SIGIL_NODISCARD bool Parse();
 
-    SIGIL_NODISCARD auto ViewParseTree() const -> const ast::ParseNode&;
+    SIGIL_NODISCARD auto ViewParseTree() const -> const ParseNode&;
     SIGIL_NODISCARD auto ViewTokens() const -> const TokenStream&;
 
     void PrintParseTree() const;
     void EmitParseTree(std::string_view file_name = "Mana.ast") const;
 
 private:
-    SIGIL_NODISCARD std::string EmitParseTree(const ast::ParseNode& root, std::string prepend = "") const;
+    SIGIL_NODISCARD std::string EmitParseTree(const ParseNode& root, std::string prepend = "") const;
 
     SIGIL_NODISCARD auto CurrentToken() const -> const Token&;
     SIGIL_NODISCARD auto PeekNextToken() const -> const Token&;
     SIGIL_NODISCARD auto NextToken() -> const Token&;
     SIGIL_NODISCARD auto GetAndCycleToken() -> const Token&;
 
-    void AddTokensTo(ast::ParseNode& node, TokenType delimiter);
-    void AddTokensTo(ast::ParseNode& node, ml::i64 count);
-    void AddCurrentTokenTo(ast::ParseNode& node) const;
-    void AddCycledTokenTo(ast::ParseNode& node);
+    void AddTokensTo(ParseNode& node, TokenType delimiter);
+    void AddTokensTo(ParseNode& node, ml::i64 count);
+    void AddCurrentTokenTo(ParseNode& node) const;
+    void AddCycledTokenTo(ParseNode& node);
 
     void TransmitTokens(TokenStream& from, TokenStream& to) const;
-    void TransmitTokens(ast::ParseNode& from, ast::ParseNode& to, TokenRange range) const;
+    void TransmitTokens(ParseNode& from, ParseNode& to, TokenRange range) const;
 
-    bool ProgressedAST(ast::ParseNode& node);
+    bool ProgressedAST(ParseNode& node);
 
     // Matchers
-    SIGIL_NODISCARD bool MatchedExpression(ast::ParseNode& node);
+    SIGIL_NODISCARD bool MatchedExpression(ParseNode& node);
 
-    SIGIL_NODISCARD bool MatchedPrimary(ast::ParseNode& node);
-    SIGIL_NODISCARD bool MatchedUnary(ast::ParseNode& node);
-    SIGIL_NODISCARD bool MatchedFactor(ast::ParseNode& node);
-    SIGIL_NODISCARD bool MatchedTerm(ast::ParseNode& node);
-    SIGIL_NODISCARD bool MatchedComparison(ast::ParseNode& node);
-    SIGIL_NODISCARD bool MatchedEquality(ast::ParseNode& node);
+    SIGIL_NODISCARD bool MatchedPrimary(ParseNode& node);
+    SIGIL_NODISCARD bool MatchedUnary(ParseNode& node);
+    SIGIL_NODISCARD bool MatchedFactor(ParseNode& node);
+    SIGIL_NODISCARD bool MatchedTerm(ParseNode& node);
+    SIGIL_NODISCARD bool MatchedComparison(ParseNode& node);
+    SIGIL_NODISCARD bool MatchedEquality(ParseNode& node);
 
-    using MatcherFnPtr   = bool (Parser::*)(ast::ParseNode&);
+    using MatcherFnPtr   = bool (Parser::*)(ParseNode&);
     using OpCheckerFnPtr = bool (*)(TokenType);
 
     SIGIL_NODISCARD bool MatchedBinaryExpr(
-        ast::ParseNode& node,
-        OpCheckerFnPtr  is_valid_operator,
-        MatcherFnPtr    matched_operand,
-        ast::Rule       rule
+        ParseNode&     node,
+        OpCheckerFnPtr is_valid_operator,
+        MatcherFnPtr   matched_operand,
+        ast::Rule      rule
     );
 };
 
