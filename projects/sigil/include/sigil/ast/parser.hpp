@@ -47,7 +47,9 @@ private:
     void TransmitTokens(TokenStream& from, TokenStream& to) const;
     void TransmitTokens(ParseNode& from, ParseNode& to, TokenRange range) const;
 
-    bool ProgressedAST(ParseNode& node);
+    bool ProgressedParseTree(ParseNode& node);
+
+    void ConstructAST(const ParseNode& node);
 
     // Matchers
     SIGIL_NODISCARD bool MatchedExpression(ParseNode& node);

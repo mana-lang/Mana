@@ -34,6 +34,10 @@ SIGIL_NODISCARD bool ParseNode::IsRoot() const {
     return parent == nullptr;
 }
 
+bool ParseNode::IsLeaf() const {
+    return branches.empty();
+}
+
 void ParseNode::AcquireBranchOf(ParseNode& target, const i64 index) {
 #ifdef SIGIL_DEBUG
     if (target.branches[index].get() == this) {

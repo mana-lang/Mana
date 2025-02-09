@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <sigil/ast/ast.hpp>
 
 namespace sigil {
 using namespace ast;
@@ -36,12 +37,15 @@ bool Parser::Parse() {
     parse_tree.tokens.push_back(tokens.front());
 
     cursor = 1;
-    while (ProgressedAST(parse_tree)) {}
+    while (ProgressedParseTree(parse_tree)) {}
+
+    ConstructAST(parse_tree);
 
     if (CurrentToken().type != TokenType::Eof) {
         // LogErr("It appears we did not parse the entire file.");
         return true;  // TODO: handle this error and return false instead
     }
+
     return true;
 }
 
@@ -185,7 +189,7 @@ void Parser::TransmitTokens(ParseNode& sender, ParseNode& receiver, TokenRange r
     }
 }
 
-bool Parser::ProgressedAST(ParseNode& node) {
+bool Parser::ProgressedParseTree(ParseNode& node) {
     // don't process eof (final token) before quitting
     if (cursor + 1 >= tokens.size() - 1) {
         return false;
@@ -197,6 +201,31 @@ bool Parser::ProgressedAST(ParseNode& node) {
     }
 
     return MatchedExpression(node);
+}
+
+void Parser::ConstructAST(const ParseNode& node) {
+    if (node.rule != Rule::Module) {
+        LogErr("Something went very wrong.");
+        return;
+    }
+
+    if (node.IsLeaf()) {
+        LogErr("Empty module, no AST can be constructed");
+        return;
+    }
+
+    Module root {node.tokens[0].text};
+    for (const auto& n : node.branches) {
+        switch (n->rule) {
+            using enum Rule;
+        case Term:
+        case Factor:
+            root.AddChild<BinaryOp>(n->tokens[0].text[0], *n->branches[0], *n->branches[1]);
+        default:
+            break;
+        }
+    }
+    int x = 6;
 }
 
 bool Parser::MatchedExpression(ParseNode& node) {
