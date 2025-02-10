@@ -63,7 +63,7 @@ bool Lexer::Tokenize(const std::filesystem::path& file_path) {
     token_stream.clear();
 
     token_stream.emplace_back(
-        TokenType::_module_,
+        TokenType::_artifact_,
         file_path.filename().replace_extension("").string(),
         TextPosition {
             .line   = -1,
@@ -388,7 +388,7 @@ SIGIL_NODISCARD bool Lexer::MatchedKeyword(std::string& identifier_buffer) {
         {"enum",     KW_enum      },
         {"generic",  KW_generic   },
 
-        {"module",   KW_module    },
+        {"module",   KW_artifact  },
         {"public",   KW_public    },
         {"private",  KW_private   },
         {"import",   KW_import    },

@@ -24,16 +24,16 @@ Parser::Parser(const TokenStream& tokens)
 bool Parser::Parse() {
     const auto& top_token = tokens.front();
 
-    if (top_token.type != TokenType::_module_) {
+    if (top_token.type != TokenType::_artifact_) {
         LogErr(
-            "Improper token stream format. Top-level token was: '{}' instead of "
-            "'_module_'",
-            magic_enum::enum_name(top_token.type)
+            "Improper token stream format. Top-level token was: '{}' instead of {}",
+            magic_enum::enum_name(top_token.type),
+            magic_enum::enum_name(TokenType::_artifact_)
         );
         return false;
     }
 
-    parse_tree.rule = Rule::Module;
+    parse_tree.rule = Rule::Artifact;
     parse_tree.tokens.push_back(tokens.front());
 
     cursor = 1;
@@ -62,7 +62,7 @@ auto Parser::ViewAST() const -> Node* {
 }
 
 void Parser::PrintParseTree() const {
-    Log("Printing AST for module '{}'\n\n{}", parse_tree.tokens[0].text, EmitParseTree(parse_tree));
+    Log("Printing AST for artifact '{}'\n\n{}", parse_tree.tokens[0].text, EmitParseTree(parse_tree));
 }
 
 void Parser::EmitParseTree(const std::string_view file_name) const {
@@ -75,7 +75,7 @@ void Parser::EmitParseTree(const std::string_view file_name) const {
 
 std::string Parser::EmitParseTree(const ParseNode& root, std::string prepend) const {
     std::string ret = "";
-    if (root.rule == Rule::Module) {
+    if (root.rule == Rule::Artifact) {
         ret = fmt::format("[Module] -> {}\n\n", root.tokens[0].text);
 
     } else {
@@ -210,7 +210,7 @@ bool Parser::ProgressedParseTree(ParseNode& node) {
 }
 
 void Parser::ConstructAST(const ParseNode& node) {
-    if (node.rule != Rule::Module) {
+    if (node.rule != Rule::Artifact) {
         LogErr("Something went very wrong.");
         return;
     }
@@ -379,6 +379,7 @@ bool IsComparisonOp(const TokenType token) {
     }
 }
 
+// comparison = term ( ('>' | '>=' | '<' | '<=') term)*
 bool Parser::MatchedComparison(ParseNode& node) {
     return MatchedBinaryExpr(node, IsComparisonOp, &Parser::MatchedTerm, Rule::Comparison);
 }
@@ -395,6 +396,7 @@ bool IsEqualityOp(const TokenType token) {
     }
 }
 
+// equality   = comparison (  ('!=' | '==') comparison)*
 bool Parser::MatchedEquality(ParseNode& node) {
     return MatchedBinaryExpr(node, IsEqualityOp, &Parser::MatchedComparison, Rule::Equality);
 }
@@ -416,6 +418,7 @@ bool Parser::MatchedBinaryExpr(
     auto& binary_expr = node.NewBranch(rule);
     AddCycledTokenTo(binary_expr);
 
+    // LHS matched, so we need to make it a child of this expr
     binary_expr.AcquireBranchOf(node, node.branches.size() - 2);
     const auto expr_index = node.branches.size() - 1;
 

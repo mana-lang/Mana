@@ -184,7 +184,7 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
             }
 
             SECTION("Module Declarators") {
-                CHECK(declaration_tokens[8].type == KW_module);
+                CHECK(declaration_tokens[8].type == KW_artifact);
                 CHECK(declaration_tokens[8].text == "module");
 
                 CHECK(declaration_tokens[9].type == KW_public);
