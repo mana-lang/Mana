@@ -127,6 +127,46 @@ struct Token {
     bool operator==(const Token& other) const {
         return type == other.type && position == other.position && text == other.text;
     }
+
+    SIGIL_NODISCARD ml::f64 AsF64() const {
+        return std::stod(text);
+    }
+
+    SIGIL_NODISCARD ml::f32 AsF32() const {
+        return std::stof(text);
+    }
+
+    SIGIL_NODISCARD ml::i8 ToI8() const {
+        return static_cast<ml::i8>(std::stoll(text));
+    }
+
+    SIGIL_NODISCARD ml::i8 ToI16() const {
+        return static_cast<ml::i16>(std::stoll(text));
+    }
+
+    SIGIL_NODISCARD ml::i8 ToI32() const {
+        return static_cast<ml::i32>(std::stoll(text));
+    }
+
+    SIGIL_NODISCARD ml::i64 ToI64() const {
+        return std::stoll(text);
+    }
+
+    SIGIL_NODISCARD ml::u8 ToU8() const {
+        return static_cast<ml::u8>(std::stoull(text));
+    }
+
+    SIGIL_NODISCARD ml::u8 ToU16() const {
+        return static_cast<ml::u16>(std::stoull(text));
+    }
+
+    SIGIL_NODISCARD ml::u8 ToU32() const {
+        return static_cast<ml::u32>(std::stoull(text));
+    }
+
+    SIGIL_NODISCARD ml::u64 ToU64() const {
+        return std::stoull(text);
+    }
 };
 
 using TokenStream = std::vector<Token>;

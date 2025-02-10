@@ -5,6 +5,7 @@ enable_testing()
 
 set(CIRCE_SOURCES
         src/circe/main.cpp
+        src/circe/main-visitor.cpp
 )
 
 set(CIRCE_INCLUDES

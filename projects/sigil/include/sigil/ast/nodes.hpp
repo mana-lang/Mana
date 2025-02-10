@@ -1,7 +1,7 @@
 #pragma once
 
-#include "parse-tree.hpp"
 #include <mana/literals.hpp>
+#include <sigil/ast/parse-tree.hpp>
 
 #include <memory>
 #include <string>
@@ -48,24 +48,24 @@ public:
     }
 };
 
-class LiteralF64 final : public Node {
+class Literal_F64 final : public Node {
     ml::f64 value;
 
 public:
-    explicit LiteralF64(ml::f64 value);
+    explicit Literal_F64(ml::f64 value);
 
     SIGIL_NODISCARD ml::f64 Get() const;
 
     void Accept(Visitor& visitor) const override;
 };
 
-class BinaryOp final : public Node {
+class BinaryExpr final : public Node {
     char op;
     Ptr  left, right;
 
 public:
-    explicit BinaryOp(const ParseNode& node);
-    explicit BinaryOp(char op, const ParseNode& left, const ParseNode& right);
+    explicit BinaryExpr(const ParseNode& node);
+    explicit BinaryExpr(char op, const ParseNode& left, const ParseNode& right);
 
     SIGIL_NODISCARD char GetOp() const;
     SIGIL_NODISCARD auto GetLeft() const -> const Node&;
@@ -75,16 +75,20 @@ public:
 
 private:
     static Ptr ConstructChild(const ParseNode& node);
-    explicit BinaryOp(const ParseNode& node, ml::i64 depth);
+    explicit BinaryExpr(const ParseNode& node, ml::i64 depth);
 };
 
-class Visitor {
-public:
-    virtual ~Visitor() = default;
+class UnaryExpr final : public Node {
+    char op;
+    Ptr  val;
 
-    virtual void Visit(const LiteralF64& node) = 0;
-    virtual void Visit(const BinaryOp& node)   = 0;
-    virtual void Visit(const Module& node)     = 0;
+public:
+    explicit UnaryExpr(const ParseNode& node);
+
+    void Accept(Visitor& visitor) const override;
+
+    SIGIL_NODISCARD char GetOp() const;
+    SIGIL_NODISCARD auto GetVal() const -> const Node&;
 };
 
 }  // namespace sigil::ast

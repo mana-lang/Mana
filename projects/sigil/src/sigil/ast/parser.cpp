@@ -5,7 +5,7 @@
 
 #include <algorithm>
 #include <fstream>
-#include <sigil/ast/ast.hpp>
+#include <sigil/ast/nodes.hpp>
 
 namespace sigil {
 using namespace ast;
@@ -227,7 +227,7 @@ void Parser::ConstructAST(const ParseNode& node) {
         switch (n->rule) {
         case Rule::Term:
         case Rule::Factor:
-            root->AddChild<BinaryOp>(*n);
+            root->AddChild<BinaryExpr>(*n);
         default:
             break;
         }
