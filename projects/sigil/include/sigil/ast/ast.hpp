@@ -1,10 +1,9 @@
 #pragma once
 
-#include <sigil/ast/rule.hpp>
-
 #include <mana/literals.hpp>
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace sigil {
@@ -71,7 +70,7 @@ public:
     void Accept(Visitor& visitor) const override;
 
 private:
-    void ConstructChild(const ParseNode& node, Ptr& target);
+    Ptr ConstructChild(const ParseNode& node);
 };
 
 class Visitor {

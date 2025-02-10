@@ -57,6 +57,10 @@ auto Parser::ViewTokens() const -> const TokenStream& {
     return tokens;
 }
 
+auto Parser::ViewAST() const -> Node* {
+    return syntax_tree.get();
+}
+
 void Parser::PrintParseTree() const {
     Log("Printing AST for module '{}'\n\n{}", parse_tree.tokens[0].text, EmitParseTree(parse_tree));
 }
@@ -65,6 +69,8 @@ void Parser::EmitParseTree(const std::string_view file_name) const {
     std::ofstream out {std::string(file_name)};
 
     out << EmitParseTree(parse_tree);
+
+    out.close();
 }
 
 std::string Parser::EmitParseTree(const ParseNode& root, std::string prepend) const {
@@ -214,18 +220,19 @@ void Parser::ConstructAST(const ParseNode& node) {
         return;
     }
 
-    Module root {node.tokens[0].text};
+    syntax_tree = std::make_unique<Module>(node.tokens[0].text);
+
+    const auto root = dynamic_cast<Module*>(syntax_tree.get());
     for (const auto& n : node.branches) {
         switch (n->rule) {
-            using enum Rule;
-        case Term:
-        case Factor:
-            root.AddChild<BinaryOp>(n->tokens[0].text[0], *n->branches[0], *n->branches[1]);
+        case Rule::Term:
+        case Rule::Factor:
+            root->AddChild<BinaryOp>(n->tokens[0].text[0], *n->branches[0], *n->branches[1]);
         default:
             break;
         }
     }
-    int x = 6;
+    int x = 1;
 }
 
 bool Parser::MatchedExpression(ParseNode& node) {
@@ -338,7 +345,7 @@ bool IsFactorOp(const TokenType token) {
 
 // factor = unary ( ('/' | '*') unary )*
 bool Parser::MatchedFactor(ParseNode& node) {
-    return MatchedBinaryExpr(node, IsFactorOp, MatchedUnary, Rule::Factor);
+    return MatchedBinaryExpr(node, IsFactorOp, &Parser::MatchedUnary, Rule::Factor);
 }
 
 bool IsTermOp(const TokenType token) {
@@ -355,7 +362,7 @@ bool IsTermOp(const TokenType token) {
 
 // term = factor ( ('-' | '+') factor)*
 bool Parser::MatchedTerm(ParseNode& node) {
-    return MatchedBinaryExpr(node, IsTermOp, MatchedFactor, Rule::Term);
+    return MatchedBinaryExpr(node, IsTermOp, &Parser::MatchedFactor, Rule::Term);
 }
 
 bool IsComparisonOp(const TokenType token) {
@@ -373,7 +380,7 @@ bool IsComparisonOp(const TokenType token) {
 }
 
 bool Parser::MatchedComparison(ParseNode& node) {
-    return MatchedBinaryExpr(node, IsComparisonOp, MatchedTerm, Rule::Comparison);
+    return MatchedBinaryExpr(node, IsComparisonOp, &Parser::MatchedTerm, Rule::Comparison);
 }
 
 bool IsEqualityOp(const TokenType token) {
@@ -389,7 +396,7 @@ bool IsEqualityOp(const TokenType token) {
 }
 
 bool Parser::MatchedEquality(ParseNode& node) {
-    return MatchedBinaryExpr(node, IsEqualityOp, MatchedComparison, Rule::Equality);
+    return MatchedBinaryExpr(node, IsEqualityOp, &Parser::MatchedComparison, Rule::Equality);
 }
 
 bool Parser::MatchedBinaryExpr(

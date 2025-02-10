@@ -1,11 +1,58 @@
 #include <circe/core/logger.hpp>
 
+#include <sigil/ast/ast.hpp>
 #include <sigil/ast/lexer.hpp>
 #include <sigil/ast/parser.hpp>
 
 #include <hex/vm/slice.hpp>
 
 #include <fstream>
+
+class CirceVisitor final : public sigil::ast::Visitor {
+    hex::Slice slice;
+
+public:
+    void Visit(const sigil::ast::Module& node) override {
+        for (const auto& child : node.GetChildren()) {
+            child->Accept(*this);
+        }
+    }
+
+    void Visit(const sigil::ast::BinaryOp& node) override {
+        using namespace sigil::ast;
+        using namespace mana::vm;
+
+        node.GetLeft().Accept(*this);
+        node.GetRight().Accept(*this);
+
+        switch (node.GetOp()) {
+        case '+':
+            slice.Write(Op::Add);
+            break;
+        case '-':
+            slice.Write(Op::Sub);
+            break;
+        case '*':
+            slice.Write(Op::Mul);
+            break;
+        case '/':
+            slice.Write(Op::Div);
+            break;
+
+        default:
+            circe::LogErr("Unknown Binary Operator");
+            break;
+        }
+    }
+
+    void Visit(const sigil::ast::LiteralF64& node) override {
+        slice.Write(mana::vm::Op::Constant, slice.AddConstant(node.Get()));
+    }
+
+    hex::Slice GetSlice() const {
+        return slice;
+    }
+};
 
 int main() {
     using namespace circe;
@@ -21,24 +68,17 @@ int main() {
         Log("Double nice.");
     }
 
-    hex::Slice  slice;
-    const auto& ast = parser.ViewParseTree();
+    hex::Slice   slice;
+    const auto&  ast = parser.ViewAST();
+    CirceVisitor visitor;
 
-    for (const auto& branch : ast.branches) {
-        using namespace mana::vm;
-        if (branch->rule == sigil::ast::Rule::Term) {
-            const auto a = slice.AddConstant(std::stod(branch->branches[0]->tokens[0].text));
-            const auto b = slice.AddConstant(std::stod(branch->branches[1]->tokens[0].text));
-            slice.Write(Op::Constant, a);
-            slice.Write(Op::Constant, b);
-            slice.Write(Op::Add);
-        }
-    }
+    ast->Accept(visitor);
 
     // for now
+    slice = visitor.GetSlice();
     slice.Write(mana::vm::Op::Return);
 
-    std::ofstream out_file("test-circe.mhm", std::ios::binary);
+    std::ofstream out_file("../hex/airi.mhm", std::ios::binary);
 
     const auto output = slice.Serialize();
     out_file.write(reinterpret_cast<const char*>(output.data()), output.size());

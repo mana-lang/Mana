@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mana/literals.hpp>
+#include <sigil/ast/ast.hpp>
 #include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/token.hpp>
 
@@ -15,9 +16,12 @@ struct TokenRange {
 };
 
 class Parser {
+    using ASTNode = std::unique_ptr<ast::Node>;
+
     TokenStream tokens;
     ml::i64     cursor;
     ParseNode   parse_tree;
+    ASTNode     syntax_tree;
 
 public:
     explicit Parser(const TokenStream&& tokens);
@@ -27,6 +31,7 @@ public:
 
     SIGIL_NODISCARD auto ViewParseTree() const -> const ParseNode&;
     SIGIL_NODISCARD auto ViewTokens() const -> const TokenStream&;
+    SIGIL_NODISCARD auto ViewAST() const -> ast::Node*;
 
     void PrintParseTree() const;
     void EmitParseTree(std::string_view file_name = "Mana.ast") const;

@@ -29,10 +29,9 @@ void LiteralF64::Accept(Visitor& visitor) const {
 }
 
 BinaryOp::BinaryOp(const char op, const ParseNode& lhs, const ParseNode& rhs)
-    : op(op) {
-    ConstructChild(lhs, left);
-    ConstructChild(rhs, right);
-}
+    : op(op)
+    , left(ConstructChild(lhs))
+    , right(ConstructChild(rhs)) {}
 
 char BinaryOp::GetOp() const {
     return op;
@@ -50,14 +49,18 @@ void BinaryOp::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
-void BinaryOp::ConstructChild(const ParseNode& node, Ptr& target) {
+Node::Ptr BinaryOp::ConstructChild(const ParseNode& node) {
+    const auto& token = node.tokens[0];
     switch (node.rule) {
         using enum Rule;
 
+    case Term:
+    case Factor:
+        return std::make_shared<BinaryOp>(token.text[0], *node.branches[0], *node.branches[1]);
+
     case Literal: {
-        const auto& token = node.tokens[0];
-        if (token.type == TokenType::Lit_Float) {
-            target = std::make_shared<LiteralF64>(std::stof(token.text));
+        if (token.type == TokenType::Lit_Float || token.type == TokenType::Lit_Int) {
+            return std::make_shared<LiteralF64>(std::stof(token.text));
         }
         break;
     }
@@ -65,5 +68,7 @@ void BinaryOp::ConstructChild(const ParseNode& node, Ptr& target) {
         LogErr("Not a binary op");
         break;
     }
+
+    return nullptr;
 }
 }  // namespace sigil::ast
