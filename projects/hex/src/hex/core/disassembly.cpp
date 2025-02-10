@@ -4,6 +4,8 @@
 #include <magic_enum/magic_enum.hpp>
 
 namespace hex {
+using namespace mana::vm;
+
 void EmitConstant(i64 offset, Value constant) {
     Log("{:04} | {} | {}", offset, magic_enum::enum_name(Op::Constant), constant);
 }
@@ -27,6 +29,7 @@ void PrintBytecode(const Slice& c) {
         case Sub:
         case Div:
         case Mul:
+        case Halt:
         case Return:
             EmitSimple(i, op);
             break;

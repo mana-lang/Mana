@@ -4,17 +4,18 @@
 #include <sigil/ast/lexer.hpp>
 #include <sigil/ast/parser.hpp>
 
-#include <hex/vm/slice.hpp>
+#include <mana/vm/slice.hpp>
 
 #include <fstream>
 
 class CirceVisitor final : public sigil::ast::Visitor {
-    hex::Slice slice;
+    mana::vm::Slice slice;
 
 public:
     void Visit(const sigil::ast::Module& node) override {
         for (const auto& child : node.GetChildren()) {
             child->Accept(*this);
+            slice.Write(mana::vm::Op::Return);
         }
     }
 
@@ -49,7 +50,7 @@ public:
         slice.Write(mana::vm::Op::Constant, slice.AddConstant(node.Get()));
     }
 
-    hex::Slice GetSlice() const {
+    mana::vm::Slice GetSlice() const {
         return slice;
     }
 };
@@ -68,17 +69,16 @@ int main() {
         Log("Double nice.");
     }
 
-    hex::Slice   slice;
-    const auto&  ast = parser.ViewAST();
-    CirceVisitor visitor;
+    mana::vm::Slice slice;
+    const auto&     ast = parser.ViewAST();
+    CirceVisitor    visitor;
 
     ast->Accept(visitor);
 
     // for now
     slice = visitor.GetSlice();
-    slice.Write(mana::vm::Op::Return);
-
-    std::ofstream out_file("../hex/airi.mhm", std::ios::binary);
+    slice.Write(mana::vm::Op::Halt);
+    std::ofstream out_file("../hex/test-circe.mhm", std::ios::binary);
 
     const auto output = slice.Serialize();
     out_file.write(reinterpret_cast<const char*>(output.data()), output.size());

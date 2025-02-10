@@ -1,19 +1,21 @@
 #include <hex/core/cli.hpp>
 #include <hex/core/disassembly.hpp>
 #include <hex/core/logger.hpp>
-#include <hex/vm/slice.hpp>
 #include <hex/vm/virtual-machine.hpp>
 
 #include <mana/vm/opcode.hpp>
+#include <mana/vm/slice.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
 #include <chrono>
 #include <fstream>
 
+using namespace hex;
+
 void WriteTestFile() {
     using namespace mana::vm;
-    hex::Slice out_slice;
+    Slice out_slice;
 
     const auto a = out_slice.AddConstant(1.2);
     const auto b = out_slice.AddConstant(2.4);
@@ -35,7 +37,7 @@ void WriteTestFile() {
     out_file.write(reinterpret_cast<const char*>(output.data()), output.size());
 
     if (not out_file) {
-        hex::LogErr("Failed to write to file.");
+        LogErr("Failed to write to file.");
         return;
     }
 
@@ -50,7 +52,7 @@ void ExecuteVM(const std::string_view exe_name) {
 
     std::ifstream in_file(std::string(exe_name), std::ios::binary);
     if (not in_file) {
-        hex::LogErr("Failed to read file.");
+        LogErr("Failed to read file.");
         return;
     }
     in_file.seekg(0, std::ios::end);
@@ -60,28 +62,28 @@ void ExecuteVM(const std::string_view exe_name) {
     std::vector<mana::literals::u8> raw(file_size);
     in_file.read(reinterpret_cast<char*>(raw.data()), file_size);
 
-    const auto start_deser = chrono::high_resolution_clock::now();
-    hex::Slice in_slice;
+    const auto      start_deser = chrono::high_resolution_clock::now();
+    mana::vm::Slice in_slice;
     in_slice.Deserialize(raw);
     const auto end_deser = chrono::high_resolution_clock::now();
 
-    hex::Log("--- Reading executable '{}' ---", exe_name);
-    hex::Log("");
+    Log("--- Reading executable '{}' ---", exe_name);
+    Log("");
     PrintBytecode(in_slice);
-    hex::Log("");
+    Log("");
 
-    hex::Log("Executing...\n");
-    hex::VirtualMachine vm;
-    hex::SetLogPattern("%v");
+    Log("Executing...\n");
+    VirtualMachine vm;
+    SetLogPattern("%v");
 
     const auto start_interp = chrono::high_resolution_clock::now();
     const auto interp_res   = vm.Interpret(&in_slice);
     const auto end_interp   = chrono::high_resolution_clock::now();
 
     const auto result = magic_enum::enum_name(interp_res);
-    hex::Log("");
-    hex::SetLogPattern("%^<%n>%$ %v");
-    hex::Log("Interpret Result: {}\n", result);
+    Log("");
+    SetLogPattern("%^<%n>%$ %v");
+    Log("Interpret Result: {}\n", result);
 
     const auto end_file = chrono::high_resolution_clock::now();
 
@@ -91,25 +93,24 @@ void ExecuteVM(const std::string_view exe_name) {
     elapsed_deser << chrono::duration_cast<chrono::microseconds>(end_deser - start_deser);
     elapsed_exec << chrono::duration_cast<chrono::microseconds>(end_interp - start_interp);
 
-    hex::
-        Log("Elapsed time:\nTotal: {}\nDeserialize: {}\nExecute: {}",
-            elapsed_file.str(),
-            elapsed_deser.str(),
-            elapsed_exec.str());
+    Log("Elapsed time:\nTotal: {}\nDeserialize: {}\nExecute: {}",
+        elapsed_file.str(),
+        elapsed_deser.str(),
+        elapsed_exec.str());
 }
 
 int main(const int argc, char** argv) {
-    hex::CommandLineSettings cli(argc, argv);
+    CommandLineSettings cli(argc, argv);
 
     cli.Populate();
 
     if (cli.ShouldSayHi()) {
-        hex::Log("Hiiiiiii :3c");
-        hex::Log("");
+        Log("Hiiiiiii :3c");
+        Log("");
     }
 
     if (cli.ShouldGenTestfile()) {
-        hex::Log("Generating testfile...");
+        Log("Generating testfile...");
         WriteTestFile();
         return 0;
     }

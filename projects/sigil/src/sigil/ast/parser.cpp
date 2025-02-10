@@ -227,7 +227,7 @@ void Parser::ConstructAST(const ParseNode& node) {
         switch (n->rule) {
         case Rule::Term:
         case Rule::Factor:
-            root->AddChild<BinaryOp>(n->tokens[0].text[0], *n->branches[0], *n->branches[1]);
+            root->AddChild<BinaryOp>(*n);
         default:
             break;
         }

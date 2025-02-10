@@ -5,6 +5,8 @@
 namespace mana::vm {
 
 enum class Op : literals::u8 {
+    Halt,
+
     Return,
 
     Constant,

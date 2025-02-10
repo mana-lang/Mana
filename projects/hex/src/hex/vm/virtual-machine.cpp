@@ -2,6 +2,8 @@
 #include <hex/vm/virtual-machine.hpp>
 
 namespace hex {
+using namespace mana::vm;
+
 VirtualMachine::VirtualMachine() {
     stack.reserve(256);
     stack_top = stack.data();
@@ -52,6 +54,7 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
     const auto* constants = slice->Constants().data();
 
     constexpr std::array dispatch_table {
+        &&op_halt,
         &&op_return,
         &&op_constant,
         &&op_negate,
@@ -65,10 +68,10 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
 #ifdef HEX_DEBUG
     constexpr auto err          = &&compile_error;
     constexpr auto dispatch_max = dispatch_table.size();
-#    define DISPATCH()                                                                 \
-        {                                                                              \
+#    define DISPATCH()                                                                  \
+        {                                                                               \
             auto  label = *ip >= 0 && *ip < dispatch_max ? dispatch_table[*ip++] : err; \
-            goto* label;                                                               \
+            goto *label;                                                                \
         }
 #else
 #    define DISPATCH() goto* dispatch_table[*ip++]
@@ -77,10 +80,14 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
 
     DISPATCH();
 
+op_halt:
+    return InterpretResult::OK;
+
 op_return:
     Log("");
-    Log("ret {}", Pop());
-    return InterpretResult::OK;
+    Log("ret {}\n\n", Pop());
+
+    DISPATCH();
 
 op_constant:
     Push(*(constants + *ip++));

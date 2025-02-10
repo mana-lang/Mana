@@ -1,15 +1,13 @@
 #pragma once
 
-#include <hex/vm/slice.hpp>
-
 #include <mana/literals.hpp>
-#include <mana/vm/opcode.hpp>
+#include <mana/vm/slice.hpp>
 
 #include <vector>
 
 namespace hex {
-using namespace mana::literals;
-using namespace mana::vm;
+namespace ml  = mana::literals;
+namespace mvm = mana::vm;
 
 enum class InterpretResult {
     OK,
@@ -18,26 +16,26 @@ enum class InterpretResult {
 };
 
 class VirtualMachine {
-    Slice* slice {nullptr};
-    u8*    ip {nullptr};
+    mvm::Slice* slice {nullptr};
+    u8*         ip {nullptr};
 
-    std::vector<Value> stack {};
+    std::vector<mvm::Value> stack {};
 
-    Value* stack_top {nullptr};
+    mvm::Value* stack_top {nullptr};
 
 public:
     VirtualMachine();
 
-    InterpretResult Interpret(Slice* next_slice);
+    InterpretResult Interpret(mvm::Slice* next_slice);
 
 private:
     void ResetStack();
 
-    void Push(Value value);
+    void Push(mvm::Value value);
 
-    Value Pop();
+    mvm::Value Pop();
 
-    Value StackTop() const;
+    mvm::Value StackTop() const;
 };
 
 }  // namespace hex

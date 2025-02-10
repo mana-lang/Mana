@@ -8,7 +8,6 @@ set(HEX_SOURCES
         src/hex/core/cli.cpp
         src/hex/core/disassembly.cpp
 
-        src/hex/vm/slice.cpp
         src/hex/vm/virtual-machine.cpp
 )
 

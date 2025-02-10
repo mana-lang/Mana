@@ -1,11 +1,14 @@
 #pragma once
 
+#include "parse-tree.hpp"
 #include <mana/literals.hpp>
 
 #include <memory>
 #include <string>
 #include <vector>
 
+/// As the ptree gets constructed before the AST,
+/// AST nodes assume their ptree input is correct
 namespace sigil {
 class ParseNode;
 }
@@ -61,6 +64,7 @@ class BinaryOp final : public Node {
     Ptr  left, right;
 
 public:
+    explicit BinaryOp(const ParseNode& node);
     explicit BinaryOp(char op, const ParseNode& left, const ParseNode& right);
 
     SIGIL_NODISCARD char GetOp() const;
@@ -70,7 +74,8 @@ public:
     void Accept(Visitor& visitor) const override;
 
 private:
-    Ptr ConstructChild(const ParseNode& node);
+    static Ptr ConstructChild(const ParseNode& node);
+    explicit BinaryOp(const ParseNode& node, ml::i64 depth);
 };
 
 class Visitor {
