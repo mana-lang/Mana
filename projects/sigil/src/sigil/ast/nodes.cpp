@@ -97,7 +97,7 @@ Node::Ptr BinaryExpr::ConstructChild(const ParseNode& node) {
 
     case Unary:
         if (token.type == TokenType::Op_Minus && IsNumber(node.branches[0]->tokens[0].type)) {
-            return std::make_shared<ast::UnaryExpr>(node);
+            return std::make_shared<UnaryExpr>(node);
         }
         break;
     case Literal:
