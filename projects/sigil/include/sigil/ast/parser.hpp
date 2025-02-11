@@ -1,9 +1,11 @@
 #pragma once
 
-#include <mana/literals.hpp>
 #include <sigil/ast/nodes.hpp>
 #include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/token.hpp>
+#include <sigil/error/error-sink.hpp>
+
+#include <mana/literals.hpp>
 
 #include <vector>
 
@@ -22,6 +24,7 @@ class Parser {
     ml::i64     cursor;
     ParseNode   parse_tree;
     ASTNode     syntax_tree;
+    ErrorSink   error_sink;
 
 public:
     explicit Parser(const TokenStream&& tokens);

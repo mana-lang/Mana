@@ -16,13 +16,13 @@ class Slice {
     std::vector<Value> constants;
 
 public:
-    void Write(Op opcode);
-    void Write(Op opcode, u8 byte);
+    void  Write(Op opcode);
+    void  Write(Op opcode, u8 byte);
     usize AddConstant(Value value);
 
-    MANA_NODISCARD auto Code() const -> const std::vector<u8>&;
-    MANA_NODISCARD auto Code() -> std::vector<u8>&;
-    MANA_NODISCARD auto Constants() const -> const std::vector<Value>&;
+    MANA_NODISCARD auto  Code() const -> const std::vector<u8>&;
+    MANA_NODISCARD auto  Code() -> std::vector<u8>&;
+    MANA_NODISCARD auto  Constants() const -> const std::vector<Value>&;
     MANA_NODISCARD Value ConstantAt(i64 index) const;
 
     // serializes a slice to a vector of unsigned char (bytes)

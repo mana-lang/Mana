@@ -83,4 +83,4 @@ bool Slice::Deserialize(const std::vector<u8>& bytes) {
 
     return true;
 }
-} // namespace mana
+}  // namespace mana::vm
