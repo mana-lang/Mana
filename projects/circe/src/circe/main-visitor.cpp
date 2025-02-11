@@ -37,7 +37,7 @@ void MainVisitor::Visit(const BinaryExpr& node) {
         break;
 
     default:
-        LogErr("Unknown Binary Operator");
+        Log->error("Unknown Binary Operator");
         break;
     }
 }

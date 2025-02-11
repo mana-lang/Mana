@@ -6,6 +6,8 @@ enable_testing()
 set(CIRCE_SOURCES
         src/circe/main.cpp
         src/circe/main-visitor.cpp
+
+        src/circe/core/logger.cpp
 )
 
 set(CIRCE_INCLUDES
@@ -14,7 +16,6 @@ set(CIRCE_INCLUDES
 
 set(CIRCE_LIBS
         sigil::sigil
-        hex::hex
 )
 
 set(EXT_INCLUDES
@@ -54,12 +55,11 @@ add_custom_command(
         ${PROJECT_BINARY_DIR}/assets/
 )
 
-add_custom_command(
-        TARGET circe POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${PROJECT_BINARY_DIR}/../hex/libhex_api.dll
-        ${PROJECT_BINARY_DIR}/../sigil/libsigil.dll
-        ${PROJECT_BINARY_DIR}/
-)
+#add_custom_command(
+#        TARGET circe POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E copy
+#        ${PROJECT_BINARY_DIR}/../sigil/libsigil.dll
+#        ${PROJECT_BINARY_DIR}/
+#)
 
 add_subdirectory(tests)

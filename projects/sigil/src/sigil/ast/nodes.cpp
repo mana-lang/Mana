@@ -106,11 +106,11 @@ Node::Ptr BinaryExpr::ConstructChild(const ParseNode& node) {
         }
         break;
     default:
-        LogErr("Not a binary op");
+        Log->error("Not a binary op");
         break;
     }
 
-    LogErr("Erroneous input to BinaryOp");
+    Log->error("Erroneous input to BinaryOp");
 
     return nullptr;
 }

@@ -17,7 +17,7 @@ enum class InterpretResult {
 
 class VirtualMachine {
     mvm::Slice* slice {nullptr};
-    u8*         ip {nullptr};
+    ml::u8*     ip {nullptr};
 
     std::vector<mvm::Value> stack {};
 
