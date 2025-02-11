@@ -24,16 +24,16 @@ Parser::Parser(const TokenStream& tokens)
 bool Parser::Parse() {
     const auto& top_token = tokens.front();
 
-    if (top_token.type != TokenType::_module_) {
-        LogErr(
-            "Improper token stream format. Top-level token was: '{}' instead of "
-            "'_module_'",
-            magic_enum::enum_name(top_token.type)
+    if (top_token.type != TokenType::_artifact_) {
+        Log->error(
+            "Improper token stream format. Top-level token was: '{}' instead of {}",
+            magic_enum::enum_name(top_token.type),
+            magic_enum::enum_name(TokenType::_artifact_)
         );
         return false;
     }
 
-    parse_tree.rule = Rule::Module;
+    parse_tree.rule = Rule::Artifact;
     parse_tree.tokens.push_back(tokens.front());
 
     cursor = 1;
@@ -42,7 +42,7 @@ bool Parser::Parse() {
     ConstructAST(parse_tree);
 
     if (CurrentToken().type != TokenType::Eof) {
-        // LogErr("It appears we did not parse the entire file.");
+        // Log->error("It appears we did not parse the entire file.");
         return true;  // TODO: handle this error and return false instead
     }
 
@@ -62,7 +62,7 @@ auto Parser::ViewAST() const -> Node* {
 }
 
 void Parser::PrintParseTree() const {
-    Log("Printing AST for module '{}'\n\n{}", parse_tree.tokens[0].text, EmitParseTree(parse_tree));
+    Log->debug("Printing AST for artifact '{}'\n\n{}", parse_tree.tokens[0].text, EmitParseTree(parse_tree));
 }
 
 void Parser::EmitParseTree(const std::string_view file_name) const {
@@ -75,7 +75,7 @@ void Parser::EmitParseTree(const std::string_view file_name) const {
 
 std::string Parser::EmitParseTree(const ParseNode& root, std::string prepend) const {
     std::string ret = "";
-    if (root.rule == Rule::Module) {
+    if (root.rule == Rule::Artifact) {
         ret = fmt::format("[Module] -> {}\n\n", root.tokens[0].text);
 
     } else {
@@ -186,7 +186,7 @@ void Parser::TransmitTokens(ParseNode& sender, ParseNode& receiver, TokenRange r
     const auto [breadth, offset] = range;
 
     if (breadth + offset > sender.tokens.size()) {
-        LogErr("TransmitTokens error: range was too large");
+        Log->error("TransmitTokens error: range was too large");
         return;
     }
 
@@ -210,13 +210,13 @@ bool Parser::ProgressedParseTree(ParseNode& node) {
 }
 
 void Parser::ConstructAST(const ParseNode& node) {
-    if (node.rule != Rule::Module) {
-        LogErr("Something went very wrong.");
+    if (node.rule != Rule::Artifact) {
+        Log->error("Something went very wrong.");
         return;
     }
 
     if (node.IsLeaf()) {
-        LogErr("Empty module, no AST can be constructed");
+        Log->error("Empty module, no AST can be constructed");
         return;
     }
 
@@ -274,7 +274,7 @@ bool Parser::MatchedPrimary(ParseNode& node) {
 
         if (MatchedExpression(grouping)) {
             if (grouping.branches.size() > 1) {
-                LogErr("Grouping may not contain more than one expression");
+                Log->error("Grouping may not contain more than one expression");
                 grouping.rule = Rule::Mistake;
                 return false;
             }
@@ -282,7 +282,7 @@ bool Parser::MatchedPrimary(ParseNode& node) {
                 AddCycledTokenTo(grouping);
 
                 if (grouping.branches.size() < 1) {
-                    LogErr("Grouping must contain at least one expression");
+                    Log->error("Grouping must contain at least one expression");
                     return false;
                 }
 
@@ -314,7 +314,7 @@ bool Parser::MatchedUnary(ParseNode& node) {
         AddCycledTokenTo(unary);
         if (not MatchedUnary(unary)) {
             if (not MatchedPrimary(unary)) {
-                LogErr("Expected primary expression.");
+                Log->error("Expected primary expression.");
                 node.PopBranch();  // dangle should be okay since we immediately return
             } else
                 break;
@@ -379,6 +379,7 @@ bool IsComparisonOp(const TokenType token) {
     }
 }
 
+// comparison = term ( ('>' | '>=' | '<' | '<=') term)*
 bool Parser::MatchedComparison(ParseNode& node) {
     return MatchedBinaryExpr(node, IsComparisonOp, &Parser::MatchedTerm, Rule::Comparison);
 }
@@ -395,6 +396,7 @@ bool IsEqualityOp(const TokenType token) {
     }
 }
 
+// equality   = comparison (  ('!=' | '==') comparison)*
 bool Parser::MatchedEquality(ParseNode& node) {
     return MatchedBinaryExpr(node, IsEqualityOp, &Parser::MatchedComparison, Rule::Equality);
 }
@@ -416,11 +418,12 @@ bool Parser::MatchedBinaryExpr(
     auto& binary_expr = node.NewBranch(rule);
     AddCycledTokenTo(binary_expr);
 
+    // LHS matched, so we need to make it a child of this expr
     binary_expr.AcquireBranchOf(node, node.branches.size() - 2);
     const auto expr_index = node.branches.size() - 1;
 
     if (not(this->*matched_operand)(node)) {
-        LogErr("Expected expression");
+        Log->error("Expected expression");
         return false;
     }
 
@@ -429,7 +432,7 @@ bool Parser::MatchedBinaryExpr(
         AddCycledTokenTo(binary_expr);
 
         if (not(this->*matched_operand)(node)) {
-            LogErr("Incomplete expression");
+            Log->error("Incomplete expression");
             binary_expr.rule = Rule::Mistake;
 
             ret = false;

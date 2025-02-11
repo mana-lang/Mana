@@ -43,7 +43,7 @@ public:
         return constants;
     }
 
-    HEX_NODISCARD Value ConstantAt(const i64 index) const {
+    MANA_NODISCARD Value ConstantAt(const i64 index) const {
         return constants[index];
     }
 
@@ -53,7 +53,7 @@ public:
     // - constant pool
     // - opcode size
     // - opcode
-    HEX_NODISCARD auto Serialize() const -> std::vector<u8> {
+    MANA_NODISCARD auto Serialize() const -> std::vector<u8> {
         constexpr auto size_elem = sizeof(u64);
 
         const auto constants_count = constants.size();

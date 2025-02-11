@@ -6,16 +6,16 @@ using namespace mana::literals;
 using namespace ast;
 
 ParseNode::ParseNode(const Rule r)
-    : rule {r}
-    , parent {nullptr} {}
+    : parent {nullptr}
+    , rule {r} {}
 
 ParseNode::ParseNode(ParseNode* p, const Rule r)
-    : rule {r}
-    , parent {p} {}
+    : parent {p}
+    , rule {r} {}
 
 ParseNode& ParseNode::NewBranch(const Rule new_rule) {
     // because the module node is the root, it's useless to list it as a parent
-    return *branches.emplace_back(std::make_shared<ParseNode>(rule == Rule::Module ? nullptr : this, new_rule));
+    return *branches.emplace_back(std::make_shared<ParseNode>(rule == Rule::Artifact ? nullptr : this, new_rule));
 }
 
 void ParseNode::PopBranch() {
@@ -41,7 +41,7 @@ bool ParseNode::IsLeaf() const {
 void ParseNode::AcquireBranchOf(ParseNode& target, const i64 index) {
 #ifdef SIGIL_DEBUG
     if (target.branches[index].get() == this) {
-        LogErr("Can not acquire branches of self");
+        Log->error("Can not acquire branches of self");
         return;
     }
 #endif
@@ -55,7 +55,7 @@ void ParseNode::AcquireBranchesOf(ParseNode& target, const i64 start, const i64 
     for (i64 i = start; i <= end; ++i) {
 #ifdef SIGIL_DEBUG
         if (target.branches[i].get() == this) {
-            LogErr("Can not acquire branches of self");
+            Log->error("Can not acquire branches of self");
             return;
         }
 #endif
@@ -71,7 +71,7 @@ void ParseNode::AcquireBranchesOf(ParseNode& target, const i64 start) {
     for (i64 i = start; i < target.branches.size(); ++i) {
 #ifdef SIGIL_DEBUG
         if (target.branches[i].get() == this) {
-            LogErr("Can not acquire branches of self");
+            Log->error("Can not acquire branches of self");
             return;
         }
 #endif
@@ -84,7 +84,7 @@ void ParseNode::AcquireBranchesOf(ParseNode& target, const i64 start) {
 void ParseNode::AcquireTailBranchOf(ParseNode& target) {
 #ifdef SIGIL_DEBUG
     if (target.branches.back().get() == this) {
-        LogErr("Can not acquire branches of self");
+        Log->error("Can not acquire branches of self");
         return;
     }
 #endif

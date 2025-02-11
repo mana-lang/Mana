@@ -23,13 +23,13 @@ TEST_CASE("Expression Parsing", "[parse][ast]") {
 
         SECTION("Parsing step succeeded") {
             REQUIRE_FALSE(tokens.empty());
-            REQUIRE(tokens[0].type == TokenType::_module_);
+            REQUIRE(tokens[0].type == TokenType::_artifact_);
         }
 
         using namespace ast;
         SECTION("AST root is properly formed") {
             CHECK_FALSE(ast.tokens.empty());
-            REQUIRE(ast.rule == Rule::Module);
+            REQUIRE(ast.rule == Rule::Artifact);
             REQUIRE(ast.tokens[0].text == "expressions");
         }
 

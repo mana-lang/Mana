@@ -9,7 +9,7 @@ enum class Rule : ml::i64 {
     Undefined,
     Mistake,
 
-    Module,
+    Artifact,
 
     Expression,
 

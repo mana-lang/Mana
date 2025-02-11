@@ -56,14 +56,14 @@ void Lexer::TokenizeLine(std::string_view current_line) {
 bool Lexer::Tokenize(const std::filesystem::path& file_path) {
     std::ifstream file(file_path);
     if (not file.is_open()) {
-        Log(LogLevel::Error, "Failed to open file at '{}'", file_path.string());
+        Log->error("Failed to open file at '{}'", file_path.string());
         return false;
     }
 
     token_stream.clear();
 
     token_stream.emplace_back(
-        TokenType::_module_,
+        TokenType::_artifact_,
         file_path.filename().replace_extension("").string(),
         TextPosition {
             .line   = -1,
@@ -86,22 +86,20 @@ bool Lexer::Tokenize(const std::filesystem::path& file_path) {
 
 void Lexer::PrintTokens() const {
     if (token_stream.empty()) {
-        Log(LogLevel::Error, "Lexer token print requested, but token stream was empty.");
+        Log->error("Lexer token print requested, but token stream was empty.");
         return;
     }
 
-    Log(LogLevel::Debug, "--- Printing Token Stream ---\n");
+    Log->debug("--- Printing Token Stream ---\n");
 
     for (const auto& [type, contents, position] : token_stream) {
         if (type == TokenType::Terminator) {
-            Log(LogLevel::Info, "[L: {} | C: {}] {}: \\n", position.line, position.column, magic_enum::enum_name(type)
-            );
+            Log->info("[L: {} | C: {}] {}: \\n", position.line, position.column, magic_enum::enum_name(type));
             continue;
         }
-        Log(LogLevel::Info, "[L: {} | C: {}] {}: \\n", position.line, position.column, magic_enum::enum_name(type), contents
-        );
+        Log->info("[L: {} | C: {}] {}: \\n", position.line, position.column, magic_enum::enum_name(type), contents);
     }
-    Log(LogLevel::Debug, "End of token stream.\n");
+    Log->debug("End of token stream.\n");
 }
 
 void Lexer::clear() {
@@ -146,7 +144,7 @@ SIGIL_NODISCARD bool Lexer::LexedString(const std::string_view line) {
         literal_type = TokenType::Lit_Char;
         break;
     default:
-        Log(LogLevel::Error, "Improper call to LexedString");
+        Log->error("Improper call to LexedString");
         AddToken(TokenType::Unknown, std::move(buffer));
         return false;
     }
@@ -154,7 +152,7 @@ SIGIL_NODISCARD bool Lexer::LexedString(const std::string_view line) {
     while (true) {
         if (static_cast<usize>(++cursor) >= line.size()) {
             // next token should always be a newline or string literal
-            Log(LogLevel::Warn, "Unexpected EOF while lexing string literal");
+            Log->warn("Unexpected EOF while lexing string literal");
             AddToken(TokenType::Unknown, std::move(buffer));
             AddEOF();
             return false;
@@ -388,7 +386,7 @@ SIGIL_NODISCARD bool Lexer::MatchedKeyword(std::string& identifier_buffer) {
         {"enum",     KW_enum      },
         {"generic",  KW_generic   },
 
-        {"module",   KW_module    },
+        {"module",   KW_artifact  },
         {"public",   KW_public    },
         {"private",  KW_private   },
         {"import",   KW_import    },

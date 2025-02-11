@@ -11,16 +11,16 @@
 
 int main() {
     using namespace circe;
-    Log("Hello from Circe!");
+    Log->debug("Hello from Circe!");
 
     sigil::Lexer lexer;
     if (lexer.Tokenize("assets/samples/expr-a.mn")) {
-        Log("Nice.");
+        Log->debug("Nice.");
     }
 
     sigil::Parser parser(lexer.RelinquishTokens());
     if (parser.Parse()) {
-        Log("Double nice.");
+        Log->debug("Double nice.");
     }
 
     mana::vm::Slice slice;
@@ -38,7 +38,7 @@ int main() {
     out_file.write(reinterpret_cast<const char*>(output.data()), output.size());
 
     if (not out_file) {
-        LogErr("Failed to write to file.");
+        Log->error("Failed to write to file.");
         return 3;
     }
 

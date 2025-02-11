@@ -86,7 +86,7 @@ enum class TokenType : ml::i64 {
     KW_enum,
     KW_generic,
 
-    KW_module,
+    KW_artifact,
     KW_public,
     KW_private,
     KW_import,
@@ -107,7 +107,7 @@ enum class TokenType : ml::i64 {
     Eof,
 
     Unknown,
-    _module_,  // special token, auto-inserted
+    _artifact_,  // special token, auto-inserted
 };
 
 struct TextPosition {

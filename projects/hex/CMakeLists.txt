@@ -5,7 +5,9 @@ enable_testing()
 
 set(HEX_SOURCES
         src/hex/main.cpp
+
         src/hex/core/cli.cpp
+        src/hex/core/logger.cpp
         src/hex/core/disassembly.cpp
 
         src/hex/vm/virtual-machine.cpp
@@ -16,7 +18,7 @@ set(HEX_INCLUDES
 )
 
 set(HEX_LIBS
-        spdlog::spdlog
+        mana::core
 )
 
 set(EXT_INCLUDES
