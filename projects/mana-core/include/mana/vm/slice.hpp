@@ -3,27 +3,25 @@
 #include <mana/literals.hpp>
 #include <mana/vm/opcode.hpp>
 
-#include <cstring>
 #include <vector>
 
 namespace mana::vm {
 using namespace literals;
 
-using Value = f64;
-
 class Slice {
-    std::vector<u8>    code;
-    std::vector<Value> constants;
+    using ByteCode = std::vector<u8>;
+    ByteCode bytecode;
+
+    std::vector<f64> float_constants;
 
 public:
-    void  Write(Op opcode);
-    void  Write(Op opcode, u8 byte);
-    usize AddConstant(Value value);
+    void Write(Op opcode);
+    void Write(Op opcode, u8 byte);
+    u64  AddConstant(f64 value);
 
-    MANA_NODISCARD auto  Code() const -> const std::vector<u8>&;
-    MANA_NODISCARD auto  Code() -> std::vector<u8>&;
-    MANA_NODISCARD auto  Constants() const -> const std::vector<Value>&;
-    MANA_NODISCARD Value ConstantAt(i64 index) const;
+    MANA_NODISCARD auto Bytecode() const -> const ByteCode&;
+    MANA_NODISCARD auto Bytecode() -> ByteCode&;
+    MANA_NODISCARD auto FloatConstants() const -> const std::vector<f64>&;
 
     // serializes a slice to a vector of unsigned char (bytes)
     // for now, the sequence is:
@@ -31,10 +29,10 @@ public:
     // - constant pool
     // - opcode size
     // - opcode
-    MANA_NODISCARD auto Serialize() const -> std::vector<u8>;
+    MANA_NODISCARD auto Serialize() const -> ByteCode;
 
     // for now, this function assumes the input is actually correct
-    bool Deserialize(const std::vector<u8>& bytes);
+    bool Deserialize(const ByteCode& bytes);
 };
 
 }  // namespace mana::vm

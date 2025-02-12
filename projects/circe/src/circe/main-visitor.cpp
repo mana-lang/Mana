@@ -43,7 +43,7 @@ void MainVisitor::Visit(const BinaryExpr& node) {
 }
 
 void MainVisitor::Visit(const Literal_F64& node) {
-    slice.Write(Op::Constant, slice.AddConstant(node.Get()));
+    slice.Write(Op::Push_Float, slice.AddConstant(node.Get()));
 }
 
 void MainVisitor::Visit(const UnaryExpr& node) {

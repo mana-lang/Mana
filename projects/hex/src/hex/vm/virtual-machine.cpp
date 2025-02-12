@@ -6,9 +6,9 @@ using namespace mana::vm;
 
 InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
     slice = next_slice;
-    ip    = slice->Code().data();
+    ip    = slice->Bytecode().data();
 
-    const auto* constants = slice->Constants().data();
+    const auto* constants = slice->FloatConstants().data();
 
     constexpr std::array dispatch_table {
         &&op_halt,

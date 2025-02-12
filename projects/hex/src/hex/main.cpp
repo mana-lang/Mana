@@ -20,15 +20,15 @@ void WriteTestFile() {
     const auto a = out_slice.AddConstant(1.2);
     const auto b = out_slice.AddConstant(2.4);
 
-    out_slice.Write(Op::Constant, a);
-    out_slice.Write(Op::Constant, b);
+    out_slice.Write(Op::Push_Float, a);
+    out_slice.Write(Op::Push_Float, b);
     out_slice.Write(Op::Add);
     out_slice.Write(Op::Negate);
-    out_slice.Write(Op::Constant, out_slice.AddConstant(-12.2));
+    out_slice.Write(Op::Push_Float, out_slice.AddConstant(-12.2));
     out_slice.Write(Op::Mul);
-    out_slice.Write(Op::Constant, out_slice.AddConstant(3));
+    out_slice.Write(Op::Push_Float, out_slice.AddConstant(3));
     out_slice.Write(Op::Div);
-    out_slice.Write(Op::Constant, b);
+    out_slice.Write(Op::Push_Float, b);
     out_slice.Write(Op::Sub);
     out_slice.Write(Op::Return);
     std::ofstream out_file("test_1.mhm", std::ios::binary);

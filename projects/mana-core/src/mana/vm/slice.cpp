@@ -1,85 +1,83 @@
 #include <mana/vm/slice.hpp>
 
+#include <cstring>
+
 namespace mana::vm {
 
 void Slice::Write(Op opcode) {
-    code.push_back(static_cast<u8>(opcode));
+    bytecode.push_back(static_cast<u8>(opcode));
 }
 
 void Slice::Write(Op opcode, const u8 byte) {
-    code.push_back(static_cast<u8>(opcode));
-    code.push_back(byte);
+    bytecode.push_back(static_cast<u8>(opcode));
+    bytecode.push_back(byte);
 }
 
-usize Slice::AddConstant(const Value value) {
-    constants.push_back(value);
+usize Slice::AddConstant(const f64 value) {
+    float_constants.push_back(value);
 
-    return constants.size() - 1;
+    return float_constants.size() - 1;
 }
 
-auto Slice::Code() const -> const std::vector<u8>& {
-    return code;
+auto Slice::Bytecode() const -> const ByteCode& {
+    return bytecode;
 }
 
-auto Slice::Code() -> std::vector<u8>& {
-    return code;
+auto Slice::Bytecode() -> ByteCode& {
+    return bytecode;
 }
 
-auto Slice::Constants() const -> const std::vector<Value>& {
-    return constants;
+auto Slice::FloatConstants() const -> const std::vector<f64>& {
+    return float_constants;
 }
 
-Value Slice::ConstantAt(const i64 index) const {
-    return constants[index];
-}
-
-auto Slice::Serialize() const -> std::vector<u8> {
+auto Slice::Serialize() const -> ByteCode {
     constexpr auto size_elem = sizeof(u64);
 
-    const auto constants_count = constants.size();
-    const auto constants_bytes = sizeof(Value) * constants_count;
+    const auto constants_count = float_constants.size();
+    const auto constants_bytes = sizeof(f64) * constants_count;
 
-    const auto code_count = code.size();
+    const auto code_count = bytecode.size();
     const auto code_bytes = sizeof(u8) * code_count;
 
     // ----------------- we also need store 2 slots for array sizes
-    std::vector<u8> ret((size_elem * 2) + constants_bytes + code_bytes);
+    ByteCode ret((size_elem * 2) + constants_bytes + code_bytes);
 
     std::memcpy(ret.data(), &constants_count, size_elem);
-    std::memcpy(ret.data() + size_elem, constants.data(), constants_bytes);
+    std::memcpy(ret.data() + size_elem, float_constants.data(), constants_bytes);
 
     const auto code_offset = size_elem + constants_bytes;
     std::memcpy(ret.data() + code_offset, &code_count, size_elem);
-    std::memcpy(ret.data() + code_offset + size_elem, code.data(), code_bytes);
+    std::memcpy(ret.data() + code_offset + size_elem, bytecode.data(), code_bytes);
 
     return ret;
 }
 
-bool Slice::Deserialize(const std::vector<u8>& bytes) {
+bool Slice::Deserialize(const ByteCode& bytes) {
     if (bytes.empty()) {
         // LogErr("Empty vector given to Slice::Deserialize");
         return false;
     }
 
-    constants.clear();
-    code.clear();
+    float_constants.clear();
+    bytecode.clear();
 
     constexpr auto size_elem = sizeof(u64);
 
     u64 total_constants = 0;
     std::memcpy(&total_constants, bytes.data(), size_elem);
 
-    const u64 constants_bytes = sizeof(Value) * total_constants;
+    const u64 constants_bytes = sizeof(f64) * total_constants;
 
-    constants.resize(total_constants);
-    std::memcpy(constants.data(), bytes.data() + size_elem, constants_bytes);
+    float_constants.resize(total_constants);
+    std::memcpy(float_constants.data(), bytes.data() + size_elem, constants_bytes);
 
     u64       total_code  = 0;
     const u64 code_offset = constants_bytes + size_elem;
     std::memcpy(&total_code, bytes.data() + code_offset, size_elem);
 
-    code.resize(total_code);
-    std::memcpy(code.data(), bytes.data() + code_offset + size_elem, total_code);
+    bytecode.resize(total_code);
+    std::memcpy(bytecode.data(), bytes.data() + code_offset + size_elem, total_code);
 
     return true;
 }

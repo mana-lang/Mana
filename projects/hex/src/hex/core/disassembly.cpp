@@ -6,8 +6,20 @@
 namespace hex {
 using namespace mana::vm;
 
-void EmitConstant(i64 offset, Value constant) {
-    Log->debug("{:04} | {} | {}", offset, magic_enum::enum_name(Op::Constant), constant);
+void EmitConstant(i64 offset, f64 constant) {
+    Log->debug("{:04} | {} | {}", offset, magic_enum::enum_name(Op::Push_Float), constant);
+}
+
+void EmitConstant(i64 offset, i64 constant) {
+    // Log->debug("{:04} | {} | {}", offset, magic_enum::enum_name(Op::Push_Int), constant);
+}
+
+void EmitConstant(i64 offset, u64 constant) {
+    // Log->debug("{:04} | {} | {}", offset, magic_enum::enum_name(Op::Push_UInt), constant);
+}
+
+void EmitConstant(i64 offset, bool constant) {
+    // Log->debug("{:04} | {} | {}", offset, magic_enum::enum_name(Op::Push_Bool), constant);
 }
 
 void EmitSimple(i64 offset, const Op op) {
@@ -15,13 +27,13 @@ void EmitSimple(i64 offset, const Op op) {
 }
 
 void PrintBytecode(const Slice& c) {
-    const auto& code = c.Code();
+    const auto& code = c.Bytecode();
 
     for (i64 i = 0; i < code.size(); ++i) {
         switch (const auto op = static_cast<Op>(code[i])) {
             using enum Op;
-        case Constant:
-            EmitConstant(i, c.ConstantAt(code[i + 1]));
+        case Push_Float:
+            EmitConstant(i, c.FloatConstants()[code[i + 1]]);
             ++i;
             break;
         case Negate:
