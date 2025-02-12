@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.28)
 project(sigil)
 
 add_executable(sigil-tests
-        tests/parsing.cpp
-        tests/lexing.cpp
+        tests/ptree.cpp
+        tests/tokenization.cpp
         tests/ast.cpp
         # tests/error_reporting.cpp
 )

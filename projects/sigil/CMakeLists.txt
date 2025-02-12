@@ -10,6 +10,9 @@ set(SIGIL_SOURCES
         src/sigil/ast/nodes.cpp
 
         src/sigil/core/logger.cpp
+
+        src/sigil/error/error.cpp
+        src/sigil/error/error-sink.cpp
 )
 
 set(SIGIL_INCLUDES

@@ -1,9 +1,11 @@
 #pragma once
 
-#include <mana/literals.hpp>
 #include <sigil/ast/nodes.hpp>
 #include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/token.hpp>
+#include <sigil/error/error-sink.hpp>
+
+#include <mana/literals.hpp>
 
 #include <vector>
 
@@ -22,6 +24,7 @@ class Parser {
     ml::i64     cursor;
     ParseNode   parse_tree;
     ASTNode     syntax_tree;
+    ErrorSink   error_sink;
 
 public:
     explicit Parser(const TokenStream&& tokens);
@@ -34,7 +37,9 @@ public:
     SIGIL_NODISCARD auto ViewAST() const -> ast::Node*;
 
     void PrintParseTree() const;
-    void EmitParseTree(std::string_view file_name = "Mana.ast") const;
+    void EmitParseTree(std::string_view file_name) const;
+
+    SIGIL_NODISCARD std::string EmitParseTree() const;
 
 private:
     SIGIL_NODISCARD std::string EmitParseTree(const ParseNode& root, std::string prepend = "") const;

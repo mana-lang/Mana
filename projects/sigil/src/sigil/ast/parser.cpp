@@ -62,21 +62,25 @@ auto Parser::ViewAST() const -> Node* {
 }
 
 void Parser::PrintParseTree() const {
-    Log->debug("Printing AST for artifact '{}'\n\n{}", parse_tree.tokens[0].text, EmitParseTree(parse_tree));
+    Log->debug("Parse tree for artifact '{}'\n\n{}", parse_tree.tokens[0].text, EmitParseTree(parse_tree));
 }
 
 void Parser::EmitParseTree(const std::string_view file_name) const {
-    std::ofstream out {std::string(file_name)};
+    std::ofstream out {std::string(file_name) + std::string(".pt")};
 
     out << EmitParseTree(parse_tree);
 
     out.close();
 }
 
+std::string Parser::EmitParseTree() const {
+    return EmitParseTree(parse_tree);
+}
+
 std::string Parser::EmitParseTree(const ParseNode& root, std::string prepend) const {
     std::string ret = "";
     if (root.rule == Rule::Artifact) {
-        ret = fmt::format("[Module] -> {}\n\n", root.tokens[0].text);
+        ret = fmt::format("[{}] -> {}\n\n", magic_enum::enum_name(root.rule), root.tokens[0].text);
 
     } else {
         ret.append(fmt::format("{}[{}]\n", prepend, magic_enum::enum_name(root.rule)));
@@ -186,7 +190,7 @@ void Parser::TransmitTokens(ParseNode& sender, ParseNode& receiver, TokenRange r
     const auto [breadth, offset] = range;
 
     if (breadth + offset > sender.tokens.size()) {
-        Log->error("TransmitTokens error: range was too large");
+        Log->error("TransmitTokens: range was too large");
         return;
     }
 
@@ -211,7 +215,7 @@ bool Parser::ProgressedParseTree(ParseNode& node) {
 
 void Parser::ConstructAST(const ParseNode& node) {
     if (node.rule != Rule::Artifact) {
-        Log->error("Something went very wrong.");
+        Log->error("Top-level Ptree node was not 'Artifact' but {}", magic_enum::enum_name(node.rule));
         return;
     }
 
@@ -282,7 +286,8 @@ bool Parser::MatchedPrimary(ParseNode& node) {
                 AddCycledTokenTo(grouping);
 
                 if (grouping.branches.size() < 1) {
-                    Log->error("Grouping must contain at least one expression");
+                    // Log->error("Grouping must contain at least one expression");
+                    error_sink.Report(grouping, cursor, ErrorCode::Grouping_NoExpr);
                     return false;
                 }
 
