@@ -77,20 +77,20 @@ std::string Parser::EmitParseTree() const {
     return EmitParseTree(parse_tree);
 }
 
-std::string Parser::EmitParseTree(const ParseNode& root, std::string prepend) const {
+std::string Parser::EmitParseTree(const ParseNode& node, std::string prepend) const {
     std::string ret = "";
-    if (root.rule == Rule::Artifact) {
-        ret = fmt::format("[{}] -> {}\n\n", magic_enum::enum_name(root.rule), root.tokens[0].text);
+    if (node.rule == Rule::Artifact) {
+        ret = fmt::format("[{}] -> {}\n\n", magic_enum::enum_name(node.rule), node.tokens[0].text);
 
     } else {
-        ret.append(fmt::format("{}[{}]\n", prepend, magic_enum::enum_name(root.rule)));
+        ret.append(fmt::format("{}[{}]\n", prepend, magic_enum::enum_name(node.rule)));
 
         prepend.append("== ");
 
-        if (not root.tokens.empty()) {
+        if (not node.tokens.empty()) {
             std::ranges::replace(prepend, '=', '-');
 
-            for (const auto& [type, text, position] : root.tokens) {
+            for (const auto& [type, text, position] : node.tokens) {
                 if (type == TokenType::Terminator) {
                     continue;
                 }
@@ -101,13 +101,13 @@ std::string Parser::EmitParseTree(const ParseNode& root, std::string prepend) co
         }
     }
 
-    if (not root.branches.empty()) {
-        for (auto& node : root.branches) {
-            ret.append(EmitParseTree(*node, prepend));
+    if (not node.branches.empty()) {
+        for (auto& branch : node.branches) {
+            ret.append(EmitParseTree(*branch, prepend));
         }
     }
 
-    if (not root.branches.empty() && root.IsRoot()) {
+    if (not node.branches.empty() && node.IsRoot()) {
         ret.append("\n");
     }
 

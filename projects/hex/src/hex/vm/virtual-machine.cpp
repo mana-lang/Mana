@@ -4,49 +4,6 @@
 namespace hex {
 using namespace mana::vm;
 
-VirtualMachine::VirtualMachine() {
-    stack.reserve(256);
-    stack_top = stack.data();
-}
-
-void VirtualMachine::ResetStack() {
-    stack_top = stack.data();
-}
-
-void VirtualMachine::Push(const Value value) {
-    if (stack_top == &stack.back()) {
-        stack.reserve(stack.capacity() * 2);
-    }
-
-    *stack_top = value;
-    ++stack_top;
-}
-
-Value VirtualMachine::Pop() {
-    if (stack_top != &stack.front()) {
-        --stack_top;
-    } else {
-        Log->error("Attempted to pop from empty stack.");
-        return 0.0;
-    }
-
-    return *stack_top;
-}
-
-// clang-format off
-#define BINARY_OP(op)              \
-    {                              \
-        Value a = Pop();           \
-        *(stack_top - 1) op## = a; \
-    }
-// clang-format on
-
-#ifdef HEX_DEBUG
-#    define LOG_STACK_TOP(x) Log->debug(x, StackTop())
-#else
-#    define LOG_STACK_TOP(x)
-#endif
-
 InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
     slice = next_slice;
     ip    = slice->Code().data();
@@ -85,50 +42,37 @@ op_halt:
 
 op_return:
     Log->debug("");
-    Log->debug("ret {}\n\n", Pop());
+    Log->debug("ret {}\n\n", stack_f64.Pop());
 
     DISPATCH();
 
 op_constant:
-    Push(*(constants + *ip++));
-    LOG_STACK_TOP("push:  {}");
+    stack_f64.Push(*(constants + *ip++));
     DISPATCH();
 
 op_negate:
-    *(stack_top - 1) *= -1;
-    LOG_STACK_TOP("neg:   {}");
+    *stack_f64.Top() *= -1;
+    stack_f64.LogTop("neg:   {}");
     DISPATCH();
 
 op_add:
-    BINARY_OP(+);
-    LOG_STACK_TOP("add:   {}");
+    stack_f64.Op_Add();
     DISPATCH();
 
 op_sub:
-    BINARY_OP(-);
-    LOG_STACK_TOP("sub:   {}");
+    stack_f64.Op_Sub();
     DISPATCH();
 
 op_div:
-    BINARY_OP(/);
-    LOG_STACK_TOP("div:   {}");
+    stack_f64.Op_Div();
     DISPATCH();
 
 op_mul:
-    BINARY_OP(*);
-    LOG_STACK_TOP("mul:   {}");
+    stack_f64.Op_Mul();
     DISPATCH();
 
 compile_error:
     return InterpretResult::CompileError;
 }
 
-Value VirtualMachine::StackTop() const {
-    if (stack_top == &stack.front()) {
-        Log->error("Attempted to read from empty stack");
-        return 0.0;
-    }
-
-    return *(stack_top - 1);
-}
 }  // namespace hex

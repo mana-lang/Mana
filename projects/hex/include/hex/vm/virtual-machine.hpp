@@ -1,9 +1,9 @@
 #pragma once
 
+#include <hex/vm/stack.hpp>
+
 #include <mana/literals.hpp>
 #include <mana/vm/slice.hpp>
-
-#include <vector>
 
 namespace hex {
 namespace ml  = mana::literals;
@@ -19,23 +19,12 @@ class VirtualMachine {
     mvm::Slice* slice {nullptr};
     ml::u8*     ip {nullptr};
 
-    std::vector<mvm::Value> stack {};
-
-    mvm::Value* stack_top {nullptr};
+    Stack<ml::f64> stack_f64 {};
 
 public:
-    VirtualMachine();
+    VirtualMachine() = default;
 
     InterpretResult Interpret(mvm::Slice* next_slice);
-
-private:
-    void ResetStack();
-
-    void Push(mvm::Value value);
-
-    mvm::Value Pop();
-
-    mvm::Value StackTop() const;
 };
 
 }  // namespace hex

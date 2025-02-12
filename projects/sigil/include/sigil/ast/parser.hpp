@@ -42,7 +42,7 @@ public:
     SIGIL_NODISCARD std::string EmitParseTree() const;
 
 private:
-    SIGIL_NODISCARD std::string EmitParseTree(const ParseNode& root, std::string prepend = "") const;
+    SIGIL_NODISCARD std::string EmitParseTree(const ParseNode& node, std::string prepend = "") const;
 
     SIGIL_NODISCARD auto CurrentToken() const -> const Token&;
     SIGIL_NODISCARD auto PeekNextToken() const -> const Token&;

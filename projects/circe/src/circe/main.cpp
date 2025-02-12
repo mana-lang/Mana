@@ -9,6 +9,9 @@
 
 #include <fstream>
 
+using namespace mana::literals;
+using namespace circe;
+
 int main() {
     using namespace circe;
     Log->debug("Hello from Circe!");

@@ -37,7 +37,7 @@ void WriteTestFile() {
     out_file.write(reinterpret_cast<const char*>(output.data()), output.size());
 
     if (not out_file) {
-        LogErr("Failed to write to file.");
+        Log->error("Failed to write to file.");
         return;
     }
 
@@ -52,7 +52,7 @@ void ExecuteVM(const std::string_view exe_name) {
 
     std::ifstream in_file(std::string(exe_name), std::ios::binary);
     if (not in_file) {
-        LogErr("Failed to read file.");
+        Log->error("Failed to read file.");
         return;
     }
     in_file.seekg(0, std::ios::end);
@@ -67,23 +67,23 @@ void ExecuteVM(const std::string_view exe_name) {
     in_slice.Deserialize(raw);
     const auto end_deser = chrono::high_resolution_clock::now();
 
-    Log("--- Reading executable '{}' ---", exe_name);
-    Log("");
+    Log->debug("--- Reading executable '{}' ---", exe_name);
+    Log->debug("");
     PrintBytecode(in_slice);
-    Log("");
+    Log->debug("");
 
-    Log("Executing...\n");
+    Log->debug("Executing...\n");
     VirtualMachine vm;
-    SetLogPattern("%v");
+    Log->set_pattern("%v");
 
     const auto start_interp = chrono::high_resolution_clock::now();
     const auto interp_res   = vm.Interpret(&in_slice);
     const auto end_interp   = chrono::high_resolution_clock::now();
 
     const auto result = magic_enum::enum_name(interp_res);
-    Log("");
-    SetLogPattern("%^<%n>%$ %v");
-    Log("Interpret Result: {}\n", result);
+    Log->debug("");
+    Log->set_pattern("%^<%n>%$ %v");
+    Log->debug("Interpret Result: {}\n", result);
 
     const auto end_file = chrono::high_resolution_clock::now();
 
@@ -93,10 +93,12 @@ void ExecuteVM(const std::string_view exe_name) {
     elapsed_deser << chrono::duration_cast<chrono::microseconds>(end_deser - start_deser);
     elapsed_exec << chrono::duration_cast<chrono::microseconds>(end_interp - start_interp);
 
-    Log("Elapsed time:\nTotal: {}\nDeserialize: {}\nExecute: {}",
+    Log->debug(
+        "Elapsed time:\nTotal: {}\nDeserialize: {}\nExecute: {}",
         elapsed_file.str(),
         elapsed_deser.str(),
-        elapsed_exec.str());
+        elapsed_exec.str()
+    );
 }
 
 int main(const int argc, char** argv) {
@@ -105,12 +107,12 @@ int main(const int argc, char** argv) {
     cli.Populate();
 
     if (cli.ShouldSayHi()) {
-        Log("Hiiiiiii :3c");
-        Log("");
+        Log->debug("Hiiiiiii :3c");
+        Log->debug("");
     }
 
     if (cli.ShouldGenTestfile()) {
-        Log("Generating testfile...");
+        Log->debug("Generating testfile...");
         WriteTestFile();
         return 0;
     }

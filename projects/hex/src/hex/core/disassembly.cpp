@@ -7,11 +7,11 @@ namespace hex {
 using namespace mana::vm;
 
 void EmitConstant(i64 offset, Value constant) {
-    Log("{:04} | {} | {}", offset, magic_enum::enum_name(Op::Constant), constant);
+    Log->debug("{:04} | {} | {}", offset, magic_enum::enum_name(Op::Constant), constant);
 }
 
 void EmitSimple(i64 offset, const Op op) {
-    Log("{:04} | {}", offset, magic_enum::enum_name(op));
+    Log->debug("{:04} | {}", offset, magic_enum::enum_name(op));
 }
 
 void PrintBytecode(const Slice& c) {
@@ -34,7 +34,7 @@ void PrintBytecode(const Slice& c) {
             EmitSimple(i, op);
             break;
         default:
-            Log("???");
+            Log->debug("???");
             break;
         }
     }
