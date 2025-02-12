@@ -5,8 +5,8 @@ void ErrorSink::PrintError(Error& error) {}
 
 void ErrorSink::AnalyzeNode(Error& error) {}
 
-std::span<const Error> ErrorSink::PeekTop() const {
-    return errors.empty() ? ({}) : std::span(&errors.back(), 1);
+const Error* ErrorSink::PeekTop() const {
+    return errors.empty() ? nullptr : &errors.back();
 }
 
 void ErrorSink::PrintTop() {

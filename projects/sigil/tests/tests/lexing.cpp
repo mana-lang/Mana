@@ -1,9 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "common.hpp"
+#include "headers/common.hpp"
 #include <sigil/ast/lexer.hpp>
 
 constexpr auto LEXER_TESTING_PATH = "assets/samples/lexing/";
+
 TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
     using enum sigil::TokenType;
 
@@ -15,7 +16,6 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
         REQUIRE(tokens.size() == 16);
 
         SECTION("Tokens are being processed") {
-
             CHECK(tokens[0].type == KW_data);
             CHECK(tokens[0].text == "data");
 
@@ -228,7 +228,6 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
             }
 
             SECTION("Iteration") {
-
                 CHECK(controlflow_tokens[6].type == KW_loop);
                 CHECK(controlflow_tokens[6].text == "loop");
 
@@ -245,7 +244,6 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
                 CHECK(controlflow_tokens[10].text == "skip");
             }
         }
-
     }
 
     SECTION("Operator lexing") {
@@ -285,7 +283,6 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
 
             CHECK(tokens[76].type == Op_LogicalNot);
             CHECK(tokens[76].text == "not");
-
         }
 
         SECTION("Arithmetic Operators") {

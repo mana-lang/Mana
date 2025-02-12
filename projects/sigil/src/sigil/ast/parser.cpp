@@ -66,17 +66,21 @@ void Parser::PrintParseTree() const {
 }
 
 void Parser::EmitParseTree(const std::string_view file_name) const {
-    std::ofstream out {std::string(file_name)};
+    std::ofstream out {std::string(file_name) + std::string(".pt")};
 
     out << EmitParseTree(parse_tree);
 
     out.close();
 }
 
+std::string Parser::EmitParseTree() const {
+    return EmitParseTree(parse_tree);
+}
+
 std::string Parser::EmitParseTree(const ParseNode& root, std::string prepend) const {
     std::string ret = "";
     if (root.rule == Rule::Artifact) {
-        ret = fmt::format("[Module] -> {}\n\n", root.tokens[0].text);
+        ret = fmt::format("[{}] -> {}\n\n", magic_enum::enum_name(root.rule), root.tokens[0].text);
 
     } else {
         ret.append(fmt::format("{}[{}]\n", prepend, magic_enum::enum_name(root.rule)));

@@ -13,7 +13,7 @@ class ErrorSink {
     void PrintError(Error& error);
     void AnalyzeNode(Error& error);
 
-    SIGIL_NODISCARD std::span<const Error> PeekTop() const;
+    SIGIL_NODISCARD const Error* PeekTop() const;
 
     void PrintTop();
     void PrintAll();

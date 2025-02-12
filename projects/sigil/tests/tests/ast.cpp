@@ -1,10 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "common.hpp"
+#include "headers/common.hpp"
 #include <sigil/ast/lexer.hpp>
 #include <sigil/ast/parser.hpp>
 
-constexpr auto PARSER_TESTING_PATH = "assets/samples/parsing/";
+constexpr auto PARSER_SAMPLE_PATH = "assets/samples/parsing/";
 using namespace sigil;
 using namespace mana::literals;
 

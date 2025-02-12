@@ -26,7 +26,7 @@ Value VirtualMachine::Pop() {
     if (stack_top != &stack.front()) {
         --stack_top;
     } else {
-        LogErr("Attempted to pop from empty stack.");
+        Log->error("Attempted to pop from empty stack.");
         return 0.0;
     }
 
@@ -42,7 +42,7 @@ Value VirtualMachine::Pop() {
 // clang-format on
 
 #ifdef HEX_DEBUG
-#    define LOG_STACK_TOP(x) Log(x, StackTop())
+#    define LOG_STACK_TOP(x) Log->debug(x, StackTop())
 #else
 #    define LOG_STACK_TOP(x)
 #endif
@@ -84,8 +84,8 @@ op_halt:
     return InterpretResult::OK;
 
 op_return:
-    Log("");
-    Log("ret {}\n\n", Pop());
+    Log->debug("");
+    Log->debug("ret {}\n\n", Pop());
 
     DISPATCH();
 
@@ -125,7 +125,7 @@ compile_error:
 
 Value VirtualMachine::StackTop() const {
     if (stack_top == &stack.front()) {
-        LogErr("Attempted to read from empty stack");
+        Log->error("Attempted to read from empty stack");
         return 0.0;
     }
 

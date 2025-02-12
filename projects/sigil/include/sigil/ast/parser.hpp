@@ -37,7 +37,9 @@ public:
     SIGIL_NODISCARD auto ViewAST() const -> ast::Node*;
 
     void PrintParseTree() const;
-    void EmitParseTree(std::string_view file_name = "Mana.ast") const;
+    void EmitParseTree(std::string_view file_name) const;
+
+    SIGIL_NODISCARD std::string EmitParseTree() const;
 
 private:
     SIGIL_NODISCARD std::string EmitParseTree(const ParseNode& root, std::string prepend = "") const;
