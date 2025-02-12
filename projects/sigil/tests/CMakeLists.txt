@@ -3,7 +3,7 @@ project(sigil)
 
 add_executable(sigil-tests
         tests/ptree.cpp
-        tests/lexing.cpp
+        tests/tokenization.cpp
         tests/ast.cpp
         # tests/error_reporting.cpp
 )
