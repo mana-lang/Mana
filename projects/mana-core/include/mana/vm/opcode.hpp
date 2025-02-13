@@ -10,6 +10,7 @@ enum class Op : literals::u8 {
     Return,
 
     Push_Float,
+    Push_Bool,
     Negate,
 
     Add,

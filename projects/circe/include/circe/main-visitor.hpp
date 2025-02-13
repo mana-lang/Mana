@@ -19,7 +19,7 @@ public:
     void Visit(const sigil::ast::Artifact& artifact) override;
     void Visit(const sigil::ast::BinaryExpr& node) override;
     void Visit(const sigil::ast::Literal<ml::f64>& node) override;
-    void Visit(const sigil::ast::Literal<long long>& node) override;
+    void Visit(const sigil::ast::Literal<ml::i64>& node) override;
     void Visit(const sigil::ast::Literal<void>& node) override;
     void Visit(const sigil::ast::Literal<bool>& node) override;
 };

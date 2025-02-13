@@ -34,19 +34,19 @@ auto Slice::FloatConstants() const -> const std::vector<f64>& {
 auto Slice::Serialize() const -> ByteCode {
     constexpr auto size_elem = sizeof(u64);
 
-    const auto constants_count = float_constants.size();
-    const auto constants_bytes = sizeof(f64) * constants_count;
+    const auto floats_count = float_constants.size();
+    const auto floats_bytes = sizeof(f64) * floats_count;
 
     const auto code_count = bytecode.size();
     const auto code_bytes = sizeof(u8) * code_count;
 
-    // ----------------- we also need store 2 slots for array sizes
-    ByteCode ret((size_elem * 2) + constants_bytes + code_bytes);
+    // ----------------- we also need store 3 slots for array sizes
+    ByteCode ret((size_elem * 3) + floats_bytes + code_bytes);
 
-    std::memcpy(ret.data(), &constants_count, size_elem);
-    std::memcpy(ret.data() + size_elem, float_constants.data(), constants_bytes);
+    std::memcpy(ret.data(), &floats_count, size_elem);
+    std::memcpy(ret.data() + size_elem, float_constants.data(), floats_bytes);
 
-    const auto code_offset = size_elem + constants_bytes;
+    const auto code_offset = size_elem + floats_bytes;
     std::memcpy(ret.data() + code_offset, &code_count, size_elem);
     std::memcpy(ret.data() + code_offset + size_elem, bytecode.data(), code_bytes);
 

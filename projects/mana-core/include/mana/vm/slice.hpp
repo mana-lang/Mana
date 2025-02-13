@@ -12,7 +12,8 @@ class Slice {
     using ByteCode = std::vector<u8>;
     ByteCode bytecode;
 
-    std::vector<f64> float_constants;
+    std::vector<f64>  float_constants;
+    std::vector<bool> bool_constants;
 
 public:
     void Write(Op opcode);
@@ -22,6 +23,7 @@ public:
     MANA_NODISCARD auto Bytecode() const -> const ByteCode&;
     MANA_NODISCARD auto Bytecode() -> ByteCode&;
     MANA_NODISCARD auto FloatConstants() const -> const std::vector<f64>&;
+    MANA_NODISCARD auto BoolConstants() const -> const std::vector<bool>&;
 
     // serializes a slice to a vector of unsigned char (bytes)
     // for now, the sequence is:

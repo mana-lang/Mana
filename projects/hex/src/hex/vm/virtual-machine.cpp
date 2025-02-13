@@ -8,17 +8,18 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
     slice = next_slice;
     ip    = slice->Bytecode().data();
 
-    const auto* constants = slice->FloatConstants().data();
+    const auto* floats = slice->FloatConstants().data();
 
     constexpr std::array dispatch_table {
-        &&op_halt,
-        &&op_return,
-        &&op_constant,
-        &&op_negate,
-        &&op_add,
-        &&op_sub,
-        &&op_div,
-        &&op_mul,
+        &&halt,
+        &&ret,
+        &&push_float,
+        &&push_bool,
+        &&negate,
+        &&add,
+        &&sub,
+        &&div,
+        &&mul,
     };
 
     // clang-format off
@@ -37,37 +38,41 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
 
     DISPATCH();
 
-op_halt:
+halt:
     return InterpretResult::OK;
 
-op_return:
+ret:
     Log->debug("");
     Log->debug("ret {}\n\n", stack_float.Pop());
 
     DISPATCH();
 
-op_constant:
-    stack_float.Push(*(constants + *ip++));
+push_float:
+    stack_float.Push(*(floats + *ip++));
     DISPATCH();
 
-op_negate:
+push_bool:
+    stack_bool.Push(slice->BoolConstants()[*ip++]);
+    DISPATCH();
+
+negate:
     *stack_float.Top() *= -1;
     stack_float.LogTop("neg:   {}");
     DISPATCH();
 
-op_add:
+add:
     stack_float.Op_Add();
     DISPATCH();
 
-op_sub:
+sub:
     stack_float.Op_Sub();
     DISPATCH();
 
-op_div:
+div:
     stack_float.Op_Div();
     DISPATCH();
 
-op_mul:
+mul:
     stack_float.Op_Mul();
     DISPATCH();
 
