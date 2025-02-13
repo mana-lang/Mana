@@ -42,33 +42,33 @@ op_halt:
 
 op_return:
     Log->debug("");
-    Log->debug("ret {}\n\n", stack_f64.Pop());
+    Log->debug("ret {}\n\n", stack_float.Pop());
 
     DISPATCH();
 
 op_constant:
-    stack_f64.Push(*(constants + *ip++));
+    stack_float.Push(*(constants + *ip++));
     DISPATCH();
 
 op_negate:
-    *stack_f64.Top() *= -1;
-    stack_f64.LogTop("neg:   {}");
+    *stack_float.Top() *= -1;
+    stack_float.LogTop("neg:   {}");
     DISPATCH();
 
 op_add:
-    stack_f64.Op_Add();
+    stack_float.Op_Add();
     DISPATCH();
 
 op_sub:
-    stack_f64.Op_Sub();
+    stack_float.Op_Sub();
     DISPATCH();
 
 op_div:
-    stack_f64.Op_Div();
+    stack_float.Op_Div();
     DISPATCH();
 
 op_mul:
-    stack_f64.Op_Mul();
+    stack_float.Op_Mul();
     DISPATCH();
 
 compile_error:

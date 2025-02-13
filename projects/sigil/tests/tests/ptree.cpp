@@ -45,5 +45,7 @@ TEST_CASE("P-Trees", "[parse][ast]") {
 
             REQUIRE(file_str == ptree_str);
         }
+
+        parser.PrintParseTree();
     }
 }

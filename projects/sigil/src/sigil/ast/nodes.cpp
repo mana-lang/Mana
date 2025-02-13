@@ -7,32 +7,48 @@
 namespace sigil::ast {
 using namespace mana::literals;
 
-std::shared_ptr<Literal_F64> MakeLiteral(const Token& token) {
-    return std::make_shared<Literal_F64>(token.AsF64());
+template <typename T>
+auto MakeLiteral(const Token& token) {
+    return std::make_shared<Literal<T>>(token.As<T>());
 }
 
-/// module
-auto Module::GetName() const -> std::string_view {
+auto MakeNullLiteral() {
+    return std::make_shared<Literal<void>>();
+}
+
+auto MakeLiteral(const Token& token) -> std::shared_ptr<Node> {
+    switch (token.type) {
+        using enum TokenType;
+
+    case Lit_true:
+    case Lit_false:
+        return MakeLiteral<bool>(token);
+
+    case Lit_Int:
+        return MakeLiteral<i64>(token);
+
+    case Lit_Float:
+        return MakeLiteral<f64>(token);
+
+    case Lit_null:
+        return MakeNullLiteral();
+
+    default:
+        break;
+    }
+    return nullptr;
+}
+
+/// Artifact
+auto Artifact::GetName() const -> std::string_view {
     return name;
 }
 
-auto Module::GetChildren() const -> const std::vector<Ptr>& {
+auto Artifact::GetChildren() const -> const std::vector<Ptr>& {
     return children;
 }
 
-void Module::Accept(Visitor& visitor) const {
-    visitor.Visit(*this);
-}
-
-/// f64
-Literal_F64::Literal_F64(const f64 value)
-    : value(value) {}
-
-f64 Literal_F64::Get() const {
-    return value;
-}
-
-void Literal_F64::Accept(Visitor& visitor) const {
+void Artifact::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 

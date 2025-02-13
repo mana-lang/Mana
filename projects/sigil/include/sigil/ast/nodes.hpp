@@ -1,23 +1,21 @@
 #pragma once
 
-#include <mana/literals.hpp>
 #include <sigil/ast/parse-tree.hpp>
+#include <sigil/ast/visitor.hpp>
+
+#include <mana/literals.hpp>
 
 #include <memory>
 #include <string>
 #include <vector>
-
-/// As the ptree gets constructed before the AST,
-/// AST nodes assume their ptree input is correct
-namespace sigil {
-class ParseNode;
-}
 
 namespace sigil::ast {
 namespace ml = mana::literals;
 
 class Visitor;
 
+/// As the ptree gets constructed before the AST,
+/// AST nodes assume their ptree input is correct
 class Node {
 public:
     using Ptr       = std::shared_ptr<Node>;
@@ -29,12 +27,12 @@ public:
 template <typename T>
 concept NodeType = std::is_base_of_v<Node, T>;
 
-class Module final : public Node {
+class Artifact final : public Node {
     std::string      name;
     std::vector<Ptr> children;
 
 public:
-    explicit Module(const std::string_view name)
+    explicit Artifact(const std::string_view name)
         : name(name) {}
 
     SIGIL_NODISCARD auto GetName() const -> std::string_view;
@@ -48,15 +46,29 @@ public:
     }
 };
 
-class Literal_F64 final : public Node {
-    ml::f64 value;
+template <typename T>
+class Literal final : public Node {
+    T value;
 
 public:
-    explicit Literal_F64(ml::f64 value);
+    explicit Literal(T value)
+        : value(value) {}
 
-    SIGIL_NODISCARD ml::f64 Get() const;
+    SIGIL_NODISCARD T Get() const {
+        return value;
+    }
 
-    void Accept(Visitor& visitor) const override;
+    void Accept(Visitor& visitor) const override {
+        visitor.Visit(*this);
+    }
+};
+
+template <>
+class Literal<void> final : public Node {
+public:
+    void Accept(Visitor& visitor) const override {
+        visitor.Visit(*this);
+    }
 };
 
 class BinaryExpr final : public Node {

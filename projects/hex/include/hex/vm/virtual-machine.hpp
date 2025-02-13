@@ -19,7 +19,7 @@ class VirtualMachine {
     mvm::Slice* slice {nullptr};
     ml::u8*     ip {nullptr};
 
-    Stack<ml::f64> stack_f64 {};
+    Stack<ml::f64> stack_float {};
 
 public:
     VirtualMachine() = default;

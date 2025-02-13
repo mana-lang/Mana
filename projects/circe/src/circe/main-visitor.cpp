@@ -11,8 +11,8 @@ Slice MainVisitor::GetSlice() const {
     return slice;
 }
 
-void MainVisitor::Visit(const Module& module) {
-    for (const auto& child : module.GetChildren()) {
+void MainVisitor::Visit(const Artifact& artifact) {
+    for (const auto& child : artifact.GetChildren()) {
         child->Accept(*this);
         slice.Write(Op::Return);
     }
@@ -42,9 +42,15 @@ void MainVisitor::Visit(const BinaryExpr& node) {
     }
 }
 
-void MainVisitor::Visit(const Literal_F64& node) {
+void MainVisitor::Visit(const Literal<f64>& node) {
     slice.Write(Op::Push_Float, slice.AddConstant(node.Get()));
 }
+
+void MainVisitor::Visit(const Literal<long long>& node) {}
+
+void MainVisitor::Visit(const Literal<void>& node) {}
+
+void MainVisitor::Visit(const Literal<bool>& node) {}
 
 void MainVisitor::Visit(const UnaryExpr& node) {
     node.GetVal().Accept(*this);

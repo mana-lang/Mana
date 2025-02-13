@@ -1,17 +1,22 @@
 #pragma once
 
-#include <sigil/ast/nodes.hpp>
-
 namespace sigil::ast {
+
+template <typename T>
+class Literal;
 
 class Visitor {
 public:
     virtual ~Visitor() = default;
 
-    virtual void Visit(const UnaryExpr& node)   = 0;
-    virtual void Visit(const Literal_F64& node) = 0;
-    virtual void Visit(const BinaryExpr& node)  = 0;
-    virtual void Visit(const Module& node)      = 0;
+    virtual void Visit(const class UnaryExpr& node)  = 0;
+    virtual void Visit(const class BinaryExpr& node) = 0;
+    virtual void Visit(const class Artifact& node)   = 0;
+
+    virtual void Visit(const class Literal<bool>& node)    = 0;
+    virtual void Visit(const class Literal<ml::i64>& node) = 0;
+    virtual void Visit(const class Literal<ml::f64>& node) = 0;
+    virtual void Visit(const class Literal<void>& node)    = 0;
 };
 
 }  // namespace sigil::ast

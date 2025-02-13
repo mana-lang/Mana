@@ -224,9 +224,9 @@ void Parser::ConstructAST(const ParseNode& node) {
         return;
     }
 
-    syntax_tree = std::make_unique<Module>(node.tokens[0].text);
+    syntax_tree = std::make_unique<Artifact>(node.tokens[0].text);
 
-    const auto root = dynamic_cast<Module*>(syntax_tree.get());
+    const auto root = dynamic_cast<Artifact*>(syntax_tree.get());
     for (const auto& n : node.branches) {
         switch (n->rule) {
         case Rule::Term:
