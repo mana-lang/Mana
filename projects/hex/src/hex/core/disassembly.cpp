@@ -27,7 +27,7 @@ void EmitSimple(i64 offset, const Op op) {
 }
 
 void PrintBytecode(const Slice& c) {
-    const auto& code = c.Bytecode();
+    const auto& code = c.Instructions();
 
     for (i64 i = 0; i < code.size(); ++i) {
         switch (const auto op = static_cast<Op>(code[i])) {

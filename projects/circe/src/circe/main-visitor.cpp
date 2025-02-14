@@ -46,12 +46,15 @@ void MainVisitor::Visit(const Literal<f64>& node) {
     slice.Write(Op::Push_Float, slice.AddConstant(node.Get()));
 }
 
-void MainVisitor::Visit(const Literal<i64>& node) {}  //
+void MainVisitor::Visit(const Literal<i64>& node) {
+    /// TODO: change this to int, obviously
+    slice.Write(Op::Push_Float, slice.AddConstant(node.Get()));
+}
 
 void MainVisitor::Visit(const Literal<void>& node) {}
 
 void MainVisitor::Visit(const Literal<bool>& node) {
-    slice.Write(Op::Push_Bool, slice.AddConstant(node.Get()));
+    // slice.Write(Op::Push_Bool, slice.AddConstant(node.Get()));
 }
 
 void MainVisitor::Visit(const UnaryExpr& node) {

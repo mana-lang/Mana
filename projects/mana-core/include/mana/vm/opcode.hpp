@@ -3,14 +3,14 @@
 #include "../literals.hpp"
 
 namespace mana::vm {
+using namespace literals;
 
-enum class Op : literals::u8 {
+enum class Op : u8 {
     Halt,
 
     Return,
 
     Push_Float,
-    Push_Bool,
     Negate,
 
     Add,

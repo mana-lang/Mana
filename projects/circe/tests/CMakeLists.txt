@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.28)
 project(circe)
 
 add_executable(circe-tests
-        tests/lexing.cpp
+        tests/serialization.cpp
 )
 
 target_include_directories(circe-tests PRIVATE include/)

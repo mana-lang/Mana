@@ -20,7 +20,6 @@ class VirtualMachine {
     ml::u8*     ip {nullptr};
 
     Stack<ml::f64> stack_float {};
-    Stack<bool>    stack_bool {};
 
 public:
     VirtualMachine() = default;

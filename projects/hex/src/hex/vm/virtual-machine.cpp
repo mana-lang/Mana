@@ -6,7 +6,7 @@ using namespace mana::vm;
 
 InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
     slice = next_slice;
-    ip    = slice->Bytecode().data();
+    ip    = slice->Instructions().data();
 
     const auto* floats = slice->FloatConstants().data();
 
@@ -14,7 +14,6 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
         &&halt,
         &&ret,
         &&push_float,
-        &&push_bool,
         &&negate,
         &&add,
         &&sub,
@@ -49,10 +48,6 @@ ret:
 
 push_float:
     stack_float.Push(*(floats + *ip++));
-    DISPATCH();
-
-push_bool:
-    stack_bool.Push(slice->BoolConstants()[*ip++]);
     DISPATCH();
 
 negate:

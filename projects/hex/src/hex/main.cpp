@@ -13,37 +13,6 @@
 
 using namespace hex;
 
-void WriteTestFile() {
-    using namespace mana::vm;
-    Slice out_slice;
-
-    const auto a = out_slice.AddConstant(1.2);
-    const auto b = out_slice.AddConstant(2.4);
-
-    out_slice.Write(Op::Push_Float, a);
-    out_slice.Write(Op::Push_Float, b);
-    out_slice.Write(Op::Add);
-    out_slice.Write(Op::Negate);
-    out_slice.Write(Op::Push_Float, out_slice.AddConstant(-12.2));
-    out_slice.Write(Op::Mul);
-    out_slice.Write(Op::Push_Float, out_slice.AddConstant(3));
-    out_slice.Write(Op::Div);
-    out_slice.Write(Op::Push_Float, b);
-    out_slice.Write(Op::Sub);
-    out_slice.Write(Op::Return);
-    std::ofstream out_file("test_1.mhm", std::ios::binary);
-
-    const auto output = out_slice.Serialize();
-    out_file.write(reinterpret_cast<const char*>(output.data()), output.size());
-
-    if (not out_file) {
-        Log->error("Failed to write to file.");
-        return;
-    }
-
-    out_file.close();
-}
-
 void ExecuteVM(const std::string_view exe_name) {
     namespace chrono = std::chrono;
     using namespace std::chrono_literals;
@@ -59,7 +28,7 @@ void ExecuteVM(const std::string_view exe_name) {
     const auto file_size = in_file.tellg();
     in_file.seekg(0, std::ios::beg);
 
-    std::vector<mana::literals::u8> raw(file_size);
+    std::vector<u8> raw(file_size);
     in_file.read(reinterpret_cast<char*>(raw.data()), file_size);
 
     const auto      start_deser = chrono::high_resolution_clock::now();
@@ -109,12 +78,6 @@ int main(const int argc, char** argv) {
     if (cli.ShouldSayHi()) {
         Log->debug("Hiiiiiii :3c");
         Log->debug("");
-    }
-
-    if (cli.ShouldGenTestfile()) {
-        Log->debug("Generating testfile...");
-        WriteTestFile();
-        return 0;
     }
 
     const std::string_view exe_name = cli.ExecutableName();
