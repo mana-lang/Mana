@@ -52,7 +52,7 @@ void SerializeValueTo(std::vector<u8>& dst, T val) {
 }
 
 template <SupportedType T>
-T DeserializeValue(const std::vector<u8>& src, const i64 offset = 0) {
+T DeserializeValue(const std::vector<u8>& src, const i64 offset) {
     std::array<u8, sizeof(T)> ret;
 
     for (i64 i = 0; i < ret.size(); ++i) {

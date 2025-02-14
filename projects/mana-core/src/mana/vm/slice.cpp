@@ -35,6 +35,9 @@ auto Slice::Serialize() const -> ByteCode {
     SerializeValueTo(out, floats.constants.size());
     floats.SerializeTo(out);
 
+    // SerializeValueTo(out, ints.constants.size());
+    // ints.SerializeTo(out);
+
     out.insert(out.end(), instructions.begin(), instructions.end());
 
     return out;
@@ -43,12 +46,17 @@ auto Slice::Serialize() const -> ByteCode {
 bool Slice::Deserialize(const ByteCode& bytes) {
     floats.constants.clear();
 
-    const auto       num_floats = DeserializeValue<u64>(bytes);
-    const IndexRange float_bytes {sizeof(num_floats), num_floats * sizeof(f64)};
+    auto serialize_pool = [bytes]<typename T>(ConstantPool<T>& pool, const u64 offset) -> u64 {
+        const auto       num_constants = DeserializeValue<u64>(bytes, offset);
+        const IndexRange pool_bytes {sizeof(num_constants) + offset, num_constants * sizeof(T)};
+        pool.Deserialize(bytes, pool_bytes);
 
-    floats.Deserialize(bytes, float_bytes);
+        return pool_bytes.end;
+    };
 
-    instructions.insert(instructions.begin(), bytes.begin() + float_bytes.end, bytes.end());
+    const auto float_offset = serialize_pool(floats, 0);
+
+    instructions.insert(instructions.begin(), bytes.begin() + float_offset, bytes.end());
 
     return true;
 }

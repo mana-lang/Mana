@@ -13,6 +13,7 @@ class Slice {
     ByteCode instructions;
 
     ConstantPool<f64> floats;
+    ConstantPool<i64> ints;
 
 public:
     void Write(Op opcode);
@@ -25,8 +26,10 @@ public:
 
     // serializes a slice to a vector of unsigned char (bytes)
     // for now, the sequence is:
-    // - constant pool size
-    // - constant pool
+    // - float pool size
+    // - float pool
+    // - integer pool size
+    // - integer pool
     // - instructions
     MANA_NODISCARD auto Serialize() const -> ByteCode;
 
