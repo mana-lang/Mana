@@ -8,24 +8,24 @@
 namespace hex {
 template <typename T>
 class Stack {
-    std::vector<T> stack {};
+    std::vector<T> values {};
     T*             top {nullptr};
 
 public:
     using ValueType = T;
 
     Stack() {
-        stack.reserve(128);
-        top = stack.data();
+        values.reserve(128);
+        top = values.data();
     }
 
     void Reset() {
-        top = stack.data();
+        top = values.data();
     }
 
     void Push(T value) {
-        if (top == &stack.back()) {
-            stack.reserve(stack.capacity() * 2);
+        if (top == &values.back()) {
+            values.reserve(values.capacity() * 2);
         }
 
         *top = value;
@@ -35,7 +35,7 @@ public:
     }
 
     T Pop() {
-        if (top != &stack.front()) {
+        if (top != &values.front()) {
             --top;
         } else {
             Log->error("Attempted to pop from empty stack.");
@@ -46,7 +46,7 @@ public:
     }
 
     T ViewTop() const {
-        if (top == &stack.front()) {
+        if (top == &values.front()) {
             Log->error("Attempted to read from empty stack");
             return 0.0;
         }
@@ -55,7 +55,7 @@ public:
     }
 
     T* Top() const {
-        if (top == &stack.front()) {
+        if (top == &values.front()) {
             Log->error("Attempted to read from empty stack");
             return nullptr;
         }
@@ -65,36 +65,43 @@ public:
 
     void LogTop(const std::string_view msg) const {
 #ifdef HEX_DEBUG
-        Log->debug(fmt::runtime(msg), ViewTop());
+        Log->debug(fmt::runtime(msg), ViewTop().AsFloat());
 #endif
     }
 
     void Op_Add() {
-        T rhs       = Pop();
+        T rhs = Pop();
+
         *(top - 1) += rhs;
 
         LogTop("add:   {}");
     }
 
     void Op_Sub() {
-        T rhs       = Pop();
-        *(top - 1) -= rhs;
+        T rhs = Pop();
+        // *(top - 1) -= rhs;
 
         LogTop("sub:   {}");
     }
 
     void Op_Mul() {
-        T rhs       = Pop();
-        *(top - 1) *= rhs;
+        T rhs = Pop();
+        // *(top - 1) *= rhs;
 
         LogTop("mul:   {}");
     }
 
     void Op_Div() {
-        T rhs       = Pop();
-        *(top - 1) /= rhs;
+        T rhs = Pop();
+        // *(top - 1) /= rhs;
 
         LogTop("div:   {}");
+    }
+
+    void Op_Neg() {
+        *(top - 1) *= -1;
+
+        LogTop("neg:   {}");
     }
 };
 }  // namespace hex

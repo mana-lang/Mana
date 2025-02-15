@@ -28,13 +28,12 @@ int main() {
         Log->debug("Parsed the file.");
     }
 
-    mana::vm::Slice slice;
-    const auto&     ast = parser.ViewAST();
-    MainVisitor     visitor;
+    const auto& ast = parser.ViewAST();
+    MainVisitor visitor;
 
     ast->Accept(visitor);
 
-    // for now
+    mana::vm::Slice slice;
     slice = visitor.GetSlice();
     slice.Write(mana::vm::Op::Halt);
     constexpr auto output_path = "../hex/test-circe.mhm";

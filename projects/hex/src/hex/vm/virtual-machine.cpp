@@ -8,12 +8,12 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
     slice = next_slice;
     ip    = slice->Instructions().data();
 
-    const auto* floats = slice->FloatConstants().data();
+    const auto* values = slice->Constants().data();
 
     constexpr std::array dispatch_table {
         &&halt,
         &&ret,
-        &&push_float,
+        &&push,
         &&negate,
         &&add,
         &&sub,
@@ -42,33 +42,32 @@ halt:
 
 ret:
     Log->debug("");
-    Log->debug("ret {}\n\n", stack_float.Pop());
+    Log->debug("ret {}\n\n", stack.Pop().AsFloat());
 
     DISPATCH();
 
-push_float:
-    stack_float.Push(*(floats + *ip++));
+push:
+    stack.Push(*(values + *ip++));
     DISPATCH();
 
 negate:
-    *stack_float.Top() *= -1;
-    stack_float.LogTop("neg:   {}");
+    stack.Op_Neg();
     DISPATCH();
 
 add:
-    stack_float.Op_Add();
+    stack.Op_Add();
     DISPATCH();
 
 sub:
-    stack_float.Op_Sub();
+    stack.Op_Sub();
     DISPATCH();
 
 div:
-    stack_float.Op_Div();
+    stack.Op_Div();
     DISPATCH();
 
 mul:
-    stack_float.Op_Mul();
+    stack.Op_Mul();
     DISPATCH();
 
 compile_error:

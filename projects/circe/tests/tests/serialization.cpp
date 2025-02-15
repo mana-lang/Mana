@@ -30,23 +30,22 @@ TEST_CASE("Bytecode", "[serde][bytecode]") {
         SECTION("Slice") {
             Slice slice;
 
-            slice.Write(Op::Push_Float, slice.AddConstant(23.65));
-            slice.Write(Op::Push_Float, slice.AddConstant(123.4));
+            slice.Write(Op::Push, slice.AddConstant(23.65));
+            slice.Write(Op::Push, slice.AddConstant(123.4));
             slice.Write(Op::Add);
             slice.Write(Op::Return);
 
             const auto bytes = slice.Serialize();
-            REQUIRE(
-                bytes.size()
-                == sizeof(u64) + sizeof(f64) * slice.FloatConstants().size() + slice.Instructions().size()
-            );
+
+            constexpr auto value_size = sizeof(Value::DispatchU) + sizeof(Value::Type);
+            REQUIRE(bytes.size() == sizeof(u64) + slice.Instructions().size() + value_size * slice.Constants().size());
 
             Slice deser_slice;
             deser_slice.Deserialize(bytes);
 
-            REQUIRE(deser_slice.FloatConstants().size() == slice.FloatConstants().size());
-            for (u64 i = 0; i < slice.FloatConstants().size(); ++i) {
-                CHECK(deser_slice.FloatConstants()[i] == slice.FloatConstants()[i]);
+            REQUIRE(deser_slice.Constants().size() == slice.Constants().size());
+            for (u64 i = 0; i < slice.Constants().size(); ++i) {
+                CHECK(deser_slice.Constants()[i] == slice.Constants()[i]);
             }
 
             REQUIRE(deser_slice.Instructions().size() == slice.Instructions().size());

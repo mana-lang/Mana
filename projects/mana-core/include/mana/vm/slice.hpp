@@ -3,6 +3,7 @@
 #include <mana/literals.hpp>
 #include <mana/vm/constant-pool.hpp>
 #include <mana/vm/opcode.hpp>
+#include <mana/vm/value.hpp>
 
 #include <vector>
 
@@ -12,26 +13,36 @@ using namespace literals;
 class Slice {
     ByteCode instructions;
 
-    ConstantPool<f64> floats;
-    ConstantPool<i64> ints;
+    std::vector<Value> values;
 
 public:
     void Write(Op opcode);
     void Write(Op opcode, u8 byte);
-    u64  AddConstant(f64 value);
+
+    template <typename T>
+        requires std::is_integral_v<T> || std::is_floating_point_v<T>
+    u64 AddConstant(const T value) {
+        values.push_back(value);
+
+        return values.size() - 1;
+    }
 
     MANA_NODISCARD auto Instructions() const -> const ByteCode&;
     MANA_NODISCARD auto Instructions() -> ByteCode&;
-    MANA_NODISCARD auto FloatConstants() const -> const std::vector<f64>&;
+
+    MANA_NODISCARD auto Constants() const -> const std::vector<Value>&;
 
     // serializes a slice to a vector of unsigned char (bytes)
     // for now, the sequence is:
-    // - float pool size
-    // - float pool
-    // - integer pool size
-    // - integer pool
+    // - constant pool size
+    // - constant pool
+    // --- where (size_bytes) elem:
+    // ----- (1) type
+    // ----- (8) value
     // - instructions
-    MANA_NODISCARD auto Serialize() const -> ByteCode;
+    MANA_NODISCARD auto Serialize() -> ByteCode;
+
+    void SerializeConstantsTo(ByteCode& out) const;
 
     // for now, this function assumes the input is actually correct
     bool Deserialize(const ByteCode& bytes);

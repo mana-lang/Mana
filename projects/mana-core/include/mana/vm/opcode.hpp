@@ -10,7 +10,7 @@ enum class Op : u8 {
 
     Return,
 
-    Push_Float,
+    Push,
     Negate,
 
     Add,
