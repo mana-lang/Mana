@@ -10,13 +10,13 @@ using namespace literals;
 struct Value {
     friend class Slice;
 
-    enum class Type : u8 {
+    enum Type : u8 {
         Int64,
         Uint64,
         Float64,
     };
 
-    Type type;
+    u8 type;
 
     union As {
         i64 int64;

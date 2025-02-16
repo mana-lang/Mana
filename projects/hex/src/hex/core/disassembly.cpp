@@ -23,8 +23,8 @@ void EmitConstant(i64 offset, bool constant) {
 }
 
 void EmitConstant(i64 offset, const Value constant) {
-    const auto print = [offset]<typename T>(const Value::Type type, T val) {
-        Log->debug("{:04} | {} | {} | {}", offset, magic_enum::enum_name(Op::Push), magic_enum::enum_name(type), val);
+    const auto print = [offset]<typename T>(decltype(Value::type) type, T val) {
+        Log->debug("{:04} | {} | {} | {}", offset, magic_enum::enum_name(Op::Push), magic_enum::enum_name(static_cast<Value::Type>(type)), val);
     };
 
     switch (constant.type) {
