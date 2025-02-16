@@ -16,16 +16,16 @@ constexpr auto FILE_TO_TOKENIZE = "assets/samples/expr-a.mn";
 
 int main() {
     using namespace circe;
-    Log->debug("Hello from Circe!");
+    Log->info("Hello from Circe!");
 
     sigil::Lexer lexer;
     if (lexer.Tokenize(FILE_TO_TOKENIZE)) {
-        Log->debug("Tokenized file from '{}'", FILE_TO_TOKENIZE);
+        Log->info("Tokenized file from '{}'", FILE_TO_TOKENIZE);
     }
 
     sigil::Parser parser(lexer.RelinquishTokens());
     if (parser.Parse()) {
-        Log->debug("Parsed the file.");
+        Log->info("Parsed the file.");
     }
 
     const auto& ast = parser.ViewAST();
@@ -38,7 +38,7 @@ int main() {
     slice.Write(mana::vm::Op::Halt);
     constexpr auto output_path = "../hex/test-circe.mhm";
     std::ofstream  out_file(output_path, std::ios::binary);
-    Log->debug("Output file to: {}", output_path);
+    Log->info("Output file to: {}", output_path);
 
     const auto output = slice.Serialize();
     out_file.write(reinterpret_cast<const char*>(output.data()), output.size());

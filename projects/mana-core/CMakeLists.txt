@@ -3,8 +3,9 @@ project(mana-core VERSION 0.0.1)
 
 set(MANA_SOURCES
         src/mana/logger.cpp
-        
+
         src/mana/vm/slice.cpp
+        src/mana/vm/value.cpp
 )
 
 set(MANA_INCLUDES

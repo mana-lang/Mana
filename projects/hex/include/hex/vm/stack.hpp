@@ -2,18 +2,18 @@
 
 #include <hex/core/logger.hpp>
 
+#include <mana/vm/value.hpp>
 #include <string_view>
 #include <vector>
 
 namespace hex {
-template <typename T>
+namespace mvm = mana::vm;
+
 class Stack {
-    std::vector<T> values {};
-    T*             top {nullptr};
+    std::vector<mvm::Value> values {};
+    mvm::Value*             top {nullptr};
 
 public:
-    using ValueType = T;
-
     Stack() {
         values.reserve(128);
         top = values.data();
@@ -23,7 +23,7 @@ public:
         top = values.data();
     }
 
-    void Push(T value) {
+    void Push(const mvm::Value value) {
         if (top == &values.back()) {
             values.reserve(values.capacity() * 2);
         }
@@ -34,7 +34,7 @@ public:
         LogTop("push:  {}");
     }
 
-    T Pop() {
+    mvm::Value Pop() {
         if (top != &values.front()) {
             --top;
         } else {
@@ -45,7 +45,7 @@ public:
         return *top;
     }
 
-    T ViewTop() const {
+    mvm::Value ViewTop() const {
         if (top == &values.front()) {
             Log->error("Attempted to read from empty stack");
             return 0.0;
@@ -54,7 +54,7 @@ public:
         return *(top - 1);
     }
 
-    T* Top() const {
+    mvm::Value* Top() const {
         if (top == &values.front()) {
             Log->error("Attempted to read from empty stack");
             return nullptr;
@@ -70,30 +70,25 @@ public:
     }
 
     void Op_Add() {
-        T rhs = Pop();
-
-        *(top - 1) += rhs;
+        *(top - 1) += Pop();
 
         LogTop("add:   {}");
     }
 
     void Op_Sub() {
-        T rhs = Pop();
-        // *(top - 1) -= rhs;
+        *(top - 1) -= Pop();
 
         LogTop("sub:   {}");
     }
 
     void Op_Mul() {
-        T rhs = Pop();
-        // *(top - 1) *= rhs;
+        *(top - 1) *= Pop();
 
         LogTop("mul:   {}");
     }
 
     void Op_Div() {
-        T rhs = Pop();
-        // *(top - 1) /= rhs;
+        *(top - 1) /= Pop();
 
         LogTop("div:   {}");
     }

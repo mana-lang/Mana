@@ -3,7 +3,6 @@
 #include <hex/core/logger.hpp>
 #include <hex/vm/virtual-machine.hpp>
 
-#include <mana/vm/opcode.hpp>
 #include <mana/vm/slice.hpp>
 
 #include <magic_enum/magic_enum.hpp>
