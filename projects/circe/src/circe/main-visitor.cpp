@@ -22,7 +22,9 @@ void MainVisitor::Visit(const BinaryExpr& node) {
     node.GetLeft().Accept(*this);
     node.GetRight().Accept(*this);
 
-    switch (node.GetOp()) {
+    const auto op = node.GetOp();
+
+    switch (op[0]) {
     case '+':
         slice.Write(Op::Add);
         break;
@@ -36,9 +38,17 @@ void MainVisitor::Visit(const BinaryExpr& node) {
         slice.Write(Op::Div);
         break;
     case '>':
+        if (op.size() == 2 && op[1] == '=') {
+            slice.Write(Op::Cmp_GreaterEq);
+            break;
+        }
         slice.Write(Op::Cmp_Greater);
         break;
     case '<':
+        if (op.size() == 2 && op[1] == '=') {
+            slice.Write(Op::Cmp_LesserEq);
+            break;
+        }
         slice.Write(Op::Cmp_Lesser);
         break;
 

@@ -40,8 +40,6 @@ struct Value {
 
     Type GetType() const;
 
-    bool operator==(const Value& other) const;
-
     static i64                  IDispatchI(As val);
     static i64                  IDispatchU(As val);
     static i64                  IDispatchF(As val);
@@ -97,7 +95,11 @@ struct Value {
     void operator/=(const Value& rhs);
 
     bool operator>(const Value& rhs) const;
+    bool operator>=(const Value& rhs) const;
     bool operator<(const Value& rhs) const;
+    bool operator<=(const Value& rhs) const;
+
+    bool operator==(const Value& other) const;
 
     void operator*=(const i64& rhs);
 

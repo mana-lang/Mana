@@ -72,16 +72,16 @@ public:
 };
 
 class BinaryExpr final : public Node {
-    char op;
-    Ptr  left, right;
+    std::string op;
+    Ptr         left, right;
 
 public:
     explicit BinaryExpr(const ParseNode& node);
-    explicit BinaryExpr(char op, const ParseNode& left, const ParseNode& right);
+    explicit BinaryExpr(const std::string& op, const ParseNode& left, const ParseNode& right);
 
-    SIGIL_NODISCARD char GetOp() const;
-    SIGIL_NODISCARD auto GetLeft() const -> const Node&;
-    SIGIL_NODISCARD auto GetRight() const -> const Node&;
+    SIGIL_NODISCARD std::string_view GetOp() const;
+    SIGIL_NODISCARD auto             GetLeft() const -> const Node&;
+    SIGIL_NODISCARD auto             GetRight() const -> const Node&;
 
     void Accept(Visitor& visitor) const override;
 

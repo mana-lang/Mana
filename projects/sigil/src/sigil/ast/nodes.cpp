@@ -61,25 +61,25 @@ BinaryExpr::BinaryExpr(const ParseNode& node, const i64 depth) {
         // we're in the leaf node
         left  = ConstructChild(*branches[0]);
         right = ConstructChild(*branches[1]);
-        op    = tokens[0].text[0];
+        op    = tokens[0].text;
         return;
     }
 
     // we're in a parent node
     left  = std::shared_ptr<BinaryExpr>(new BinaryExpr(node, depth + 1));  // can't call make_shared cause private
     right = ConstructChild(*branches[branches.size() - depth]);
-    op    = tokens[tokens.size() - depth].text[0];
+    op    = tokens[tokens.size() - depth].text;
 }
 
 BinaryExpr::BinaryExpr(const ParseNode& node)
     : BinaryExpr(node, 1) {}
 
-BinaryExpr::BinaryExpr(const char op, const ParseNode& lhs, const ParseNode& rhs)
+BinaryExpr::BinaryExpr(const std::string& op, const ParseNode& lhs, const ParseNode& rhs)
     : op(op)
     , left(ConstructChild(lhs))
     , right(ConstructChild(rhs)) {}
 
-char BinaryExpr::GetOp() const {
+std::string_view BinaryExpr::GetOp() const {
     return op;
 }
 
@@ -110,7 +110,7 @@ Node::Ptr BinaryExpr::ConstructChild(const ParseNode& node) {
     case Comparison:
     case Term:
     case Factor:
-        return std::make_shared<BinaryExpr>(token.text[0], *node.branches[0], *node.branches[1]);
+        return std::make_shared<BinaryExpr>(token.text, *node.branches[0], *node.branches[1]);
 
     case Unary:
         if (token.type == TokenType::Op_Minus && IsNumber(node.branches[0]->tokens[0].type)) {

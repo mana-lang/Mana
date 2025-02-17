@@ -63,6 +63,24 @@ Value::Type Value::GetType() const {
     return static_cast<Type>(type);
 }
 
+void Value::WriteBytes(const std::array<u8, sizeof(As)>& bytes) {
+    switch (type) {
+    case Int64:
+        as.int64 = std::bit_cast<i64>(bytes);
+        break;
+    case Uint64:
+        as.uint64 = std::bit_cast<u64>(bytes);
+        break;
+    case Float64:
+        as.float64 = std::bit_cast<f64>(bytes);
+        break;
+    case Boolean:
+        as.boolean = bytes[0];
+    default:
+        UNREACHABLE();
+    }
+}
+
 #ifdef MANA_RELEASE
 #    define CHECK_BOUNDS_CGT()
 #else
@@ -87,108 +105,16 @@ Value::Type Value::GetType() const {
 #define CASE_BOOL     type_bool
 
 bool Value::operator==(const Value& other) const {
-    switch (type) {
-    case Int64:
-        return as.int64 == other.AsInt();
-    case Uint64:
-        return as.uint64 == other.AsUint();
-    case Float64:
-        return as.float64 == other.AsFloat();
-    case Boolean:
-        return as.boolean == other.AsBool();
-    default:
-        UNREACHABLE();
-    }
-}
-
-void Value::operator+=(const Value& rhs) {
     COMPUTED_GOTO();
 
 CASE_INT:
-    as.int64 += rhs.AsInt();
-    return;
+    return as.int64 == other.AsInt();
 CASE_UNSIGNED:
-    as.uint64 += rhs.AsUint();
-    return;
+    return as.uint64 == other.AsUint();
 CASE_FLOAT:
-    as.float64 += rhs.AsFloat();
-    return;
+    return as.float64 == other.AsFloat();
 CASE_BOOL:
-    UNREACHABLE();
-}
-
-void Value::operator-=(const Value& rhs) {
-    COMPUTED_GOTO();
-
-CASE_INT:
-    as.int64 -= rhs.AsInt();
-    return;
-CASE_UNSIGNED:
-    as.uint64 -= rhs.AsUint();
-    return;
-CASE_FLOAT:
-    as.float64 -= rhs.AsFloat();
-    return;
-CASE_BOOL:
-    UNREACHABLE();
-}
-
-void Value::operator*=(const Value& rhs) {
-    COMPUTED_GOTO();
-
-CASE_INT:
-    as.int64 *= rhs.AsInt();
-    return;
-CASE_UNSIGNED:
-    as.uint64 *= rhs.AsUint();
-    return;
-CASE_FLOAT:
-    as.float64 *= rhs.AsFloat();
-    return;
-CASE_BOOL:
-    UNREACHABLE();
-}
-
-void Value::operator/=(const Value& rhs) {
-    COMPUTED_GOTO();
-
-CASE_INT:
-    as.int64 /= rhs.AsInt();
-    return;
-CASE_UNSIGNED:
-    as.uint64 /= rhs.AsUint();
-    return;
-CASE_FLOAT:
-    as.float64 /= rhs.AsFloat();
-    return;
-CASE_BOOL:
-    UNREACHABLE();
-}
-
-bool Value::operator>(const Value& rhs) const {
-    COMPUTED_GOTO();
-
-CASE_INT:
-    return as.int64 > rhs.AsInt();
-CASE_UNSIGNED:
-    return as.uint64 > rhs.AsUint();
-CASE_FLOAT:
-    return as.float64 > rhs.AsFloat();
-CASE_BOOL:
-    UNREACHABLE();
-}
-
-bool Value::operator<(const Value& rhs) const {
-    COMPUTED_GOTO();
-
-CASE_INT:
-    return as.int64 < rhs.AsInt();
-CASE_UNSIGNED:
-    return as.uint64 < rhs.AsUint();
-CASE_FLOAT:
-    return as.float64 < rhs.AsFloat();
-CASE_BOOL:
-    UNREACHABLE();
+    return as.boolean == other.AsBool();
 }
 
 void Value::operator*=(const i64& rhs) {
@@ -207,23 +133,44 @@ CASE_BOOL:
     UNREACHABLE();
 }
 
-void Value::WriteBytes(const std::array<u8, sizeof(As)>& bytes) {
-    switch (type) {
-    case Int64:
-        as.int64 = std::bit_cast<i64>(bytes);
-        break;
-    case Uint64:
-        as.uint64 = std::bit_cast<u64>(bytes);
-        break;
-    case Float64:
-        as.float64 = std::bit_cast<f64>(bytes);
-        break;
-    case Boolean:
-        as.boolean = bytes[0];
-    default:
-        UNREACHABLE();
+#define CGOTO_OPERATOR_CMP(ret, op)                   \
+    ret Value::operator op(const Value & rhs) const { \
+        COMPUTED_GOTO();                              \
+    CASE_INT:                                         \
+        return as.int64 op rhs.AsInt();               \
+    CASE_UNSIGNED:                                    \
+        return as.uint64 op rhs.AsUint();             \
+    CASE_FLOAT:                                       \
+        return as.float64 op rhs.AsFloat();           \
+    CASE_BOOL:                                        \
+        UNREACHABLE();                                \
     }
-}
+
+#define CGOTO_OPERATOR_ARITH_ASSIGN(op)          \
+    void Value::operator op(const Value & rhs) { \
+        COMPUTED_GOTO();                         \
+    CASE_INT:                                    \
+        as.int64 op rhs.AsInt();                 \
+        return;                                  \
+    CASE_UNSIGNED:                               \
+        as.uint64 op rhs.AsUint();               \
+        return;                                  \
+    CASE_FLOAT:                                  \
+        as.float64 op rhs.AsFloat();             \
+        return;                                  \
+    CASE_BOOL:                                   \
+        UNREACHABLE();                           \
+    }
+
+CGOTO_OPERATOR_ARITH_ASSIGN(+=);
+CGOTO_OPERATOR_ARITH_ASSIGN(-=);
+CGOTO_OPERATOR_ARITH_ASSIGN(*=);
+CGOTO_OPERATOR_ARITH_ASSIGN(/=);
+
+CGOTO_OPERATOR_CMP(bool, >);
+CGOTO_OPERATOR_CMP(bool, >=);
+CGOTO_OPERATOR_CMP(bool, <);
+CGOTO_OPERATOR_CMP(bool, <=);
 
 f64 Value::AsFloat() const {
     return dispatch_float[type](as);

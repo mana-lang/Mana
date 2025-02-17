@@ -25,7 +25,9 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
         &&div,
         &&mul,
         &&cmp_greater,
+        &&cmp_greater_eq,
         &&cmp_lesser,
+        &&cmp_lesser_eq,
     };
 
     // clang-format off
@@ -98,10 +100,22 @@ cmp_greater:
     LogTopBool("cmp_greater: {}");
     DISPATCH();
 
+cmp_greater_eq:
+    Push(Pop() >= Pop());
+
+    LogTopBool("cmp_greater_eq: {}");
+    DISPATCH();
+
 cmp_lesser:
     Push(Pop() < Pop());
 
     LogTopBool("cmp_lesser: {}");
+    DISPATCH();
+
+cmp_lesser_eq:
+    Push(Pop() <= Pop());
+
+    LogTopBool("cmp_lesser_eq: {}");
     DISPATCH();
 
 compile_error:
