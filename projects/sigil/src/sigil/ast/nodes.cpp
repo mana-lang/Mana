@@ -118,10 +118,8 @@ Node::Ptr BinaryExpr::ConstructChild(const ParseNode& node) {
         }
         break;
     case Literal:
-        if (IsNumber(token.type)) {
-            return MakeLiteral(token);
-        }
-        break;
+        return MakeLiteral(token);
+
     default:
         Log->error("Not a binary op");
         break;

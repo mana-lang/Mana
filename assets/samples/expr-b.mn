@@ -13,3 +13,15 @@
 79 <= 45
 45 <= 79
 79 <= 79
+
+5 == 5
+5 != 5
+5 == 6
+5 != 6
+
+true == true
+false == false
+false == true
+
+true != false
+true != true

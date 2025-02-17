@@ -35,7 +35,6 @@ private:
     mvm::Value* StackTop() const;
 
     void LogTop(std::string_view msg) const;
-    void LogTopBool(std::string_view msg) const;
 };
 
 }  // namespace hex

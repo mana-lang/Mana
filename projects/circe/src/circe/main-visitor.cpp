@@ -51,6 +51,16 @@ void MainVisitor::Visit(const BinaryExpr& node) {
         }
         slice.Write(Op::Cmp_Lesser);
         break;
+    case '=':
+        if (op.size() == 2 && op[1] == '=') {
+            slice.Write(Op::Equals);
+            break;
+        }
+    case '!':
+        if (op.size() == 2 && op[1] == '=') {
+            slice.Write(Op::NotEquals);
+            break;
+        }
 
     default:
         Log->error("Unknown Binary-Operator '{}'", node.GetOp());
@@ -69,7 +79,7 @@ void MainVisitor::Visit(const Literal<i64>& node) {
 void MainVisitor::Visit(const Literal<void>& node) {}
 
 void MainVisitor::Visit(const Literal<bool>& node) {
-    // slice.Write(Op::Push_Bool, slice.AddConstant(node.Get()));
+    slice.Write(Op::Push, slice.AddConstant(node.Get()));
 }
 
 void MainVisitor::Visit(const UnaryExpr& node) {

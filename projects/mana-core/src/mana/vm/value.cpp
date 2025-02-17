@@ -5,10 +5,19 @@
 
 namespace mana::vm {
 
+// no real point in having this since we use computed goto anyway
+// and thus aren't compatible with MSVC
+// but sure why not
+#ifdef __GNUC__
+#    define FUNCSTR std::string(__PRETTY_FUNCTION__)
+#else
+#    define FUNCSTR std::string(__func__)
+#endif
+
 #ifdef MANA_RELEASE
 #    define UNREACHABLE() std::unreachable()
 #else
-#    define UNREACHABLE() throw std::runtime_error("Reached invalid code path")
+#    define UNREACHABLE() throw std::runtime_error(FUNCSTR + std::string(" -- Reached invalid code path"))
 #endif
 
 Value::Value(const i64 i)
@@ -38,6 +47,9 @@ Value::Value(const Type t)
         break;
     case Float64:
         as.float64 = 0.0;
+        break;
+    case Boolean:
+        as.boolean = false;
         break;
     default:
         UNREACHABLE();
@@ -76,6 +88,7 @@ void Value::WriteBytes(const std::array<u8, sizeof(As)>& bytes) {
         break;
     case Boolean:
         as.boolean = bytes[0];
+        break;
     default:
         UNREACHABLE();
     }

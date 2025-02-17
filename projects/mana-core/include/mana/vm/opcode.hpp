@@ -22,6 +22,9 @@ enum class Op : u8 {
     Cmp_GreaterEq,
     Cmp_Lesser,
     Cmp_LesserEq,
+
+    Equals,
+    NotEquals,
 };
 
 }  // namespace mana::vm

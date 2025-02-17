@@ -28,6 +28,8 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
         &&cmp_greater_eq,
         &&cmp_lesser,
         &&cmp_lesser_eq,
+        &&equals,
+        &&not_equals,
     };
 
     // clang-format off
@@ -97,25 +99,36 @@ mul:
 cmp_greater:
     Push(Pop() > Pop());
 
-    LogTopBool("cmp_greater: {}");
+    LogTop("cmp_greater: {}");
     DISPATCH();
 
 cmp_greater_eq:
     Push(Pop() >= Pop());
 
-    LogTopBool("cmp_greater_eq: {}");
+    LogTop("cmp_greater_eq: {}");
     DISPATCH();
 
 cmp_lesser:
     Push(Pop() < Pop());
 
-    LogTopBool("cmp_lesser: {}");
+    LogTop("cmp_lesser: {}");
     DISPATCH();
 
 cmp_lesser_eq:
     Push(Pop() <= Pop());
 
-    LogTopBool("cmp_lesser_eq: {}");
+    LogTop("cmp_lesser_eq: {}");
+    DISPATCH();
+
+equals:
+    Push(Pop() == Pop());
+
+    LogTop("equals: {}");
+    DISPATCH();
+not_equals:
+    Push(Pop() != Pop());
+
+    LogTop("not_equals: {}");
     DISPATCH();
 
 compile_error:
@@ -126,7 +139,7 @@ void VirtualMachine::Reset() {
     stack_top = stack.data();
 }
 
-void VirtualMachine::Push(Value value) {
+void VirtualMachine::Push(const Value value) {
     if (stack_top == &stack.back()) {
         stack.reserve(stack.capacity() * 2);
     }
@@ -168,13 +181,11 @@ Value* VirtualMachine::StackTop() const {
 
 void VirtualMachine::LogTop(const std::string_view msg) const {
 #ifdef HEX_DEBUG
-    Log->debug(fmt::runtime(msg), ViewTop().AsFloat());
-#endif
-}
-
-void VirtualMachine::LogTopBool(const std::string_view msg) const {
-#ifdef HEX_DEBUG
-    Log->debug(fmt::runtime(msg), ViewTop().AsBool());
+    if (StackTop()->GetType() == Value::Type::Boolean) {
+        Log->debug(fmt::runtime(msg), ViewTop().AsBool());
+    } else {
+        Log->debug(fmt::runtime(msg), ViewTop().AsFloat());
+    }
 #endif
 }
 
