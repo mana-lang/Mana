@@ -1,7 +1,6 @@
 #pragma once
 
 #include <mana/literals.hpp>
-#include <mana/vm/constant-pool.hpp>
 #include <mana/vm/opcode.hpp>
 #include <mana/vm/value.hpp>
 
@@ -9,6 +8,16 @@
 
 namespace mana::vm {
 using namespace literals;
+
+using ByteCode = std::vector<u8>;
+
+struct IndexRange {
+    u64 start, end;
+
+    IndexRange(const u64 init_offset, const u64 range);
+
+    IndexRange() = delete;
+};
 
 class Slice {
     ByteCode instructions;

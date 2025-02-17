@@ -1,6 +1,16 @@
 #include <mana/vm/slice.hpp>
 
+#include <stdexcept>
+
 namespace mana::vm {
+
+IndexRange::IndexRange(const u64 init_offset, const u64 range)
+    : start(init_offset)
+    , end(init_offset + range) {
+    if (range < init_offset) {
+        throw std::runtime_error("IndexRange was out of bounds");
+    }
+}
 
 void Slice::Write(Op opcode) {
     instructions.push_back(static_cast<u8>(opcode));
@@ -52,7 +62,7 @@ void Slice::SerializeConstantsTo(ByteCode& out) const {
 bool Slice::Deserialize(const ByteCode& bytes) {
     values.clear();
 
-    // bytes of num values in the constant pool
+    // bytes taken up by value-count slot in the constant pool
     std::array<u8, sizeof(u64)> count_bytes;
     for (i64 i = 0; i < count_bytes.size(); ++i) {
         count_bytes[i] = bytes[i];

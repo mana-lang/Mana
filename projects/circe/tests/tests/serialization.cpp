@@ -1,7 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <mana/literals.hpp>
-#include <mana/vm/constant-pool.hpp>
 #include <mana/vm/slice.hpp>
 
 using namespace mana::vm;
@@ -9,24 +8,6 @@ using namespace mana::literals;
 
 TEST_CASE("Bytecode", "[serde][bytecode]") {
     SECTION("Serializing") {
-        SECTION("Constant Pool") {
-            ConstantPool<f64> floats;
-            floats.constants.push_back(493.343);
-
-            const auto bytes = floats.GetSerialized();
-            REQUIRE(bytes.size() == 8);
-
-            const ByteCode control_bytes {0x73, 0x68, 0x91, 0xED, 0x7C, 0xD5, 0x7E, 0x40};
-            for (i64 i = 0; i < bytes.size(); ++i) {
-                REQUIRE(bytes[i] == control_bytes[i]);
-            }
-
-            ConstantPool<f64> new_floats;
-            new_floats.Deserialize(bytes);
-            REQUIRE(new_floats.constants.size() == 1);
-            REQUIRE(new_floats.constants.back() == floats.constants.back());
-        }
-
         SECTION("Slice") {
             Slice slice;
 
@@ -37,7 +18,7 @@ TEST_CASE("Bytecode", "[serde][bytecode]") {
 
             const auto bytes = slice.Serialize();
 
-            constexpr auto value_size = sizeof(Value::DispatchU) + sizeof(Value::Type);
+            constexpr auto value_size = sizeof(Value::As) + sizeof(Value::Type);
             REQUIRE(bytes.size() == sizeof(u64) + slice.Instructions().size() + value_size * slice.Constants().size());
 
             Slice deser_slice;

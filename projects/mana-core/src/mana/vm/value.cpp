@@ -7,12 +7,8 @@ namespace mana::vm {
 
 #ifdef MANA_RELEASE
 #    define UNREACHABLE() std::unreachable()
-#    define CHECK_BOUNDS_CGT()
 #else
 #    define UNREACHABLE() throw std::runtime_error("Reached invalid code path")
-#    define CHECK_BOUNDS_CGT()         \
-        if (not(type < choice.size())) \
-            UNREACHABLE();
 #endif
 
 Value::Value(const i64 i)
@@ -69,6 +65,14 @@ bool Value::operator==(const Value& other) const {
         UNREACHABLE();
     }
 }
+
+#ifdef MANA_RELEASE
+#    define CHECK_BOUNDS_CGT()
+#else
+#    define CHECK_BOUNDS_CGT()         \
+        if (not(type < choice.size())) \
+            throw std::runtime_error("Out of bounds Computed Goto access");
+#endif
 
 #define COMPUTED_GOTO()                  \
     static constexpr std::array choice { \
@@ -169,6 +173,18 @@ void Value::WriteBytes(const std::array<u8, sizeof(As)>& bytes) {
     }
 }
 
+f64 Value::AsFloat() const {
+    return dispatch_float[type](as);
+}
+
+i64 Value::AsInt() const {
+    return dispatch_int[type](as);
+}
+
+u64 Value::AsUint() const {
+    return dispatch_unsigned[type](as);
+}
+
 f64 Value::FDispatchI(const As val) {
     return static_cast<f64>(val.int64);
 }
@@ -205,15 +221,4 @@ u64 Value::UDispatchF(const As val) {
     return static_cast<u64>(val.float64);
 }
 
-f64 Value::AsFloat() const {
-    return dispatch_float[static_cast<u8>(type)](as);
-}
-
-i64 Value::AsInt() const {
-    return dispatch_int[static_cast<u8>(type)](as);
-}
-
-u64 Value::AsUint() const {
-    return dispatch_unsigned[static_cast<u8>(type)](as);
-}
 }  // namespace mana::vm
