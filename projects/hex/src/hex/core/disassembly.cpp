@@ -10,18 +10,6 @@ void EmitConstant(i64 offset, f64 constant) {
     Log->debug("{:04} | {} | {}", offset, magic_enum::enum_name(Op::Push), constant);
 }
 
-void EmitConstant(i64 offset, i64 constant) {
-    // Log->debug("{:04} | {} | {}", offset, magic_enum::enum_name(Op::Push_Int), constant);
-}
-
-void EmitConstant(i64 offset, u64 constant) {
-    // Log->debug("{:04} | {} | {}", offset, magic_enum::enum_name(Op::Push_UInt), constant);
-}
-
-void EmitConstant(i64 offset, bool constant) {
-    // Log->debug("{:04} | {} | {}", offset, magic_enum::enum_name(Op::Push_Bool), constant);
-}
-
 void EmitConstant(i64 offset, const Value constant) {
     const auto print = [offset]<typename T>(decltype(Value::type) type, T val) {
         Log->debug("{:04} | {} | {} | {}", offset, magic_enum::enum_name(Op::Push), magic_enum::enum_name(static_cast<Value::Type>(type)), val);
@@ -36,6 +24,9 @@ void EmitConstant(i64 offset, const Value constant) {
         break;
     case Value::Type::Uint64:
         print(constant.type, constant.as.uint64);
+        break;
+    case Value::Type::Boolean:
+        print(constant.type, constant.as.boolean);
         break;
     default:
         break;
@@ -63,6 +54,7 @@ void PrintBytecode(const Slice& c) {
         case Mul:
         case Halt:
         case Return:
+        case Cmp_Greater:
             EmitSimple(i, op);
             break;
         default:

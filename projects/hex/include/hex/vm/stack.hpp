@@ -69,6 +69,12 @@ public:
 #endif
     }
 
+    void LogTopBool(const std::string_view msg) const {
+#ifdef HEX_DEBUG
+        Log->debug(fmt::runtime(msg), ViewTop().AsBool());
+#endif
+    }
+
     void Op_Add() {
         *(top - 1) += Pop();
 
@@ -97,6 +103,12 @@ public:
         *(top - 1) *= -1;
 
         LogTop("neg:   {}");
+    }
+
+    void Op_CmpGreater() {
+        Push(Pop() > Pop());
+
+        LogTopBool("cmp_greater:   {}");
     }
 };
 }  // namespace hex

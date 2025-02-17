@@ -23,6 +23,10 @@ Value::Value(const f64 f)
     : type(static_cast<u8>(Float64))
     , as {.float64 = f} {}
 
+Value::Value(const bool b)
+    : type(static_cast<u8>(Boolean))
+    , as {.boolean = b} {}
+
 Value::Value(const Type t)
     : type(static_cast<u8>(t)) {
     switch (type) {
@@ -48,22 +52,15 @@ u64 Value::BitCasted() const {
         return std::bit_cast<u64>(as.uint64);
     case Float64:
         return std::bit_cast<u64>(as.float64);
+    case Boolean:
+        return as.boolean;  // sobbing and weeping
     default:
         UNREACHABLE();
     }
 }
 
-bool Value::operator==(const Value& other) const {
-    switch (type) {
-    case Int64:
-        return as.int64 == other.AsInt();
-    case Uint64:
-        return as.uint64 == other.AsUint();
-    case Float64:
-        return as.float64 == other.AsFloat();
-    default:
-        UNREACHABLE();
-    }
+Value::Type Value::GetType() const {
+    return static_cast<Type>(type);
 }
 
 #ifdef MANA_RELEASE
@@ -79,6 +76,7 @@ bool Value::operator==(const Value& other) const {
         &&type_int,                      \
         &&type_unsigned,                 \
         &&type_float,                    \
+        &&type_bool,                     \
     };                                   \
     CHECK_BOUNDS_CGT()                   \
     goto* choice[type]
@@ -86,6 +84,22 @@ bool Value::operator==(const Value& other) const {
 #define CASE_INT      type_int
 #define CASE_UNSIGNED type_unsigned
 #define CASE_FLOAT    type_float
+#define CASE_BOOL     type_bool
+
+bool Value::operator==(const Value& other) const {
+    switch (type) {
+    case Int64:
+        return as.int64 == other.AsInt();
+    case Uint64:
+        return as.uint64 == other.AsUint();
+    case Float64:
+        return as.float64 == other.AsFloat();
+    case Boolean:
+        return as.boolean == other.AsBool();
+    default:
+        UNREACHABLE();
+    }
+}
 
 void Value::operator+=(const Value& rhs) {
     COMPUTED_GOTO();
@@ -99,6 +113,8 @@ CASE_UNSIGNED:
 CASE_FLOAT:
     as.float64 += rhs.AsFloat();
     return;
+CASE_BOOL:
+    UNREACHABLE();
 }
 
 void Value::operator-=(const Value& rhs) {
@@ -113,6 +129,8 @@ CASE_UNSIGNED:
 CASE_FLOAT:
     as.float64 -= rhs.AsFloat();
     return;
+CASE_BOOL:
+    UNREACHABLE();
 }
 
 void Value::operator*=(const Value& rhs) {
@@ -127,6 +145,8 @@ CASE_UNSIGNED:
 CASE_FLOAT:
     as.float64 *= rhs.AsFloat();
     return;
+CASE_BOOL:
+    UNREACHABLE();
 }
 
 void Value::operator/=(const Value& rhs) {
@@ -141,6 +161,21 @@ CASE_UNSIGNED:
 CASE_FLOAT:
     as.float64 /= rhs.AsFloat();
     return;
+CASE_BOOL:
+    UNREACHABLE();
+}
+
+bool Value::operator>(const Value& rhs) const {
+    COMPUTED_GOTO();
+
+CASE_INT:
+    return as.int64 > rhs.AsInt();
+CASE_UNSIGNED:
+    return as.uint64 > rhs.AsUint();
+CASE_FLOAT:
+    return as.float64 > rhs.AsFloat();
+CASE_BOOL:
+    UNREACHABLE();
 }
 
 void Value::operator*=(const i64& rhs) {
@@ -155,6 +190,8 @@ CASE_UNSIGNED:
 CASE_FLOAT:
     as.float64 *= static_cast<f64>(rhs);
     return;
+CASE_BOOL:
+    UNREACHABLE();
 }
 
 void Value::WriteBytes(const std::array<u8, sizeof(As)>& bytes) {
@@ -168,6 +205,8 @@ void Value::WriteBytes(const std::array<u8, sizeof(As)>& bytes) {
     case Float64:
         as.float64 = std::bit_cast<f64>(bytes);
         break;
+    case Boolean:
+        as.boolean = bytes[0];
     default:
         UNREACHABLE();
     }
@@ -185,6 +224,11 @@ u64 Value::AsUint() const {
     return dispatch_unsigned[type](as);
 }
 
+bool Value::AsBool() const {
+    return dispatch_bool[type](as);
+}
+
+// Floats
 f64 Value::FDispatchI(const As val) {
     return static_cast<f64>(val.int64);
 }
@@ -197,6 +241,11 @@ f64 Value::FDispatchF(const As val) {
     return val.float64;
 }
 
+f64 Value::FDispatchB(const As val) {
+    return val.boolean;
+}
+
+// Integers
 i64 Value::IDispatchI(const As val) {
     return val.int64;
 }
@@ -209,6 +258,11 @@ i64 Value::IDispatchF(const As val) {
     return static_cast<i64>(val.float64);
 }
 
+i64 Value::IDispatchB(const As val) {
+    return val.boolean;
+}
+
+// Unsigned
 u64 Value::UDispatchI(const As val) {
     return static_cast<u64>(val.int64);
 }
@@ -219,6 +273,27 @@ u64 Value::UDispatchU(const As val) {
 
 u64 Value::UDispatchF(const As val) {
     return static_cast<u64>(val.float64);
+}
+
+u64 Value::UDispatchB(const As val) {
+    return val.boolean;
+}
+
+// Boolean
+bool Value::BDispatchI(const As val) {
+    return static_cast<bool>(val.int64);
+}
+
+bool Value::BDispatchU(const As val) {
+    return static_cast<bool>(val.uint64);
+}
+
+bool Value::BDispatchF(const As val) {
+    return static_cast<bool>(val.float64);
+}
+
+bool Value::BDispatchB(const As val) {
+    return val.boolean;
 }
 
 }  // namespace mana::vm

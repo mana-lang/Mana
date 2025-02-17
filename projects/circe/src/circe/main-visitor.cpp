@@ -35,9 +35,12 @@ void MainVisitor::Visit(const BinaryExpr& node) {
     case '/':
         slice.Write(Op::Div);
         break;
+    case '>':
+        slice.Write(Op::Cmp_Greater);
+        break;  //
 
     default:
-        Log->error("Unknown Binary Operator");
+        Log->error("Unknown Binary-Operator '{}'", node.GetOp());
         break;
     }
 }

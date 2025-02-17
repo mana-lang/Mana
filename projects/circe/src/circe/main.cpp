@@ -7,20 +7,24 @@
 
 #include <mana/vm/slice.hpp>
 
+#include <filesystem>
 #include <fstream>
 
 using namespace mana::literals;
 using namespace circe;
 
-constexpr auto FILE_TO_TOKENIZE = "assets/samples/expr-a.mn";
+constexpr std::string IN_PATH  = "assets/samples/";
+constexpr std::string OUT_PATH = "../hex/";
 
-int main() {
-    using namespace circe;
-    Log->info("Hello from Circe!");
+int CreateFile(const std::string& filename) {
+    Log->info("");
 
     sigil::Lexer lexer;
-    if (lexer.Tokenize(FILE_TO_TOKENIZE)) {
-        Log->info("Tokenized file from '{}'", FILE_TO_TOKENIZE);
+
+    const std::filesystem::path in = IN_PATH + filename;
+
+    if (lexer.Tokenize(in)) {
+        Log->info("Tokenized file from '{}'", in.string());
     }
 
     sigil::Parser parser(lexer.RelinquishTokens());
@@ -36,17 +40,28 @@ int main() {
     mana::vm::Slice slice;
     slice = visitor.GetSlice();
     slice.Write(mana::vm::Op::Halt);
-    constexpr auto output_path = "../hex/test-circe.mhm";
-    std::ofstream  out_file(output_path, std::ios::binary);
-    Log->info("Output file to: {}", output_path);
+
+    std::filesystem::path out = OUT_PATH + in.filename().replace_extension("mhm").string();
+    std::ofstream         out_file(out, std::ios::binary);
+    Log->info("Output file to '{}'", out.string());
 
     const auto output = slice.Serialize();
     out_file.write(reinterpret_cast<const char*>(output.data()), output.size());
 
+    int ret = 0;
     if (not out_file) {
         Log->error("Failed to write to file.");
-        return 3;
+        ret = 3;
     }
 
     out_file.close();
+    return ret;
+}
+
+int main() {
+    using namespace circe;
+    Log->info("Hello from Circe!");
+
+    CreateFile("expr-a.mn");
+    CreateFile("expr-b.mn");
 }

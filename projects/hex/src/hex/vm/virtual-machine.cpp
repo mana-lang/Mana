@@ -19,6 +19,7 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
         &&sub,
         &&div,
         &&mul,
+        &&cmp_greater,
     };
 
     // clang-format off
@@ -42,7 +43,12 @@ halt:
 
 ret:
     Log->debug("");
-    Log->debug("ret {}\n\n", stack.Pop().AsFloat());
+
+    if (stack.Top()->GetType() == Value::Type::Boolean) {
+        Log->debug("ret {}\n\n", stack.Pop().AsBool());
+    } else {
+        Log->debug("ret {}\n\n", stack.Pop().AsFloat());
+    }
 
     DISPATCH();
 
@@ -68,6 +74,10 @@ div:
 
 mul:
     stack.Op_Mul();
+    DISPATCH();
+
+cmp_greater:
+    stack.Op_CmpGreater();
     DISPATCH();
 
 compile_error:

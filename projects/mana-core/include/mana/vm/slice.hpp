@@ -14,8 +14,7 @@ using ByteCode = std::vector<u8>;
 struct IndexRange {
     u64 start, end;
 
-    IndexRange(const u64 init_offset, const u64 range);
-
+    IndexRange(u64 init_offset, u64 range);
     IndexRange() = delete;
 };
 
@@ -27,14 +26,6 @@ class Slice {
 public:
     void Write(Op opcode);
     void Write(Op opcode, u8 byte);
-
-    template <typename T>
-        requires std::is_integral_v<T> || std::is_floating_point_v<T>
-    u64 AddConstant(const T value) {
-        values.push_back(value);
-
-        return values.size() - 1;
-    }
 
     MANA_NODISCARD auto Instructions() const -> const ByteCode&;
     MANA_NODISCARD auto Instructions() -> ByteCode&;
@@ -55,6 +46,14 @@ public:
 
     // for now, this function assumes the input is actually correct
     bool Deserialize(const ByteCode& bytes);
+
+    template <typename T>
+        requires std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>
+    u64 AddConstant(const T value) {
+        values.push_back(value);
+
+        return values.size() - 1;
+    }
 };
 
 }  // namespace mana::vm

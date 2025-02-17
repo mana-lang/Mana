@@ -107,6 +107,7 @@ Node::Ptr BinaryExpr::ConstructChild(const ParseNode& node) {
     case Grouping:
         return ConstructChild(*node.branches[0]);
 
+    case Comparison:
     case Term:
     case Factor:
         return std::make_shared<BinaryExpr>(token.text[0], *node.branches[0], *node.branches[1]);

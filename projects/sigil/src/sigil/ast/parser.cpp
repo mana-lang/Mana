@@ -229,6 +229,7 @@ void Parser::ConstructAST(const ParseNode& node) {
     const auto root = dynamic_cast<Artifact*>(syntax_tree.get());
     for (const auto& n : node.branches) {
         switch (n->rule) {
+        case Rule::Comparison:
         case Rule::Term:
         case Rule::Factor:
             root->AddChild<BinaryExpr>(*n);
@@ -236,7 +237,6 @@ void Parser::ConstructAST(const ParseNode& node) {
             break;
         }
     }
-    int x = 1;
 }
 
 bool Parser::MatchedExpression(ParseNode& node) {

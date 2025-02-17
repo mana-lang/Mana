@@ -17,6 +17,8 @@ enum class Op : u8 {
     Sub,
     Div,
     Mul,
+
+    Cmp_Greater,
 };
 
 }  // namespace mana::vm
