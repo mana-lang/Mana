@@ -55,6 +55,7 @@ void PrintBytecode(const Slice& c) {
         case Halt:
         case Return:
         case Cmp_Greater:
+        case Cmp_Lesser:
             EmitSimple(i, op);
             break;
         default:

@@ -97,6 +97,7 @@ struct Value {
     void operator/=(const Value& rhs);
 
     bool operator>(const Value& rhs) const;
+    bool operator<(const Value& rhs) const;
 
     void operator*=(const i64& rhs);
 

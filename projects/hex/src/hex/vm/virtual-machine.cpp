@@ -20,6 +20,7 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
         &&div,
         &&mul,
         &&cmp_greater,
+        &&cmp_lesser,
     };
 
     // clang-format off
@@ -78,6 +79,10 @@ mul:
 
 cmp_greater:
     stack.Op_CmpGreater();
+    DISPATCH();
+
+cmp_lesser:
+    stack.Op_CmpLesser();
     DISPATCH();
 
 compile_error:

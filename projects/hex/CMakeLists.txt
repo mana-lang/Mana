@@ -11,6 +11,7 @@ set(HEX_SOURCES
         src/hex/core/disassembly.cpp
 
         src/hex/vm/virtual-machine.cpp
+        src/hex/vm/stack.cpp
 )
 
 set(HEX_INCLUDES

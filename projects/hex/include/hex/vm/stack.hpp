@@ -14,101 +14,25 @@ class Stack {
     mvm::Value*             top {nullptr};
 
 public:
-    Stack() {
-        values.reserve(128);
-        top = values.data();
-    }
+    Stack();
 
-    void Reset() {
-        top = values.data();
-    }
+    void Reset();
+    void Push(mvm::Value value);
 
-    void Push(const mvm::Value value) {
-        if (top == &values.back()) {
-            values.reserve(values.capacity() * 2);
-        }
+    mvm::Value  Pop();
+    mvm::Value  ViewTop() const;
+    mvm::Value* Top() const;
 
-        *top = value;
-        ++top;
+    void LogTop(std::string_view msg) const;
+    void LogTopBool(std::string_view msg) const;
 
-        LogTop("push:  {}");
-    }
+    void Op_Add();
+    void Op_Sub();
+    void Op_Mul();
+    void Op_Div();
+    void Op_Neg();
 
-    mvm::Value Pop() {
-        if (top != &values.front()) {
-            --top;
-        } else {
-            Log->error("Attempted to pop from empty stack.");
-            return 0.0;
-        }
-
-        return *top;
-    }
-
-    mvm::Value ViewTop() const {
-        if (top == &values.front()) {
-            Log->error("Attempted to read from empty stack");
-            return 0.0;
-        }
-
-        return *(top - 1);
-    }
-
-    mvm::Value* Top() const {
-        if (top == &values.front()) {
-            Log->error("Attempted to read from empty stack");
-            return nullptr;
-        }
-
-        return top - 1;
-    }
-
-    void LogTop(const std::string_view msg) const {
-#ifdef HEX_DEBUG
-        Log->debug(fmt::runtime(msg), ViewTop().AsFloat());
-#endif
-    }
-
-    void LogTopBool(const std::string_view msg) const {
-#ifdef HEX_DEBUG
-        Log->debug(fmt::runtime(msg), ViewTop().AsBool());
-#endif
-    }
-
-    void Op_Add() {
-        *(top - 1) += Pop();
-
-        LogTop("add:   {}");
-    }
-
-    void Op_Sub() {
-        *(top - 1) -= Pop();
-
-        LogTop("sub:   {}");
-    }
-
-    void Op_Mul() {
-        *(top - 1) *= Pop();
-
-        LogTop("mul:   {}");
-    }
-
-    void Op_Div() {
-        *(top - 1) /= Pop();
-
-        LogTop("div:   {}");
-    }
-
-    void Op_Neg() {
-        *(top - 1) *= -1;
-
-        LogTop("neg:   {}");
-    }
-
-    void Op_CmpGreater() {
-        Push(Pop() > Pop());
-
-        LogTopBool("cmp_greater:   {}");
-    }
+    void Op_CmpGreater();
+    void Op_CmpLesser();
 };
 }  // namespace hex

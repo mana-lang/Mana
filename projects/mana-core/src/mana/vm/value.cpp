@@ -178,6 +178,19 @@ CASE_BOOL:
     UNREACHABLE();
 }
 
+bool Value::operator<(const Value& rhs) const {
+    COMPUTED_GOTO();
+
+CASE_INT:
+    return as.int64 < rhs.AsInt();
+CASE_UNSIGNED:
+    return as.uint64 < rhs.AsUint();
+CASE_FLOAT:
+    return as.float64 < rhs.AsFloat();
+CASE_BOOL:
+    UNREACHABLE();
+}
+
 void Value::operator*=(const i64& rhs) {
     COMPUTED_GOTO();
 
