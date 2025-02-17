@@ -54,7 +54,7 @@ halt:
 ret:
     Log->debug("");
 
-    if (StackTop()->GetType() == Value::Type::Boolean) {
+    if (StackTop()->GetType() == Value::Type::Bool) {
         Log->debug("ret {}\n\n", Pop().AsBool());
     } else {
         Log->debug("ret {}\n\n", Pop().AsFloat());
@@ -181,7 +181,7 @@ Value* VirtualMachine::StackTop() const {
 
 void VirtualMachine::LogTop(const std::string_view msg) const {
 #ifdef HEX_DEBUG
-    if (StackTop()->GetType() == Value::Type::Boolean) {
+    if (StackTop()->GetType() == Value::Type::Bool) {
         Log->debug(fmt::runtime(msg), ViewTop().AsBool());
     } else {
         Log->debug(fmt::runtime(msg), ViewTop().AsFloat());

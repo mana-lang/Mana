@@ -21,20 +21,20 @@ namespace mana::vm {
 #endif
 
 Value::Value(const i64 i)
-    : type(static_cast<u8>(Int64))
-    , as {.int64 = i} {}
+    : as {.int64 = i}
+    , type(static_cast<u8>(Int64)) {}
 
 Value::Value(const u64 u)
-    : type(static_cast<u8>(Uint64))
-    , as {.uint64 = u} {}
+    : as {.uint64 = u}
+    , type(static_cast<u8>(Uint64)) {}
 
 Value::Value(const f64 f)
-    : type(static_cast<u8>(Float64))
-    , as {.float64 = f} {}
+    : as {.float64 = f}
+    , type(static_cast<u8>(Float64)) {}
 
 Value::Value(const bool b)
-    : type(static_cast<u8>(Boolean))
-    , as {.boolean = b} {}
+    : as {.boolean = b}
+    , type(static_cast<u8>(Bool)) {}
 
 Value::Value(const Type t)
     : type(static_cast<u8>(t)) {
@@ -48,7 +48,7 @@ Value::Value(const Type t)
     case Float64:
         as.float64 = 0.0;
         break;
-    case Boolean:
+    case Bool:
         as.boolean = false;
         break;
     default:
@@ -64,7 +64,7 @@ u64 Value::BitCasted() const {
         return std::bit_cast<u64>(as.uint64);
     case Float64:
         return std::bit_cast<u64>(as.float64);
-    case Boolean:
+    case Bool:
         return as.boolean;  // sobbing and weeping
     default:
         UNREACHABLE();
@@ -86,7 +86,7 @@ void Value::WriteBytes(const std::array<u8, sizeof(As)>& bytes) {
     case Float64:
         as.float64 = std::bit_cast<f64>(bytes);
         break;
-    case Boolean:
+    case Bool:
         as.boolean = bytes[0];
         break;
     default:

@@ -14,19 +14,15 @@ struct Value {
         Int64,
         Uint64,
         Float64,
-        Boolean,
+        Bool,
     };
-
-    u8 type;
 
     union As {
         i64  int64;
         u64  uint64;
         f64  float64;
         bool boolean;
-    } as;
-
-    Value() = delete;
+    };
 
     // ReSharper disable CppNonExplicitConvertingConstructor
     Value(i64 i);
@@ -39,6 +35,34 @@ struct Value {
     u64 BitCasted() const;
 
     Type GetType() const;
+
+    f64  AsFloat() const;
+    i64  AsInt() const;
+    u64  AsUint() const;
+    bool AsBool() const;
+
+    void operator+=(const Value& rhs);
+    void operator-=(const Value& rhs);
+    void operator*=(const Value& rhs);
+    void operator/=(const Value& rhs);
+
+    bool operator>(const Value& rhs) const;
+    bool operator>=(const Value& rhs) const;
+    bool operator<(const Value& rhs) const;
+    bool operator<=(const Value& rhs) const;
+
+    bool operator==(const Value& other) const;
+
+    void operator*=(const i64& rhs);
+
+private:
+    As as;
+    u8 type;
+
+    Value() = delete;
+    explicit Value(Type t);
+
+    void WriteBytes(const std::array<u8, sizeof(As)>& bytes);
 
     static i64                  IDispatchI(As val);
     static i64                  IDispatchU(As val);
@@ -83,29 +107,6 @@ struct Value {
         BDispatchF,
         BDispatchB,
     };
-
-    f64  AsFloat() const;
-    i64  AsInt() const;
-    u64  AsUint() const;
-    bool AsBool() const;
-
-    void operator+=(const Value& rhs);
-    void operator-=(const Value& rhs);
-    void operator*=(const Value& rhs);
-    void operator/=(const Value& rhs);
-
-    bool operator>(const Value& rhs) const;
-    bool operator>=(const Value& rhs) const;
-    bool operator<(const Value& rhs) const;
-    bool operator<=(const Value& rhs) const;
-
-    bool operator==(const Value& other) const;
-
-    void operator*=(const i64& rhs);
-
-private:
-    explicit Value(Type t);
-    void WriteBytes(const std::array<u8, sizeof(As)>& bytes);
 };
 
 }  // namespace mana::vm

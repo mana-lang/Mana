@@ -11,22 +11,22 @@ void EmitConstant(i64 offset, f64 constant) {
 }
 
 void EmitConstant(i64 offset, const Value constant) {
-    const auto print = [offset]<typename T>(decltype(Value::type) type, T val) {
+    const auto print = [offset]<typename T>(const Value::Type type, T val) {
         Log->debug("{:04} | {} | {} | {}", offset, magic_enum::enum_name(Op::Push), magic_enum::enum_name(static_cast<Value::Type>(type)), val);
     };
 
-    switch (constant.type) {
+    switch (constant.GetType()) {
     case Value::Type::Float64:
-        print(constant.type, constant.as.float64);
+        print(constant.GetType(), constant.AsFloat());
         break;
     case Value::Type::Int64:
-        print(constant.type, constant.as.int64);
+        print(constant.GetType(), constant.AsInt());
         break;
     case Value::Type::Uint64:
-        print(constant.type, constant.as.uint64);
+        print(constant.GetType(), constant.AsUint());
         break;
-    case Value::Type::Boolean:
-        print(constant.type, constant.as.boolean);
+    case Value::Type::Bool:
+        print(constant.GetType(), constant.AsBool());
         break;
     default:
         break;
