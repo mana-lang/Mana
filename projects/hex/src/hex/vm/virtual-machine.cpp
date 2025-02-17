@@ -4,6 +4,11 @@
 namespace hex {
 using namespace mana::vm;
 
+VirtualMachine::VirtualMachine() {
+    stack.reserve(128);
+    stack_top = stack.data();
+}
+
 InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
     slice = next_slice;
     ip    = slice->Instructions().data();
@@ -45,48 +50,118 @@ halt:
 ret:
     Log->debug("");
 
-    if (stack.Top()->GetType() == Value::Type::Boolean) {
-        Log->debug("ret {}\n\n", stack.Pop().AsBool());
+    if (StackTop()->GetType() == Value::Type::Boolean) {
+        Log->debug("ret {}\n\n", Pop().AsBool());
     } else {
-        Log->debug("ret {}\n\n", stack.Pop().AsFloat());
+        Log->debug("ret {}\n\n", Pop().AsFloat());
     }
 
     DISPATCH();
 
 push:
-    stack.Push(*(values + *ip++));
+    Push(*(values + *ip++));
     DISPATCH();
 
 negate:
-    stack.Op_Neg();
+    *(stack_top - 1) *= -1;
+
+    LogTop("neg:   {}");
     DISPATCH();
 
 add:
-    stack.Op_Add();
+    *(stack_top - 1) += Pop();
+
+    LogTop("add:   {}");
     DISPATCH();
 
 sub:
-    stack.Op_Sub();
+    *(stack_top - 1) -= Pop();
+
+    LogTop("sub:   {}");
     DISPATCH();
 
 div:
-    stack.Op_Div();
+    *(stack_top - 1) /= Pop();
+
+    LogTop("div:   {}");
     DISPATCH();
 
 mul:
-    stack.Op_Mul();
+    *(stack_top - 1) *= Pop();
+
+    LogTop("mul:   {}");
     DISPATCH();
 
 cmp_greater:
-    stack.Op_CmpGreater();
+    Push(Pop() > Pop());
+
+    LogTopBool("cmp_greater: {}");
     DISPATCH();
 
 cmp_lesser:
-    stack.Op_CmpLesser();
+    Push(Pop() < Pop());
+
+    LogTopBool("cmp_lesser: {}");
     DISPATCH();
 
 compile_error:
     return InterpretResult::CompileError;
+}
+
+void VirtualMachine::Reset() {
+    stack_top = stack.data();
+}
+
+void VirtualMachine::Push(Value value) {
+    if (stack_top == &stack.back()) {
+        stack.reserve(stack.capacity() * 2);
+    }
+
+    *stack_top = value;
+    ++stack_top;
+
+    LogTop("push:  {}");
+}
+
+Value VirtualMachine::Pop() {
+    if (stack_top != &stack.front()) {
+        --stack_top;
+    } else {
+        Log->error("Attempted to pop from empty stack.");
+        return 0.0;
+    }
+
+    return *stack_top;
+}
+
+Value VirtualMachine::ViewTop() const {
+    if (stack_top == &stack.front()) {
+        Log->error("Attempted to read from empty stack");
+        return 0.0;
+    }
+
+    return *(stack_top - 1);
+}
+
+Value* VirtualMachine::StackTop() const {
+    if (stack_top == &stack.front()) {
+        Log->error("Attempted to read from empty stack");
+        return nullptr;
+    }
+
+    return stack_top - 1;
+}
+
+void VirtualMachine::LogTop(const std::string_view msg) const {
+#ifdef HEX_DEBUG
+    Log->debug(fmt::runtime(msg), ViewTop().AsFloat());
+#endif
+}
+
+void VirtualMachine::LogTopBool(const std::string_view msg) const {
+#ifdef HEX_DEBUG
+    Log->debug(fmt::runtime(msg), ViewTop().AsBool());
+#endif
 }
 
 }  // namespace hex

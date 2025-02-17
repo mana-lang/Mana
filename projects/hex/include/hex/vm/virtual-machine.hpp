@@ -1,7 +1,5 @@
 #pragma once
 
-#include <hex/vm/stack.hpp>
-
 #include <mana/literals.hpp>
 #include <mana/vm/slice.hpp>
 
@@ -19,12 +17,25 @@ class VirtualMachine {
     mvm::Slice* slice {nullptr};
     ml::u8*     ip {nullptr};
 
-    Stack stack {};
+    // Stack stack {};
+    std::vector<mvm::Value> stack;
+    mvm::Value*             stack_top;
 
 public:
-    VirtualMachine() = default;
+    VirtualMachine();
 
     InterpretResult Interpret(mvm::Slice* next_slice);
+
+private:
+    void Reset();
+    void Push(mvm::Value value);
+
+    mvm::Value  Pop();
+    mvm::Value  ViewTop() const;
+    mvm::Value* StackTop() const;
+
+    void LogTop(std::string_view msg) const;
+    void LogTopBool(std::string_view msg) const;
 };
 
 }  // namespace hex
