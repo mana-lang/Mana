@@ -51,6 +51,8 @@ struct Value {
     bool operator<(const Value& rhs) const;
     bool operator<=(const Value& rhs) const;
 
+    bool operator!() const;
+
     bool operator==(const Value& other) const;
 
     void operator*=(const i64& rhs);

@@ -234,6 +234,9 @@ void Parser::ConstructAST(const ParseNode& node) {
         case Rule::Term:
         case Rule::Factor:
             root->AddChild<BinaryExpr>(*n);
+            break;
+        case Rule::Unary:
+            root->AddChild<UnaryExpr>(*n);
         default:
             break;
         }

@@ -185,6 +185,10 @@ CGOTO_OPERATOR_CMP(bool, >=);
 CGOTO_OPERATOR_CMP(bool, <);
 CGOTO_OPERATOR_CMP(bool, <=);
 
+bool Value::operator!() const {
+    return not as.boolean;
+}
+
 f64 Value::AsFloat() const {
     return dispatch_float[type](as);
 }

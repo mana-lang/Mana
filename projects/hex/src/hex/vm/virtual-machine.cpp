@@ -30,6 +30,7 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
         &&cmp_lesser_eq,
         &&equals,
         &&not_equals,
+        &&bool_not,
     };
 
     // clang-format off
@@ -64,6 +65,8 @@ ret:
 
 push:
     Push(*(values + *ip++));
+
+    LogTop("[push:  {}]");
     DISPATCH();
 
 negate:
@@ -73,62 +76,69 @@ negate:
     DISPATCH();
 
 add:
-    *(stack_top - 1) += Pop();
+    LogTopTwo("add: ({}, {})");
 
-    LogTop("add:   {}");
+    *(stack_top - 1) += Pop();
     DISPATCH();
 
 sub:
-    *(stack_top - 1) -= Pop();
+    LogTopTwo("sub: ({}, {})");
 
-    LogTop("sub:   {}");
+    *(stack_top - 1) -= Pop();
     DISPATCH();
 
 div:
-    *(stack_top - 1) /= Pop();
+    LogTopTwo("div: ({}, {})");
 
-    LogTop("div:   {}");
+    *(stack_top - 1) /= Pop();
     DISPATCH();
 
 mul:
-    *(stack_top - 1) *= Pop();
+    LogTopTwo("mul: ({}, {})");
 
-    LogTop("mul:   {}");
+    *(stack_top - 1) *= Pop();
     DISPATCH();
 
 cmp_greater:
-    Push(Pop() > Pop());
+    LogTopTwo("cmp_greater: ({}, {})");
 
-    LogTop("cmp_greater: {}");
+    Push(Pop() > Pop());
     DISPATCH();
 
 cmp_greater_eq:
-    Push(Pop() >= Pop());
+    LogTopTwo("cmp_greater_eq: ({}, {})");
 
-    LogTop("cmp_greater_eq: {}");
+    Push(Pop() >= Pop());
     DISPATCH();
 
 cmp_lesser:
-    Push(Pop() < Pop());
+    LogTop("cmp_lesser: ({}, {})");
 
-    LogTop("cmp_lesser: {}");
+    Push(Pop() < Pop());
     DISPATCH();
 
 cmp_lesser_eq:
-    Push(Pop() <= Pop());
+    LogTopTwo("cmp_lesser_eq: ({}, {})");
 
-    LogTop("cmp_lesser_eq: {}");
+    Push(Pop() <= Pop());
     DISPATCH();
 
 equals:
+    LogTopTwo("equals ({}, {})");
+
     Push(Pop() == Pop());
-
-    LogTop("equals: {}");
     DISPATCH();
-not_equals:
-    Push(Pop() != Pop());
 
-    LogTop("not_equals: {}");
+not_equals:
+    LogTopTwo("not_equals ({}, {})");
+
+    Push(Pop() != Pop());
+    DISPATCH();
+
+bool_not:
+    LogTop("not ({})");
+
+    Push(!Pop());
     DISPATCH();
 
 compile_error:
@@ -146,8 +156,6 @@ void VirtualMachine::Push(const Value value) {
 
     *stack_top = value;
     ++stack_top;
-
-    LogTop("push:  {}");
 }
 
 Value VirtualMachine::Pop() {
@@ -185,6 +193,16 @@ void VirtualMachine::LogTop(const std::string_view msg) const {
         Log->debug(fmt::runtime(msg), ViewTop().AsBool());
     } else {
         Log->debug(fmt::runtime(msg), ViewTop().AsFloat());
+    }
+#endif
+}
+
+void VirtualMachine::LogTopTwo(std::string_view msg) const {
+#ifdef HEX_DEBUG
+    if (StackTop()->GetType() == Value::Type::Bool) {
+        Log->debug(fmt::runtime(msg), ViewTop().AsBool(), (StackTop() - 1)->AsBool());
+    } else {
+        Log->debug(fmt::runtime(msg), ViewTop().AsFloat(), (StackTop() - 1)->AsFloat());
     }
 #endif
 }

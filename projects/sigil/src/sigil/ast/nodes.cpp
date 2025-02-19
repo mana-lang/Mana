@@ -99,6 +99,10 @@ SIGIL_NODISCARD bool IsNumber(const TokenType token) {
     return token == TokenType::Lit_Float || token == TokenType::Lit_Int;
 }
 
+SIGIL_NODISCARD bool IsBooleanLiteral(const TokenType token) {
+    return token == TokenType::Lit_true || token == TokenType::Lit_false;
+}
+
 Node::Ptr BinaryExpr::ConstructChild(const ParseNode& node) {
     const auto& token = node.tokens[0];
     switch (node.rule) {
@@ -112,11 +116,24 @@ Node::Ptr BinaryExpr::ConstructChild(const ParseNode& node) {
     case Factor:
         return std::make_shared<BinaryExpr>(token.text, *node.branches[0], *node.branches[1]);
 
-    case Unary:
-        if (token.type == TokenType::Op_Minus && IsNumber(node.branches[0]->tokens[0].type)) {
-            return std::make_shared<UnaryExpr>(node);
+    case Unary: {
+        if (token.type == TokenType::Op_Minus) {
+            if (IsNumber(node.branches[0]->tokens[0].type)) {
+                return std::make_shared<UnaryExpr>(node);
+            } else {
+                // report error
+                break;
+            }
         }
-        break;
+        if (token.type == TokenType::Op_LogicalNot) {
+            if (IsBooleanLiteral(node.branches[0]->tokens[0].type)) {
+                return std::make_shared<UnaryExpr>(node);
+            } else {
+                // report error
+                break;
+            }
+        }
+    } break;
     case Literal:
         return MakeLiteral(token);
 

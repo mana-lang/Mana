@@ -61,7 +61,6 @@ void MainVisitor::Visit(const BinaryExpr& node) {
             slice.Write(Op::NotEquals);
             break;
         }
-
     default:
         Log->error("Unknown Binary-Operator '{}'", node.GetOp());
         break;
@@ -85,8 +84,16 @@ void MainVisitor::Visit(const Literal<bool>& node) {
 void MainVisitor::Visit(const UnaryExpr& node) {
     node.GetVal().Accept(*this);
 
-    if (node.GetOp() == '-') {
+    switch (node.GetOp()) {
+    case '-':
         slice.Write(Op::Negate);
+        break;
+    case '!':
+        slice.Write(Op::Not);
+        break;
+    default:
+        Log->error("Invalid unary expression");
+        break;
     }
 }
 }  // namespace circe
