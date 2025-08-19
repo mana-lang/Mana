@@ -60,7 +60,7 @@ struct Value {
     // Nulled values shouldn't be valid
     // -727 (bool) is a specific signifier of that
     Value()
-        : as{.int64 = -727}
+        : as {.int64 = -727}
         , type(static_cast<u8>(Bool)) {}
 
 private:
@@ -71,10 +71,11 @@ private:
 
     void WriteBytes(const std::array<u8, sizeof(As)>& bytes);
 
-    static i64                  IDispatchI(As val);
-    static i64                  IDispatchU(As val);
-    static i64                  IDispatchF(As val);
-    static i64                  IDispatchB(As val);
+    static i64 IDispatchI(As val);
+    static i64 IDispatchU(As val);
+    static i64 IDispatchF(As val);
+    static i64 IDispatchB(As val);
+
     static constexpr std::array dispatch_int {
         IDispatchI,
         IDispatchU,
@@ -82,10 +83,11 @@ private:
         IDispatchB,
     };
 
-    static u64                  UDispatchI(As val);
-    static u64                  UDispatchU(As val);
-    static u64                  UDispatchF(As val);
-    static u64                  UDispatchB(As val);
+    static u64 UDispatchI(As val);
+    static u64 UDispatchU(As val);
+    static u64 UDispatchF(As val);
+    static u64 UDispatchB(As val);
+
     static constexpr std::array dispatch_unsigned {
         UDispatchI,
         UDispatchU,
@@ -93,10 +95,11 @@ private:
         UDispatchB,
     };
 
-    static f64                  FDispatchI(As val);
-    static f64                  FDispatchU(As val);
-    static f64                  FDispatchF(As val);
-    static f64                  FDispatchB(As val);
+    static f64 FDispatchI(As val);
+    static f64 FDispatchU(As val);
+    static f64 FDispatchF(As val);
+    static f64 FDispatchB(As val);
+
     static constexpr std::array dispatch_float {
         FDispatchI,
         FDispatchU,
@@ -104,10 +107,11 @@ private:
         FDispatchB,
     };
 
-    static bool                 BDispatchI(As val);
-    static bool                 BDispatchU(As val);
-    static bool                 BDispatchF(As val);
-    static bool                 BDispatchB(As val);
+    static bool BDispatchI(As val);
+    static bool BDispatchU(As val);
+    static bool BDispatchF(As val);
+    static bool BDispatchB(As val);
+
     static constexpr std::array dispatch_bool {
         BDispatchI,
         BDispatchU,
