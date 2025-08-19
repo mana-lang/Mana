@@ -32,14 +32,14 @@ struct Value {
     // ReSharper restore CppNonExplicitConvertingConstructor
 
     // ReSharper disable once CppNotAllPathsReturnValue
-    u64 BitCasted() const;
+    MANA_NODISCARD u64 BitCasted() const;
 
-    Type GetType() const;
+    MANA_NODISCARD Type GetType() const;
 
-    f64  AsFloat() const;
-    i64  AsInt() const;
-    u64  AsUint() const;
-    bool AsBool() const;
+    MANA_NODISCARD f64  AsFloat() const;
+    MANA_NODISCARD i64  AsInt() const;
+    MANA_NODISCARD u64  AsUint() const;
+    MANA_NODISCARD bool AsBool() const;
 
     void operator+=(const Value& rhs);
     void operator-=(const Value& rhs);

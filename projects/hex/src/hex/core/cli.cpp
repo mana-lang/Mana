@@ -21,8 +21,8 @@ i64 CommandLineSettings::Populate() {
     } catch (const CLI::ParseError& e) {
         const auto exit_code = cli->exit(e);
         if (exit_code == 0) {
-            const std::string_view helparg(argv[1]);
-            if (helparg == "--help" || helparg == "-h") {
+            if (const std::string_view helparg(argv[1]);
+                helparg == "--help" || helparg == "-h") {
                 return 1;  // not an error code
             }
         }
