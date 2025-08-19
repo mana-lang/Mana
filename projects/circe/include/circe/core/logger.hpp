@@ -17,5 +17,10 @@
 #endif
 
 namespace circe {
-extern mana::SpdLogger Log;
+// extern mana::SpdLogger Log;
+
+inline mana::SpdLogger& Log() {
+    static mana::SpdLogger Log = mana::GlobalLoggerSink().CreateLogger(CIRCE_LOG_NAME, CIRCE_LOG_LEVEL);
+    return Log;
+}
 }

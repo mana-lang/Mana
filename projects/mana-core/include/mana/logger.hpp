@@ -29,6 +29,10 @@ public:
     auto CreateLogger(std::string_view name, LogLevel default_level = LogLevel::Debug) -> SpdLogger;
 };
 
-extern LoggerSink GlobalLoggerSink;
+inline LoggerSink& GlobalLoggerSink() {
+    static LoggerSink logger_sink;
+    return logger_sink;
+}
+// extern LoggerSink GlobalLoggerSink;
 
 }  // namespace mana

@@ -17,19 +17,19 @@ constexpr std::string IN_PATH  = "assets/samples/";
 constexpr std::string OUT_PATH = "../hex/";
 
 int CreateFile(const std::string& filename) {
-    Log->info("");
+    Log()->info("");
 
     sigil::Lexer lexer;
 
     const std::filesystem::path in = IN_PATH + filename;
 
     if (lexer.Tokenize(in)) {
-        Log->info("Tokenized file from '{}'", in.string());
+        Log()->info("Tokenized file from '{}'", in.string());
     }
 
     sigil::Parser parser(lexer.RelinquishTokens());
     if (parser.Parse()) {
-        Log->info("Parsed the file.");
+        Log()->info("Parsed the file.");
     }
 
     const auto& ast = parser.ViewAST();
@@ -43,14 +43,14 @@ int CreateFile(const std::string& filename) {
 
     std::filesystem::path out = OUT_PATH + in.filename().replace_extension("mhm").string();
     std::ofstream         out_file(out, std::ios::binary);
-    Log->info("Output file to '{}'", out.string());
+    Log()->info("Output file to '{}'", out.string());
 
     const auto output = slice.Serialize();
-    out_file.write(reinterpret_cast<const char*>(output.data()), output.size());
+    out_file.write(reinterpret_cast<const char*>(output.data()), static_cast<std::streamsize>(output.size()));
 
     int ret = 0;
     if (not out_file) {
-        Log->error("Failed to write to file.");
+        Log()->error("Failed to write to file.");
         ret = 3;
     }
 
@@ -60,7 +60,7 @@ int CreateFile(const std::string& filename) {
 
 int main() {
     using namespace circe;
-    Log->info("Hello from Circe!");
+    Log()->info("Hello from Circe!");
 
     CreateFile("expr-a.mn");
     CreateFile("expr-b.mn");
