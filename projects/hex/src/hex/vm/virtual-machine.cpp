@@ -4,8 +4,10 @@
 namespace hex {
 using namespace mana::vm;
 
+static constexpr std::size_t STACK_MAX = 512;
+
 VirtualMachine::VirtualMachine() {
-    stack.reserve(128);
+    stack.resize(STACK_MAX);
     stack_top = stack.data();
 }
 
@@ -151,7 +153,7 @@ void VirtualMachine::Reset() {
 
 void VirtualMachine::Push(const Value value) {
     if (stack_top == &stack.back()) {
-        stack.reserve(stack.capacity() * 2);
+        stack.resize(stack.capacity() * 2);
     }
 
     *stack_top = value;

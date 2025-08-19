@@ -60,6 +60,7 @@ void PrintBytecode(const Slice& c) {
         case Cmp_LesserEq:
         case Equals:
         case NotEquals:
+        case Not:
             EmitSimple(i, op);
             break;
         default:

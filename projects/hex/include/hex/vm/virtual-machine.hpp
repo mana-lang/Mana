@@ -17,7 +17,6 @@ class VirtualMachine {
     mvm::Slice* slice {nullptr};
     ml::u8*     ip {nullptr};
 
-    // Stack stack {};
     std::vector<mvm::Value> stack;
     mvm::Value*             stack_top;
 

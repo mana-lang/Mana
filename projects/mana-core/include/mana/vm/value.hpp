@@ -57,11 +57,14 @@ struct Value {
 
     void operator*=(const i64& rhs);
 
+    Value()
+        : as{.boolean = false}
+        , type(static_cast<u8>(Bool)) {}
+
 private:
     As as;
     u8 type;
 
-    Value() = delete;
     explicit Value(Type t);
 
     void WriteBytes(const std::array<u8, sizeof(As)>& bytes);
