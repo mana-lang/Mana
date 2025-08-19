@@ -36,7 +36,7 @@ Value::Value(const bool b)
     : as {.boolean = b}
     , type(static_cast<u8>(Bool)) {}
 
-Value::Value(const Type t)
+Value::Value(const Type t) // NOLINT(*-pro-type-member-init)
     : type(static_cast<u8>(t)) {
     switch (type) {
     case Int64:

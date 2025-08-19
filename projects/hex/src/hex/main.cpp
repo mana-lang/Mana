@@ -75,8 +75,7 @@ int main(const int argc, char** argv) {
     cli.Populate();
 
     if (cli.ShouldSayHi()) {
-        Log->debug("Hiiiiiii :3c");
-        Log->debug("");
+        Log->debug("Hey!");
     }
 
     const std::string_view exe_name = cli.ExecutableName();

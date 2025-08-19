@@ -39,22 +39,43 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
 #ifdef HEX_DEBUG
     constexpr auto err          = &&compile_error;
     constexpr auto dispatch_max = dispatch_table.size();
-#    define DISPATCH()                                                                  \
+#   define DISPATCH()                                                                   \
         {                                                                               \
             auto  label = *ip >= 0 && *ip < dispatch_max ? dispatch_table[*ip++] : err; \
             goto *label;                                                                \
         }
+#   define PUSH(val) Push(val)
+#   define POP() Pop()
+#   define TOP_VAL() *StackTop()
+#   define LOG(msg) Log->debug(msg)
+#   define LOG_TOP(msg) LogTop(msg)
+#   define LOG_TOP_TWO(msg) LogTopTwo(msg)
+#   define FETCH_CONSTANT() values[*ip++]
+#   define CMP(op) Pop() op Pop()
+#   define LOGICAL_NOT() Push(!Pop())
 #else
-#    define DISPATCH() goto* dispatch_table[*ip++]
+#   define DISPATCH() goto* dispatch_table[*ip++]
+#   define PUSH(val) *(stack_top++) = val
+#   define POP() *(--stack_top)
+#   define TOP_VAL() *(stack_top - 1)
+#   define LOG(msg)
+#   define LOG_TOP(msg)
+#   define LOG_TOP_TWO(msg)
+#   define FETCH_CONSTANT() *(values + *ip++)
+#   define CMP(op) *(stack_top - 2) op *(stack_top - 1)
+#   define LOGICAL_NOT() *(++stack_top) = !*(--stack_top)
 #endif
     // clang-format on
 
+
+    // Start VM
     DISPATCH();
 
 halt:
     return InterpretResult::OK;
 
 ret:
+#ifdef HEX_DEBUG
     Log->debug("");
 
     if (StackTop()->GetType() == Value::Type::Bool) {
@@ -62,85 +83,88 @@ ret:
     } else {
         Log->debug("ret {}\n\n", Pop().AsFloat());
     }
+#else
+    POP();
+#endif
 
     DISPATCH();
 
 push:
-    Push(*(values + *ip++));
+    PUSH(FETCH_CONSTANT());
+    LOG_TOP("[push:  {}]");
 
-    LogTop("[push:  {}]");
     DISPATCH();
 
 negate:
-    *(stack_top - 1) *= -1;
+    TOP_VAL() *= -1;
+    LOG_TOP("neg:   {}");
 
-    LogTop("neg:   {}");
     DISPATCH();
 
 add:
-    LogTopTwo("add: ({}, {})");
+    LOG_TOP_TWO("add: ({}, {})");
+    TOP_VAL() += POP();
 
-    *(stack_top - 1) += Pop();
     DISPATCH();
 
 sub:
-    LogTopTwo("sub: ({}, {})");
+    LOG_TOP_TWO("sub: ({}, {})");
+    TOP_VAL() -= POP();
 
-    *(stack_top - 1) -= Pop();
     DISPATCH();
 
 div:
-    LogTopTwo("div: ({}, {})");
+    LOG_TOP_TWO("div: ({}, {})");
+    TOP_VAL() /= POP();
 
-    *(stack_top - 1) /= Pop();
     DISPATCH();
 
 mul:
-    LogTopTwo("mul: ({}, {})");
+    LOG_TOP_TWO("mul: ({}, {})");
+    TOP_VAL() *= POP();
 
-    *(stack_top - 1) *= Pop();
     DISPATCH();
 
 cmp_greater:
-    LogTopTwo("cmp_greater: ({}, {})");
+    LOG_TOP_TWO("cmp_greater: ({}, {})");
+    PUSH(CMP(>));
 
-    Push(Pop() > Pop());
     DISPATCH();
 
 cmp_greater_eq:
-    LogTopTwo("cmp_greater_eq: ({}, {})");
+    LOG_TOP_TWO("cmp_greater_eq: ({}, {})");
+    PUSH(CMP(>=));
 
-    Push(Pop() >= Pop());
     DISPATCH();
 
 cmp_lesser:
-    LogTop("cmp_lesser: ({}, {})");
+    LOG_TOP_TWO("cmp_lesser: ({}, {})");
+    PUSH(CMP(<));
 
-    Push(Pop() < Pop());
     DISPATCH();
 
 cmp_lesser_eq:
-    LogTopTwo("cmp_lesser_eq: ({}, {})");
+    LOG_TOP_TWO("cmp_lesser_eq: ({}, {})");
+    PUSH(CMP(<=));
 
-    Push(Pop() <= Pop());
     DISPATCH();
 
 equals:
-    LogTopTwo("equals ({}, {})");
+    LOG_TOP_TWO("equals ({}, {})");
+    PUSH(CMP(==));
 
-    Push(Pop() == Pop());
     DISPATCH();
 
 not_equals:
-    LogTopTwo("not_equals ({}, {})");
+    LOG_TOP_TWO("not_equals ({}, {})");
+    PUSH(CMP(!=));
 
-    Push(Pop() != Pop());
     DISPATCH();
 
 bool_not:
-    LogTop("not ({})");
+    LOG_TOP("not ({})");
+    LOGICAL_NOT();
 
-    Push(!Pop());
     DISPATCH();
 
 compile_error:
@@ -190,23 +214,19 @@ Value* VirtualMachine::StackTop() const {
 }
 
 void VirtualMachine::LogTop(const std::string_view msg) const {
-#ifdef HEX_DEBUG
     if (StackTop()->GetType() == Value::Type::Bool) {
         Log->debug(fmt::runtime(msg), ViewTop().AsBool());
     } else {
         Log->debug(fmt::runtime(msg), ViewTop().AsFloat());
     }
-#endif
 }
 
 void VirtualMachine::LogTopTwo(std::string_view msg) const {
-#ifdef HEX_DEBUG
     if (StackTop()->GetType() == Value::Type::Bool) {
-        Log->debug(fmt::runtime(msg), ViewTop().AsBool(), (StackTop() - 1)->AsBool());
+        Log->debug(fmt::runtime(msg), (StackTop() - 1)->AsBool(), ViewTop().AsBool());
     } else {
-        Log->debug(fmt::runtime(msg), ViewTop().AsFloat(), (StackTop() - 1)->AsFloat());
+        Log->debug(fmt::runtime(msg), (StackTop() - 1)->AsFloat(), ViewTop().AsFloat());
     }
-#endif
 }
 
 }  // namespace hex

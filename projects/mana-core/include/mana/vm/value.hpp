@@ -57,8 +57,10 @@ struct Value {
 
     void operator*=(const i64& rhs);
 
+    // Nulled values shouldn't be valid
+    // -727 (bool) is a specific signifier of that
     Value()
-        : as{.boolean = false}
+        : as{.int64 = -727}
         , type(static_cast<u8>(Bool)) {}
 
 private:

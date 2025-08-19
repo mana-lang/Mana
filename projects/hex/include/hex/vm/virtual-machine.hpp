@@ -30,8 +30,8 @@ private:
     void Push(mvm::Value value);
 
     mvm::Value  Pop();
-    mvm::Value  ViewTop() const;
-    mvm::Value* StackTop() const;
+    HEX_NODISCARD mvm::Value  ViewTop() const;
+    HEX_NODISCARD mvm::Value* StackTop() const;
 
     void LogTop(std::string_view msg) const;
     void LogTopTwo(std::string_view msg) const;
