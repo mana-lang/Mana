@@ -44,10 +44,12 @@ public:
 private:
     SIGIL_NODISCARD std::string EmitParseTree(const ParseNode& node, std::string prepend = "") const;
 
-    SIGIL_NODISCARD auto CurrentToken() const -> const Token&;
-    SIGIL_NODISCARD auto PeekNextToken() const -> const Token&;
-    SIGIL_NODISCARD auto NextToken() -> const Token&;
-    SIGIL_NODISCARD auto GetAndCycleToken() -> const Token&;
+    SIGIL_NODISCARD const Token& CurrentToken() const;
+    SIGIL_NODISCARD const Token& PeekNextToken() const;
+    SIGIL_NODISCARD const Token& NextToken();
+    SIGIL_NODISCARD const Token& GetAndCycleToken();
+
+    bool SkipNewlines();
 
     void AddTokensTo(ParseNode& node, TokenType delimiter);
     void AddTokensTo(ParseNode& node, ml::i64 count);
@@ -62,14 +64,17 @@ private:
     void ConstructAST(const ParseNode& node);
 
     // Matchers
-    SIGIL_NODISCARD bool MatchedExpression(ParseNode& node);
+    bool MatchedExpression(ParseNode& node);
 
-    SIGIL_NODISCARD bool MatchedPrimary(ParseNode& node);
-    SIGIL_NODISCARD bool MatchedUnary(ParseNode& node);
-    SIGIL_NODISCARD bool MatchedFactor(ParseNode& node);
-    SIGIL_NODISCARD bool MatchedTerm(ParseNode& node);
-    SIGIL_NODISCARD bool MatchedComparison(ParseNode& node);
-    SIGIL_NODISCARD bool MatchedEquality(ParseNode& node);
+    bool MatchedElemList(ParseNode& node);
+    bool MatchedArrayLiteral(ParseNode& node);
+    bool MatchedGrouping(ParseNode& node);
+    bool MatchedPrimary(ParseNode& node);
+    bool MatchedUnary(ParseNode& node);
+    bool MatchedFactor(ParseNode& node);
+    bool MatchedTerm(ParseNode& node);
+    bool MatchedComparison(ParseNode& node);
+    bool MatchedEquality(ParseNode& node);
 
     using MatcherFnPtr   = bool (Parser::*)(ParseNode&);
     using OpCheckerFnPtr = bool (*)(TokenType);

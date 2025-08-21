@@ -15,6 +15,8 @@ enum class Rule : ml::i64 {
 
     Grouping,
     Literal,
+    ArrayLiteral,
+    ElemList,
 
     Unary,
     Factor,

@@ -1,12 +1,12 @@
-ID         = [a-zA-Z_][a-zA-Z0-9_]* ; // letter or underscore followed by any letters, numbers or underscores
+ID         = [a-zA-Z_][a-zA-Z0-9_]* ;  (*letter or underscore followed by any letters, numbers or underscores *)
 INT        = [0-9]+                  ;
 FLOAT      = INT.[0-9]+              ;
-STRING     = "\"(?:[^\"\\]|\\.)*\""  ; // anything between double-quoted strings, minus escape sequences
-STRING_CH  = "'(?:[^'\\]|\\.)*'"     ; // same but single quotes
+STRING     = "\"(?:[^\"\\]|\\.)*\""  ;  (*anything between double-quoted strings, minus escape sequences *)
+STRING_CH  = "'(?:[^'\\]|\\.)*'"     ; (* same but single quotes *)
 
 
 
-// rules
+ (* rules *)
 artifact = expr* EOF ;
 
 expr       = equality                                 ;
@@ -15,7 +15,7 @@ comparison = term ( ('>' | '>=' | '<' | '<=') term)*  ;
 term       = factor ( ('-' | '+') factor)*            ;
 factor     = unary ( ('/' | '*') unary )*             ;
 unary      = ('!' | '-') unary | primary              ;
-primary    = literal | grouping                       ;
+primary    = grouping | literal | array_literal       ;
 grouping   = "(" expr ")"                             ;
 literal    = number
            | string
@@ -23,6 +23,8 @@ literal    = number
            | "false"
            | "null"
            ;
+array_literal = '[' elem_list? ']'   ;
+elem_list = expr (',' expr)* (',')?  ;
 
 number = INT | FLOAT        ;
 string = STRING | STRING_CH ;

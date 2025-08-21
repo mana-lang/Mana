@@ -46,6 +46,22 @@ TEST_CASE("P-Trees", "[parse][ast]") {
             REQUIRE(file_str == ptree_str);
         }
 
+
         parser.PrintParseTree();
+    }
+
+    SECTION("Arrays") {
+        Lexer lexer;
+
+        const auto path = Concatenate(PARSER_SAMPLE_PATH, "arrays.mn");
+        REQUIRE(lexer.Tokenize(path));
+
+        Parser parser(lexer.RelinquishTokens());
+
+        REQUIRE(parser.Parse());
+
+        const auto& tokens = parser.ViewTokens();
+        const auto& ptree  = parser.ViewParseTree();
+        parser.EmitParseTree(Concatenate(PARSER_CONTROL_PATH, "arrays"));
     }
 }

@@ -66,7 +66,7 @@ void Parser::PrintParseTree() const {
 }
 
 void Parser::EmitParseTree(const std::string_view file_name) const {
-    std::ofstream out {std::string(file_name) + std::string(".pt")};
+    std::ofstream out {std::string(file_name) + std::string(".ptree")};
 
     out << EmitParseTree(parse_tree);
 
@@ -78,7 +78,7 @@ std::string Parser::EmitParseTree() const {
 }
 
 std::string Parser::EmitParseTree(const ParseNode& node, std::string prepend) const {
-    std::string ret = "";
+    std::string ret;
     if (node.rule == Rule::Artifact) {
         ret = fmt::format("[{}] -> {}\n\n", magic_enum::enum_name(node.rule), node.tokens[0].text);
 
@@ -178,24 +178,24 @@ void Parser::AddCycledTokenTo(ParseNode& node) {
     }
 }
 
-void Parser::TransmitTokens(TokenStream& sender, TokenStream& receiver) const {
-    for (const auto& send : sender) {
-        receiver.push_back(send);
+void Parser::TransmitTokens(TokenStream& from, TokenStream& to) const {
+    for (const auto& from_sender : from) {
+        to.push_back(from_sender);
     }
 
-    sender.clear();
+    from.clear();
 }
 
-void Parser::TransmitTokens(ParseNode& sender, ParseNode& receiver, TokenRange range) const {
+void Parser::TransmitTokens(ParseNode& from, ParseNode& to, TokenRange range) const {
     const auto [breadth, offset] = range;
 
-    if (breadth + offset > sender.tokens.size()) {
+    if (breadth + offset > from.tokens.size()) {
         Log->error("TransmitTokens: range was too large");
         return;
     }
 
     for (i64 i = 0; i < breadth; ++i) {
-        receiver.tokens.emplace_back(sender.tokens[offset]);
+        to.tokens.emplace_back(from.tokens[offset]);
     }
 }
 
@@ -215,7 +215,7 @@ bool Parser::ProgressedParseTree(ParseNode& node) {
 
 void Parser::ConstructAST(const ParseNode& node) {
     if (node.rule != Rule::Artifact) {
-        Log->error("Top-level Ptree node was not 'Artifact' but {}", magic_enum::enum_name(node.rule));
+        Log->error("Top-level p-tree node was not 'Artifact' but {}", magic_enum::enum_name(node.rule));
         return;
     }
 
@@ -245,6 +245,89 @@ void Parser::ConstructAST(const ParseNode& node) {
 
 bool Parser::MatchedExpression(ParseNode& node) {
     return MatchedEquality(node);
+}
+
+bool Parser::SkipNewlines() {
+    bool ret = false;
+
+    while (cursor < tokens.size()
+        && CurrentToken().type == TokenType::Terminator
+        && CurrentToken().text == "\n") {
+        ret = true;
+        ++cursor;
+    }
+
+    return ret;
+}
+
+// elem_list = expr (',' expr)* (',')?  ;
+bool Parser::MatchedElemList(ParseNode& node) {
+    using enum TokenType;
+
+    auto& elem_list {node.NewBranch()};
+    elem_list.rule = Rule::ElemList;
+
+    SkipNewlines();
+
+    if (not MatchedExpression(elem_list)) {
+        node.PopBranch();
+        return false;
+    }
+
+    // trailing comma allowed
+    while (CurrentToken().type == Op_Comma) {
+        AddCycledTokenTo(elem_list);  // ','
+
+        SkipNewlines();
+
+        if (not MatchedExpression(elem_list)) {
+            break;
+        }
+
+        SkipNewlines();
+    }
+
+    return true;
+}
+
+// array_literal = '[' elem_list? ']'   ;
+bool Parser::MatchedArrayLiteral(ParseNode& node) {
+    if (CurrentToken().type == TokenType::Op_BracketLeft) {
+        auto& array_literal {node.NewBranch()};
+        array_literal.rule = Rule::ArrayLiteral;
+        AddCycledTokenTo(array_literal);  // '['
+
+        // Allow [\n] etc.
+        SkipNewlines();
+
+        // []
+        if (CurrentToken().type == TokenType::Op_BracketRight) {
+            AddCycledTokenTo(array_literal);  // ']'
+            return true;
+        }
+
+        if (not MatchedElemList(array_literal)) {
+            Log->error("Line: {} -> | Expected elem list", CurrentToken().position.line);
+            array_literal.rule = Rule::Mistake;
+            return false;
+        }
+
+        // [1, 2, 3,]
+        if (CurrentToken().type == TokenType::Op_BracketRight) {
+            AddCycledTokenTo(array_literal);  // ']'
+            return true;
+        }
+
+        SkipNewlines();
+
+        Log->error("Line: {} -> | Expected ']'", CurrentToken().position.line);
+        array_literal.rule = Rule::Mistake;
+    }
+    return false;
+}
+
+bool Parser::MatchedGrouping(ParseNode& node) {
+    return false;
 }
 
 // literal = number | string | KW_true | KW_false | KW_null
@@ -299,6 +382,10 @@ bool Parser::MatchedPrimary(ParseNode& node) {
                 return true;
             }
         }
+    }
+
+    if (MatchedArrayLiteral(node)) {
+        return true;
     }
 
     if (not IsLiteral(CurrentToken().type)) {
