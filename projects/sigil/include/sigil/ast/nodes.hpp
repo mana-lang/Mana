@@ -86,21 +86,21 @@ public:
     void Accept(Visitor& visitor) const override;
 
 private:
-    static Ptr ConstructChild(const ParseNode& node);
-    explicit BinaryExpr(const ParseNode& node, ml::i64 depth);
+    static Ptr ConstructChild(const ParseNode& operand_node);
+    explicit BinaryExpr(const ParseNode& binary_node, ml::i64 depth);
 };
 
 class UnaryExpr final : public Node {
-    char op;
+    std::string op;
     Ptr  val;
 
 public:
-    explicit UnaryExpr(const ParseNode& node);
+    explicit UnaryExpr(const ParseNode& unary_node);
 
     void Accept(Visitor& visitor) const override;
 
-    SIGIL_NODISCARD char GetOp() const;
-    SIGIL_NODISCARD auto GetVal() const -> const Node&;
+    SIGIL_NODISCARD std::string_view GetOp() const;
+    SIGIL_NODISCARD const Node& GetVal() const;
 };
 
 }  // namespace sigil::ast

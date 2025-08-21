@@ -53,9 +53,9 @@ void Artifact::Accept(Visitor& visitor) const {
 }
 
 /// BinaryExpr
-BinaryExpr::BinaryExpr(const ParseNode& node, const i64 depth) {
-    const auto& tokens   = node.tokens;
-    const auto& branches = node.branches;
+BinaryExpr::BinaryExpr(const ParseNode& binary_node, const i64 depth) {
+    const auto& tokens   = binary_node.tokens;
+    const auto& branches = binary_node.branches;
 
     if (tokens.size() <= depth) {
         // we're in the leaf node
@@ -66,7 +66,8 @@ BinaryExpr::BinaryExpr(const ParseNode& node, const i64 depth) {
     }
 
     // we're in a parent node
-    left  = std::shared_ptr<BinaryExpr>(new BinaryExpr(node, depth + 1));  // can't call make_shared cause private
+    left  = std::shared_ptr<BinaryExpr>(new BinaryExpr(binary_node, depth + 1)
+    );  // can't call make_shared cause private
     right = ConstructChild(*branches[branches.size() - depth]);
     op    = tokens[tokens.size() - depth].text;
 }
@@ -96,42 +97,42 @@ void BinaryExpr::Accept(Visitor& visitor) const {
 }
 
 SIGIL_NODISCARD bool IsNumber(const TokenType token) {
-    return token == TokenType::Lit_Float || token == TokenType::Lit_Int;
+    using enum TokenType;
+    return token == Lit_Float || token == Lit_Int;
 }
 
 SIGIL_NODISCARD bool IsBooleanLiteral(const TokenType token) {
-    return token == TokenType::Lit_true || token == TokenType::Lit_false;
+    using enum TokenType;
+    return token == Lit_true || token == Lit_false;
 }
 
-Node::Ptr BinaryExpr::ConstructChild(const ParseNode& node) {
-    const auto& token = node.tokens[0];
-    switch (node.rule) {
+Node::Ptr BinaryExpr::ConstructChild(const ParseNode& operand_node) {
+    const auto& token = operand_node.tokens[0];
+    switch (operand_node.rule) {
         using enum Rule;
 
     case Grouping:
-        return ConstructChild(*node.branches[0]);
+        return ConstructChild(*operand_node.branches[0]);
 
     case Comparison:
     case Term:
     case Factor:
-        return std::make_shared<BinaryExpr>(token.text, *node.branches[0], *node.branches[1]);
+        return std::make_shared<BinaryExpr>(token.text, *operand_node.branches[0], *operand_node.branches[1]);
 
     case Unary: {
         if (token.type == TokenType::Op_Minus) {
-            if (IsNumber(node.branches[0]->tokens[0].type)) {
-                return std::make_shared<UnaryExpr>(node);
-            } else {
-                // report error
-                break;
+            if (IsNumber(operand_node.branches[0]->tokens[0].type)) {
+                return std::make_shared<UnaryExpr>(operand_node);
             }
+            // report error
+            break;
         }
         if (token.type == TokenType::Op_LogicalNot) {
-            if (IsBooleanLiteral(node.branches[0]->tokens[0].type)) {
-                return std::make_shared<UnaryExpr>(node);
-            } else {
-                // report error
-                break;
+            if (IsBooleanLiteral(operand_node.branches[0]->tokens[0].type)) {
+                return std::make_shared<UnaryExpr>(operand_node);
             }
+            // report error
+            break;
         }
     } break;
     case Literal:
@@ -148,26 +149,26 @@ Node::Ptr BinaryExpr::ConstructChild(const ParseNode& node) {
 }
 
 /// UnaryExpr
-UnaryExpr::UnaryExpr(const ParseNode& node)
-    : op(node.tokens[0].text[0]) {
-    const auto& next_node = *node.branches[0];
-    if (next_node.rule == Rule::Literal) {
-        val = MakeLiteral(next_node.tokens[0]);
+UnaryExpr::UnaryExpr(const ParseNode& unary_node)
+    : op(unary_node.tokens[0].text) {
+    const auto& operand_node = *unary_node.branches[0];
+    if (operand_node.rule == Rule::Literal) {
+        val = MakeLiteral(operand_node.tokens[0]);
         return;
     }
 
-    val = std::make_shared<UnaryExpr>(node);
+    val = std::make_shared<UnaryExpr>(operand_node);
 }
 
 void UnaryExpr::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
-char UnaryExpr::GetOp() const {
+std::string_view UnaryExpr::GetOp() const {
     return op;
 }
 
-auto UnaryExpr::GetVal() const -> const Node& {
+const Node& UnaryExpr::GetVal() const {
     return *val;
 }
 }  // namespace sigil::ast
