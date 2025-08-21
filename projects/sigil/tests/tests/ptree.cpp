@@ -37,7 +37,7 @@ TEST_CASE("P-Trees", "[parse][ast]") {
         }
 
         SECTION("P-Tree output matches control") {
-            std::ifstream file(Concatenate(PARSER_CONTROL_PATH, "expressions.pt"));
+            std::ifstream file(Concatenate(PARSER_CONTROL_PATH, "expressions.ptree"));
             REQUIRE((file && file.is_open()));
 
             const std::string file_str(std::istreambuf_iterator {file}, {});
@@ -51,17 +51,21 @@ TEST_CASE("P-Trees", "[parse][ast]") {
     }
 
     SECTION("Arrays") {
-        Lexer lexer;
-
         const auto path = Concatenate(PARSER_SAMPLE_PATH, "arrays.mn");
+
+        Lexer lexer;
         REQUIRE(lexer.Tokenize(path));
 
         Parser parser(lexer.RelinquishTokens());
-
         REQUIRE(parser.Parse());
 
-        const auto& tokens = parser.ViewTokens();
-        const auto& ptree  = parser.ViewParseTree();
-        parser.EmitParseTree(Concatenate(PARSER_CONTROL_PATH, "arrays"));
+        std::ifstream file(Concatenate(PARSER_CONTROL_PATH, "arrays.ptree"));
+        REQUIRE((file && file.is_open()));
+
+        const std::string file_str(std::istreambuf_iterator {file}, {});
+        const std::string ptree_str = parser.EmitParseTree();
+        parser.PrintParseTree();
+
+        REQUIRE(file_str == ptree_str);
     }
 }

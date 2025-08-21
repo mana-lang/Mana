@@ -327,6 +327,32 @@ bool Parser::MatchedArrayLiteral(ParseNode& node) {
 }
 
 bool Parser::MatchedGrouping(ParseNode& node) {
+    if (CurrentToken().type == TokenType::Op_ParenLeft) {
+        auto& grouping = node.NewBranch();
+        grouping.rule  = Rule::Grouping;
+        AddCycledTokenTo(grouping);
+
+        if (MatchedExpression(grouping)) {
+            if (grouping.branches.size() > 1) {
+                Log->error("Grouping may not contain more than one expression");
+                grouping.rule = Rule::Mistake;
+                return false;
+            }
+            if (CurrentToken().type == TokenType::Op_ParenRight) {
+                AddCycledTokenTo(grouping);
+
+                if (grouping.branches.size() < 1) {
+                    // Log->error("Grouping must contain at least one expression");
+                    error_sink.Report(grouping, cursor, ErrorCode::Grouping_NoExpr);
+                    return false;
+                }
+
+                // guaranteed to be valid expression by now
+                return true;
+            }
+        }
+    }
+
     return false;
 }
 
@@ -358,30 +384,8 @@ bool Parser::MatchedPrimary(ParseNode& node) {
         return true;
     }
 
-    if (CurrentToken().type == TokenType::Op_ParenLeft) {
-        auto& grouping = node.NewBranch();
-        grouping.rule  = Rule::Grouping;
-        AddCycledTokenTo(grouping);
-
-        if (MatchedExpression(grouping)) {
-            if (grouping.branches.size() > 1) {
-                Log->error("Grouping may not contain more than one expression");
-                grouping.rule = Rule::Mistake;
-                return false;
-            }
-            if (CurrentToken().type == TokenType::Op_ParenRight) {
-                AddCycledTokenTo(grouping);
-
-                if (grouping.branches.size() < 1) {
-                    // Log->error("Grouping must contain at least one expression");
-                    error_sink.Report(grouping, cursor, ErrorCode::Grouping_NoExpr);
-                    return false;
-                }
-
-                // guaranteed to be valid expression by now
-                return true;
-            }
-        }
+    if (MatchedGrouping(node)) {
+        return true;
     }
 
     if (MatchedArrayLiteral(node)) {
