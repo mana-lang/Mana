@@ -24,14 +24,11 @@ struct Value {
         bool boolean;
     };
 
-    // ReSharper disable CppNonExplicitConvertingConstructor
     Value(i64 i);
     Value(u64 u);
     Value(f64 f);
     Value(bool b);
-    // ReSharper restore CppNonExplicitConvertingConstructor
 
-    // ReSharper disable once CppNotAllPathsReturnValue
     MANA_NODISCARD u64 BitCasted() const;
 
     MANA_NODISCARD Type GetType() const;

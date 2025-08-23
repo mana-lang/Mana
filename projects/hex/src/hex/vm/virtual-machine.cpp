@@ -67,7 +67,6 @@ InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
 #endif
     // clang-format on
 
-
     // Start VM
     DISPATCH();
 

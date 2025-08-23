@@ -82,7 +82,9 @@ void MainVisitor::Visit(const Literal<bool>& node) {
 }
 
 void MainVisitor::Visit(const ArrayLiteral& node) {
-    Log->warn("Unhandled array literal");
+    for (const auto& value : node.GetValues()) {
+        value->Accept(*this);
+    }
 }
 
 void MainVisitor::Visit(const UnaryExpr& node) {
