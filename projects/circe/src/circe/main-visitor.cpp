@@ -62,7 +62,7 @@ void MainVisitor::Visit(const BinaryExpr& node) {
             break;
         }
     default:
-        Log()->error("Unknown Binary-Operator '{}'", node.GetOp());
+        Log->error("Unknown Binary-Operator '{}'", node.GetOp());
         break;
     }
 }
@@ -84,7 +84,12 @@ void MainVisitor::Visit(const Literal<bool>& node) {
 void MainVisitor::Visit(const UnaryExpr& node) {
     node.GetVal().Accept(*this);
 
-    switch (node.GetOp()) {
+    if (node.GetOp().size() > 1) {
+        Log->error("Unhandled unary expression");
+        return;
+    } //
+
+    switch (node.GetOp()[0]) {
     case '-':
         slice.Write(Op::Negate);
         break;
@@ -92,7 +97,7 @@ void MainVisitor::Visit(const UnaryExpr& node) {
         slice.Write(Op::Not);
         break;
     default:
-        Log()->error("Invalid unary expression");
+        Log->error("Invalid unary expression");
         break;
     }
 }
