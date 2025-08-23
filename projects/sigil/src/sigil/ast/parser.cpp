@@ -228,14 +228,16 @@ void Parser::ConstructAST(const ParseNode& node) {
 
     const auto root = dynamic_cast<Artifact*>(syntax_tree.get());
     for (const auto& n : node.branches) {
+        using enum Rule;
+        
         switch (n->rule) {
-        case Rule::Equality:
-        case Rule::Comparison:
-        case Rule::Term:
-        case Rule::Factor:
+        case Equality:
+        case Comparison:
+        case Term:
+        case Factor:
             root->AddChild<BinaryExpr>(*n);
             break;
-        case Rule::Unary:
+        case Unary:
             root->AddChild<UnaryExpr>(*n);
         default:
             break;

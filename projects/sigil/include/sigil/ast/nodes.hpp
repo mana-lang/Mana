@@ -14,8 +14,8 @@ namespace ml = mana::literals;
 
 class Visitor;
 
-/// As the ptree gets constructed before the AST,
-/// AST nodes assume their ptree input is correct
+// As the ptree gets constructed before the AST,
+// AST nodes assume their ptree input is correct
 class Node {
 public:
     using Ptr       = std::shared_ptr<Node>;
@@ -80,8 +80,9 @@ public:
     explicit BinaryExpr(const std::string& op, const ParseNode& left, const ParseNode& right);
 
     SIGIL_NODISCARD std::string_view GetOp() const;
-    SIGIL_NODISCARD auto             GetLeft() const -> const Node&;
-    SIGIL_NODISCARD auto             GetRight() const -> const Node&;
+
+    SIGIL_NODISCARD auto GetLeft() const -> const Node&;
+    SIGIL_NODISCARD auto GetRight() const -> const Node&;
 
     void Accept(Visitor& visitor) const override;
 
@@ -92,7 +93,7 @@ private:
 
 class UnaryExpr final : public Node {
     std::string op;
-    Ptr  val;
+    Ptr         val;
 
 public:
     explicit UnaryExpr(const ParseNode& unary_node);
@@ -100,7 +101,7 @@ public:
     void Accept(Visitor& visitor) const override;
 
     SIGIL_NODISCARD std::string_view GetOp() const;
-    SIGIL_NODISCARD const Node& GetVal() const;
+    SIGIL_NODISCARD const Node&      GetVal() const;
 };
 
 }  // namespace sigil::ast

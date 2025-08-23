@@ -33,8 +33,10 @@ int CreateFile(const std::string& filename) {
     }
 
     const auto& ast = parser.ViewAST();
-    MainVisitor visitor;
+    Log->info("Compiling...");
+    parser.PrintParseTree();
 
+    MainVisitor visitor;
     ast->Accept(visitor);
 
     mana::vm::Slice slice;
