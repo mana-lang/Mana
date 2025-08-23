@@ -229,7 +229,7 @@ void Parser::ConstructAST(const ParseNode& node) {
     const auto root = dynamic_cast<Artifact*>(syntax_tree.get());
     for (const auto& n : node.branches) {
         using enum Rule;
-        
+
         switch (n->rule) {
         case Equality:
         case Comparison:
@@ -239,6 +239,10 @@ void Parser::ConstructAST(const ParseNode& node) {
             break;
         case Unary:
             root->AddChild<UnaryExpr>(*n);
+            break;
+        case ArrayLiteral:
+            root->AddChild<ast::ArrayLiteral>(*n);
+            break;
         default:
             break;
         }
@@ -252,9 +256,7 @@ bool Parser::MatchedExpression(ParseNode& node) {
 bool Parser::SkipNewlines() {
     bool ret = false;
 
-    while (cursor < tokens.size()
-        && CurrentToken().type == TokenType::Terminator
-        && CurrentToken().text == "\n") {
+    while (cursor < tokens.size() && CurrentToken().type == TokenType::Terminator && CurrentToken().text == "\n") {
         ret = true;
         ++cursor;
     }

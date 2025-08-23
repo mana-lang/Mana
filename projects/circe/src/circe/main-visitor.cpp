@@ -81,6 +81,10 @@ void MainVisitor::Visit(const Literal<bool>& node) {
     slice.Write(Op::Push, slice.AddConstant(node.Get()));
 }
 
+void MainVisitor::Visit(const ArrayLiteral& node) {
+    Log->warn("Unhandled array literal");
+}
+
 void MainVisitor::Visit(const UnaryExpr& node) {
     node.GetVal().Accept(*this);
 

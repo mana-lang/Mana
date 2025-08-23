@@ -13,10 +13,12 @@ public:
     virtual void Visit(const class BinaryExpr& node) = 0;
     virtual void Visit(const class Artifact& node)   = 0;
 
-    virtual void Visit(const class Literal<bool>& node)    = 0;
-    virtual void Visit(const class Literal<ml::i64>& node) = 0;
-    virtual void Visit(const class Literal<ml::f64>& node) = 0;
-    virtual void Visit(const class Literal<void>& node)    = 0;
+    virtual void Visit(const Literal<bool>& node)    = 0;
+    virtual void Visit(const Literal<ml::i64>& node) = 0;
+    virtual void Visit(const Literal<ml::f64>& node) = 0;
+    virtual void Visit(const Literal<void>& node)    = 0;
+
+    virtual void Visit(const class ArrayLiteral& node) = 0;
 };
 
 }  // namespace sigil::ast

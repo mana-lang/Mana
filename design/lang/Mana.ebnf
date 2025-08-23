@@ -1,4 +1,4 @@
-ID         = [a-zA-Z_][a-zA-Z0-9_]* ;  (*letter or underscore followed by any letters, numbers or underscores *)
+ID         = [a-zA-Z_][a-zA-Z0-9_]*  ; (*letter or underscore followed by any letters, numbers or underscores *)
 INT        = [0-9]+                  ;
 FLOAT      = INT.[0-9]+              ;
 STRING     = "\"(?:[^\"\\]|\\.)*\""  ; (*anything between double-quoted strings, minus escape sequences *)
@@ -16,6 +16,7 @@ term       = factor ( ('-' | '+') factor)*            ;
 factor     = unary ( ('/' | '*') unary )*             ;
 unary      = ('!' | '-') unary | primary              ;
 primary    = grouping | literal | array_literal       ;
+
 grouping   = "(" expr ")"                             ;
 literal    = number
            | string

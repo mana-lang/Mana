@@ -80,7 +80,7 @@ BreakBeforeTernaryOperators: true
 #BreakConstructorInitializersBeforeComma: true
 BreakConstructorInitializers: BeforeComma
 BreakStringLiterals: true
-ColumnLimit: 115
+ColumnLimit: 88
 #CommentPragmas:  '^ IWYU pragma:'
 QualifierAlignment: Left
 CompactNamespaces: false

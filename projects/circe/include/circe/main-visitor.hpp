@@ -22,6 +22,7 @@ public:
     void Visit(const sigil::ast::Literal<ml::i64>& node) override;
     void Visit(const sigil::ast::Literal<void>& node) override;
     void Visit(const sigil::ast::Literal<bool>& node) override;
+    void Visit(const sigil::ast::ArrayLiteral& node) override;
 };
 
 }  // namespace circe

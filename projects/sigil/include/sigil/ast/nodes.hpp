@@ -71,6 +71,22 @@ public:
     }
 };
 
+class ArrayLiteral final : public Node {
+    std::vector<Ptr> values;
+
+public:
+    ArrayLiteral(const ParseNode& node);
+
+    const std::vector<Ptr>& GetValues() const;
+
+    const Ptr& operator[](ml::i64 index) const;
+
+    void Accept(Visitor& visitor) const override;
+
+private:
+    Ptr GetValue(const ParseNode& elem);
+};
+
 class BinaryExpr final : public Node {
     std::string op;
     Ptr         left, right;
