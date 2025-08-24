@@ -174,7 +174,7 @@ void VirtualMachine::Reset() {
     stack_top = stack.data();
 }
 
-void VirtualMachine::Push(const Value value) {
+void VirtualMachine::Push(const Value& value) {
     if (stack_top == &stack.back()) {
         stack.resize(stack.capacity() * 2);
     }
@@ -220,7 +220,7 @@ void VirtualMachine::LogTop(const std::string_view msg) const {
     }
 }
 
-void VirtualMachine::LogTopTwo(std::string_view msg) const {
+void VirtualMachine::LogTopTwo(const std::string_view msg) const {
     if (StackTop()->GetType() == Value::Type::Bool) {
         Log->debug(fmt::runtime(msg), (StackTop() - 1)->AsBool(), ViewTop().AsBool());
     } else {

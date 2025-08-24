@@ -27,7 +27,7 @@ public:
 
 private:
     void Reset();
-    void Push(mvm::Value value);
+    void Push(const mvm::Value& value);
 
     mvm::Value  Pop();
     HEX_NODISCARD mvm::Value  ViewTop() const;

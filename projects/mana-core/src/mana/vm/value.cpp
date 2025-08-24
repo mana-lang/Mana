@@ -203,7 +203,7 @@ Value& Value::operator=(const Value& other) {
         }
     }
 
-    if (other.data == nullptr || length == 0) {
+    if (other.data == nullptr || other.length == 0) {
         length = 0;
         type   = invalid_type;
         data   = nullptr;
