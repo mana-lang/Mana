@@ -1,3 +1,4 @@
+#include <cstring>
 #include <mana/vm/value.hpp>
 
 #include <stdexcept>
@@ -19,40 +20,45 @@ namespace mana::vm {
 #endif
 
 Value::Value(const i64 i)
-    : data {.as_i64 = i}
+    : data(new Data {.as_i64 = i})
     , length(1)
+    , rc(0)
     , type(static_cast<u8>(Int64)) {}
 
 Value::Value(const u64 u)
-    : data {.as_u64 = u}
+    : data(new Data {.as_u64 = u})
     , length(1)
+    , rc(0)
     , type(static_cast<u8>(Uint64)) {}
 
 Value::Value(const f64 f)
-    : data {.as_f64 = f}
+    : data(new Data {.as_f64 = f})
     , length(1)
+    , rc(0)
     , type(static_cast<u8>(Float64)) {}
 
 Value::Value(const bool b)
-    : data {.as_bool = b}
+    : data(new Data {.as_bool = b})
     , length(1)
+    , rc(0)
     , type(static_cast<u8>(Bool)) {}
 
 Value::Value(const Type t)
     : length(1)
+    , rc(0)
     , type(static_cast<u8>(t)) {
     switch (type) {
     case Int64:
-        data.as_i64 = 0;
+        data = new Data {.as_i64 = 0};
         break;
     case Uint64:
-        data.as_u64 = 0u;
+        data = new Data {.as_u64 = 0u};
         break;
     case Float64:
-        data.as_f64 = 0.0;
+        data = new Data {.as_f64 = 0.0};
         break;
     case Bool:
-        data.as_bool = false;
+        data = new Data {.as_bool = false};
         break;
     default:
         UNREACHABLE();
@@ -62,13 +68,13 @@ Value::Value(const Type t)
 u64 Value::BitCasted() const {
     switch (type) {
     case Int64:
-        return std::bit_cast<u64>(data.as_i64);
+        return std::bit_cast<u64>(data->as_i64);
     case Uint64:
-        return std::bit_cast<u64>(data.as_u64);
+        return std::bit_cast<u64>(data->as_u64);
     case Float64:
-        return std::bit_cast<u64>(data.as_f64);
+        return std::bit_cast<u64>(data->as_f64);
     case Bool:
-        return data.as_bool;  // sobbing and weeping
+        return data->as_bool;  // sobbing and weeping
     default:
         UNREACHABLE();
     }
@@ -81,16 +87,16 @@ Value::Type Value::GetType() const {
 void Value::WriteBytes(const std::array<u8, sizeof(Data)>& bytes) {
     switch (type) {
     case Int64:
-        data.as_i64 = std::bit_cast<i64>(bytes);
+        data->as_i64 = std::bit_cast<i64>(bytes);
         break;
     case Uint64:
-        data.as_u64 = std::bit_cast<u64>(bytes);
+        data->as_u64 = std::bit_cast<u64>(bytes);
         break;
     case Float64:
-        data.as_f64 = std::bit_cast<f64>(bytes);
+        data->as_f64 = std::bit_cast<f64>(bytes);
         break;
     case Bool:
-        data.as_bool = bytes[0];
+        data->as_bool = bytes[0];
         break;
     default:
         UNREACHABLE();
@@ -124,55 +130,179 @@ bool Value::operator==(const Value& other) const {
     COMPUTED_GOTO();
 
 CASE_INT:
-    return data.as_i64 == other.AsInt();
+    return data->as_i64 == other.AsInt();
 CASE_UNSIGNED:
-    return data.as_u64 == other.AsUint();
+    return data->as_u64 == other.AsUint();
 CASE_FLOAT:
-    return data.as_f64 == other.AsFloat();
+    return data->as_f64 == other.AsFloat();
 CASE_BOOL:
-    return data.as_bool == other.AsBool();
+    return data->as_bool == other.AsBool();
 }
 
 void Value::operator*=(const i64& rhs) {
     COMPUTED_GOTO();
 
 CASE_INT:
-    data.as_i64 *= rhs;
+    data->as_i64 *= rhs;
     return;
 CASE_UNSIGNED:
-    data.as_u64 *= static_cast<u64>(rhs);
+    data->as_u64 *= static_cast<u64>(rhs);
     return;
 CASE_FLOAT:
-    data.as_f64 *= static_cast<f64>(rhs);
+    data->as_f64 *= static_cast<f64>(rhs);
     return;
 CASE_BOOL:
     UNREACHABLE();
 }
 
+Value::Value(const Value& other)
+    : data(nullptr)
+    , length(other.length)
+    , rc(0)
+    , type(other.type) {
+    if (other.data == nullptr || length == 0) {
+        return;
+    }
+
+    if (length == 1) {
+        data = new Data(*other.data);
+        return;
+    }
+
+    data = new Data[length];
+    std::memcpy(data, other.data, length * sizeof(Data));
+}
+
+Value::Value(Value&& other) noexcept
+    : data(nullptr)
+    , length(other.length)
+    , rc(0)
+    , type(other.type) {
+    if (other.data == nullptr || length == 0) {
+        other.length = 0;
+        other.type   = invalid_type;
+        other.data   = nullptr;
+        return;
+    }
+
+    data = other.data;
+
+    other.data = nullptr;
+}
+
+Value& Value::operator=(const Value& other) {
+    if (this == &other) {
+        return *this;
+    }
+
+    if (data != nullptr) {
+        if (length == 1) {
+            delete data;
+        } else {
+            delete[] data;
+        }
+    }
+
+    if (other.data == nullptr || length == 0) {
+        length = 0;
+        type   = invalid_type;
+        data   = nullptr;
+        return *this;
+    }
+
+    length = other.length;
+    type   = other.type;
+
+    if (length == 1) {
+        data = new Data(*other.data);
+        return *this;
+    }
+
+    data = new Data[length];
+    std::memcpy(data, other.data, length * sizeof(Data));
+    return *this;
+}
+
+Value& Value::operator=(Value&& other) noexcept {
+    if (this == &other) {
+        return *this;
+    }
+
+    if (data != nullptr) {
+        if (length == 1) {
+            delete data;
+        } else {
+            delete[] data;
+        }
+    }
+
+    if (other.data == nullptr || length == 0) {
+        length = 0;
+        type   = invalid_type;
+        data   = nullptr;
+        return *this;
+    }
+
+    length = other.length;
+    type   = other.type;
+    data   = other.data;
+
+    other.data = nullptr;
+    other.length = 0;
+    other.type = invalid_type;
+
+    return *this;
+}
+
+Value::~Value() {
+    if (data == nullptr) {
+        return;
+    }
+
+#ifdef MANA_DEBUG
+    if (length == 0) {
+        // not sure what to do here. Value isn't supposed to log things, but we shouldn't
+        // throw in a destructor either. the intuition is to delete it just in case, but
+        // that might be even more catastrophic so for now, we'll just consider this a crash scenario
+        // maybe should add a ManaLogger or even ValueLogger for situations like this
+        std::terminate();
+    }
+#endif
+
+    if (length == 1) {
+        delete data;
+        return;
+    }
+
+    if (length > 1) {
+        delete[] data;
+    }
+}
+
 #define CGOTO_OPERATOR_CMP(ret, op)                   \
-    ret Value::operator op(const Value& rhs) const {  \
+    ret Value::operator op(const Value & rhs) const { \
         COMPUTED_GOTO();                              \
     CASE_INT:                                         \
-        return data.as_i64 op rhs.AsInt();            \
+        return data->as_i64 op rhs.AsInt();           \
     CASE_UNSIGNED:                                    \
-        return data.as_u64 op rhs.AsUint();           \
+        return data->as_u64 op rhs.AsUint();          \
     CASE_FLOAT:                                       \
-        return data.as_f64 op rhs.AsFloat();          \
+        return data->as_f64 op rhs.AsFloat();         \
     CASE_BOOL:                                        \
         UNREACHABLE();                                \
     }
 
 #define CGOTO_OPERATOR_ARITH_ASSIGN(op)          \
-    void Value::operator op(const Value& rhs) {  \
+    void Value::operator op(const Value & rhs) { \
         COMPUTED_GOTO();                         \
     CASE_INT:                                    \
-        data.as_i64 op rhs.AsInt();              \
+        data->as_i64 op rhs.AsInt();             \
         return;                                  \
     CASE_UNSIGNED:                               \
-        data.as_u64 op rhs.AsUint();             \
+        data->as_u64 op rhs.AsUint();            \
         return;                                  \
     CASE_FLOAT:                                  \
-        data.as_f64 op rhs.AsFloat();            \
+        data->as_f64 op rhs.AsFloat();           \
         return;                                  \
     CASE_BOOL:                                   \
         UNREACHABLE();                           \
@@ -189,7 +319,7 @@ CGOTO_OPERATOR_CMP(bool, <);
 CGOTO_OPERATOR_CMP(bool, <=);
 
 bool Value::operator!() const {
-    return not data.as_bool;
+    return not data->as_bool;
 }
 
 f64 Value::AsFloat() const {
@@ -209,71 +339,71 @@ bool Value::AsBool() const {
 }
 
 // Floats
-f64 Value::FDispatchI(const Data val) {
-    return static_cast<f64>(val.as_i64);
+f64 Value::FDispatchI(const Data* val) {
+    return static_cast<f64>(val->as_i64);
 }
 
-f64 Value::FDispatchU(const Data val) {
-    return static_cast<f64>(val.as_u64);
+f64 Value::FDispatchU(const Data* val) {
+    return static_cast<f64>(val->as_u64);
 }
 
-f64 Value::FDispatchF(const Data val) {
-    return val.as_f64;
+f64 Value::FDispatchF(const Data* val) {
+    return val->as_f64;
 }
 
-f64 Value::FDispatchB(const Data val) {
-    return val.as_bool;
+f64 Value::FDispatchB(const Data* val) {
+    return val->as_bool;
 }
 
 // Integers
-i64 Value::IDispatchI(const Data val) {
-    return val.as_i64;
+i64 Value::IDispatchI(const Data* val) {
+    return val->as_i64;
 }
 
-i64 Value::IDispatchU(const Data val) {
-    return static_cast<i64>(val.as_u64);
+i64 Value::IDispatchU(const Data* val) {
+    return static_cast<i64>(val->as_u64);
 }
 
-i64 Value::IDispatchF(const Data val) {
-    return static_cast<i64>(val.as_f64);
+i64 Value::IDispatchF(const Data* val) {
+    return static_cast<i64>(val->as_f64);
 }
 
-i64 Value::IDispatchB(const Data val) {
-    return val.as_bool;
+i64 Value::IDispatchB(const Data* val) {
+    return val->as_bool;
 }
 
 // Unsigned
-u64 Value::UDispatchI(const Data val) {
-    return static_cast<u64>(val.as_i64);
+u64 Value::UDispatchI(const Data* val) {
+    return static_cast<u64>(val->as_i64);
 }
 
-u64 Value::UDispatchU(const Data val) {
-    return val.as_u64;
+u64 Value::UDispatchU(const Data* val) {
+    return val->as_u64;
 }
 
-u64 Value::UDispatchF(const Data val) {
-    return static_cast<u64>(val.as_f64);
+u64 Value::UDispatchF(const Data* val) {
+    return static_cast<u64>(val->as_f64);
 }
 
-u64 Value::UDispatchB(const Data val) {
-    return val.as_bool;
+u64 Value::UDispatchB(const Data* val) {
+    return val->as_bool;
 }
 
 // Boolean
-bool Value::BDispatchI(const Data val) {
-    return static_cast<bool>(val.as_i64);
+bool Value::BDispatchI(const Data* val) {
+    return static_cast<bool>(val->as_i64);
 }
 
-bool Value::BDispatchU(const Data val) {
-    return static_cast<bool>(val.as_u64);
+bool Value::BDispatchU(const Data* val) {
+    return static_cast<bool>(val->as_u64);
 }
 
-bool Value::BDispatchF(const Data val) {
-    return static_cast<bool>(val.as_f64);
+bool Value::BDispatchF(const Data* val) {
+    return static_cast<bool>(val->as_f64);
 }
 
-bool Value::BDispatchB(const Data val) {
-    return val.as_bool;
+bool Value::BDispatchB(const Data* val) {
+    return val->as_bool;
 }
 
 }  // namespace mana::vm

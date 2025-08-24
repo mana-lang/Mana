@@ -54,26 +54,32 @@ struct Value {
 
     void operator*=(const i64& rhs);
 
-    // Nulled values shouldn't be valid
-    // -727 (bool) is a specific signifier of that
     Value()
-        : data {.as_i64 = -727}
+        : data {nullptr}
         , length(0)
-        , type(static_cast<u8>(Bool)) {}
+        , type(invalid_type) {}
+
+    Value(const Value& other);
+    Value(Value&& other) noexcept;
+    Value& operator=(const Value& other);
+    Value& operator=(Value&& other) noexcept;
+
+    ~Value();
 
 private:
-    Data data;
-    u32 length;
-    u8 type;
+    Data* data;
+    u32   length;
+    u16   rc;
+    u8    type;
 
     explicit Value(Type t);
 
     void WriteBytes(const std::array<u8, sizeof(Data)>& bytes);
 
-    static i64 IDispatchI(Data val);
-    static i64 IDispatchU(Data val);
-    static i64 IDispatchF(Data val);
-    static i64 IDispatchB(Data val);
+    static i64 IDispatchI(const Data* val);
+    static i64 IDispatchU(const Data* val);
+    static i64 IDispatchF(const Data* val);
+    static i64 IDispatchB(const Data* val);
 
     static constexpr std::array dispatch_int {
         IDispatchI,
@@ -82,10 +88,10 @@ private:
         IDispatchB,
     };
 
-    static u64 UDispatchI(Data val);
-    static u64 UDispatchU(Data val);
-    static u64 UDispatchF(Data val);
-    static u64 UDispatchB(Data val);
+    static u64 UDispatchI(const Data* val);
+    static u64 UDispatchU(const Data* val);
+    static u64 UDispatchF(const Data* val);
+    static u64 UDispatchB(const Data* val);
 
     static constexpr std::array dispatch_unsigned {
         UDispatchI,
@@ -94,10 +100,10 @@ private:
         UDispatchB,
     };
 
-    static f64 FDispatchI(Data val);
-    static f64 FDispatchU(Data val);
-    static f64 FDispatchF(Data val);
-    static f64 FDispatchB(Data val);
+    static f64 FDispatchI(const Data* val);
+    static f64 FDispatchU(const Data* val);
+    static f64 FDispatchF(const Data* val);
+    static f64 FDispatchB(const Data* val);
 
     static constexpr std::array dispatch_float {
         FDispatchI,
@@ -106,10 +112,10 @@ private:
         FDispatchB,
     };
 
-    static bool BDispatchI(Data val);
-    static bool BDispatchU(Data val);
-    static bool BDispatchF(Data val);
-    static bool BDispatchB(Data val);
+    static bool BDispatchI(const Data* val);
+    static bool BDispatchU(const Data* val);
+    static bool BDispatchF(const Data* val);
+    static bool BDispatchB(const Data* val);
 
     static constexpr std::array dispatch_bool {
         BDispatchI,
@@ -117,6 +123,8 @@ private:
         BDispatchF,
         BDispatchB,
     };
+
+    static constexpr u8 invalid_type = 202;
 };
 
 }  // namespace mana::vm
