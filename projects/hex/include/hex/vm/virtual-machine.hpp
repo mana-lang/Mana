@@ -14,8 +14,7 @@ enum class InterpretResult {
 };
 
 class VirtualMachine {
-    mvm::Slice* slice {nullptr};
-    ml::u8*     ip {nullptr};
+    ml::u8* ip {nullptr};
 
     std::vector<mvm::Value> stack;
     mvm::Value*             stack_top;
@@ -27,10 +26,11 @@ public:
 
 private:
     void Reset();
-    void Push(const mvm::Value& value);
 
-    mvm::Value  Pop();
-    HEX_NODISCARD mvm::Value  ViewTop() const;
+    void       Push(const mvm::Value& value);
+    mvm::Value Pop();
+
+    HEX_NODISCARD mvm::Value ViewTop() const;
     HEX_NODISCARD mvm::Value* StackTop() const;
 
     void LogTop(std::string_view msg) const;

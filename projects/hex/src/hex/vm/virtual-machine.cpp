@@ -11,9 +11,8 @@ VirtualMachine::VirtualMachine() {
     stack_top = stack.data();
 }
 
-InterpretResult VirtualMachine::Interpret(Slice* next_slice) {
-    slice = next_slice;
-    ip    = slice->Instructions().data();
+InterpretResult VirtualMachine::Interpret(Slice* slice) {
+    ip = slice->Instructions().data();
 
     const auto* values = slice->Constants().data();
 

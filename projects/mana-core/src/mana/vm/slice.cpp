@@ -21,29 +21,29 @@ void Slice::Write(Op opcode, const u8 byte) {
     instructions.push_back(byte);
 }
 
-auto Slice::Instructions() const -> const ByteCode& {
+const ByteCode& Slice::Instructions() const {
     return instructions;
 }
 
-auto Slice::Instructions() -> ByteCode& {
+ByteCode& Slice::Instructions() {
     return instructions;
 }
 
-auto Slice::Constants() const -> const std::vector<Value>& {
+const std::vector<Value>& Slice::Constants() const {
     return values;
 }
 
-auto Slice::Serialize() -> ByteCode {
-    ByteCode out;
-
-    SerializeConstantsTo(out);
+ByteCode Slice::Serialize() {
+    ByteCode out = SerializeConstants();
 
     out.insert(out.end(), instructions.begin(), instructions.end());
 
     return out;
 }
 
-void Slice::SerializeConstantsTo(ByteCode& out) const {
+ByteCode Slice::SerializeConstants() const {
+    ByteCode out;
+
     const auto constant_count = std::bit_cast<u64>(values.size());
     for (i64 i = 0; i < sizeof(constant_count); ++i) {
         out.push_back((constant_count >> i * 8) & 0xFF);
@@ -57,6 +57,8 @@ void Slice::SerializeConstantsTo(ByteCode& out) const {
             out.emplace_back((serializable >> i * 8) & 0xFF);
         }
     }
+
+    return out;
 }
 
 bool Slice::Deserialize(const ByteCode& bytes) {

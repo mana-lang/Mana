@@ -61,6 +61,8 @@ struct Value {
 
     Value(const Value& other);
     Value(Value&& other) noexcept;
+
+    // copy constructs a completely new value on the heap
     Value& operator=(const Value& other);
     Value& operator=(Value&& other) noexcept;
 
@@ -69,7 +71,6 @@ struct Value {
 private:
     Data* data;
     u32   length;
-    u16   rc;
     u8    type;
 
     explicit Value(Type t);

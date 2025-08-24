@@ -9,14 +9,14 @@
 namespace mana::vm {
 using namespace literals;
 
-using ByteCode = std::vector<u8>;
-
 struct IndexRange {
     u64 start, end;
 
     IndexRange(u64 init_offset, u64 range);
     IndexRange() = delete;
 };
+
+using ByteCode = std::vector<u8>;
 
 class Slice {
     ByteCode instructions;
@@ -27,10 +27,10 @@ public:
     void Write(Op opcode);
     void Write(Op opcode, u8 byte);
 
-    MANA_NODISCARD auto Instructions() const -> const ByteCode&;
-    MANA_NODISCARD auto Instructions() -> ByteCode&;
+    MANA_NODISCARD const ByteCode& Instructions() const;
+    MANA_NODISCARD ByteCode&       Instructions();
 
-    MANA_NODISCARD auto Constants() const -> const std::vector<Value>&;
+    MANA_NODISCARD const std::vector<Value>& Constants() const;
 
     // serializes a slice to a vector of unsigned char (bytes)
     // for now, the sequence is:
@@ -40,15 +40,15 @@ public:
     // ----- (1) type
     // ----- (8) value
     // - instructions
-    MANA_NODISCARD auto Serialize() -> ByteCode;
-
-    void SerializeConstantsTo(ByteCode& out) const;
+    MANA_NODISCARD ByteCode Serialize();
+    MANA_NODISCARD ByteCode SerializeConstants() const;
 
     // for now, this function assumes the input is actually correct
     bool Deserialize(const ByteCode& bytes);
 
     template <typename T>
-        requires std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>
+        requires std::is_integral_v<T> || std::is_floating_point_v<T>
+                 || std::is_same_v<T, bool>
     u64 AddConstant(const T value) {
         values.push_back(value);
 

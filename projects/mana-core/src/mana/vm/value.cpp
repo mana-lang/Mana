@@ -22,30 +22,25 @@ namespace mana::vm {
 Value::Value(const i64 i)
     : data(new Data {.as_i64 = i})
     , length(1)
-    , rc(0)
     , type(static_cast<u8>(Int64)) {}
 
 Value::Value(const u64 u)
     : data(new Data {.as_u64 = u})
     , length(1)
-    , rc(0)
     , type(static_cast<u8>(Uint64)) {}
 
 Value::Value(const f64 f)
     : data(new Data {.as_f64 = f})
     , length(1)
-    , rc(0)
     , type(static_cast<u8>(Float64)) {}
 
 Value::Value(const bool b)
     : data(new Data {.as_bool = b})
     , length(1)
-    , rc(0)
     , type(static_cast<u8>(Bool)) {}
 
 Value::Value(const Type t)
     : length(1)
-    , rc(0)
     , type(static_cast<u8>(t)) {
     switch (type) {
     case Int64:
@@ -158,7 +153,6 @@ CASE_BOOL:
 Value::Value(const Value& other)
     : data(nullptr)
     , length(other.length)
-    , rc(0)
     , type(other.type) {
     if (other.data == nullptr || length == 0) {
         return;
@@ -176,7 +170,6 @@ Value::Value(const Value& other)
 Value::Value(Value&& other) noexcept
     : data(nullptr)
     , length(other.length)
-    , rc(0)
     , type(other.type) {
     if (other.data == nullptr || length == 0) {
         other.length = 0;
@@ -188,6 +181,8 @@ Value::Value(Value&& other) noexcept
     data = other.data;
 
     other.data = nullptr;
+    other.length = 0;
+    other.type = invalid_type;
 }
 
 Value& Value::operator=(const Value& other) {
