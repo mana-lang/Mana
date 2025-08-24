@@ -18,7 +18,7 @@ TEST_CASE("Bytecode", "[serde][bytecode]") {
 
             const auto bytes = slice.Serialize();
 
-            constexpr auto value_size = sizeof(Value::As) + sizeof(Value::Type);
+            constexpr auto value_size = sizeof(Value::Data) + sizeof(Value::Type);
             REQUIRE(bytes.size() == sizeof(u64) + slice.Instructions().size() + value_size * slice.Constants().size());
 
             Slice deser_slice;

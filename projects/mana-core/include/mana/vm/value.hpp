@@ -17,11 +17,11 @@ struct Value {
         Bool,
     };
 
-    union As {
-        i64  int64;
-        u64  uint64;
-        f64  float64;
-        bool boolean;
+    union Data {
+        i64  as_i64;
+        u64  as_u64;
+        f64  as_f64;
+        bool as_bool;
     };
 
     Value(i64 i);
@@ -57,21 +57,23 @@ struct Value {
     // Nulled values shouldn't be valid
     // -727 (bool) is a specific signifier of that
     Value()
-        : as {.int64 = -727}
+        : data {.as_i64 = -727}
+        , length(0)
         , type(static_cast<u8>(Bool)) {}
 
 private:
-    As as;
+    Data data;
+    u32 length;
     u8 type;
 
     explicit Value(Type t);
 
-    void WriteBytes(const std::array<u8, sizeof(As)>& bytes);
+    void WriteBytes(const std::array<u8, sizeof(Data)>& bytes);
 
-    static i64 IDispatchI(As val);
-    static i64 IDispatchU(As val);
-    static i64 IDispatchF(As val);
-    static i64 IDispatchB(As val);
+    static i64 IDispatchI(Data val);
+    static i64 IDispatchU(Data val);
+    static i64 IDispatchF(Data val);
+    static i64 IDispatchB(Data val);
 
     static constexpr std::array dispatch_int {
         IDispatchI,
@@ -80,10 +82,10 @@ private:
         IDispatchB,
     };
 
-    static u64 UDispatchI(As val);
-    static u64 UDispatchU(As val);
-    static u64 UDispatchF(As val);
-    static u64 UDispatchB(As val);
+    static u64 UDispatchI(Data val);
+    static u64 UDispatchU(Data val);
+    static u64 UDispatchF(Data val);
+    static u64 UDispatchB(Data val);
 
     static constexpr std::array dispatch_unsigned {
         UDispatchI,
@@ -92,10 +94,10 @@ private:
         UDispatchB,
     };
 
-    static f64 FDispatchI(As val);
-    static f64 FDispatchU(As val);
-    static f64 FDispatchF(As val);
-    static f64 FDispatchB(As val);
+    static f64 FDispatchI(Data val);
+    static f64 FDispatchU(Data val);
+    static f64 FDispatchF(Data val);
+    static f64 FDispatchB(Data val);
 
     static constexpr std::array dispatch_float {
         FDispatchI,
@@ -104,10 +106,10 @@ private:
         FDispatchB,
     };
 
-    static bool BDispatchI(As val);
-    static bool BDispatchU(As val);
-    static bool BDispatchF(As val);
-    static bool BDispatchB(As val);
+    static bool BDispatchI(Data val);
+    static bool BDispatchU(Data val);
+    static bool BDispatchF(Data val);
+    static bool BDispatchB(Data val);
 
     static constexpr std::array dispatch_bool {
         BDispatchI,

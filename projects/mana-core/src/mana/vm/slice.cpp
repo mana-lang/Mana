@@ -70,12 +70,12 @@ bool Slice::Deserialize(const ByteCode& bytes) {
 
     const IndexRange pool_range {
         sizeof(count_bytes),
-        std::bit_cast<u64>(count_bytes) * (sizeof(Value::As) + sizeof(Value::Type)),
+        std::bit_cast<u64>(count_bytes) * (sizeof(Value::Data) + sizeof(Value::Type)),
     };
 
-    std::array<u8, sizeof(Value::As)> value_bytes;
+    std::array<u8, sizeof(Value::Data)> value_bytes;
 
-    for (i64 n = pool_range.start; n < pool_range.end; n += sizeof(Value::As)) {
+    for (i64 n = pool_range.start; n < pool_range.end; n += sizeof(Value::Data)) {
         auto value = Value {static_cast<Value::Type>(bytes[n])};
         ++n;
 
