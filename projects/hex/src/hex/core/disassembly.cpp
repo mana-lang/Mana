@@ -10,22 +10,22 @@ void EmitConstant(i64 offset, f64 constant) {
     Log->debug("{:04} | {} | {}", offset, magic_enum::enum_name(Op::Push), constant);
 }
 
-void EmitConstant(i64 offset, const Value constant) {
-    const auto print = [offset]<typename T>(const Value::Type type, T val) {
-        Log->debug("{:04} | {} | {} | {}", offset, magic_enum::enum_name(Op::Push), magic_enum::enum_name(static_cast<Value::Type>(type)), val);
+void EmitConstant(i64 offset, const Value& constant) {
+    const auto print = [offset]<typename T>(const mana::PrimitiveType type, T val) {
+        Log->debug("{:04} | {} | {} | {}", offset, magic_enum::enum_name(Op::Push), magic_enum::enum_name(type), val);
     };
 
     switch (constant.GetType()) {
-    case Value::Type::Float64:
+    case mana::PrimitiveType::Float64:
         print(constant.GetType(), constant.AsFloat());
         break;
-    case Value::Type::Int64:
+    case mana::PrimitiveType::Int64:
         print(constant.GetType(), constant.AsInt());
         break;
-    case Value::Type::Uint64:
+    case mana::PrimitiveType::Uint64:
         print(constant.GetType(), constant.AsUint());
         break;
-    case Value::Type::Bool:
+    case mana::PrimitiveType::Bool:
         print(constant.GetType(), constant.AsBool());
         break;
     default:

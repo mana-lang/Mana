@@ -1,3 +1,4 @@
+#include "mana/vm/primitive-type.hpp"
 #include "spdlog/fmt/bundled/chrono.h"
 #include <sigil/core/logger.hpp>
 
@@ -17,28 +18,34 @@ auto MakeNullLiteral() {
     return std::make_shared<Literal<void>>();
 }
 
-Node::Ptr MakeLiteral(const Token& token) {
+struct LiteralData {
+    Node::Ptr           value;
+    mana::PrimitiveType type;
+};
+
+LiteralData MakeLiteral(const Token& token) {
     switch (token.type) {
         using enum TokenType;
 
     case Lit_true:
     case Lit_false:
-        return MakeLiteral<bool>(token);
+        return {MakeLiteral<bool>(token), mana::PrimitiveType::Bool};
 
     case Lit_Int:
-        return MakeLiteral<i64>(token);
+        return {MakeLiteral<i64>(token), mana::PrimitiveType::Int64};
 
     case Lit_Float:
-        return MakeLiteral<f64>(token);
+        return {MakeLiteral<f64>(token), mana::PrimitiveType::Float64};
 
     case Lit_null:
-        return MakeNullLiteral();
+        return {MakeNullLiteral(), mana::PrimitiveType::Invalid};
 
     default:
         break;
     }
+
     Log->error("Unexpected token for literal");
-    return nullptr;
+    return {nullptr, mana::PrimitiveType::Invalid};
 }
 
 /// Artifact
@@ -55,7 +62,8 @@ void Artifact::Accept(Visitor& visitor) const {
 }
 
 /// ArrayLiteral
-ArrayLiteral::ArrayLiteral(const ParseNode& node) {
+ArrayLiteral::ArrayLiteral(const ParseNode& node)
+    : type(mana::PrimitiveType::Invalid) {
     // []
     if (node.branches.empty()) {
         return;
@@ -67,11 +75,11 @@ ArrayLiteral::ArrayLiteral(const ParseNode& node) {
 
     for (const auto& elem_list = *node.branches[0];
          const auto& elem : elem_list.branches) {
-        values.emplace_back(std::move(GetValue(*elem)));
+        values.emplace_back(std::move(ProcessValue(*elem)));
     }
 }
 
-Node::Ptr ArrayLiteral::GetValue(const ParseNode& elem) {
+Node::Ptr ArrayLiteral::ProcessValue(const ParseNode& elem) {
     switch (elem.rule) {
         using enum Rule;
 
@@ -83,7 +91,7 @@ Node::Ptr ArrayLiteral::GetValue(const ParseNode& elem) {
         }
 
         // [(foo)]
-        return GetValue(*elem.branches[0]);
+        return ProcessValue(*elem.branches[0]);
 
     case ArrayLiteral:
         // [[1, 2, 3,], [4, 3, 2],]
@@ -94,7 +102,35 @@ Node::Ptr ArrayLiteral::GetValue(const ParseNode& elem) {
 
     case Literal:
         // [12.4, 95.3]
-        return MakeLiteral(elem.tokens[0]);
+        {
+            const auto literal = MakeLiteral(elem.tokens[0]);
+
+            if (literal.type == mana::PrimitiveType::Invalid) {
+                Log->error(
+                    "ArrayLiteral attempted to add invalid value '{}'",
+                    elem.tokens[0].text
+                );
+                return nullptr;
+            }
+
+            // we want to deduce the array's type based on the first literal in the
+            // elem_list so we start in Invalid, assign the type based on the first, and
+            // any type changes past that raise an error
+            if (literal.type != type) {
+                if (type == mana::PrimitiveType::Invalid) {
+                    type = literal.type;
+                } else {
+                    Log->warn(
+                        fmt::runtime(
+                            "ArrayLiteral is of type '{}', "
+                            "but tried adding value of type '{}'"
+                        ),
+                        magic_enum::enum_name(literal.type)
+                    );
+                }
+            }
+            return literal.value;
+        }
 
     case Equality:
     case Comparison:
@@ -117,8 +153,8 @@ const std::vector<Node::Ptr>& ArrayLiteral::GetValues() const {
     return values;
 }
 
-const Node::Ptr& ArrayLiteral::operator[](const i64 index) const {
-    return values.at(index);
+mana::PrimitiveType ArrayLiteral::GetType() const {
+    return type;
 }
 
 void ArrayLiteral::Accept(Visitor& visitor) const {
@@ -210,7 +246,7 @@ Node::Ptr BinaryExpr::ConstructChild(const ParseNode& operand_node) {
         }
     } break;
     case Literal:
-        return MakeLiteral(token);
+        return MakeLiteral(token).value;
 
     default:
         Log->error("Not a binary op");
@@ -228,7 +264,7 @@ UnaryExpr::UnaryExpr(const ParseNode& unary_node)
     const auto& operand_node = *unary_node.branches[0];
 
     if (operand_node.rule == Rule::Literal) {
-        val = MakeLiteral(operand_node.tokens[0]);
+        val = MakeLiteral(operand_node.tokens[0]).value;
         return;
     }
 

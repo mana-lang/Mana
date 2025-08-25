@@ -76,7 +76,7 @@ ret:
 #ifdef HEX_DEBUG
     Log->debug("");
 
-    if (StackTop()->GetType() == Value::Type::Bool) {
+    if (StackTop()->GetType() == mana::PrimitiveType::Bool) {
         Log->debug("ret {}\n\n", Pop().AsBool());
     } else {
         Log->debug("ret {}\n\n", Pop().AsFloat());
@@ -212,7 +212,7 @@ Value* VirtualMachine::StackTop() const {
 }
 
 void VirtualMachine::LogTop(const std::string_view msg) const {
-    if (StackTop()->GetType() == Value::Type::Bool) {
+    if (StackTop()->GetType() == mana::PrimitiveType::Bool) {
         Log->debug(fmt::runtime(msg), ViewTop().AsBool());
     } else {
         Log->debug(fmt::runtime(msg), ViewTop().AsFloat());
@@ -220,7 +220,7 @@ void VirtualMachine::LogTop(const std::string_view msg) const {
 }
 
 void VirtualMachine::LogTopTwo(const std::string_view msg) const {
-    if (StackTop()->GetType() == Value::Type::Bool) {
+    if (StackTop()->GetType() == mana::PrimitiveType::Bool) {
         Log->debug(fmt::runtime(msg), (StackTop() - 1)->AsBool(), ViewTop().AsBool());
     } else {
         Log->debug(fmt::runtime(msg), (StackTop() - 1)->AsFloat(), ViewTop().AsFloat());

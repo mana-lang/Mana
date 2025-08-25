@@ -43,7 +43,7 @@ public:
     MANA_NODISCARD ByteCode Serialize();
     MANA_NODISCARD ByteCode SerializeConstants() const;
 
-    // for now, this function assumes the input is actually correct
+    // this function assumes correct input
     bool Deserialize(const ByteCode& bytes);
 
     template <typename T>
@@ -53,6 +53,17 @@ public:
         values.push_back(value);
 
         return values.size() - 1;
+    }
+
+    template <typename T>
+        requires std::is_integral_v<T> || std::is_floating_point_v<T>
+                 || std::is_same_v<T, bool>
+    u64 AddConstants(const std::vector<T>& constants) {
+        const auto first_elem_index = values.size();
+
+        values.push_back(Value{constants});
+
+        return first_elem_index;
     }
 };
 

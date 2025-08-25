@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mana/vm/primitive-type.hpp>
 #include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/visitor.hpp>
 
@@ -73,18 +74,18 @@ public:
 
 class ArrayLiteral final : public Node {
     std::vector<Ptr> values;
+    mana::PrimitiveType type;
 
 public:
     ArrayLiteral(const ParseNode& node);
 
     const std::vector<Ptr>& GetValues() const;
-
-    const Ptr& operator[](ml::i64 index) const;
+    mana::PrimitiveType     GetType() const;
 
     void Accept(Visitor& visitor) const override;
 
 private:
-    Ptr GetValue(const ParseNode& elem);
+    Ptr ProcessValue(const ParseNode& elem);
 };
 
 class BinaryExpr final : public Node {

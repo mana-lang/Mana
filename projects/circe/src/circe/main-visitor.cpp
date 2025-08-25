@@ -82,9 +82,40 @@ void MainVisitor::Visit(const Literal<bool>& node) {
 }
 
 void MainVisitor::Visit(const ArrayLiteral& node) {
-    for (const auto& value : node.GetValues()) {
-        value->Accept(*this);
+    const auto& array_elems = node.GetValues();
+
+    if (array_elems.empty()) {
+        return;
     }
+
+    const auto ConstructValues = [&array_elems, this] <typename T> () {
+        std::vector<T> values;
+        for (const auto& val : array_elems) {
+            values.push_back(dynamic_cast<Literal<T>&>(*val).Get());
+        }
+        slice.Write(Op::Push, slice.AddConstants(values));
+    };
+
+    switch (node.GetType()) {
+        using enum mana::PrimitiveType;
+
+    case Float64:
+        ConstructValues.operator()<f64>();
+        return;
+    case Uint64:
+        ConstructValues.operator()<u64>();
+        return;
+    case Int64:
+        ConstructValues.operator()<i64>();
+        return;
+    case Bool:
+        ConstructValues.operator()<bool>();
+        return;
+    default:
+        break;
+    }
+
+    Log->error("Unhandled array literal type '{}'", magic_enum::enum_name(node.GetType()));
 }
 
 void MainVisitor::Visit(const UnaryExpr& node) {
@@ -93,7 +124,7 @@ void MainVisitor::Visit(const UnaryExpr& node) {
     if (node.GetOp().size() > 1) {
         Log->error("Unhandled unary expression");
         return;
-    } //
+    }  //
 
     switch (node.GetOp()[0]) {
     case '-':

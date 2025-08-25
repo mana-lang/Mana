@@ -1,21 +1,32 @@
 #pragma once
 
+#include "primitive-type.hpp"
 #include <mana/literals.hpp>
 
 #include <array>
+#include <vector>
 
 namespace mana::vm {
 using namespace literals;
 
+inline PrimitiveType GetManaTypeFrom(i64) {
+    return Int64;
+}
+
+inline PrimitiveType GetManaTypeFrom(f64) {
+    return Float64;
+}
+
+inline PrimitiveType GetManaTypeFrom(u64) {
+    return Uint64;
+}
+
+inline PrimitiveType GetManaTypeFrom(bool) {
+    return Bool;
+}
+
 struct Value {
     friend class Slice;
-
-    enum Type : u8 {
-        Int64,
-        Uint64,
-        Float64,
-        Bool,
-    };
 
     union Data {
         i64  as_i64;
@@ -31,7 +42,7 @@ struct Value {
 
     MANA_NODISCARD u64 BitCasted() const;
 
-    MANA_NODISCARD Type GetType() const;
+    MANA_NODISCARD PrimitiveType GetType() const;
 
     MANA_NODISCARD f64  AsFloat() const;
     MANA_NODISCARD i64  AsInt() const;
@@ -57,7 +68,7 @@ struct Value {
     Value()
         : data {nullptr}
         , length(0)
-        , type(invalid_type) {}
+        , type(PrimitiveType::Invalid) {}
 
     Value(const Value& other);
     Value(Value&& other) noexcept;
@@ -68,12 +79,46 @@ struct Value {
 
     ~Value();
 
+    template <typename T>
+    requires std::is_integral_v<T> || std::is_floating_point_v<T>
+         || std::is_same_v<T, bool>
+    explicit Value(const std::vector<T>& values) : length(values.size()), type(GetManaTypeFrom(T{})) {
+        if (length == 0) {
+            data = nullptr;
+            return;
+        }
+
+        data = new Data[length];
+        for (u64 i = 0; i < length; ++i) {
+            switch (type) {
+                case Int64:
+                    data[i].as_i64 = values[i];
+                    break;
+                case Uint64:
+                    data[i].as_u64 = values[i];
+                case Float64:
+                    data[i].as_f64 = values[i];
+                case Bool:
+                    data[i].as_bool = values[i];
+                default:
+                    return;
+            }
+        }
+    }
+
+    // Value(const std::vector<i64>& values);
+    // Value(const std::vector<u64>& values);
+    // Value(const std::vector<f64>& values);
+    // Value(const std::vector<bool>& values);
+    //
+    // void ConstructFromList(const std::vector<Value>& values);
+
 private:
     Data* data;
     u32   length;
     u8    type;
 
-    explicit Value(Type t);
+    explicit Value(PrimitiveType t);
 
     void WriteBytes(const std::array<u8, sizeof(Data)>& bytes);
 
@@ -124,8 +169,6 @@ private:
         BDispatchF,
         BDispatchB,
     };
-
-    static constexpr u8 invalid_type = 202;
 };
 
 }  // namespace mana::vm

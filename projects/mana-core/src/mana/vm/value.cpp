@@ -39,7 +39,7 @@ Value::Value(const bool b)
     , length(1)
     , type(static_cast<u8>(Bool)) {}
 
-Value::Value(const Type t)
+Value::Value(const PrimitiveType t)
     : length(1)
     , type(static_cast<u8>(t)) {
     switch (type) {
@@ -54,6 +54,11 @@ Value::Value(const Type t)
         break;
     case Bool:
         data = new Data {.as_bool = false};
+        break;
+    case Null:
+    case Invalid:
+        data   = nullptr;
+        length = 0;
         break;
     default:
         UNREACHABLE();
@@ -75,8 +80,8 @@ u64 Value::BitCasted() const {
     }
 }
 
-Value::Type Value::GetType() const {
-    return static_cast<Type>(type);
+PrimitiveType Value::GetType() const {
+    return static_cast<PrimitiveType>(type);
 }
 
 void Value::WriteBytes(const std::array<u8, sizeof(Data)>& bytes) {
@@ -173,16 +178,16 @@ Value::Value(Value&& other) noexcept
     , type(other.type) {
     if (other.data == nullptr || length == 0) {
         other.length = 0;
-        other.type   = invalid_type;
+        other.type   = Invalid;
         other.data   = nullptr;
         return;
     }
 
     data = other.data;
 
-    other.data = nullptr;
+    other.data   = nullptr;
     other.length = 0;
-    other.type = invalid_type;
+    other.type   = Invalid;
 }
 
 Value& Value::operator=(const Value& other) {
@@ -200,7 +205,7 @@ Value& Value::operator=(const Value& other) {
 
     if (other.data == nullptr || other.length == 0) {
         length = 0;
-        type   = invalid_type;
+        type   = Invalid;
         data   = nullptr;
         return *this;
     }
@@ -233,7 +238,7 @@ Value& Value::operator=(Value&& other) noexcept {
 
     if (other.data == nullptr || length == 0) {
         length = 0;
-        type   = invalid_type;
+        type   = Invalid;
         data   = nullptr;
         return *this;
     }
@@ -242,9 +247,9 @@ Value& Value::operator=(Value&& other) noexcept {
     type   = other.type;
     data   = other.data;
 
-    other.data = nullptr;
+    other.data   = nullptr;
     other.length = 0;
-    other.type = invalid_type;
+    other.type   = Invalid;
 
     return *this;
 }
