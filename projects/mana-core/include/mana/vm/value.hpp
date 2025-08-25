@@ -35,12 +35,16 @@ struct Value {
         bool as_bool;
     };
 
+    using LengthSize              = u32;
+    static constexpr u64 ByteSize = sizeof(Data) * sizeof(LengthSize);
+
     Value(i64 i);
     Value(u64 u);
     Value(f64 f);
     Value(bool b);
 
-    MANA_NODISCARD u64 BitCasted() const;
+    MANA_NODISCARD LengthSize Length() const;
+    MANA_NODISCARD u64        BitCasted(u32 at) const;
 
     MANA_NODISCARD PrimitiveType GetType() const;
 
@@ -68,7 +72,7 @@ struct Value {
     Value()
         : data {nullptr}
         , length(0)
-        , type(PrimitiveType::Invalid) {}
+        , type(Invalid) {}
 
     Value(const Value& other);
     Value(Value&& other) noexcept;
@@ -80,9 +84,11 @@ struct Value {
     ~Value();
 
     template <typename T>
-    requires std::is_integral_v<T> || std::is_floating_point_v<T>
-         || std::is_same_v<T, bool>
-    explicit Value(const std::vector<T>& values) : length(values.size()), type(GetManaTypeFrom(T{})) {
+        requires std::is_integral_v<T> || std::is_floating_point_v<T>
+                     || std::is_same_v<T, bool>
+    explicit Value(const std::vector<T>& values)
+        : length(values.size())
+        , type(GetManaTypeFrom(T {})) {
         if (length == 0) {
             data = nullptr;
             return;
@@ -91,36 +97,31 @@ struct Value {
         data = new Data[length];
         for (u64 i = 0; i < length; ++i) {
             switch (type) {
-                case Int64:
-                    data[i].as_i64 = values[i];
-                    break;
-                case Uint64:
-                    data[i].as_u64 = values[i];
-                case Float64:
-                    data[i].as_f64 = values[i];
-                case Bool:
-                    data[i].as_bool = values[i];
-                default:
-                    return;
+            case Int64:
+                data[i].as_i64 = values[i];
+                break;
+            case Uint64:
+                data[i].as_u64 = values[i];
+            case Float64:
+                data[i].as_f64 = values[i];
+            case Bool:
+                data[i].as_bool = values[i];
+            default:
+                return;
             }
         }
     }
 
-    // Value(const std::vector<i64>& values);
-    // Value(const std::vector<u64>& values);
-    // Value(const std::vector<f64>& values);
-    // Value(const std::vector<bool>& values);
-    //
-    // void ConstructFromList(const std::vector<Value>& values);
-
 private:
-    Data* data;
-    u32   length;
-    u8    type;
+    Data*      data;
+    LengthSize length;
+    u8         type;
 
-    explicit Value(PrimitiveType t);
+    Value(PrimitiveType t, LengthSize l);
 
-    void WriteBytes(const std::array<u8, sizeof(Data)>& bytes);
+    u64 SerializeBytesSize() const;
+
+    void WriteValueBytes(const std::array<unsigned char, 8>& bytes, u32 index);
 
     static i64 IDispatchI(const Data* val);
     static i64 IDispatchU(const Data* val);

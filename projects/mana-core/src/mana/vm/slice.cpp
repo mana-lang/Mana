@@ -16,9 +16,10 @@ void Slice::Write(Op opcode) {
     instructions.push_back(static_cast<u8>(opcode));
 }
 
-void Slice::Write(Op opcode, const u8 byte) {
+void Slice::Write(const Op opcode, const u16 const_pool_idx) {
     instructions.push_back(static_cast<u8>(opcode));
-    instructions.push_back(byte);
+    instructions.push_back(const_pool_idx & 0xFF);
+    instructions.push_back((const_pool_idx >> 8) & 0xFF);
 }
 
 const ByteCode& Slice::Instructions() const {
@@ -44,20 +45,53 @@ ByteCode Slice::Serialize() {
 ByteCode Slice::SerializeConstants() const {
     ByteCode out;
 
-    const auto constant_count = std::bit_cast<u64>(values.size());
-    for (i64 i = 0; i < sizeof(constant_count); ++i) {
-        out.push_back((constant_count >> i * 8) & 0xFF);
+    if (ConstantCount() > std::numeric_limits<u16>::max()) {
+        throw std::runtime_error("Constant count too large to serialize");
     }
 
-    for (const auto fval : values) {
-        out.push_back(static_cast<u8>(fval.type));
+    // serialize all values, including array indices
+    const u64 constant_bytes_count = ConstantPoolBytesCount();
+    for (i64 i = 0; i < sizeof(constant_bytes_count); ++i) {
+        out.push_back((constant_bytes_count >> i * 8) & 0xFF);
+    }
 
-        const auto serializable = fval.BitCasted();
-        for (i64 i = 0; i < sizeof(serializable); ++i) {
-            out.emplace_back((serializable >> i * 8) & 0xFF);
+    for (const auto& value : values) {
+        out.push_back(static_cast<u8>(value.type));
+
+        for (i64 i = 0; i < sizeof(value.length); ++i) {
+            out.push_back((value.length >> i * 8) & 0xFF);
+        }
+
+        // need to serialize each value separately
+        for (i64 i = 0; i < value.length; ++i) {
+            const auto serializable = value.BitCasted(i);
+
+            for (i64 k = 0; k < sizeof(serializable); ++k) {
+                out.emplace_back((serializable >> k * 8) & 0xFF);
+            }
         }
     }
 
+    return out;
+}
+
+u64 Slice::ConstantPoolBytesCount() const {
+    u64 out = 0;
+
+    for (const auto& value : values) {
+        out += value.length * sizeof(Value::Data);
+        out += sizeof(value.type);
+        out += sizeof(value.length);
+    }
+    return out;
+}
+
+u64 Slice::ConstantCount() const {
+    u64 out = 0;
+
+    for (const auto& value : values) {
+        out += value.length;
+    }
     return out;
 }
 
@@ -71,20 +105,31 @@ bool Slice::Deserialize(const ByteCode& bytes) {
     }
 
     const IndexRange pool_range {
-        sizeof(count_bytes),
-        std::bit_cast<u64>(count_bytes) * (sizeof(Value::Data) + sizeof(PrimitiveType)),
+        sizeof(count_bytes), // start from end of pool count
+        std::bit_cast<u64>(count_bytes),
     };
 
-    std::array<u8, sizeof(Value::Data)> value_bytes;
+    std::array<u8, sizeof(Value::Data)>       value_bytes;
+    std::array<u8, sizeof(Value::LengthSize)> length_bytes;
 
-    for (i64 n = pool_range.start; n < pool_range.end; n += sizeof(Value::Data)) {
-        auto value = Value {static_cast<PrimitiveType>(bytes[n])};
-        ++n;
+    for (i64 offset = pool_range.start; offset < pool_range.end;) {
+        const auto type = static_cast<PrimitiveType>(bytes[offset]);
+        offset += sizeof(PrimitiveType);
 
-        for (i64 i = 0; i < value_bytes.size(); ++i) {
-            value_bytes[i] = bytes[i + n];
+        for (i64 i = 0; i < length_bytes.size(); ++i) {
+            length_bytes[i] = bytes[i + offset];
         }
-        value.WriteBytes(value_bytes);
+        const auto length = std::bit_cast<Value::LengthSize>(length_bytes);
+        offset += sizeof(Value::LengthSize);
+
+        auto value = Value {type, length};
+        for (u32 i = 0; i < length; ++i) {
+            for (i64 k = 0; k < value_bytes.size(); ++k) {
+                value_bytes[k] = bytes[k + offset];
+            }
+            value.WriteValueBytes(value_bytes, i);
+            offset += sizeof(Value::Data);
+        }
         values.push_back(value);
     }
 

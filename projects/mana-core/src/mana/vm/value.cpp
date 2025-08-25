@@ -39,9 +39,25 @@ Value::Value(const bool b)
     , length(1)
     , type(static_cast<u8>(Bool)) {}
 
-Value::Value(const PrimitiveType t)
-    : length(1)
+Value::LengthSize Value::Length() const {
+    return length;
+}
+
+Value::Value(const PrimitiveType t, const LengthSize l)
+    : length(l)
     , type(static_cast<u8>(t)) {
+    if (length == 0 || type == Invalid) {
+        data   = nullptr;
+        type   = Invalid;
+        length = 0;
+        return;
+    }
+
+    if (length == 1) {
+        data = new Data[length];
+        return;
+    }
+
     switch (type) {
     case Int64:
         data = new Data {.as_i64 = 0};
@@ -56,7 +72,6 @@ Value::Value(const PrimitiveType t)
         data = new Data {.as_bool = false};
         break;
     case Null:
-    case Invalid:
         data   = nullptr;
         length = 0;
         break;
@@ -65,16 +80,20 @@ Value::Value(const PrimitiveType t)
     }
 }
 
-u64 Value::BitCasted() const {
+u64 Value::SerializeBytesSize() const {
+    return sizeof(length) + sizeof(type) + sizeof(Data) * length;
+}
+
+u64 Value::BitCasted(const u32 at) const {
     switch (type) {
     case Int64:
-        return std::bit_cast<u64>(data->as_i64);
+        return std::bit_cast<u64>(data[at].as_i64);
     case Uint64:
-        return std::bit_cast<u64>(data->as_u64);
+        return std::bit_cast<u64>(data[at].as_u64);
     case Float64:
-        return std::bit_cast<u64>(data->as_f64);
+        return std::bit_cast<u64>(data[at].as_f64);
     case Bool:
-        return data->as_bool;  // sobbing and weeping
+        return data[at].as_bool;  // sobbing and weeping
     default:
         UNREACHABLE();
     }
@@ -84,19 +103,23 @@ PrimitiveType Value::GetType() const {
     return static_cast<PrimitiveType>(type);
 }
 
-void Value::WriteBytes(const std::array<u8, sizeof(Data)>& bytes) {
+void Value::WriteValueBytes(const std::array<u8, sizeof(Data)>& bytes, const u32 index) {
+    if (index >= length) {
+        throw std::runtime_error("Value::WriteValueBytes: Out of bounds write");
+    }
+
     switch (type) {
     case Int64:
-        data->as_i64 = std::bit_cast<i64>(bytes);
+        data[index].as_i64 = std::bit_cast<i64>(bytes);
         break;
     case Uint64:
-        data->as_u64 = std::bit_cast<u64>(bytes);
+        data[index].as_u64 = std::bit_cast<u64>(bytes);
         break;
     case Float64:
-        data->as_f64 = std::bit_cast<f64>(bytes);
+        data[index].as_f64 = std::bit_cast<f64>(bytes);
         break;
     case Bool:
-        data->as_bool = bytes[0];
+        data[index].as_bool = bytes[0];
         break;
     default:
         UNREACHABLE();
