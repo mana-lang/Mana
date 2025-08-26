@@ -39,11 +39,11 @@ Value::Value(const bool b)
     , length(1)
     , type(static_cast<u8>(Bool)) {}
 
-Value::LengthSize Value::Length() const {
+Value::LengthType Value::Length() const {
     return length;
 }
 
-Value::Value(const PrimitiveType t, const LengthSize l)
+Value::Value(const PrimitiveType t, const LengthType l)
     : length(l)
     , type(static_cast<u8>(t)) {
     if (length == 0 || type == Invalid) {
@@ -78,10 +78,6 @@ Value::Value(const PrimitiveType t, const LengthSize l)
     default:
         UNREACHABLE();
     }
-}
-
-u64 Value::SerializeBytesSize() const {
-    return sizeof(length) + sizeof(type) + sizeof(Data) * length;
 }
 
 u64 Value::BitCasted(const u32 at) const {

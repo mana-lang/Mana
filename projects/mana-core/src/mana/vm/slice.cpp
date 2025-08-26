@@ -110,7 +110,7 @@ bool Slice::Deserialize(const ByteCode& bytes) {
     };
 
     std::array<u8, sizeof(Value::Data)>       value_bytes;
-    std::array<u8, sizeof(Value::LengthSize)> length_bytes;
+    std::array<u8, sizeof(Value::LengthType)> length_bytes;
 
     for (i64 offset = pool_range.start; offset < pool_range.end;) {
         const auto type = static_cast<PrimitiveType>(bytes[offset]);
@@ -119,8 +119,8 @@ bool Slice::Deserialize(const ByteCode& bytes) {
         for (i64 i = 0; i < length_bytes.size(); ++i) {
             length_bytes[i] = bytes[i + offset];
         }
-        const auto length = std::bit_cast<Value::LengthSize>(length_bytes);
-        offset += sizeof(Value::LengthSize);
+        const auto length = std::bit_cast<Value::LengthType>(length_bytes);
+        offset += sizeof(Value::LengthType);
 
         auto value = Value {type, length};
         for (u32 i = 0; i < length; ++i) {

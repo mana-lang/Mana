@@ -35,15 +35,14 @@ struct Value {
         bool as_bool;
     };
 
-    using LengthSize              = u32;
-    static constexpr u64 ByteSize = sizeof(Data) * sizeof(LengthSize);
+    using LengthType = u32;
 
     Value(i64 i);
     Value(u64 u);
     Value(f64 f);
     Value(bool b);
 
-    MANA_NODISCARD LengthSize Length() const;
+    MANA_NODISCARD LengthType Length() const;
     MANA_NODISCARD u64        BitCasted(u32 at) const;
 
     MANA_NODISCARD PrimitiveType GetType() const;
@@ -114,12 +113,10 @@ struct Value {
 
 private:
     Data*      data;
-    LengthSize length;
+    LengthType length;
     u8         type;
 
-    Value(PrimitiveType t, LengthSize l);
-
-    u64 SerializeBytesSize() const;
+    Value(PrimitiveType t, LengthType l);
 
     void WriteValueBytes(const std::array<unsigned char, 8>& bytes, u32 index);
 

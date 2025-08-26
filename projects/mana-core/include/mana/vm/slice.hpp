@@ -36,7 +36,7 @@ public:
 
     // serializes a slice to a vector of unsigned char (bytes)
     // for now, the sequence is:
-    // - constant pool size (u64) -> 8
+    // - constant pool size in bytes (u64) -> 8
     // - constant pool
     // --- where (size_bytes) elem:
     // ----- (1) type
