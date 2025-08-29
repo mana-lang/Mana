@@ -234,24 +234,26 @@ void Parser::ConstructAST(const ParseNode& node) {
     syntax_tree = std::make_unique<Artifact>(node.tokens[0].text);
 
     const auto root = dynamic_cast<Artifact*>(syntax_tree.get());
-    for (const auto& n : node.branches) {
-        using enum Rule;
+    for (const auto& stmt : node.branches) {
+        for (const auto& n : stmt->branches) {
+            using enum Rule;
 
-        switch (n->rule) {
-        case Equality:
-        case Comparison:
-        case Term:
-        case Factor:
-            root->AddChild<BinaryExpr>(*n);
-            break;
-        case Unary:
-            root->AddChild<UnaryExpr>(*n);
-            break;
-        case ArrayLiteral:
-            root->AddChild<ast::ArrayLiteral>(*n);
-            break;
-        default:
-            break;
+            switch (n->rule) {
+            case Equality:
+            case Comparison:
+            case Term:
+            case Factor:
+                root->AddChild<BinaryExpr>(*n);
+                break;
+            case Unary:
+                root->AddChild<UnaryExpr>(*n);
+                break;
+            case ArrayLiteral:
+                root->AddChild<ast::ArrayLiteral>(*n);
+                break;
+            default:
+                break;
+            }
         }
     }
 }
