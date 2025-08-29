@@ -47,6 +47,10 @@ public:
     }
 };
 
+// class Statement final : public Node {
+//
+// };
+
 template <typename T>
 class Literal final : public Node {
     T value;

@@ -233,6 +233,10 @@ void Parser::ConstructAST(const ParseNode& node) {
 
     syntax_tree = std::make_unique<Artifact>(node.tokens[0].text);
 
+    //TODO: this is kind of a bug.
+    // instead of adding all statements to 'root',
+    // we should have a Statement node which can contain different things
+    // the Statement nodes get added to 'root', and the expressions get added to Statement nodes
     const auto root = dynamic_cast<Artifact*>(syntax_tree.get());
     for (const auto& stmt : node.branches) {
         for (const auto& n : stmt->branches) {
