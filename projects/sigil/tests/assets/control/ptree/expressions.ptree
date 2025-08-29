@@ -1,0 +1,274 @@
+[Artifact] -> expressions
+
+[Statement]
+== [Literal]
+-- --  [Lit_Int] -> 27
+
+[Statement]
+== [Literal]
+-- --  [Lit_Float] -> 7.27
+
+[Statement]
+== [Literal]
+-- --  [Lit_String] -> "Blue"
+
+[Statement]
+== [Literal]
+-- --  [Lit_Char] -> 'z'
+
+[Statement]
+== [Literal]
+-- --  [Lit_true] -> true
+
+[Statement]
+== [Literal]
+-- --  [Lit_false] -> false
+
+[Statement]
+== [Literal]
+-- --  [Lit_null] -> null
+
+[Statement]
+== [Unary]
+-- --  [Op_Minus] -> -
+== == [Literal]
+-- -- --  [Lit_Int] -> 6
+
+[Statement]
+== [Unary]
+-- --  [Op_Minus] -> -
+== == [Literal]
+-- -- --  [Lit_Float] -> 45.795
+
+[Statement]
+== [Unary]
+-- --  [Op_LogicalNot] -> !
+== == [Literal]
+-- -- --  [Lit_true] -> true
+
+[Statement]
+== [Grouping]
+-- --  [Op_ParenLeft] -> (
+-- --  [Op_ParenRight] -> )
+== == [Literal]
+-- -- --  [Lit_Int] -> 94
+
+[Statement]
+== [Grouping]
+-- --  [Op_ParenLeft] -> (
+-- --  [Op_ParenRight] -> )
+== == [Literal]
+-- -- --  [Lit_false] -> false
+
+[Statement]
+== [Grouping]
+-- --  [Op_ParenLeft] -> (
+-- --  [Op_ParenRight] -> )
+== == [Literal]
+-- -- --  [Lit_Float] -> 34.853
+
+[Statement]
+== [Unary]
+-- --  [Op_LogicalNot] -> !
+== == [Grouping]
+-- -- --  [Op_ParenLeft] -> (
+-- -- --  [Op_ParenRight] -> )
+== == == [Unary]
+-- -- -- --  [Op_LogicalNot] -> !
+== == == == [Literal]
+-- -- -- -- --  [Lit_false] -> false
+
+[Statement]
+== [Factor]
+-- --  [Op_Asterisk] -> *
+== == [Literal]
+-- -- --  [Lit_Int] -> 26
+== == [Literal]
+-- -- --  [Lit_Int] -> 2
+
+[Statement]
+== [Factor]
+-- --  [Op_FwdSlash] -> /
+-- --  [Op_Asterisk] -> *
+-- --  [Op_FwdSlash] -> /
+-- --  [Op_FwdSlash] -> /
+-- --  [Op_Asterisk] -> *
+== == [Literal]
+-- -- --  [Lit_Int] -> 943
+== == [Literal]
+-- -- --  [Lit_Float] -> 27.54
+== == [Literal]
+-- -- --  [Lit_Float] -> 12.95
+== == [Literal]
+-- -- --  [Lit_Int] -> 599
+== == [Literal]
+-- -- --  [Lit_Int] -> 2
+== == [Literal]
+-- -- --  [Lit_Float] -> 94.323
+
+[Statement]
+== [Factor]
+-- --  [Op_Asterisk] -> *
+== == [Literal]
+-- -- --  [Lit_Int] -> 5
+== == [Grouping]
+-- -- --  [Op_ParenLeft] -> (
+-- -- --  [Op_ParenRight] -> )
+== == == [Factor]
+-- -- -- --  [Op_Asterisk] -> *
+== == == == [Grouping]
+-- -- -- -- --  [Op_ParenLeft] -> (
+-- -- -- -- --  [Op_ParenRight] -> )
+== == == == == [Factor]
+-- -- -- -- -- --  [Op_FwdSlash] -> /
+== == == == == == [Literal]
+-- -- -- -- -- -- --  [Lit_Int] -> 27
+== == == == == == [Literal]
+-- -- -- -- -- -- --  [Lit_Int] -> 5
+== == == == [Literal]
+-- -- -- -- --  [Lit_Float] -> 2.5
+
+[Statement]
+== [Term]
+-- --  [Op_Plus] -> +
+== == [Literal]
+-- -- --  [Lit_Int] -> 63
+== == [Literal]
+-- -- --  [Lit_Int] -> 12
+
+[Statement]
+== [Term]
+-- --  [Op_Minus] -> -
+-- --  [Op_Plus] -> +
+-- --  [Op_Minus] -> -
+-- --  [Op_Minus] -> -
+-- --  [Op_Plus] -> +
+== == [Literal]
+-- -- --  [Lit_Int] -> 358
+== == [Literal]
+-- -- --  [Lit_Float] -> 54.91
+== == [Literal]
+-- -- --  [Lit_Float] -> 263.12
+== == [Literal]
+-- -- --  [Lit_Int] -> 958
+== == [Literal]
+-- -- --  [Lit_Int] -> 23
+== == [Literal]
+-- -- --  [Lit_Float] -> 6.37
+
+[Statement]
+== [Term]
+-- --  [Op_Plus] -> +
+== == [Literal]
+-- -- --  [Lit_Int] -> 97
+== == [Grouping]
+-- -- --  [Op_ParenLeft] -> (
+-- -- --  [Op_ParenRight] -> )
+== == == [Term]
+-- -- -- --  [Op_Plus] -> +
+== == == == [Grouping]
+-- -- -- -- --  [Op_ParenLeft] -> (
+-- -- -- -- --  [Op_ParenRight] -> )
+== == == == == [Term]
+-- -- -- -- -- --  [Op_Minus] -> -
+== == == == == == [Literal]
+-- -- -- -- -- -- --  [Lit_Int] -> 40
+== == == == == == [Literal]
+-- -- -- -- -- -- --  [Lit_Int] -> 17
+== == == == [Literal]
+-- -- -- -- --  [Lit_Float] -> 5.2
+
+[Statement]
+== [Comparison]
+-- --  [Op_GreaterThan] -> >
+== == [Literal]
+-- -- --  [Lit_Int] -> 55
+== == [Literal]
+-- -- --  [Lit_Int] -> 23
+
+[Statement]
+== [Comparison]
+-- --  [Op_GreaterEqual] -> >=
+== == [Literal]
+-- -- --  [Lit_Int] -> 72
+== == [Literal]
+-- -- --  [Lit_Int] -> 125
+
+[Statement]
+== [Comparison]
+-- --  [Op_LessEqual] -> <=
+-- --  [Op_LessThan] -> <
+-- --  [Op_GreaterThan] -> >
+-- --  [Op_GreaterEqual] -> >=
+== == [Literal]
+-- -- --  [Lit_Int] -> 953
+== == [Literal]
+-- -- --  [Lit_Int] -> 24
+== == [Literal]
+-- -- --  [Lit_Int] -> 12
+== == [Literal]
+-- -- --  [Lit_Float] -> 2384.5
+== == [Literal]
+-- -- --  [Lit_false] -> false
+
+[Statement]
+== [Equality]
+-- --  [Op_Equality] -> ==
+== == [Literal]
+-- -- --  [Lit_true] -> true
+== == [Literal]
+-- -- --  [Lit_false] -> false
+
+[Statement]
+== [Equality]
+-- --  [Op_NotEqual] -> !=
+== == [Literal]
+-- -- --  [Lit_Int] -> 94
+== == [Literal]
+-- -- --  [Lit_Int] -> 94
+
+[Statement]
+== [Equality]
+-- --  [Op_Equality] -> ==
+-- --  [Op_NotEqual] -> !=
+== == [Literal]
+-- -- --  [Lit_Int] -> 83
+== == [Comparison]
+-- -- --  [Op_LessThan] -> <
+-- -- --  [Op_GreaterEqual] -> >=
+== == == [Term]
+-- -- -- --  [Op_Plus] -> +
+== == == == [Unary]
+-- -- -- -- --  [Op_Minus] -> -
+== == == == == [Literal]
+-- -- -- -- -- --  [Lit_Int] -> 24
+== == == == [Factor]
+-- -- -- -- --  [Op_FwdSlash] -> /
+== == == == == [Literal]
+-- -- -- -- -- --  [Lit_Int] -> 94
+== == == == == [Grouping]
+-- -- -- -- -- --  [Op_ParenLeft] -> (
+-- -- -- -- -- --  [Op_ParenRight] -> )
+== == == == == == [Factor]
+-- -- -- -- -- -- --  [Op_Asterisk] -> *
+== == == == == == == [Literal]
+-- -- -- -- -- -- -- --  [Lit_Int] -> 3
+== == == == == == == [Grouping]
+-- -- -- -- -- -- -- --  [Op_ParenLeft] -> (
+-- -- -- -- -- -- -- --  [Op_ParenRight] -> )
+== == == == == == == == [Term]
+-- -- -- -- -- -- -- -- --  [Op_Minus] -> -
+== == == == == == == == == [Literal]
+-- -- -- -- -- -- -- -- -- --  [Lit_Int] -> 12
+== == == == == == == == == [Literal]
+-- -- -- -- -- -- -- -- -- --  [Lit_Int] -> 34
+== == == [Literal]
+-- -- -- --  [Lit_Float] -> 85.32
+== == == [Literal]
+-- -- -- --  [Lit_Int] -> 120
+== == [Unary]
+-- -- --  [Op_LogicalNot] -> !
+== == == [Literal]
+-- -- -- --  [Lit_false] -> false
+
+

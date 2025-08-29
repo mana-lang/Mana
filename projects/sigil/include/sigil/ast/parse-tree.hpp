@@ -1,98 +1,42 @@
 #pragma once
 
-#include <mana/literals.hpp>
+#include <sigil/ast/rule.hpp>
 #include <sigil/ast/token.hpp>
+
+#include <mana/literals.hpp>
 
 #include <memory>
 #include <vector>
 
-namespace sigil::ast {
-using namespace mana::literals;
-enum class Rule : i64 {
-    Undefined,
-    Mistake,
+namespace sigil {
 
-    Module,
+class ParseNode {
+    ParseNode* parent;
 
-    Expression,
+public:
+    using Ptr        = std::shared_ptr<ParseNode>;
+    using BranchList = std::vector<Ptr>;
 
-    Grouping,
-    Literal,
+    ast::Rule   rule;
+    TokenStream tokens;
+    BranchList  branches;
 
-    Unary,
-    Factor,
-    Term,
-    Comparison,
-    Equality,
+    explicit ParseNode(ast::Rule rule = ast::Rule::Undefined);
+    explicit ParseNode(ParseNode* parent, ast::Rule rule = ast::Rule::Undefined);
 
-    // ReachedEOF,
-    //
-    // Declaration,
-    // Decl_Import,
-    // Decl_Access,
-    // Decl_Function,
-    // Decl_Global,
-    //
-    // Import_Module,
-    // Import_Access,
-    // Import_Alias,
-    //
-    // Access_Spec,
-    // Access_Decl,
-    //
-    // Param,
-    // Param_List,
-    //
-    // Type,
-    // Type_Annotation,
-    // Type_Association,
-    //
-    // Scope,
-    // Statement,
-    // Return,
-    // Assignment,
-    // Arguments,
-    // MemberAccess,
-    //
-    // CompoundAssignment,
-    //
-    // Init_Mut,
-    // Init_Static,
-    //
-    // UDT,
-    // UDT_Struct,
-    // UDT_Pack,
-    // UDT_Enum,
-    // UDT_Body,
-    // UDT_Init,
-};
-
-struct Node {
-    using NodePtr = std::shared_ptr<Node>;
-
-    Rule                 rule;
-    TokenStream          tokens;
-    std::vector<NodePtr> branches;
-
-    explicit Node(Rule rule = Rule::Undefined);
-    explicit Node(Node* parent, Rule rule = Rule::Undefined);
-
-    SIGIL_NODISCARD Node& NewBranch(Rule new_rule = Rule::Undefined);
+    SIGIL_NODISCARD ParseNode& NewBranch(ast::Rule new_rule = ast::Rule::Undefined);
 
     void PopBranch();
-    void RemoveBranch(i64 idx);
-    void RemoveBranchFromTail(i64 idx);
+    void RemoveBranch(ml::i64 idx);
+    void RemoveBranchFromTail(ml::i64 idx);
 
     SIGIL_NODISCARD bool IsRoot() const;
+    SIGIL_NODISCARD bool IsLeaf() const;
 
-    void AcquireBranchOf(Node& target, i64 index);
-    void AcquireBranchesOf(Node& target, i64 start, i64 end);
-    void AcquireBranchesOf(Node& target, i64 start);
-    void AcquireTailBranchOf(Node& target);
-
-private:
-    // not intended to be used; this is just to identify a root node that isn't a module node
-    Node* parent;
+    void AcquireBranchOf(ParseNode& target, ml::i64 index);
+    void AcquireBranchesOf(ParseNode& target, ml::i64 start, ml::i64 end);
+    void AcquireBranchesOf(ParseNode& target, ml::i64 start);
+    void AcquireTailBranchOf(ParseNode& target);
 };
 
-}  // namespace sigil::ast
+}  // namespace sigil

@@ -2,7 +2,7 @@
 Language: Cpp
 
 AccessModifierOffset: -4
-AlignAfterOpenBracket: BlockIndent
+AlignAfterOpenBracket: Align
 AlignArrayOfStructures: Left
 
 AlignConsecutiveAssignments:
@@ -73,14 +73,14 @@ BraceWrapping:
   SplitEmptyRecord: false
   SplitEmptyNamespace: false
 BreakAdjacentStringLiterals: true
-BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeBinaryOperators: All
 BreakBeforeConceptDeclarations: Always
 BreakInheritanceList: BeforeComma
 BreakBeforeTernaryOperators: true
 #BreakConstructorInitializersBeforeComma: true
 BreakConstructorInitializers: BeforeComma
 BreakStringLiterals: true
-ColumnLimit: 115
+ColumnLimit: 90
 #CommentPragmas:  '^ IWYU pragma:'
 QualifierAlignment: Left
 CompactNamespaces: false

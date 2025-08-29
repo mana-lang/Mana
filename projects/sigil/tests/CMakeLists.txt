@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.28)
 project(sigil)
 
 add_executable(sigil-tests
-        tests/parsing.cpp
-        tests/lexing.cpp
+        tests/ptree.cpp
+        tests/tokenization.cpp
+        tests/ast.cpp
         # tests/error_reporting.cpp
 )
 
@@ -25,3 +26,10 @@ add_custom_command(
         ${PROJECT_SOURCE_DIR}/assets
         ${PROJECT_BINARY_DIR}/assets/
 )
+
+#add_custom_command(
+#        TARGET sigil-tests PRE_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E copy
+#        ${PROJECT_BINARY_DIR}/../libsigil.dll
+#        ${PROJECT_BINARY_DIR}/
+#)

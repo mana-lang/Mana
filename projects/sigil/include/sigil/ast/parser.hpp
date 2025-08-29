@@ -1,23 +1,23 @@
 #pragma once
 
-#include <mana/literals.hpp>
+#include <sigil/ast/nodes.hpp>
 #include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/token.hpp>
+
+#include <mana/literals.hpp>
 
 #include <vector>
 
 namespace sigil {
-using namespace mana::literals;
-
-struct TokenRange {
-    i64 breadth;
-    i64 offset;
-};
+namespace ml = mana::literals;
 
 class Parser {
+    using ASTNode = std::unique_ptr<ast::Node>;
+
     TokenStream tokens;
-    i64         cursor;
-    ast::Node   ast;
+    ml::i64     cursor;
+    ParseNode   parse_tree;
+    ASTNode     syntax_tree;
 
 public:
     explicit Parser(const TokenStream&& tokens);
@@ -25,45 +25,61 @@ public:
 
     SIGIL_NODISCARD bool Parse();
 
-    SIGIL_NODISCARD auto ViewAST() const -> const ast::Node&;
+    SIGIL_NODISCARD auto ViewParseTree() const -> const ParseNode&;
     SIGIL_NODISCARD auto ViewTokens() const -> const TokenStream&;
+    SIGIL_NODISCARD auto ViewAST() const -> ast::Node*;
 
-    void PrintAST() const;
-    void EmitAST(std::string_view file_name = "Mana.ast") const;
+    void PrintParseTree() const;
+    void EmitParseTree(std::string_view file_name) const;
+
+    SIGIL_NODISCARD std::string EmitParseTree() const;
 
 private:
-    SIGIL_NODISCARD std::string EmitAST(const ast::Node& root, std::string prepend = "") const;
+    SIGIL_NODISCARD std::string EmitParseTree(const ParseNode& node, std::string prepend = "") const;
 
-    SIGIL_NODISCARD auto CurrentToken() const -> const Token&;
-    SIGIL_NODISCARD auto PeekNextToken() const -> const Token&;
-    SIGIL_NODISCARD auto NextToken() -> const Token&;
-    SIGIL_NODISCARD auto GetAndCycleToken() -> const Token&;
+    SIGIL_NODISCARD const Token& CurrentToken() const;
+    SIGIL_NODISCARD const Token& PeekNextToken() const;
+    SIGIL_NODISCARD const Token& NextToken();
+    SIGIL_NODISCARD const Token& GetAndCycleToken();
 
-    void AddTokensTo(ast::Node& node, TokenType delimiter);
-    void AddTokensTo(ast::Node& node, i64 count);
-    void AddCurrentTokenTo(ast::Node& node) const;
-    void AddCycledTokenTo(ast::Node& node);
+    bool SkipNewlines();
 
-    void TransmitTokens(TokenStream& from, TokenStream& to) const;
-    void TransmitTokens(ast::Node& from, ast::Node& to, TokenRange range) const;
+    // Adds tokens to the given node, up to and including the delimiter
+    void AddTokensTo(ParseNode& node, TokenType delimiter);
 
-    bool ProgressedAST(ast::Node& node);
+    // Adds 'count' tokens to the given node
+    void AddTokensTo(ParseNode& node, ml::i64 count);
+    void AddCurrentTokenTo(ParseNode& node) const;
+    void AddCycledTokenTo(ParseNode& node);
+
+    bool ProgressedParseTree(ParseNode& node);
+
+    void ConstructAST(const ParseNode& node);
 
     // Matchers
-    SIGIL_NODISCARD bool MatchedExpression(ast::Node& node);
+    bool MatchedStatement(ParseNode& node);
+    bool Expect(bool condition, std::string_view error_message, ParseNode& node);
 
-    SIGIL_NODISCARD bool MatchedPrimary(ast::Node& node);
-    SIGIL_NODISCARD bool MatchedUnary(ast::Node& node);
-    SIGIL_NODISCARD bool MatchedFactor(ast::Node& node);
-    SIGIL_NODISCARD bool MatchedTerm(ast::Node& node);
-    SIGIL_NODISCARD bool MatchedComparison(ast::Node& node);
-    SIGIL_NODISCARD bool MatchedEquality(ast::Node& node);
+    bool MatchedDeclaration(ParseNode& node);
+    bool MatchedAssignment(ParseNode& node);
 
-    using MatcherFnPtr   = bool (Parser::*)(ast::Node&);
+    bool MatchedExpression(ParseNode& node);
+
+    bool MatchedElemList(ParseNode& node);
+    bool MatchedArrayLiteral(ParseNode& node);
+    bool MatchedGrouping(ParseNode& node);
+    bool MatchedPrimary(ParseNode& node);
+    bool MatchedUnary(ParseNode& node);
+    bool MatchedFactor(ParseNode& node);
+    bool MatchedTerm(ParseNode& node);
+    bool MatchedComparison(ParseNode& node);
+    bool MatchedEquality(ParseNode& node);
+
+    using MatcherFnPtr   = bool (Parser::*)(ParseNode&);
     using OpCheckerFnPtr = bool (*)(TokenType);
 
     SIGIL_NODISCARD bool MatchedBinaryExpr(
-        ast::Node&     node,
+        ParseNode&     node,
         OpCheckerFnPtr is_valid_operator,
         MatcherFnPtr   matched_operand,
         ast::Rule      rule

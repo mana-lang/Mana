@@ -1,0 +1,38 @@
+ID         = [a-zA-Z_][a-zA-Z0-9_]*  ; (*letter or underscore followed by any letters, numbers or underscores *)
+INT        = [0-9]+                  ;
+FLOAT      = INT.[0-9]+              ;
+STRING     = "\"(?:[^\"\\]|\\.)*\""  ; (*anything between double-quoted strings, minus escape sequences *)
+STRING_CH  = "'(?:[^'\\]|\\.)*'"     ; (* same but single quotes *)
+
+KW_DATA = "data";
+KW_MUT  = "mut" ;
+
+TERMINATOR = "\n" | ";";
+
+  (* rules *)
+artifact = stmt* EOF ;
+
+stmt   = (decl | assign | expr) TERMINATOR ;
+decl   = KW_MUT? KW_DATA ID ('=' expr)?    ;
+assign = ID '=' expr                       ;
+
+expr       = equality                                 ;
+equality   = comparison (  ('!=' | '==') comparison)* ;
+comparison = term ( ('>' | '>=' | '<' | '<=') term)*  ;
+term       = factor ( ('-' | '+') factor)*            ;
+factor     = unary ( ('/' | '*') unary )*             ;
+unary      = ('!' | '-') unary | primary              ;
+primary    = grouping | literal | array_literal | ID  ;
+
+grouping   = "(" expr ")" ;
+literal    = number
+           | string
+           | "true"
+           | "false"
+           | "null"
+           ;
+array_literal = '[' elem_list? ']'   ;
+elem_list = expr (',' expr)* (',')?  ;
+
+number = INT | FLOAT        ;
+string = STRING | STRING_CH ;

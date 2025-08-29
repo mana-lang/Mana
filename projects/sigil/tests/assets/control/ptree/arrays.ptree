@@ -1,0 +1,79 @@
+[Artifact] -> arrays
+
+[Statement]
+== [ArrayLiteral]
+-- --  [Op_BracketLeft] -> [
+-- --  [Op_BracketRight] -> ]
+== == [ElemList]
+-- -- --  [Op_Comma] -> ,
+-- -- --  [Op_Comma] -> ,
+== == == [Literal]
+-- -- -- --  [Lit_Int] -> 1
+== == == [Literal]
+-- -- -- --  [Lit_Int] -> 7
+== == == [Literal]
+-- -- -- --  [Lit_Int] -> 43
+
+[Statement]
+== [ArrayLiteral]
+-- --  [Op_BracketLeft] -> [
+-- --  [Op_BracketRight] -> ]
+== == [ElemList]
+-- -- --  [Op_Comma] -> ,
+-- -- --  [Op_Comma] -> ,
+-- -- --  [Op_Comma] -> ,
+== == == [Literal]
+-- -- -- --  [Lit_Int] -> 84
+== == == [Literal]
+-- -- -- --  [Lit_Int] -> 99
+== == == [Literal]
+-- -- -- --  [Lit_Int] -> 127
+
+[Statement]
+== [ArrayLiteral]
+-- --  [Op_BracketLeft] -> [
+-- --  [Op_BracketRight] -> ]
+== == [ElemList]
+-- -- --  [Op_Comma] -> ,
+-- -- --  [Op_Comma] -> ,
+-- -- --  [Op_Comma] -> ,
+== == == [Literal]
+-- -- -- --  [Lit_Int] -> 123
+== == == [Literal]
+-- -- -- --  [Lit_Int] -> 356
+== == == [Literal]
+-- -- -- --  [Lit_Int] -> 987
+
+[Statement]
+== [ArrayLiteral]
+-- --  [Op_BracketLeft] -> [
+-- --  [Op_BracketRight] -> ]
+
+[Statement]
+== [ArrayLiteral]
+-- --  [Op_BracketLeft] -> [
+-- --  [Op_BracketRight] -> ]
+== == [ElemList]
+-- -- --  [Op_Comma] -> ,
+== == == [Literal]
+-- -- -- --  [Lit_Int] -> 54
+
+[Statement]
+== [ArrayLiteral]
+-- --  [Op_BracketLeft] -> [
+-- --  [Op_BracketRight] -> ]
+== == [ElemList]
+-- -- --  [Op_Comma] -> ,
+-- -- --  [Op_Comma] -> ,
+-- -- --  [Op_Comma] -> ,
+-- -- --  [Op_Comma] -> ,
+== == == [Literal]
+-- -- -- --  [Lit_Int] -> 123
+== == == [Literal]
+-- -- -- --  [Lit_Int] -> 345
+== == == [Literal]
+-- -- -- --  [Lit_Int] -> 567
+== == == [Literal]
+-- -- -- --  [Lit_Int] -> 789
+
+

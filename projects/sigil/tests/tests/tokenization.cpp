@@ -1,75 +1,71 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "common.hpp"
+#include "headers/common.hpp"
 #include <sigil/ast/lexer.hpp>
 
 constexpr auto LEXER_TESTING_PATH = "assets/samples/lexing/";
-TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
+
+TEST_CASE("Tokenization", "[lex][token][operator][keyword]") {
     using enum sigil::TokenType;
 
-    SECTION("Core", "Core functionality test") {
+    SECTION("Token processing") {
         sigil::Lexer lexer;
         REQUIRE(lexer.Tokenize(Concatenate(LEXER_TESTING_PATH, "basic.mn")));
 
         const auto tokens = StripRedundant(lexer.RelinquishTokens());
         REQUIRE(tokens.size() == 16);
 
-        SECTION("Tokens are being processed") {
+        CHECK(tokens[0].type == KW_data);
+        CHECK(tokens[0].text == "data");
 
-            CHECK(tokens[0].type == KW_data);
-            CHECK(tokens[0].text == "data");
+        CHECK(tokens[1].type == Identifier);
+        CHECK(tokens[1].text == "x");
 
-            CHECK(tokens[1].type == Identifier);
-            CHECK(tokens[1].text == "x");
+        CHECK(tokens[2].type == Op_Assign);
+        CHECK(tokens[2].text == "=");
 
-            CHECK(tokens[2].type == Op_Assign);
-            CHECK(tokens[2].text == "=");
+        CHECK(tokens[3].type == Lit_Int);
+        CHECK(tokens[3].text == "5");
 
-            CHECK(tokens[3].type == Lit_Int);
-            CHECK(tokens[3].text == "5");
-        }
+        CHECK(tokens[4].type == Lit_Float);
+        CHECK(tokens[4].text == "10.783");
 
-        SECTION("Tokens are correctly registered") {
-            CHECK(tokens[4].type == Lit_Float);
-            CHECK(tokens[4].text == "10.783");
+        CHECK(tokens[5].type == KW_data);
+        CHECK(tokens[5].text == "data");
 
-            CHECK(tokens[5].type == KW_data);
-            CHECK(tokens[5].text == "data");
+        CHECK(tokens[6].type == Identifier);
+        CHECK(tokens[6].text == "add");
 
-            CHECK(tokens[6].type == Identifier);
-            CHECK(tokens[6].text == "add");
+        CHECK(tokens[7].type == Op_Assign);
+        CHECK(tokens[7].text == "=");
 
-            CHECK(tokens[7].type == Op_Assign);
-            CHECK(tokens[7].text == "=");
+        CHECK(tokens[8].type == Op_ParenLeft);
+        CHECK(tokens[8].text == "(");
 
-            CHECK(tokens[8].type == Op_ParenLeft);
-            CHECK(tokens[8].text == "(");
+        CHECK(tokens[9].type == Op_ParenRight);
+        CHECK(tokens[9].text == ")");
 
-            CHECK(tokens[9].type == Op_ParenRight);
-            CHECK(tokens[9].text == ")");
+        CHECK(tokens[10].type == Op_BraceLeft);
+        CHECK(tokens[10].text == "{");
 
-            CHECK(tokens[10].type == Op_BraceLeft);
-            CHECK(tokens[10].text == "{");
+        CHECK(tokens[11].type == Identifier);
+        CHECK(tokens[11].text == "x");
 
-            CHECK(tokens[11].type == Identifier);
-            CHECK(tokens[11].text == "x");
+        CHECK(tokens[12].type == Op_Plus);
+        CHECK(tokens[12].text == "+");
 
-            CHECK(tokens[12].type == Op_Plus);
-            CHECK(tokens[12].text == "+");
+        CHECK(tokens[13].type == Identifier);
+        CHECK(tokens[13].text == "y");
 
-            CHECK(tokens[13].type == Identifier);
-            CHECK(tokens[13].text == "y");
+        CHECK(tokens[14].type == Op_BraceRight);
+        CHECK(tokens[14].text == "}");
 
-            CHECK(tokens[14].type == Op_BraceRight);
-            CHECK(tokens[14].text == "}");
-
-            CHECK(tokens[15].type == Eof);
-            CHECK(tokens[15].text == "EOF");
-        }
+        CHECK(tokens[15].type == Eof);
+        CHECK(tokens[15].text == "EOF");
     }
 
     const auto keyword_path = Concatenate(LEXER_TESTING_PATH, "keywords/");
-    SECTION("Keyword lexing") {
+    SECTION("Keywords") {
         sigil::Lexer lexer;
         REQUIRE(lexer.Tokenize(Concatenate(keyword_path, "datatypes.mn")));
 
@@ -184,7 +180,7 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
             }
 
             SECTION("Module Declarators") {
-                CHECK(declaration_tokens[8].type == KW_module);
+                CHECK(declaration_tokens[8].type == KW_artifact);
                 CHECK(declaration_tokens[8].text == "module");
 
                 CHECK(declaration_tokens[9].type == KW_public);
@@ -228,7 +224,6 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
             }
 
             SECTION("Iteration") {
-
                 CHECK(controlflow_tokens[6].type == KW_loop);
                 CHECK(controlflow_tokens[6].text == "loop");
 
@@ -245,7 +240,6 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
                 CHECK(controlflow_tokens[10].text == "skip");
             }
         }
-
     }
 
     SECTION("Operator lexing") {
@@ -285,7 +279,6 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
 
             CHECK(tokens[76].type == Op_LogicalNot);
             CHECK(tokens[76].text == "not");
-
         }
 
         SECTION("Arithmetic Operators") {

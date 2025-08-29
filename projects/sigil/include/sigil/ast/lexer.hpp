@@ -9,7 +9,7 @@
 #include <vector>
 
 namespace sigil {
-using namespace mana::literals;
+namespace ml = mana::literals;
 
 class Lexer {
 public:
@@ -41,8 +41,8 @@ private:
     void AddEOF();
 
 private:
-    i64 cursor;
-    i64 line_number;
+    ml::i64 cursor;
+    ml::i64 line_number;
 
     TokenStream token_stream;
 };

@@ -2,12 +2,14 @@
 
 #include <mana/literals.hpp>
 
+#include <magic_enum/magic_enum.hpp>
+#include <sigil/core/logger.hpp>
 #include <string>
 #include <vector>
 
 namespace sigil {
-using namespace mana::literals;
-enum class TokenType : i64 {
+namespace ml = mana::literals;
+enum class TokenType : ml::i64 {
     Identifier,
 
     Op_Plus,
@@ -86,7 +88,7 @@ enum class TokenType : i64 {
     KW_enum,
     KW_generic,
 
-    KW_module,
+    KW_artifact,
     KW_public,
     KW_private,
     KW_import,
@@ -107,12 +109,12 @@ enum class TokenType : i64 {
     Eof,
 
     Unknown,
-    _module_,  // special token, auto-inserted
+    _artifact_,  // special token, auto-inserted
 };
 
 struct TextPosition {
-    i64 line;
-    i64 column;
+    ml::i64 line;
+    ml::i64 column;
 
     bool operator==(const TextPosition& other) const {
         return line == other.line && column == other.column;
@@ -127,7 +129,55 @@ struct Token {
     bool operator==(const Token& other) const {
         return type == other.type && position == other.position && text == other.text;
     }
+
+    template <typename T>
+    SIGIL_NODISCARD T As() const {
+        static_assert(
+            false,
+            "This function exists to convert literal tokens to actual literals,"
+            " so only its specializations are supported"
+        );
+        return T();
+    }
 };
+
+template <>
+SIGIL_NODISCARD inline auto Token::As<ml::f32>() const -> ml::f32 {
+    return std::stof(text);
+}
+
+template <>
+SIGIL_NODISCARD inline auto Token::As<ml::f64>() const -> ml::f64 {
+    return std::stod(text);
+}
+
+template <>
+SIGIL_NODISCARD inline auto Token::As<ml::i64>() const -> ml::i64 {
+    return std::stoll(text);
+}
+
+template <>
+SIGIL_NODISCARD inline auto Token::As<ml::u64>() const -> ml::u64 {
+    return std::stoull(text);
+}
+
+template <>
+SIGIL_NODISCARD inline bool Token::As<bool>() const {
+    switch (type) {
+    case TokenType::Lit_true:
+        return true;
+    case TokenType::Lit_false:
+        break;
+    default:
+        Log->critical(
+            "Bool conversion requested for non-bool token '{}'. "
+            "Defaulting to 'false'.",
+            magic_enum::enum_name(type)
+        );
+    }
+
+    return false;
+}
 
 using TokenStream = std::vector<Token>;
 

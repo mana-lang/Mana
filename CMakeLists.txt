@@ -12,17 +12,17 @@ include(FetchContent)
 
 # spdlog
 FetchContent_Declare(
-  spdlog
-  GIT_REPOSITORY https://github.com/gabime/spdlog.git 
-  GIT_TAG v1.15.0
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG v1.15.1
 )
 FetchContent_MakeAvailable(spdlog)
 
 # Catch
 FetchContent_Declare(
-    Catch2
-    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG v3.8.0
+        Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG v3.8.0
 )
 FetchContent_MakeAvailable(Catch2)
 
@@ -30,3 +30,4 @@ add_subdirectory(projects/salem)
 add_subdirectory(projects/sigil)
 add_subdirectory(projects/hex)
 add_subdirectory(projects/circe)
+add_subdirectory(projects/mana-core)

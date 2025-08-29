@@ -7,6 +7,12 @@ set(SIGIL_SOURCES
         src/sigil/ast/lexer.cpp
         src/sigil/ast/parser.cpp
         src/sigil/ast/parse-tree.cpp
+        src/sigil/ast/nodes.cpp
+
+        src/sigil/core/logger.cpp
+
+        src/sigil/error/error.cpp
+        src/sigil/error/error-sink.cpp
 )
 
 set(SIGIL_INCLUDES
@@ -14,7 +20,7 @@ set(SIGIL_INCLUDES
 )
 
 set(SIGIL_LIBS
-        spdlog::spdlog
+        mana::core
 )
 
 set(EXT_INCLUDES

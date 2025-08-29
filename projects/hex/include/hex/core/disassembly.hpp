@@ -1,18 +1,20 @@
 #pragma once
 
-#include <hex/vm/slice.hpp>
+#include <mana/vm/slice.hpp>
 
 #include <mana/literals.hpp>
 #include <mana/vm/opcode.hpp>
 
 namespace hex {
-using namespace mana::literals;
-using namespace mana::vm;
+namespace ml = mana::literals;
 
-void EmitConstant(i64 offset, Value constant);
+void EmitConstant(ml::i64 offset, ml::f64 constant);
+void EmitConstant(ml::i64 offset, ml::i64 constant);
+void EmitConstant(ml::i64 offset, ml::u64 constant);
+void EmitConstant(ml::i64 offset, bool constant);
 
-void EmitSimple(i64 offset, Op op);
+void EmitSimple(ml::i64 offset, mana::vm::Op op);
 
-void PrintBytecode(const Slice& c);
+void PrintBytecode(const mana::vm::Slice& c);
 
 }  // namespace hex

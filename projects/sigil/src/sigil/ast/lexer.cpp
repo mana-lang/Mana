@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 namespace sigil {
+using namespace mana::literals;
 
 Lexer::Lexer()
     : cursor {0}
@@ -55,14 +56,14 @@ void Lexer::TokenizeLine(std::string_view current_line) {
 bool Lexer::Tokenize(const std::filesystem::path& file_path) {
     std::ifstream file(file_path);
     if (not file.is_open()) {
-        Log(LogLevel::Error, "Failed to open file at '{}'", file_path.string());
+        Log->error("Failed to open file at '{}'", file_path.string());
         return false;
     }
 
     token_stream.clear();
 
     token_stream.emplace_back(
-        TokenType::_module_,
+        TokenType::_artifact_,
         file_path.filename().replace_extension("").string(),
         TextPosition {
             .line   = -1,
@@ -85,42 +86,32 @@ bool Lexer::Tokenize(const std::filesystem::path& file_path) {
 
 void Lexer::PrintTokens() const {
     if (token_stream.empty()) {
-        Log(LogLevel::Error,
-            "Lexer token print requested, but token stream was empty.");
+        Log->error("Lexer token print requested, but token stream was empty.");
         return;
     }
 
-    Log(LogLevel::Debug, "--- Printing Token Stream ---\n");
+    Log->debug("--- Printing Token Stream ---\n");
 
     for (const auto& [type, contents, position] : token_stream) {
         if (type == TokenType::Terminator) {
-            Log(LogLevel::Info,
-                "[L: {} | C: {}] {}: \\n",
-                position.line,
-                position.column,
-                magic_enum::enum_name(type));
+            Log->info("[L: {} | C: {}] {}: \\n", position.line, position.column, magic_enum::enum_name(type));
             continue;
         }
-        Log(LogLevel::Info,
-            "[L: {} | C: {}] {}: \\n",
-            position.line,
-            position.column,
-            magic_enum::enum_name(type),
-            contents);
+        Log->info("[L: {} | C: {}] {}: \\n", position.line, position.column, magic_enum::enum_name(type), contents);
     }
-    Log(LogLevel::Debug, "End of token stream.\n");
+    Log->debug("End of token stream.\n");
 }
 
 void Lexer::clear() {
     token_stream.clear();
 }
 
-SIGIL_NODISCARD TokenStream&& Lexer::RelinquishTokens() {
+TokenStream&& Lexer::RelinquishTokens() {
     return std::move(token_stream);
 }
 
 // ID = ^[a-zA-Z_][a-zA-Z0-9_]+
-SIGIL_NODISCARD bool Lexer::LexedIdentifier(const std::string_view line) {
+bool Lexer::LexedIdentifier(const std::string_view line) {
     if (char current = line[cursor]; current == '_' || std::isalpha(current)) {
         std::string buffer;
         while (current == '_' || std::isalnum(current)) {
@@ -138,7 +129,7 @@ SIGIL_NODISCARD bool Lexer::LexedIdentifier(const std::string_view line) {
 }
 
 // only to be entered when current char is " or '
-SIGIL_NODISCARD bool Lexer::LexedString(const std::string_view line) {
+bool Lexer::LexedString(const std::string_view line) {
     std::string buffer;
 
     char current_char = line[cursor];
@@ -153,7 +144,7 @@ SIGIL_NODISCARD bool Lexer::LexedString(const std::string_view line) {
         literal_type = TokenType::Lit_Char;
         break;
     default:
-        Log(LogLevel::Error, "Improper call to LexedString");
+        Log->error("Improper call to LexedString");
         AddToken(TokenType::Unknown, std::move(buffer));
         return false;
     }
@@ -161,7 +152,7 @@ SIGIL_NODISCARD bool Lexer::LexedString(const std::string_view line) {
     while (true) {
         if (static_cast<usize>(++cursor) >= line.size()) {
             // next token should always be a newline or string literal
-            Log(LogLevel::Warn, "Unexpected EOF while lexing string literal");
+            Log->warn("Unexpected EOF while lexing string literal");
             AddToken(TokenType::Unknown, std::move(buffer));
             AddEOF();
             return false;
@@ -169,8 +160,7 @@ SIGIL_NODISCARD bool Lexer::LexedString(const std::string_view line) {
 
         current_char = line[cursor];  // need to update
 
-        if (current_char == '\n' ||
-            (current_char == '\\' && line[cursor + 1] == 'n')) {
+        if (current_char == '\n' || (current_char == '\\' && line[cursor + 1] == 'n')) {
             // strings must close on the line they're started
             return false;
         }
@@ -187,7 +177,7 @@ SIGIL_NODISCARD bool Lexer::LexedString(const std::string_view line) {
     return true;
 }
 
-SIGIL_NODISCARD bool Lexer::LexedNumber(const std::string_view line) {
+bool Lexer::LexedNumber(const std::string_view line) {
     if (not std::isdigit(line[cursor])) {
         return false;
     }
@@ -218,7 +208,7 @@ SIGIL_NODISCARD bool Lexer::LexedNumber(const std::string_view line) {
     return true;
 }
 
-SIGIL_NODISCARD bool Lexer::LexedOperator(const std::string_view line) {
+bool Lexer::LexedOperator(const std::string_view line) {
     const auto current = line[cursor];
     const auto next    = line[cursor + 1];
     TokenType  token_type;
@@ -341,7 +331,6 @@ SIGIL_NODISCARD bool Lexer::LexedOperator(const std::string_view line) {
     ++cursor;
     AddToken(token_type, std::move(buffer));
 
-
     return true;
 }
 
@@ -358,43 +347,70 @@ void Lexer::LexUnknown(const std::string_view line) {
 
 // we take a string ref because we have a string that
 // we'd otherwise need to construct from a stringview anyway
-SIGIL_NODISCARD bool Lexer::MatchedKeyword(std::string& identifier_buffer) {
+bool Lexer::MatchedKeyword(std::string& identifier_buffer) {
     using KeywordMap = std::unordered_map<std::string, TokenType>;
 
     using enum TokenType;
     static const KeywordMap keyword_map = {
-        {"i8", KW_i8},           {"i16", KW_i16},       {"i32", KW_i32},
-        {"i64", KW_i64},         {"i128", KW_i128},
+        {"i8",       KW_i8        },
+        {"i16",      KW_i16       },
+        {"i32",      KW_i32       },
+        {"i64",      KW_i64       },
+        {"i128",     KW_i128      },
 
-        {"u8", KW_u8},           {"u16", KW_u16},       {"u32", KW_u32},
-        {"u64", KW_u64},         {"u128", KW_u128},
+        {"u8",       KW_u8        },
+        {"u16",      KW_u16       },
+        {"u32",      KW_u32       },
+        {"u64",      KW_u64       },
+        {"u128",     KW_u128      },
 
-        {"f32", KW_f32},         {"f64", KW_f64},
+        {"f32",      KW_f32       },
+        {"f64",      KW_f64       },
 
-        {"byte", KW_byte},       {"char", KW_char},     {"string", KW_string},
+        {"byte",     KW_byte      },
+        {"char",     KW_char      },
+        {"string",   KW_string    },
 
-        {"bool", KW_bool},       {"null", Lit_null},
+        {"bool",     KW_bool      },
+        {"null",     Lit_null     },
 
-        {"data", KW_data},       {"fn", KW_fn},         {"mut", KW_mut},
-        {"raw", KW_raw},         {"const", KW_const},   {"override", KW_override},
+        {"data",     KW_data      },
+        {"fn",       KW_fn        },
+        {"mut",      KW_mut       },
+        {"raw",      KW_raw       },
+        {"const",    KW_const     },
+        {"override", KW_override  },
 
-        {"pack", KW_pack},       {"struct", KW_struct}, {"enum", KW_enum},
-        {"generic", KW_generic},
+        {"pack",     KW_pack      },
+        {"struct",   KW_struct    },
+        {"enum",     KW_enum      },
+        {"generic",  KW_generic   },
 
-        {"module", KW_module},   {"public", KW_public}, {"private", KW_private},
-        {"import", KW_import},   {"as", KW_as},
+        {"module",   KW_artifact  },
+        {"public",   KW_public    },
+        {"private",  KW_private   },
+        {"import",   KW_import    },
+        {"as",       KW_as        },
 
-        {"return", KW_return},   {"true", Lit_true},    {"false", Lit_false},
-        {"if", KW_if},           {"else", KW_else},     {"match", KW_match},
+        {"return",   KW_return    },
+        {"true",     Lit_true     },
+        {"false",    Lit_false    },
+        {"if",       KW_if        },
+        {"else",     KW_else      },
+        {"match",    KW_match     },
 
-        {"loop", KW_loop},       {"while", KW_while},   {"for", KW_for},
-        {"break", KW_break},     {"skip", KW_skip},
+        {"loop",     KW_loop      },
+        {"while",    KW_while     },
+        {"for",      KW_for       },
+        {"break",    KW_break     },
+        {"skip",     KW_skip      },
 
-        {"and", Op_LogicalAnd},  {"or", Op_LogicalOr},  {"not", Op_LogicalNot},
+        {"and",      Op_LogicalAnd},
+        {"or",       Op_LogicalOr },
+        {"not",      Op_LogicalNot},
     };
 
-    if (const auto keyword = keyword_map.find(identifier_buffer);
-        keyword != keyword_map.end()) {
+    if (const auto keyword = keyword_map.find(identifier_buffer); keyword != keyword_map.end()) {
         AddToken(keyword->second, std::move(identifier_buffer));
         return true;
     }
@@ -402,11 +418,11 @@ SIGIL_NODISCARD bool Lexer::MatchedKeyword(std::string& identifier_buffer) {
     return false;
 }
 
-SIGIL_NODISCARD bool Lexer::IsWhitespace(const char c) const {
+bool Lexer::IsWhitespace(const char c) const {
     return c == ' ' || c == '\0' || c == '\n' || c == '\r' || c == '\t';
 }
 
-SIGIL_NODISCARD bool Lexer::IsComment(const char c) const {
+bool Lexer::IsComment(const char c) const {
     return c == '#';
 }
 
@@ -424,8 +440,7 @@ void Lexer::AddToken(TokenType type, std::string& text) {
 
 void Lexer::AddToken(TokenType type, std::string&& text) {
     const i64 column_pos = cursor + 1 - static_cast<i64>(text.length());
-    token_stream
-        .emplace_back(type, std::move(text), TextPosition {.line = line_number, .column = column_pos});
+    token_stream.emplace_back(type, std::move(text), TextPosition {.line = line_number, .column = column_pos});
 }
 
 void Lexer::AddEOF() {
