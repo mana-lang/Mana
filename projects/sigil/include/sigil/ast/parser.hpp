@@ -3,7 +3,6 @@
 #include <sigil/ast/nodes.hpp>
 #include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/token.hpp>
-#include <sigil/error/error-sink.hpp>
 
 #include <mana/literals.hpp>
 
@@ -12,11 +11,6 @@
 namespace sigil {
 namespace ml = mana::literals;
 
-struct TokenRange {
-    ml::i64 breadth;
-    ml::i64 offset;
-};
-
 class Parser {
     using ASTNode = std::unique_ptr<ast::Node>;
 
@@ -24,7 +18,6 @@ class Parser {
     ml::i64     cursor;
     ParseNode   parse_tree;
     ASTNode     syntax_tree;
-    ErrorSink   error_sink;
 
 public:
     explicit Parser(const TokenStream&& tokens);
@@ -51,19 +44,25 @@ private:
 
     bool SkipNewlines();
 
+    // Adds tokens to the given node, up to and including the delimiter
     void AddTokensTo(ParseNode& node, TokenType delimiter);
+
+    // Adds 'count' tokens to the given node
     void AddTokensTo(ParseNode& node, ml::i64 count);
     void AddCurrentTokenTo(ParseNode& node) const;
     void AddCycledTokenTo(ParseNode& node);
-
-    void TransmitTokens(TokenStream& from, TokenStream& to) const;
-    void TransmitTokens(ParseNode& from, ParseNode& to, TokenRange range) const;
 
     bool ProgressedParseTree(ParseNode& node);
 
     void ConstructAST(const ParseNode& node);
 
     // Matchers
+    bool MatchedStatement(ParseNode& node);
+    bool Expect(bool condition, std::string_view error_message, ParseNode& node);
+
+    bool MatchedDeclaration(ParseNode& node);
+    bool MatchedAssignment(ParseNode& node);
+
     bool MatchedExpression(ParseNode& node);
 
     bool MatchedElemList(ParseNode& node);

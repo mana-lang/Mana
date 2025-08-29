@@ -106,12 +106,12 @@ void Lexer::clear() {
     token_stream.clear();
 }
 
-SIGIL_NODISCARD TokenStream&& Lexer::RelinquishTokens() {
+TokenStream&& Lexer::RelinquishTokens() {
     return std::move(token_stream);
 }
 
 // ID = ^[a-zA-Z_][a-zA-Z0-9_]+
-SIGIL_NODISCARD bool Lexer::LexedIdentifier(const std::string_view line) {
+bool Lexer::LexedIdentifier(const std::string_view line) {
     if (char current = line[cursor]; current == '_' || std::isalpha(current)) {
         std::string buffer;
         while (current == '_' || std::isalnum(current)) {
@@ -129,7 +129,7 @@ SIGIL_NODISCARD bool Lexer::LexedIdentifier(const std::string_view line) {
 }
 
 // only to be entered when current char is " or '
-SIGIL_NODISCARD bool Lexer::LexedString(const std::string_view line) {
+bool Lexer::LexedString(const std::string_view line) {
     std::string buffer;
 
     char current_char = line[cursor];
@@ -177,7 +177,7 @@ SIGIL_NODISCARD bool Lexer::LexedString(const std::string_view line) {
     return true;
 }
 
-SIGIL_NODISCARD bool Lexer::LexedNumber(const std::string_view line) {
+bool Lexer::LexedNumber(const std::string_view line) {
     if (not std::isdigit(line[cursor])) {
         return false;
     }
@@ -208,7 +208,7 @@ SIGIL_NODISCARD bool Lexer::LexedNumber(const std::string_view line) {
     return true;
 }
 
-SIGIL_NODISCARD bool Lexer::LexedOperator(const std::string_view line) {
+bool Lexer::LexedOperator(const std::string_view line) {
     const auto current = line[cursor];
     const auto next    = line[cursor + 1];
     TokenType  token_type;
@@ -347,7 +347,7 @@ void Lexer::LexUnknown(const std::string_view line) {
 
 // we take a string ref because we have a string that
 // we'd otherwise need to construct from a stringview anyway
-SIGIL_NODISCARD bool Lexer::MatchedKeyword(std::string& identifier_buffer) {
+bool Lexer::MatchedKeyword(std::string& identifier_buffer) {
     using KeywordMap = std::unordered_map<std::string, TokenType>;
 
     using enum TokenType;
@@ -418,11 +418,11 @@ SIGIL_NODISCARD bool Lexer::MatchedKeyword(std::string& identifier_buffer) {
     return false;
 }
 
-SIGIL_NODISCARD bool Lexer::IsWhitespace(const char c) const {
+bool Lexer::IsWhitespace(const char c) const {
     return c == ' ' || c == '\0' || c == '\n' || c == '\r' || c == '\t';
 }
 
-SIGIL_NODISCARD bool Lexer::IsComment(const char c) const {
+bool Lexer::IsComment(const char c) const {
     return c == '#';
 }
 

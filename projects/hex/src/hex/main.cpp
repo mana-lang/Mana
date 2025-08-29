@@ -44,11 +44,11 @@ void ExecuteVM(const std::string_view exe_name) {
     VirtualMachine vm;
     Log->set_pattern("%v");
 
-    const auto start_interp = chrono::high_resolution_clock::now();
-    const auto interp_res   = vm.Interpret(&in_slice);
-    const auto end_interp   = chrono::high_resolution_clock::now();
+    const auto start_interp  = chrono::high_resolution_clock::now();
+    const auto interp_result = vm.Interpret(&in_slice);
+    const auto end_interp    = chrono::high_resolution_clock::now();
 
-    const auto result = magic_enum::enum_name(interp_res);
+    const auto result = magic_enum::enum_name(interp_result);
     Log->debug("");
     Log->set_pattern("%^<%n>%$ %v");
     Log->debug("Interpret Result: {}\n", result);

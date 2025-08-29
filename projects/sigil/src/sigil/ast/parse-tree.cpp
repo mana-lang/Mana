@@ -30,7 +30,7 @@ void ParseNode::RemoveBranchFromTail(const i64 idx) {
     branches.erase(branches.end() - idx);
 }
 
-SIGIL_NODISCARD bool ParseNode::IsRoot() const {
+bool ParseNode::IsRoot() const {
     return parent == nullptr;
 }
 

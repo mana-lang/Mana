@@ -11,6 +11,11 @@ enum class Rule : ml::i64 {
 
     Artifact,
 
+    Statement,
+
+    Declaration,
+    Assignment,
+
     Expression,
 
     Grouping,
