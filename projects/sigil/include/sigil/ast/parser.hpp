@@ -55,10 +55,10 @@ private:
     bool ProgressedParseTree(ParseNode& node);
 
     void ConstructAST(const ParseNode& node);
+    bool Expect(bool condition, std::string_view error_message, ParseNode& node);
 
     // Matchers
     bool MatchedStatement(ParseNode& node);
-    bool Expect(bool condition, std::string_view error_message, ParseNode& node);
 
     bool MatchedDeclaration(ParseNode& node);
     bool MatchedAssignment(ParseNode& node);

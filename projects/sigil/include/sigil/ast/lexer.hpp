@@ -11,40 +11,51 @@
 namespace sigil {
 namespace ml = mana::literals;
 
+struct TokenizedSource {
+    std::string source;
+    std::vector<Token> tokens;
+};
+
 class Lexer {
+    ml::i64 cursor;
+
+    ml::i64 line_start;
+    ml::i64 line_number;
+
+    TokenStream token_stream;
+    std::string source;
 public:
     Lexer();
 
-    void TokenizeLine(std::string_view line);
     bool Tokenize(const std::filesystem::path& file_path);
     void PrintTokens() const;
-    void clear();
+    void Reset();
 
     SIGIL_NODISCARD TokenStream&& RelinquishTokens();
 
 private:
-    SIGIL_NODISCARD bool LexedIdentifier(std::string_view line);
-    SIGIL_NODISCARD bool LexedString(std::string_view line);
-    SIGIL_NODISCARD bool LexedNumber(std::string_view line);
-    SIGIL_NODISCARD bool LexedOperator(std::string_view line);
+    void TokenizeLine();
 
-    void LexUnknown(std::string_view line);
+    mana::literals::i64  GetTokenColumnIndex(std::size_t token_length);
+
+    void AddToken(TokenType type, std::string&& text);
+    void AddToken(TokenType type, std::string& text);
+    void AddToken(TokenType type, char c);
+
+    SIGIL_NODISCARD bool LexedIdentifier();
+    SIGIL_NODISCARD bool LexedString();
+    SIGIL_NODISCARD bool LexedNumber();
+    SIGIL_NODISCARD bool LexedOperator();
+
+    void LexUnknown();
 
     SIGIL_NODISCARD bool MatchedKeyword(std::string& identifier_buffer);
 
     SIGIL_NODISCARD bool IsWhitespace(char c) const;
-    SIGIL_NODISCARD bool IsComment(char c) const;
-
-    void AddToken(TokenType type, std::string&& text);
-    void AddToken(TokenType type, std::string& text);
+    SIGIL_NODISCARD bool IsLineComment(char c) const;
+    SIGIL_NODISCARD bool IsTerminator() const;
 
     void AddEOF();
-
-private:
-    ml::i64 cursor;
-    ml::i64 line_number;
-
-    TokenStream token_stream;
 };
 
 }  // namespace sigil
