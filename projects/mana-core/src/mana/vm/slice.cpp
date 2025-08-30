@@ -16,10 +16,12 @@ void Slice::Write(Op opcode) {
     instructions.push_back(static_cast<u8>(opcode));
 }
 
-void Slice::Write(const Op opcode, const u16 const_pool_idx) {
+void Slice::Write(const Op opcode, const u16 const_pool_index) {
     instructions.push_back(static_cast<u8>(opcode));
-    instructions.push_back(const_pool_idx & 0xFF);
-    instructions.push_back((const_pool_idx >> 8) & 0xFF);
+
+    // constant pool indices are little endian 16-bit unsigned
+    instructions.push_back((const_pool_index >> 8) & 0xFF);
+    instructions.push_back(const_pool_index & 0xFF);
 }
 
 const ByteCode& Slice::Instructions() const {

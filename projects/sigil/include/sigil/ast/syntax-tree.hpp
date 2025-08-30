@@ -1,9 +1,10 @@
 #pragma once
 
-#include <mana/vm/primitive-type.hpp>
 #include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/visitor.hpp>
+#include <sigil/core/concepts.hpp>
 
+#include <mana/vm/primitive-type.hpp>
 #include <mana/literals.hpp>
 
 #include <memory>
@@ -19,14 +20,20 @@ class Visitor;
 // AST nodes assume their ptree input is correct
 class Node {
 public:
-    using Ptr       = std::shared_ptr<Node>;
+    using Ptr       = std::shared_ptr<Node>;  // TODO: rename to NodePtr
     virtual ~Node() = default;
 
     virtual void Accept(Visitor& visitor) const = 0;
 };
 
-template <typename T>
-concept NodeType = std::is_base_of_v<Node, T>;
+class Statement final : public Node {
+    Ptr child;
+
+public:
+    explicit Statement(const Ptr&& node);
+
+    void Accept(Visitor& visitor) const override;
+};
 
 class Artifact final : public Node {
     std::string      name;
@@ -41,17 +48,15 @@ public:
 
     void Accept(Visitor& visitor) const override;
 
-    template <NodeType NT, typename... Args>
+    template <typename NodeT, typename... Args>
+        requires std::is_base_of_v<Node, NodeT>
     void AddChild(Args&&... args) {
-        children.push_back(std::make_shared<NT>(std::forward<Args>(args)...));
+        children.emplace_back(std::make_shared<Statement>(
+            std::make_shared<NodeT>(std::forward<Args>(args)...)));
     }
 };
 
-// class Statement final : public Node {
-//
-// };
-
-template <typename T>
+template <LiteralType T>
 class Literal final : public Node {
     T value;
 
@@ -77,7 +82,7 @@ public:
 };
 
 class ArrayLiteral final : public Node {
-    std::vector<Ptr> values;
+    std::vector<Ptr>    values;
     mana::PrimitiveType type;
 
 public:
