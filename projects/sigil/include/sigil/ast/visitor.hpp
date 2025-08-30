@@ -1,13 +1,17 @@
 #pragma once
 
+#include <sigil/core/concepts.hpp>
+
 namespace sigil::ast {
 
-template <typename T>
+template <LiteralType T>
 class Literal;
 
 class Visitor {
 public:
     virtual ~Visitor() = default;
+
+    virtual void Visit(const class Statement& node) = 0;
 
     virtual void Visit(const class UnaryExpr& node)  = 0;
     virtual void Visit(const class BinaryExpr& node) = 0;

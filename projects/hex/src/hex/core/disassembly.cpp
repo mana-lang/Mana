@@ -44,8 +44,8 @@ void PrintBytecode(const Slice& c) {
         switch (const auto op = static_cast<Op>(code[i])) {
             using enum Op;
         case Push:
-            EmitConstant(i, c.Constants()[code[i + 1]]);
-            ++i;
+            EmitConstant(i, c.Constants()[code[i + 2]]);
+            i += 2;
             break;
         case Negate:
         case Add:

@@ -27,7 +27,7 @@ class Slice {
 
 public:
     void Write(Op opcode);
-    void Write(Op opcode, u16 const_pool_idx);
+    void Write(Op opcode, u16 const_pool_index);
 
     MANA_NODISCARD const ByteCode& Instructions() const;
     MANA_NODISCARD ByteCode&       Instructions();

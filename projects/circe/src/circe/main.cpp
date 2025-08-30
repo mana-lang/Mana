@@ -2,8 +2,8 @@
 #include <circe/main-visitor.hpp>
 
 #include <sigil/ast/lexer.hpp>
-#include <sigil/ast/nodes.hpp>
 #include <sigil/ast/parser.hpp>
+#include <sigil/ast/syntax-tree.hpp>
 
 #include <mana/vm/slice.hpp>
 

@@ -5,7 +5,7 @@
 
 #include <algorithm>
 #include <fstream>
-#include <sigil/ast/nodes.hpp>
+#include <sigil/ast/syntax-tree.hpp>
 
 namespace sigil {
 using namespace ast;

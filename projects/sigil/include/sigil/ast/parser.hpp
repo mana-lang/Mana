@@ -1,7 +1,7 @@
 #pragma once
 
-#include <sigil/ast/nodes.hpp>
 #include <sigil/ast/parse-tree.hpp>
+#include <sigil/ast/syntax-tree.hpp>
 #include <sigil/ast/token.hpp>
 
 #include <mana/literals.hpp>

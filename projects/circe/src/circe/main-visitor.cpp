@@ -14,7 +14,6 @@ Slice MainVisitor::GetSlice() const {
 void MainVisitor::Visit(const Artifact& artifact) {
     for (const auto& child : artifact.GetChildren()) {
         child->Accept(*this);
-        slice.Write(Op::Return);
     }
 }
 
@@ -118,13 +117,18 @@ void MainVisitor::Visit(const ArrayLiteral& node) {
     Log->error("Unhandled array literal type '{}'", magic_enum::enum_name(node.GetType()));
 }
 
+void MainVisitor::Visit(const Statement& node) {
+    node.Accept(*this);
+    slice.Write(Op::Return);
+}
+
 void MainVisitor::Visit(const UnaryExpr& node) {
     node.GetVal().Accept(*this);
 
     if (node.GetOp().size() > 1) {
         Log->error("Unhandled unary expression");
         return;
-    }  //
+    }
 
     switch (node.GetOp()[0]) {
     case '-':

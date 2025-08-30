@@ -2,13 +2,14 @@
 #include "spdlog/fmt/bundled/chrono.h"
 #include <sigil/core/logger.hpp>
 
-#include <sigil/ast/nodes.hpp>
 #include <sigil/ast/parse-tree.hpp>
+#include <sigil/ast/syntax-tree.hpp>
 #include <sigil/ast/visitor.hpp>
 
 namespace sigil::ast {
 using namespace mana::literals;
 
+/// Literal Helpers
 template <typename T>
 auto MakeLiteral(const Token& token) {
     return std::make_shared<Literal<T>>(token.As<T>());
@@ -38,7 +39,7 @@ LiteralData MakeLiteral(const Token& token) {
         return {MakeLiteral<f64>(token), mana::PrimitiveType::Float64};
 
     case Lit_null:
-        return {MakeNullLiteral(), mana::PrimitiveType::Invalid};
+        return {MakeNullLiteral(), mana::PrimitiveType::Null};
 
     default:
         break;
@@ -59,6 +60,13 @@ auto Artifact::GetChildren() const -> const std::vector<Ptr>& {
 
 void Artifact::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
+}
+
+/// Statement
+Statement::Statement(const Ptr&& node) : child(std::move(node)) {}
+
+void Statement::Accept(Visitor& visitor) const {
+    child->Accept(visitor); // forward the visitor, statements don't do anything on their own
 }
 
 /// ArrayLiteral

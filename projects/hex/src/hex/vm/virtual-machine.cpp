@@ -1,6 +1,8 @@
 #include <hex/core/logger.hpp>
 #include <hex/vm/virtual-machine.hpp>
 
+#include <array>
+
 namespace hex {
 using namespace mana::vm;
 
@@ -35,6 +37,7 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
     };
 
     // clang-format off
+#define CONSTANT_INDEX u16((0xFF00 & *ip) | (0x00FF & *(ip+1)))
 #ifdef HEX_DEBUG
     constexpr auto err          = &&compile_error;
     constexpr auto dispatch_max = dispatch_table.size();
@@ -49,7 +52,7 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
 #   define LOG(msg) Log->debug(msg)
 #   define LOG_TOP(msg) LogTop(msg)
 #   define LOG_TOP_TWO(msg) LogTopTwo(msg)
-#   define FETCH_CONSTANT() values[*ip++]
+#   define FETCH_CONSTANT() values[CONSTANT_INDEX]
 #   define CMP(op) Pop() op Pop()
 #   define LOGICAL_NOT() Push(!Pop())
 #else
@@ -60,7 +63,7 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
 #   define LOG(msg)
 #   define LOG_TOP(msg)
 #   define LOG_TOP_TWO(msg)
-#   define FETCH_CONSTANT() *(values + *ip++)
+#   define FETCH_CONSTANT() *(values + CONSTANT_INDEX)
 #   define CMP(op) *(stack_top - 2) op *(stack_top - 1)
 #   define LOGICAL_NOT() *(++stack_top) = !*(--stack_top)
 #endif
@@ -89,6 +92,7 @@ ret:
 
 push:
     PUSH(FETCH_CONSTANT());
+    ip += 2; // constant indices are 2 bytes long
     LOG_TOP("[push:  {}]");
 
     DISPATCH();

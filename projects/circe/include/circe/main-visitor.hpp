@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sigil/ast/nodes.hpp>
+#include <sigil/ast/syntax-tree.hpp>
 #include <sigil/ast/visitor.hpp>
 
 #include <mana/literals.hpp>
@@ -23,6 +23,7 @@ public:
     void Visit(const sigil::ast::Literal<void>& node) override;
     void Visit(const sigil::ast::Literal<bool>& node) override;
     void Visit(const sigil::ast::ArrayLiteral& node) override;
+    void Visit(const sigil::ast::Statement& node) override;
 };
 
 }  // namespace circe
