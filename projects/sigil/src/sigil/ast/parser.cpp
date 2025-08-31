@@ -7,19 +7,21 @@
 #include <fstream>
 #include <sigil/ast/syntax-tree.hpp>
 
+#include "sigil/ast/lexer.hpp"
+
 namespace sigil {
 using namespace ast;
 using namespace mana::literals;
 
 Parser::Parser(const TokenStream&& tokens)
-    : tokens {std::move(tokens)}
-    , cursor {}
-    , parse_tree {Rule::Undefined} {}
+    : tokens{std::move(tokens)}
+    , cursor{}
+    , parse_tree{Rule::Undefined} {}
 
 Parser::Parser(const TokenStream& tokens)
-    : tokens {tokens}
-    , cursor {}
-    , parse_tree {Rule::Undefined} {}
+    : tokens{tokens}
+    , cursor{}
+    , parse_tree{Rule::Undefined} {}
 
 bool Parser::Parse() {
     const auto& top_token = tokens.front();
@@ -42,7 +44,7 @@ bool Parser::Parse() {
 
     if (CurrentToken().type != TokenType::Eof) {
         // Log->error("It appears we did not parse the entire file.");
-        return true;  // TODO: handle this error and return false instead
+        return true; // TODO: handle this error and return false instead
     }
 
     return true;
@@ -52,7 +54,7 @@ auto Parser::ViewParseTree() const -> const ParseNode& {
     return parse_tree;
 }
 
-auto Parser::ViewTokens() const -> const TokenStream& {
+auto Parser::ViewTokenStream() const -> const TokenStream& {
     return tokens;
 }
 
@@ -62,12 +64,12 @@ auto Parser::ViewAST() const -> Node* {
 
 void Parser::PrintParseTree() const {
     Log->debug("Parse tree for artifact '{}'\n\n{}",
-               parse_tree.tokens[0].text,
+               Lexer::Source.Name(),
                EmitParseTree(parse_tree));
 }
 
 void Parser::EmitParseTree(const std::string_view file_name) const {
-    std::ofstream out {std::string(file_name) + std::string(".ptree")};
+    std::ofstream out{std::string(file_name) + std::string(".ptree")};
     if (not out.is_open()) {
         Log->error("Failed to open file '{}' for writing", file_name);
         return;
@@ -91,9 +93,9 @@ std::string Parser::EmitParseTree(const ParseNode& node, std::string prepend) co
     if (node.rule == Rule::Artifact) {
         ret = fmt::format("[{}] -> {}\n\n",
                           magic_enum::enum_name(node.rule),
-                          node.tokens[0].text);
-
-    } else {
+                          FetchTokenText(node.tokens[0]));
+    }
+    else {
         ret.append(fmt::format("{}[{}]\n", prepend, magic_enum::enum_name(node.rule)));
 
         prepend.append("== ");
@@ -101,14 +103,14 @@ std::string Parser::EmitParseTree(const ParseNode& node, std::string prepend) co
         if (not node.tokens.empty()) {
             std::ranges::replace(prepend, '=', '-');
 
-            for (const auto& [type, text, position] : node.tokens) {
-                if (type == TokenType::Terminator) {
+            for (const auto& token : node.tokens) {
+                if (token.type == TokenType::Terminator) {
                     continue;
                 }
                 ret.append(fmt::format("{} [{}] -> {}\n",
                                        prepend,
-                                       magic_enum::enum_name(type),
-                                       text));
+                                       magic_enum::enum_name(token.type),
+                                       FetchTokenText(token)));
             }
 
             std::ranges::replace(prepend, '-', '=');
@@ -151,20 +153,33 @@ bool IsPrimitive(const TokenType token_type) {
     }
 }
 
-auto Parser::CurrentToken() const -> const Token& {
+auto Parser::CurrentToken() const -> Token {
     return tokens[cursor];
 }
 
-auto Parser::PeekNextToken() const -> const Token& {
+auto Parser::PeekNextToken() const -> Token {
     return tokens[cursor + 1];
 }
 
-auto Parser::NextToken() -> const Token& {
+auto Parser::NextToken() -> Token {
     return tokens[++cursor];
 }
 
-auto Parser::GetAndCycleToken() -> const Token& {
+auto Parser::GetAndCycleToken() -> Token {
     return tokens[cursor++];
+}
+
+bool Parser::SkipNewlines() {
+    bool ret = false;
+
+    while (cursor < tokens.size()
+           && CurrentToken().type == TokenType::Terminator
+           && FetchTokenText(CurrentToken()) == "\n") {
+        ret = true;
+        ++cursor;
+    }
+
+    return ret;
 }
 
 void Parser::AddTokensTo(ParseNode& node, const TokenType delimiter) {
@@ -191,17 +206,6 @@ void Parser::AddCycledTokenTo(ParseNode& node) {
     if (cursor < tokens.size()) {
         node.tokens.push_back(GetAndCycleToken());
     }
-}
-
-bool Parser::Expect(const bool             condition,
-                    const std::string_view error_message,
-                    ParseNode&             node) {
-    if (not condition) {
-        Log->error("Line {} -> {}", CurrentToken().position.line, error_message);
-        node.rule = Rule::Mistake;
-        return false;
-    }
-    return true;
 }
 
 bool Parser::ProgressedParseTree(ParseNode& node) {
@@ -231,7 +235,7 @@ void Parser::ConstructAST(const ParseNode& node) {
         return;
     }
 
-    syntax_tree = std::make_unique<Artifact>(node.tokens[0].text);
+    syntax_tree = std::make_unique<Artifact>(FetchTokenText(node.tokens[0]));
 
     //TODO: this is kind of a bug.
     // instead of adding all statements to 'root',
@@ -262,26 +266,23 @@ void Parser::ConstructAST(const ParseNode& node) {
     }
 }
 
-bool Parser::SkipNewlines() {
-    bool ret = false;
-
-    // clang-format off
-    while (cursor < tokens.size()
-           && CurrentToken().type == TokenType::Terminator
-           && CurrentToken().text == "\n") {
-        ret = true;
-        ++cursor;
+bool Parser::Expect(const bool             condition,
+                    ParseNode&             node,
+                    const std::string_view error_message) {
+    if (not condition) {
+        Log->error("Line {} -> {}", CurrentToken().line, error_message);
+        node.rule = Rule::Mistake;
+        return false;
     }
-    // clang-format on
-
-    return ret;
+    return true;
 }
 
 // stmt = (decl | assign | expr) TERMINATOR
 bool Parser::MatchedStatement(ParseNode& node) {
-    auto& stmt {node.NewBranch(Rule::Statement)};
+    auto& stmt{node.NewBranch(Rule::Statement)};
 
-    const bool is_statement = MatchedDeclaration(stmt) || MatchedAssignment(stmt)
+    const bool is_statement = MatchedDeclaration(stmt)
+                              || MatchedAssignment(stmt)
                               || MatchedExpression(stmt);
 
     if (not is_statement) {
@@ -293,8 +294,8 @@ bool Parser::MatchedStatement(ParseNode& node) {
     }
 
     if (not Expect(CurrentToken().type == TokenType::Terminator,
-                   "Expected terminator",
-                   stmt)) {
+                   stmt,
+                   "Expected terminator")) {
         return true;
     }
 
@@ -311,12 +312,12 @@ bool Parser::MatchedDeclaration(ParseNode& node) {
         return false;
     }
 
-    auto& decl {node.NewBranch(Rule::Declaration)};
+    auto& decl{node.NewBranch(Rule::Declaration)};
     AddTokensTo(decl, TokenType::KW_data);
 
     if (not Expect(CurrentToken().type == TokenType::Identifier,
-                   "Expected identifier",
-                   decl)) {
+                   decl,
+                   "Expected identifier")) {
         return true;
     }
     AddCycledTokenTo(decl);
@@ -326,12 +327,17 @@ bool Parser::MatchedDeclaration(ParseNode& node) {
         return true;
     }
 
-    if (not Expect(CurrentToken().type == TokenType::Op_Assign, "Expected '='", decl)) {
+    if (not Expect(CurrentToken().type == TokenType::Op_Assign,
+                   decl,
+                   "Expected '='")) {
         return true;
     }
     AddCycledTokenTo(decl);
 
-    Expect(MatchedExpression(decl), "Expected expression", decl);
+    Expect(MatchedExpression(decl),
+           decl,
+           "Expected expression");
+
     return true;
 }
 
@@ -341,10 +347,10 @@ bool Parser::MatchedAssignment(ParseNode& node) {
         return false;
     }
 
-    auto& assignment {node.NewBranch(Rule::Assignment)};
+    auto& assignment{node.NewBranch(Rule::Assignment)};
     AddTokensTo(assignment, TokenType::Op_Assign);
 
-    Expect(MatchedExpression(assignment), "Expected expression", assignment);
+    Expect(MatchedExpression(assignment), assignment, "Expected expression");
     return true;
 }
 
@@ -356,7 +362,7 @@ bool Parser::MatchedExpression(ParseNode& node) {
 bool Parser::MatchedElemList(ParseNode& node) {
     using enum TokenType;
 
-    auto& elem_list {node.NewBranch()};
+    auto& elem_list{node.NewBranch()};
     elem_list.rule = Rule::ElemList;
 
     SkipNewlines();
@@ -368,7 +374,7 @@ bool Parser::MatchedElemList(ParseNode& node) {
 
     // trailing comma allowed
     while (CurrentToken().type == Op_Comma) {
-        AddCycledTokenTo(elem_list);  // ','
+        AddCycledTokenTo(elem_list); // ','
 
         SkipNewlines();
 
@@ -387,32 +393,34 @@ bool Parser::MatchedArrayLiteral(ParseNode& node) {
     if (CurrentToken().type != TokenType::Op_BracketLeft) {
         return false;
     }
-    auto& array_literal {node.NewBranch()};
+    auto& array_literal{node.NewBranch()};
     array_literal.rule = Rule::ArrayLiteral;
-    AddCycledTokenTo(array_literal);  // '['
+    AddCycledTokenTo(array_literal); // '['
 
     // Allow [\n] etc.
     SkipNewlines();
 
     // []
     if (CurrentToken().type == TokenType::Op_BracketRight) {
-        AddCycledTokenTo(array_literal);  // ']'
+        AddCycledTokenTo(array_literal); // ']'
         return true;
     }
 
-    if (not Expect(MatchedElemList(array_literal), "Expected elem list", array_literal)) {
+    if (not Expect(MatchedElemList(array_literal),
+                   array_literal,
+                   "Expected elem list")) {
         return true;
     }
 
     // [1, 2, 3,]
     if (CurrentToken().type == TokenType::Op_BracketRight) {
-        AddCycledTokenTo(array_literal);  // ']'
+        AddCycledTokenTo(array_literal); // ']'
         return true;
     }
 
     SkipNewlines();
 
-    Expect(false, "Expected ']'", array_literal);
+    Expect(false, array_literal, "Expected ']'");
 
     return true;
 }
@@ -425,26 +433,28 @@ bool Parser::MatchedGrouping(ParseNode& node) {
     grouping.rule  = Rule::Grouping;
     AddCycledTokenTo(grouping);
 
-    if (not Expect(MatchedExpression(grouping), "Expected expression", grouping)) {
+    if (not Expect(MatchedExpression(grouping),
+                   grouping,
+                   "Expected expression")) {
         return true;
     }
 
     if (not Expect(grouping.branches.size() == 1,
-                   "Grouping may not contain more than one expression",
-                   grouping)) {
+                   grouping,
+                   "Grouping may not contain more than one expression")) {
         return true;
     }
 
     if (not Expect(CurrentToken().type == TokenType::Op_ParenRight,
-                   "Expected ')'",
-                   grouping)) {
+                   grouping,
+                   "Expected ')'")) {
         return true;
     }
 
     AddCycledTokenTo(grouping);
     Expect(grouping.branches.size() == 1,
-           "Grouping may not contain more than one expression",
-           grouping);
+           grouping,
+           "Grouping may not contain more than one expression");
 
     return true;
 }
@@ -472,12 +482,6 @@ bool IsLiteral(const TokenType token) {
 // primary  = grouping | array_literal | literal | ID
 // grouping = "(" expr ")"
 bool Parser::MatchedPrimary(ParseNode& node) {
-    // i'm pretty sure this was an uncaught bug
-    // if (CurrentToken().type == TokenType::Terminator) {
-    //     ++cursor;
-    //     return true;
-    // }
-
     if (MatchedGrouping(node)) {
         return true;
     }
@@ -487,7 +491,7 @@ bool Parser::MatchedPrimary(ParseNode& node) {
     }
 
     if (IsLiteral(CurrentToken().type)) {
-        auto& primary {node.NewBranch()};
+        auto& primary{node.NewBranch()};
         primary.rule = Rule::Literal;
         AddCycledTokenTo(primary);
         return true;
@@ -503,10 +507,12 @@ bool Parser::MatchedUnary(ParseNode& node) {
 
     case Op_Minus:
     case Op_LogicalNot: {
-        auto& unary {node.NewBranch(Rule::Unary)};
+        auto& unary{node.NewBranch(Rule::Unary)};
         AddCycledTokenTo(unary);
 
-        Expect(MatchedUnary(unary), "Expected resolution into primary expression", unary);
+        Expect(MatchedUnary(unary),
+               unary,
+               "Expected resolution into primary expression");
         return true;
     }
 
@@ -597,7 +603,7 @@ bool Parser::MatchedBinaryExpr(ParseNode&           node,
     // so from here on out we don't want to return false and risk destroing AST progress
     // or double parsing
     if (not is_valid_operator(CurrentToken().type)) {
-        return true;  // if there's no operator following, this is just a primary
+        return true; // if there's no operator following, this is just a primary
     }
 
     auto& binary_expr = node.NewBranch(rule);
@@ -610,14 +616,18 @@ bool Parser::MatchedBinaryExpr(ParseNode&           node,
     // we need to store the index early, as branches may be acquired before we add the rhs
     const auto rhs_index = node.branches.size() - 1;
 
-    if (not Expect((this->*matched_operand)(node), "Expected expression", binary_expr)) {
+    if (not Expect((this->*matched_operand)(node),
+                   binary_expr,
+                   "Expected expression")) {
         return true;
     }
 
     while (is_valid_operator(CurrentToken().type)) {
         AddCycledTokenTo(binary_expr);
 
-        if (not Expect((this->*matched_operand)(node), "Expected expression", binary_expr)) {
+        if (not Expect((this->*matched_operand)(node),
+                       binary_expr,
+                       "Expected expression")) {
             return true;
         }
     }
@@ -625,8 +635,10 @@ bool Parser::MatchedBinaryExpr(ParseNode&           node,
 
     binary_expr.AcquireBranchesOf(node, rhs_index + 1);
 
-    Expect(binary_expr.branches.size() >= 2, "Expected more operands in binary expression", binary_expr);
+    Expect(binary_expr.branches.size() >= 2,
+           binary_expr,
+           "Expected more operands in binary expression");
 
     return true;
 }
-}  // namespace sigil
+} // namespace sigil

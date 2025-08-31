@@ -25,7 +25,7 @@ TEST_CASE("P-Trees", "[parse][ast]") {
 
         REQUIRE(parser.Parse());
 
-        const auto& tokens = parser.ViewTokens();
+        const auto& tokens = parser.ViewTokenStream();
         const auto& ptree  = parser.ViewParseTree();
 
         SECTION("Root is properly formed") {

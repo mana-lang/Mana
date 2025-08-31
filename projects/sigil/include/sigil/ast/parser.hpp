@@ -6,8 +6,6 @@
 
 #include <mana/literals.hpp>
 
-#include <vector>
-
 namespace sigil {
 namespace ml = mana::literals;
 
@@ -15,9 +13,9 @@ class Parser {
     using ASTNode = std::unique_ptr<ast::Node>;
 
     TokenStream tokens;
-    ml::i64     cursor;
-    ParseNode   parse_tree;
-    ASTNode     syntax_tree;
+    ml::i64   cursor;
+    ParseNode parse_tree;
+    ASTNode   syntax_tree;
 
 public:
     explicit Parser(const TokenStream&& tokens);
@@ -25,9 +23,9 @@ public:
 
     SIGIL_NODISCARD bool Parse();
 
-    SIGIL_NODISCARD auto ViewParseTree() const -> const ParseNode&;
-    SIGIL_NODISCARD auto ViewTokens() const -> const TokenStream&;
-    SIGIL_NODISCARD auto ViewAST() const -> ast::Node*;
+    SIGIL_NODISCARD const ParseNode&   ViewParseTree() const;
+    SIGIL_NODISCARD const TokenStream& ViewTokenStream() const;
+    SIGIL_NODISCARD ast::Node*         ViewAST() const;
 
     void PrintParseTree() const;
     void EmitParseTree(std::string_view file_name) const;
@@ -37,10 +35,10 @@ public:
 private:
     SIGIL_NODISCARD std::string EmitParseTree(const ParseNode& node, std::string prepend = "") const;
 
-    SIGIL_NODISCARD const Token& CurrentToken() const;
-    SIGIL_NODISCARD const Token& PeekNextToken() const;
-    SIGIL_NODISCARD const Token& NextToken();
-    SIGIL_NODISCARD const Token& GetAndCycleToken();
+    SIGIL_NODISCARD Token CurrentToken() const;
+    SIGIL_NODISCARD Token PeekNextToken() const;
+    SIGIL_NODISCARD Token NextToken();
+    SIGIL_NODISCARD Token GetAndCycleToken();
 
     bool SkipNewlines();
 
@@ -55,7 +53,7 @@ private:
     bool ProgressedParseTree(ParseNode& node);
 
     void ConstructAST(const ParseNode& node);
-    bool Expect(bool condition, std::string_view error_message, ParseNode& node);
+    bool Expect(bool condition, ParseNode& node, std::string_view error_message);
 
     // Matchers
     bool MatchedStatement(ParseNode& node);
@@ -85,5 +83,4 @@ private:
         ast::Rule      rule
     );
 };
-
-}  // namespace sigil
+} // namespace sigil

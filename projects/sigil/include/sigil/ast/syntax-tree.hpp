@@ -64,6 +64,10 @@ public:
     explicit Literal(T value)
         : value(value) {}
 
+    explicit Literal(const std::string_view str) {
+        std::from_chars(str.data(), str.data() + str.size(), value);
+    }
+
     SIGIL_NODISCARD T Get() const {
         return value;
     }
@@ -104,6 +108,7 @@ class BinaryExpr final : public Node {
 public:
     explicit BinaryExpr(const ParseNode& node);
     explicit BinaryExpr(const std::string& op, const ParseNode& left, const ParseNode& right);
+    explicit BinaryExpr(const std::string_view op, const ParseNode& left, const ParseNode& right);
 
     SIGIL_NODISCARD std::string_view GetOp() const;
 
