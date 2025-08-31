@@ -55,10 +55,10 @@ void Lexer::TokenizeLine() {
         LexUnknown();
     }
 
+    ++cursor;
     AddToken(TokenType::Terminator, 1);
 
     ++line_number;
-    ++cursor;
 }
 
 bool Lexer::Tokenize(const std::filesystem::path& file_path) {
@@ -93,14 +93,29 @@ void Lexer::PrintTokens() const {
     Log->debug("--- Printing Token Stream ---\n");
 
     for (const auto& [line, offset, column, length, type] : tokens) {
-        if (type == TokenType::Terminator) {
-            Log->info("[L: {} | C: {}] {}: \\n",
+        // this should be a switch but i'm lazy
+        if (type == TokenType::_artifact_) {
+            Log->info("[{}:{}] Artifact: {}",
+                      line,
+                      column,
+                      Source.Name());
+            continue;
+        }
+        if (type == TokenType::Eof) {
+            Log->info("[{}:{}] {}: EOF",
                       line,
                       column,
                       magic_enum::enum_name(type));
             continue;
         }
-        Log->info("[L: {} | C: {}] {}: {}",
+        if (type == TokenType::Terminator) {
+            Log->info("[{}:{}] {}: \\n",
+                      line,
+                      column,
+                      magic_enum::enum_name(type));
+            continue;
+        }
+        Log->info("[{}:{}] {}: {}",
                   line,
                   column,
                   magic_enum::enum_name(type),

@@ -19,6 +19,7 @@ class GlobalSourceFile {
 
     std::string name;
     std::string contents;
+    std::string_view view;
     uintmax_t size;
 
     GlobalSourceFile() = default;
@@ -43,6 +44,8 @@ private:
 
         name = file_path.filename().replace_extension("").string();
 
+        view = contents;
+
         return true;
     }
 
@@ -61,7 +64,7 @@ public:
     }
 
     std::string_view Slice(const std::size_t start, const std::size_t length) const {
-        return contents.substr(start, length);
+        return view.substr(start, length);
     }
 
     uintmax_t Size() const {
