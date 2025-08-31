@@ -1,13 +1,12 @@
 #pragma once
 
 #include <sigil/ast/token.hpp>
-#include <string>
+
 #include <unordered_map>
 
 namespace sigil {
 
-// TODO: Make this use const char* instead of std::string
-using KeywordMap = std::unordered_map<std::string, TokenType>;
+using KeywordMap = std::unordered_map<const char*, TokenType>;
 
 static const KeywordMap keyword_map = {
     {"i8",       TokenType::KW_i8        },

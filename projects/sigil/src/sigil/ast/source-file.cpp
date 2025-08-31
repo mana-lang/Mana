@@ -23,6 +23,8 @@ bool GlobalSourceFile::Load(const std::filesystem::path& file_path) {
 void GlobalSourceFile::Reset() {
     contents.clear();
     name.clear();
+    view = {};
+    size = 0;
 }
 
 std::string_view GlobalSourceFile::Name() const {
