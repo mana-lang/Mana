@@ -116,17 +116,18 @@ enum class TokenType : ml::u8 {
 };
 
 struct Token {
-    ml::i32 line;
-    ml::i32 offset;
-    ml::u16 column;
-    ml::u16 length;
+    ml::i32   line;
+    ml::i32   offset;
+    ml::u16   column;
+    ml::u16   length;
     TokenType type;
 
     bool operator==(const Token& other) const {
         return type == other.type
-            && line == other.line
-            && column == other.column
-            && length == other.length;
+               && offset == other.offset
+               && length == other.length
+               && line == other.line
+               && column == other.column;
     }
 };
 

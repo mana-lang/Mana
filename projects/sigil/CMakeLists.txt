@@ -8,6 +8,7 @@ set(SIGIL_SOURCES
         src/sigil/ast/parser.cpp
         src/sigil/ast/parse-tree.cpp
         src/sigil/ast/syntax-tree.cpp
+        src/sigil/ast/source-file.cpp
 
         src/sigil/core/logger.cpp
 
