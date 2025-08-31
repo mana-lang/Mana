@@ -37,7 +37,7 @@ auto MakeNullLiteral() {
 }
 
 struct LiteralData {
-    Node::Ptr           value;
+    NodePtr           value;
     mana::PrimitiveType type;
 };
 
@@ -71,7 +71,7 @@ auto Artifact::GetName() const -> std::string_view {
     return name;
 }
 
-auto Artifact::GetChildren() const -> const std::vector<Ptr>& {
+auto Artifact::GetChildren() const -> const std::vector<NodePtr>& {
     return children;
 }
 
@@ -80,7 +80,7 @@ void Artifact::Accept(Visitor& visitor) const {
 }
 
 /// Statement
-Statement::Statement(const Ptr&& node)
+Statement::Statement(const NodePtr&& node)
     : child(std::move(node)) {}
 
 void Statement::Accept(Visitor& visitor) const {
@@ -105,7 +105,7 @@ ArrayLiteral::ArrayLiteral(const ParseNode& node)
     }
 }
 
-Node::Ptr ArrayLiteral::ProcessValue(const ParseNode& elem) {
+NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
     switch (elem.rule) {
         using enum Rule;
 
@@ -176,7 +176,7 @@ Node::Ptr ArrayLiteral::ProcessValue(const ParseNode& elem) {
     }
 }
 
-const std::vector<Node::Ptr>& ArrayLiteral::GetValues() const {
+const std::vector<NodePtr>& ArrayLiteral::GetValues() const {
     return values;
 }
 
@@ -247,7 +247,7 @@ SIGIL_NODISCARD bool IsBooleanLiteral(const TokenType token) {
     return token == Lit_true || token == Lit_false;
 }
 
-Node::Ptr BinaryExpr::ConstructChild(const ParseNode& operand_node) {
+NodePtr BinaryExpr::ConstructChild(const ParseNode& operand_node) {
     const auto& token = operand_node.tokens[0];
     switch (operand_node.rule) {
         using enum Rule;

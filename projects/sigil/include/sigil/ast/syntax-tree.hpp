@@ -16,35 +16,36 @@ namespace ml = mana::literals;
 
 class Visitor;
 
+using NodePtr = std::shared_ptr<class Node>;
+
 // As the ptree gets constructed before the AST,
 // AST nodes assume their ptree input is correct
 class Node {
 public:
-    using Ptr       = std::shared_ptr<Node>;  // TODO: rename to NodePtr
     virtual ~Node() = default;
 
     virtual void Accept(Visitor& visitor) const = 0;
 };
 
 class Statement final : public Node {
-    Ptr child;
+    NodePtr child;
 
 public:
-    explicit Statement(const Ptr&& node);
+    explicit Statement(const NodePtr&& node);
 
     void Accept(Visitor& visitor) const override;
 };
 
 class Artifact final : public Node {
-    std::string      name;
-    std::vector<Ptr> children;
+    std::string          name;
+    std::vector<NodePtr> children;
 
 public:
     explicit Artifact(const std::string_view name)
         : name(name) {}
 
     SIGIL_NODISCARD auto GetName() const -> std::string_view;
-    SIGIL_NODISCARD auto GetChildren() const -> const std::vector<Ptr>&;
+    SIGIL_NODISCARD auto GetChildren() const -> const std::vector<NodePtr>&;
 
     void Accept(Visitor& visitor) const override;
 
@@ -86,24 +87,24 @@ public:
 };
 
 class ArrayLiteral final : public Node {
-    std::vector<Ptr>    values;
-    mana::PrimitiveType type;
+    std::vector<NodePtr> values;
+    mana::PrimitiveType  type;
 
 public:
     ArrayLiteral(const ParseNode& node);
 
-    const std::vector<Ptr>& GetValues() const;
-    mana::PrimitiveType     GetType() const;
+    const std::vector<NodePtr>& GetValues() const;
+    mana::PrimitiveType         GetType() const;
 
     void Accept(Visitor& visitor) const override;
 
 private:
-    Ptr ProcessValue(const ParseNode& elem);
+    NodePtr ProcessValue(const ParseNode& elem);
 };
 
 class BinaryExpr final : public Node {
     std::string op;
-    Ptr         left, right;
+    NodePtr     left, right;
 
 public:
     explicit BinaryExpr(const ParseNode& node);
@@ -118,13 +119,13 @@ public:
     void Accept(Visitor& visitor) const override;
 
 private:
-    static Ptr ConstructChild(const ParseNode& operand_node);
-    explicit BinaryExpr(const ParseNode& binary_node, ml::i64 depth);
+    static NodePtr ConstructChild(const ParseNode& operand_node);
+    explicit       BinaryExpr(const ParseNode& binary_node, ml::i64 depth);
 };
 
 class UnaryExpr final : public Node {
     std::string op;
-    Ptr         val;
+    NodePtr     val;
 
 public:
     explicit UnaryExpr(const ParseNode& unary_node);
@@ -134,5 +135,4 @@ public:
     SIGIL_NODISCARD std::string_view GetOp() const;
     SIGIL_NODISCARD const Node&      GetVal() const;
 };
-
-}  // namespace sigil::ast
+} // namespace sigil::ast
