@@ -1,13 +1,12 @@
 #include <sigil/ast/parser.hpp>
 #include <sigil/core/logger.hpp>
+#include <sigil/ast/source-file.hpp>
+#include <sigil/ast/syntax-tree.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
 #include <algorithm>
 #include <fstream>
-#include <sigil/ast/syntax-tree.hpp>
-
-#include "sigil/ast/lexer.hpp"
 
 namespace sigil {
 using namespace ast;
@@ -50,7 +49,7 @@ auto Parser::ViewAST() const -> Node* {
 
 void Parser::PrintParseTree() const {
     Log->debug("Parse tree for artifact '{}'\n\n{}",
-               Lexer::Source.Name(),
+               Source().Name(),
                EmitParseTree(parse_tree));
 }
 
@@ -79,7 +78,7 @@ std::string Parser::EmitParseTree(const ParseNode& node, std::string prepend) co
     if (node.rule == Rule::Artifact) {
         ret = fmt::format("[{}] -> {}\n\n",
                           magic_enum::enum_name(node.rule),
-                          Lexer::Source.Name());
+                          Source().Name());
     }
     else {
         ret.append(fmt::format("{}[{}]\n", prepend, magic_enum::enum_name(node.rule)));
@@ -221,7 +220,7 @@ void Parser::ConstructAST(const ParseNode& node) {
         return;
     }
 
-    syntax_tree = std::make_unique<Artifact>(Lexer::Source.Name());
+    syntax_tree = std::make_unique<Artifact>(Source().Name());
 
     //TODO: this is kind of a bug.
     // instead of adding all statements to 'root',

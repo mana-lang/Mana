@@ -55,8 +55,4 @@ private:
     void AddEOF();
 };
 
-SIGIL_NODISCARD inline std::string_view FetchTokenText(const Token token) {
-    return Lexer::Source.Slice(token.offset, token.length);
-}
-
 } // namespace sigil

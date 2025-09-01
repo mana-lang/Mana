@@ -1,4 +1,9 @@
 #include <sigil/ast/source-file.hpp>
+#include <sigil/ast/lexer.hpp>
+#include <sigil/core/logger.hpp>
+#include <sigil/ast/token.hpp>
+
+#include <fstream>
 
 namespace sigil {
 bool GlobalSourceFile::Load(const std::filesystem::path& file_path) {
@@ -45,5 +50,13 @@ uintmax_t GlobalSourceFile::Size() const {
 
 char GlobalSourceFile::operator[](const std::size_t index) const {
     return contents[index];
+}
+
+SIGIL_NODISCARD const GlobalSourceFile& Source() {
+    return Lexer::Source;
+}
+
+SIGIL_NODISCARD std::string_view FetchTokenText(const Token token) {
+    return Lexer::Source.Slice(token.offset, token.length);
 }
 } // namespace sigil

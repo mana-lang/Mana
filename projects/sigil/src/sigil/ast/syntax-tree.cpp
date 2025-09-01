@@ -1,8 +1,8 @@
-#include <sigil/core/logger.hpp>
-#include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/syntax-tree.hpp>
+#include <sigil/ast/parse-tree.hpp>
+#include <sigil/ast/source-file.hpp>
 #include <sigil/ast/visitor.hpp>
-#include <sigil/ast/lexer.hpp>
+#include <sigil/core/logger.hpp>
 
 #include <mana/vm/primitive-type.hpp>
 

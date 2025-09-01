@@ -1,9 +1,6 @@
 #pragma once
 
-#include <sigil/core/logger.hpp>
-
 #include <string>
-#include <fstream>
 #include <filesystem>
 
 namespace sigil {
@@ -36,4 +33,7 @@ public:
 
     char operator[](std::size_t index) const;
 };
+
+SIGIL_NODISCARD const GlobalSourceFile& Source();
+SIGIL_NODISCARD std::string_view FetchTokenText(struct Token token);
 } // namespace sigil
