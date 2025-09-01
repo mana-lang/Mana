@@ -1,10 +1,12 @@
-#include "mana/vm/primitive-type.hpp"
-#include "spdlog/fmt/bundled/chrono.h"
+#include <sigil/ast/syntax-tree.hpp>
+#include <sigil/ast/parse-tree.hpp>
+#include <sigil/ast/source-file.hpp>
+#include <sigil/ast/visitor.hpp>
 #include <sigil/core/logger.hpp>
 
-#include <sigil/ast/parse-tree.hpp>
-#include <sigil/ast/syntax-tree.hpp>
-#include <sigil/ast/visitor.hpp>
+#include <mana/vm/primitive-type.hpp>
+
+#include <magic_enum/magic_enum.hpp>
 
 namespace sigil::ast {
 using namespace mana::literals;
@@ -12,7 +14,24 @@ using namespace mana::literals;
 /// Literal Helpers
 template <typename T>
 auto MakeLiteral(const Token& token) {
-    return std::make_shared<Literal<T>>(token.As<T>());
+    return std::make_shared<Literal<T>>(FetchTokenText(token));
+}
+
+template <>
+auto MakeLiteral<bool>(const Token& token) {
+    bool val = false;
+    switch (token.type) {
+    case TokenType::Lit_true:
+        val = true;
+    case TokenType::Lit_false:
+        break;
+    default:
+        Log->critical("Bool conversion requested for non-bool token '{}'. "
+                      "Defaulting to 'false'.",
+                      magic_enum::enum_name(token.type));
+    }
+
+    return std::make_shared<Literal<bool>>(val);
 }
 
 auto MakeNullLiteral() {
@@ -20,7 +39,7 @@ auto MakeNullLiteral() {
 }
 
 struct LiteralData {
-    Node::Ptr           value;
+    NodePtr           value;
     mana::PrimitiveType type;
 };
 
@@ -54,7 +73,7 @@ auto Artifact::GetName() const -> std::string_view {
     return name;
 }
 
-auto Artifact::GetChildren() const -> const std::vector<Ptr>& {
+auto Artifact::GetChildren() const -> const std::vector<NodePtr>& {
     return children;
 }
 
@@ -63,7 +82,8 @@ void Artifact::Accept(Visitor& visitor) const {
 }
 
 /// Statement
-Statement::Statement(const Ptr&& node) : child(std::move(node)) {}
+Statement::Statement(const NodePtr&& node)
+    : child(std::move(node)) {}
 
 void Statement::Accept(Visitor& visitor) const {
     child->Accept(visitor); // forward the visitor, statements don't do anything on their own
@@ -87,7 +107,7 @@ ArrayLiteral::ArrayLiteral(const ParseNode& node)
     }
 }
 
-Node::Ptr ArrayLiteral::ProcessValue(const ParseNode& elem) {
+NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
     switch (elem.rule) {
         using enum Rule;
 
@@ -110,35 +130,36 @@ Node::Ptr ArrayLiteral::ProcessValue(const ParseNode& elem) {
 
     case Literal:
         // [12.4, 95.3]
-        {
-            const auto literal = MakeLiteral(elem.tokens[0]);
+    {
+        const auto literal = MakeLiteral(elem.tokens[0]);
 
-            if (literal.type == mana::PrimitiveType::Invalid) {
-                Log->error(
-                    "ArrayLiteral attempted to add invalid value '{}'",
-                    elem.tokens[0].text
-                );
-                return nullptr;
-            }
-
-            // we want to deduce the array's type based on the first literal in the
-            // elem_list so we start in Invalid, assign the type based on the first, and
-            // any type changes past that raise an error
-            if (literal.type != type) {
-                if (type == mana::PrimitiveType::Invalid) {
-                    type = literal.type;
-                } else {
-                    Log->warn(
-                        fmt::runtime(
-                            "ArrayLiteral is of type '{}', "
-                            "but tried adding value of type '{}'"
-                        ),
-                        magic_enum::enum_name(literal.type)
-                    );
-                }
-            }
-            return literal.value;
+        if (literal.type == mana::PrimitiveType::Invalid) {
+            Log->error(
+                "ArrayLiteral attempted to add invalid value '{}'",
+                FetchTokenText(elem.tokens[0])
+            );
+            return nullptr;
         }
+
+        // we want to deduce the array's type based on the first literal in the
+        // elem_list so we start in Invalid, assign the type based on the first, and
+        // any type changes past that raise an error
+        if (literal.type != type) {
+            if (type == mana::PrimitiveType::Invalid) {
+                type = literal.type;
+            }
+            else {
+                Log->warn(
+                    fmt::runtime(
+                        "ArrayLiteral is of type '{}', "
+                        "but tried adding value of type '{}'"
+                    ),
+                    magic_enum::enum_name(literal.type)
+                );
+            }
+        }
+        return literal.value;
+    }
 
     case Equality:
     case Comparison:
@@ -157,7 +178,7 @@ Node::Ptr ArrayLiteral::ProcessValue(const ParseNode& elem) {
     }
 }
 
-const std::vector<Node::Ptr>& ArrayLiteral::GetValues() const {
+const std::vector<NodePtr>& ArrayLiteral::GetValues() const {
     return values;
 }
 
@@ -178,7 +199,7 @@ BinaryExpr::BinaryExpr(const ParseNode& binary_node, const i64 depth) {
         // we're in the leaf node
         left  = ConstructChild(*branches[0]);
         right = ConstructChild(*branches[1]);
-        op    = tokens[0].text;
+        op    = FetchTokenText(tokens[0]);
         return;
     }
     // we're in a parent node
@@ -186,16 +207,21 @@ BinaryExpr::BinaryExpr(const ParseNode& binary_node, const i64 depth) {
     //                                  can't call make_shared cause private
     left  = std::shared_ptr<BinaryExpr>(new BinaryExpr(binary_node, depth + 1));
     right = ConstructChild(*branches[branches.size() - depth]);
-    op    = tokens[tokens.size() - depth].text;
+    op    = FetchTokenText(tokens[tokens.size() - depth]);
 }
 
 BinaryExpr::BinaryExpr(const ParseNode& node)
     : BinaryExpr(node, 1) {}
 
-BinaryExpr::BinaryExpr(const std::string& op, const ParseNode& lhs, const ParseNode& rhs)
+BinaryExpr::BinaryExpr(const std::string& op, const ParseNode& left, const ParseNode& right)
     : op(op)
-    , left(ConstructChild(lhs))
-    , right(ConstructChild(rhs)) {}
+    , left(ConstructChild(left))
+    , right(ConstructChild(right)) {}
+
+BinaryExpr::BinaryExpr(const std::string_view op, const ParseNode& left, const ParseNode& right)
+    : op(op)
+    , left(ConstructChild(left))
+    , right(ConstructChild(right)) {}
 
 std::string_view BinaryExpr::GetOp() const {
     return op;
@@ -223,7 +249,7 @@ SIGIL_NODISCARD bool IsBooleanLiteral(const TokenType token) {
     return token == Lit_true || token == Lit_false;
 }
 
-Node::Ptr BinaryExpr::ConstructChild(const ParseNode& operand_node) {
+NodePtr BinaryExpr::ConstructChild(const ParseNode& operand_node) {
     const auto& token = operand_node.tokens[0];
     switch (operand_node.rule) {
         using enum Rule;
@@ -235,7 +261,7 @@ Node::Ptr BinaryExpr::ConstructChild(const ParseNode& operand_node) {
     case Term:
     case Factor:
         return std::make_shared<
-            BinaryExpr>(token.text, *operand_node.branches[0], *operand_node.branches[1]);
+            BinaryExpr>(FetchTokenText(token), *operand_node.branches[0], *operand_node.branches[1]);
 
     case Unary: {
         if (token.type == TokenType::Op_Minus) {
@@ -252,7 +278,8 @@ Node::Ptr BinaryExpr::ConstructChild(const ParseNode& operand_node) {
             // report error
             break;
         }
-    } break;
+    }
+    break;
     case Literal:
         return MakeLiteral(token).value;
 
@@ -268,7 +295,7 @@ Node::Ptr BinaryExpr::ConstructChild(const ParseNode& operand_node) {
 
 /// UnaryExpr
 UnaryExpr::UnaryExpr(const ParseNode& unary_node)
-    : op(unary_node.tokens[0].text) {
+    : op(FetchTokenText(unary_node.tokens[0])) {
     const auto& operand_node = *unary_node.branches[0];
 
     if (operand_node.rule == Rule::Literal) {
@@ -290,4 +317,4 @@ std::string_view UnaryExpr::GetOp() const {
 const Node& UnaryExpr::GetVal() const {
     return *val;
 }
-}  // namespace sigil::ast
+} // namespace sigil::ast

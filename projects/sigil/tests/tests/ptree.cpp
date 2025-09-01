@@ -25,7 +25,7 @@ TEST_CASE("P-Trees", "[parse][ast]") {
 
         REQUIRE(parser.Parse());
 
-        const auto& tokens = parser.ViewTokens();
+        const auto& tokens = parser.ViewTokenStream();
         const auto& ptree  = parser.ViewParseTree();
 
         SECTION("Root is properly formed") {
@@ -33,7 +33,7 @@ TEST_CASE("P-Trees", "[parse][ast]") {
             REQUIRE(tokens[0].type == TokenType::_artifact_);
             CHECK_FALSE(ptree.tokens.empty());
             REQUIRE(ptree.rule == Rule::Artifact);
-            REQUIRE(ptree.tokens[0].text == "expressions");
+            REQUIRE(FetchTokenText(ptree.tokens[0]) == "expressions");
         }
 
         SECTION("P-Tree output matches control") {

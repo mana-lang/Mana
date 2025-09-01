@@ -5,7 +5,7 @@
 namespace sigil::ast {
 namespace ml = mana::literals;
 
-enum class Rule : ml::i64 {
+enum class Rule : ml::u8 {
     Undefined,
     Mistake,
 
@@ -31,7 +31,6 @@ enum class Rule : ml::i64 {
 
     // ReachedEOF,
     //
-    // Declaration,
     // Decl_Import,
     // Decl_Access,
     // Decl_Function,
@@ -52,9 +51,7 @@ enum class Rule : ml::i64 {
     // Type_Association,
     //
     // Scope,
-    // Statement,
     // Return,
-    // Assignment,
     // Arguments,
     // MemberAccess,
     //
