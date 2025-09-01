@@ -6,6 +6,8 @@
 
 #include <mana/vm/primitive-type.hpp>
 
+#include <magic_enum/magic_enum.hpp>
+
 namespace sigil::ast {
 using namespace mana::literals;
 

@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <charconv>
 
 namespace sigil::ast {
 namespace ml = mana::literals;

@@ -65,15 +65,6 @@ bool Lexer::Tokenize(const std::filesystem::path& file_path) {
     Reset();
     Source.Load(file_path);
 
-    //TODO: this has to change.
-    tokens.emplace_back(Token{
-        .line = -1,
-        .offset = 0,
-        .column = 0,
-        .length = 0,
-        .type = TokenType::_artifact_,
-    });
-
     // lines count from 1
     line_number = 1;
     while (cursor < Source.Size()) {
@@ -93,14 +84,6 @@ void Lexer::PrintTokens() const {
     Log->debug("--- Printing Token Stream ---\n");
 
     for (const auto& [line, offset, column, length, type] : tokens) {
-        // this should be a switch but i'm lazy
-        if (type == TokenType::_artifact_) {
-            Log->info("[{}:{}] Artifact: {}",
-                      line,
-                      column,
-                      Source.Name());
-            continue;
-        }
         if (type == TokenType::Eof) {
             Log->info("[{}:{}] {}: EOF",
                       line,
@@ -133,7 +116,7 @@ void Lexer::Reset() {
     line_start  = 0;
 }
 
-TokenStream&& Lexer::RelinquishTokens() {
+std::vector<Token>&& Lexer::RelinquishTokens() {
     return std::move(tokens);
 }
 

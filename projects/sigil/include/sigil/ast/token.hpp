@@ -1,13 +1,6 @@
 #pragma once
 
-#include <sigil/core/logger.hpp>
-
 #include <mana/literals.hpp>
-
-#include <magic_enum/magic_enum.hpp>
-
-#include <string>
-#include <vector>
 
 namespace sigil {
 namespace ml = mana::literals;
@@ -112,7 +105,6 @@ enum class TokenType : ml::u8 {
     Eof,
 
     Unknown,
-    _artifact_, // special token, auto-inserted
 };
 
 struct Token {
@@ -131,5 +123,4 @@ struct Token {
     }
 };
 
-using TokenStream = std::vector<Token>;
 } // namespace sigil

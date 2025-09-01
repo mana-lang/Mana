@@ -3,6 +3,8 @@
 
 #include <mana/vm/opcode.hpp>
 
+#include <magic_enum/magic_enum.hpp>
+
 namespace circe {
 using namespace mana::vm;
 using namespace sigil::ast;

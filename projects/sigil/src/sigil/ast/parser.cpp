@@ -24,30 +24,16 @@ Parser::Parser(const TokenStream& tokens)
     , parse_tree{Rule::Undefined} {}
 
 bool Parser::Parse() {
-    const auto& top_token = tokens.front();
-
-    if (top_token.type != TokenType::_artifact_) {
-        Log->error("Improper token stream format. Top-level token was: '{}' instead of "
-                   "{}",
-                   magic_enum::enum_name(top_token.type),
-                   magic_enum::enum_name(TokenType::_artifact_));
-        return false;
-    }
-
     parse_tree.rule = Rule::Artifact;
-    parse_tree.tokens.push_back(tokens.front());
 
-    cursor = 1;
+    cursor = 0;
     while (ProgressedParseTree(parse_tree)) {}
 
     ConstructAST(parse_tree);
 
-    if (CurrentToken().type != TokenType::Eof) {
-        // Log->error("It appears we did not parse the entire file.");
-        return true; // TODO: handle this error and return false instead
-    }
-
-    return true;
+    return Expect(CurrentToken().type == TokenType::Eof,
+                  parse_tree,
+                  "Expected EOF");
 }
 
 auto Parser::ViewParseTree() const -> const ParseNode& {
@@ -93,7 +79,7 @@ std::string Parser::EmitParseTree(const ParseNode& node, std::string prepend) co
     if (node.rule == Rule::Artifact) {
         ret = fmt::format("[{}] -> {}\n\n",
                           magic_enum::enum_name(node.rule),
-                          FetchTokenText(node.tokens[0]));
+                          Lexer::Source.Name());
     }
     else {
         ret.append(fmt::format("{}[{}]\n", prepend, magic_enum::enum_name(node.rule)));
@@ -235,7 +221,7 @@ void Parser::ConstructAST(const ParseNode& node) {
         return;
     }
 
-    syntax_tree = std::make_unique<Artifact>(FetchTokenText(node.tokens[0]));
+    syntax_tree = std::make_unique<Artifact>(Lexer::Source.Name());
 
     //TODO: this is kind of a bug.
     // instead of adding all statements to 'root',

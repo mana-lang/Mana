@@ -10,12 +10,13 @@ namespace sigil {
 namespace ml = mana::literals;
 
 class Parser {
-    using ASTNode = std::unique_ptr<ast::Node>;
+    using ASTNode     = std::unique_ptr<ast::Node>;
+    using TokenStream = std::vector<Token>;
 
     TokenStream tokens;
-    ml::i64   cursor;
-    ParseNode parse_tree;
-    ASTNode   syntax_tree;
+    ml::i64     cursor;
+    ParseNode   parse_tree;
+    ASTNode     syntax_tree;
 
 public:
     explicit Parser(const TokenStream&& tokens);

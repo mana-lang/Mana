@@ -5,8 +5,10 @@
 
 #include <mana/literals.hpp>
 
+#include <string_view>
 #include <filesystem>
 #include <string>
+#include <vector>
 
 namespace sigil {
 namespace ml = mana::literals;
@@ -17,7 +19,7 @@ class Lexer {
     ml::i32 line_start;
     ml::i32 line_number;
 
-    TokenStream tokens;
+    std::vector<Token> tokens;
 
 public:
     static thread_local GlobalSourceFile Source;
@@ -28,7 +30,7 @@ public:
     void PrintTokens() const;
     void Reset();
 
-    SIGIL_NODISCARD TokenStream&& RelinquishTokens();
+    SIGIL_NODISCARD std::vector<Token>&& RelinquishTokens();
 
 private:
     void TokenizeLine();
