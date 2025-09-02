@@ -28,10 +28,9 @@ void Lexer::TokenizeLine() {
 
     while (cursor < Source.Size() && not IsTerminator()) {
         if (IsLineComment(Source[cursor])) {
-            do {
-                ++cursor;
-            }
+            do { ++cursor; }
             while (not IsTerminator());
+
             break;
         }
 

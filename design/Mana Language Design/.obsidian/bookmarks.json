@@ -1,0 +1,129 @@
+{
+  "items": [
+    {
+      "type": "group",
+      "ctime": 1727578615560,
+      "items": [
+        {
+          "type": "group",
+          "ctime": 1727578615560,
+          "items": [
+            {
+              "type": "group",
+              "ctime": 1727578615560,
+              "items": [
+                {
+                  "type": "group",
+                  "ctime": 1727578615560,
+                  "items": [],
+                  "title": "Chief"
+                },
+                {
+                  "type": "group",
+                  "ctime": 1727578615560,
+                  "items": [
+                    {
+                      "type": "group",
+                      "ctime": 1727578615560,
+                      "items": [],
+                      "title": "Vortex"
+                    }
+                  ],
+                  "title": "Anomaly"
+                },
+                {
+                  "type": "group",
+                  "ctime": 1727578615560,
+                  "items": [],
+                  "title": "Demigod"
+                },
+                {
+                  "type": "group",
+                  "ctime": 1727578615560,
+                  "items": [],
+                  "title": "Vortex"
+                },
+                {
+                  "type": "group",
+                  "ctime": 1727578615560,
+                  "items": [],
+                  "title": "Demigod"
+                },
+                {
+                  "type": "file",
+                  "ctime": 1727578615560,
+                  "path": "Gameplay/Bosses/Boss Title Sequence.md",
+                  "subpath": "#^-"
+                }
+              ],
+              "title": "\\\\Bosses"
+            },
+            {
+              "type": "group",
+              "ctime": 1727584034001,
+              "items": [
+                {
+                  "type": "group",
+                  "ctime": 1727584034001,
+                  "items": [],
+                  "title": "Lumina"
+                },
+                {
+                  "type": "group",
+                  "ctime": 1727584034001,
+                  "items": [],
+                  "title": "Divine City of Avalia"
+                },
+                {
+                  "type": "group",
+                  "ctime": 1727584034001,
+                  "items": [],
+                  "title": "Calmerra"
+                },
+                {
+                  "type": "group",
+                  "ctime": 1727584034001,
+                  "items": [],
+                  "title": "Divine City of Avalia"
+                },
+                {
+                  "type": "group",
+                  "ctime": 1727584034001,
+                  "items": [],
+                  "title": "Exulas"
+                },
+                {
+                  "type": "group",
+                  "ctime": 1727584034001,
+                  "items": [],
+                  "title": "Malicis"
+                },
+                {
+                  "type": "group",
+                  "ctime": 1727584034001,
+                  "items": [],
+                  "title": "Elvira, the Sunken City"
+                },
+                {
+                  "type": "group",
+                  "ctime": 1727584034001,
+                  "items": [],
+                  "title": "Mt. Edivius"
+                },
+                {
+                  "type": "group",
+                  "ctime": 1727584034001,
+                  "items": [],
+                  "title": "Calmerra"
+                }
+              ],
+              "title": "Regions"
+            }
+          ],
+          "title": "\\\\Gameplay"
+        }
+      ],
+      "title": "sortspec"
+    }
+  ]
+}

@@ -1,79 +1,77 @@
-# comment! [no index]
-
-# member access [index 1]
+# member access
 x.y
 
-# type annotation [index 4]
+# type annotation
 x: i32
 
-# module element access [index 7]
+# module element access
 Math::Vector
 
-# assignment [index 10]
+# assignment
 x = 12
 
-# logical-not [index 12]
+# logical-not
 !x
 
-# equality [index 15]
+# equality
 x == y
 
-# not-equal [index 18]
+# not-equal
 x != y
 
-# less-than [index 21]
+# less-than
 x < y
 
-# greater-than [index 24]
+# greater-than
 x > y
 
-# less or equal [27]
+# less or equal
 x <= y
 
-# greater or equal [30]
+# greater or equal
 x >= y
 
-# short-circuiting logical AND [33]
+# short-circuiting logical AND
 x and y
 
-# short-circuiting logical OR  [36]
+# short-circuiting logical OR
 x or y
 
-# plus [39]
+# plus
 x + y
 
-# minus [42]
+# minus
 x - y
 
-# asterisk [45]
+# asterisk
 x * y
 
-# fwd-slash [48]
+# fwd-slash
 x / y
 
-# association / pointer / address [51]
+# association / pointer / address
 x->y
 
-# braces-brackets-parens [53~58]
+# braces-brackets-parens
 {}[]()
 
-# argument separator [60]
+# argument separator
 x, y
 
-# explicit copy [64]
+# explicit copy
 x = $y
 
-# explicit move / loop inclusion [68]
+# explicit move / inclusive loop
 x = ~y
 
-# explicit ref [72]
+# explicit ref
 x = &y
 
-# string literal [74]
+# string literal
 "hello world"
 
-# character literal symbol [75]
+# character literal symbol
 'f'
 
-# verbal logical not [76]
+# verbal logical not
 not x

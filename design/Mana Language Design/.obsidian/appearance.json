@@ -1,0 +1,11 @@
+{
+  "accentColor": "#dd8dce",
+  "cssTheme": "Obsidianite",
+  "theme": "obsidian",
+  "nativeMenus": false,
+  "interfaceFontFamily": "",
+  "textFontFamily": "Century Gothic",
+  "baseFontSize": 16,
+  "showViewHeader": true,
+  "showRibbon": false
+}

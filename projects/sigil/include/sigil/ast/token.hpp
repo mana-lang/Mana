@@ -107,11 +107,14 @@ enum class TokenType : ml::u8 {
     Unknown,
 };
 
+using namespace ml;
+
 struct Token {
-    ml::i32   line;
-    ml::i32   offset;
-    ml::u16   column;
-    ml::u16   length;
+    i32 line;
+    i32 offset;
+    u16 column;
+    u16 length;
+
     TokenType type;
 
     bool operator==(const Token& other) const {
@@ -122,5 +125,4 @@ struct Token {
                && column == other.column;
     }
 };
-
 } // namespace sigil
