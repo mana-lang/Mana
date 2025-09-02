@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecosystem Overview/Mana.md",
+                "file": "Ecosystem Overview/Mana Overview.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Mana"
+              "title": "Mana Overview"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Ecosystem Overview/Mana.md",
+                "file": "Ecosystem Overview/Mana Overview.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Mana"
+              "title": "Backlinks for Mana Overview"
             }
           },
           {
@@ -166,8 +166,9 @@
   },
   "active": "744c713ff3de865e",
   "lastOpenFiles": [
-    "Ecosystem Overview/Mana Overview.md",
     "Ecosystem Overview/Mana.md",
+    "_Assets/ManaEcosystem.png",
+    "Ecosystem Overview/Mana Overview.md",
     "_Templates/Dummy.md",
     "Ecosystem Overview",
     "Gameplay/Systems/Player/Combat.md",
@@ -201,7 +202,6 @@
     "Gameplay/Regions/Divine City of Avalia/Boss Fights/Vortex - Alace Vansonia ~ Nightmare of Avalia.md",
     "Meta/Marketing/The Plan™.md",
     "Lore/Injector.md",
-    "Lore/Hollow Nexus.md",
     "Characters/Niandes",
     "Characters/Altire",
     "Characters/Esteria",
@@ -212,7 +212,6 @@
     "Gameplay/Regions/Divine City of Avalia/Boss Fights/1. Chief",
     "Gameplay/Regions/Divine City of Avalia/Boss Fights/3. Vortex",
     "Gameplay/Regions/Lumina/Map.canvas",
-    "_Assets/Pasted image 20240928192500.png",
     "Untitled.canvas"
   ]
 }

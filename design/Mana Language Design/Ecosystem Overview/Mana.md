@@ -17,5 +17,5 @@ It also encourages writing high-performance code with its extensible type system
 
 Despite its focus on high performance and expressiveness, **Mana** also does not forego safety. While not quite as safe as **Rust**, **Mana** still has *lifetime-based ownership* constructs and *data race protection*.
 
-All in all, **Mana**'s ultimate goal is to enable witches, wizards and warlocks to work their magic as smoothly as possible!
+All in all, **Mana**'s ultimate goal is to enable *Sourcerers* to work their magic as smoothly as possible!
 
