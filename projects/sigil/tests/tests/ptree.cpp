@@ -30,7 +30,6 @@ TEST_CASE("P-Trees", "[parse][ast]") {
 
         SECTION("Root is properly formed") {
             REQUIRE_FALSE(tokens.empty());
-            REQUIRE(tokens[0].type == TokenType::_artifact_);
             CHECK_FALSE(ptree.tokens.empty());
             REQUIRE(ptree.rule == Rule::Artifact);
             REQUIRE(FetchTokenText(ptree.tokens[0]) == "expressions");

@@ -339,9 +339,9 @@ bool Parser::MatchedAssignment(ParseNode& node) {
     return true;
 }
 
-bool Parser::MatchedExpression(ParseNode& node) {
-    return MatchedEquality(node);
-}
+// bool Parser::MatchedExpression(ParseNode& node) {
+//     return MatchedEquality(node);
+// }
 
 // elem_list = expr (',' expr)* (',')?  ;
 bool Parser::MatchedElemList(ParseNode& node) {
@@ -518,11 +518,6 @@ bool IsFactorOp(const TokenType token) {
     }
 }
 
-// factor = unary ( ('/' | '*') unary )*
-bool Parser::MatchedFactor(ParseNode& node) {
-    return MatchedBinaryExpr(node, IsFactorOp, &Parser::MatchedUnary, Rule::Factor);
-}
-
 bool IsTermOp(const TokenType token) {
     switch (token) {
         using enum TokenType;
@@ -533,11 +528,6 @@ bool IsTermOp(const TokenType token) {
     default:
         return false;
     }
-}
-
-// term = factor ( ('-' | '+') factor)*
-bool Parser::MatchedTerm(ParseNode& node) {
-    return MatchedBinaryExpr(node, IsTermOp, &Parser::MatchedFactor, Rule::Term);
 }
 
 bool IsComparisonOp(const TokenType token) {
@@ -554,11 +544,6 @@ bool IsComparisonOp(const TokenType token) {
     }
 }
 
-// comparison = term ( ('>' | '>=' | '<' | '<=') term)*
-bool Parser::MatchedComparison(ParseNode& node) {
-    return MatchedBinaryExpr(node, IsComparisonOp, &Parser::MatchedTerm, Rule::Comparison);
-}
-
 bool IsEqualityOp(const TokenType token) {
     switch (token) {
         using enum TokenType;
@@ -571,9 +556,29 @@ bool IsEqualityOp(const TokenType token) {
     }
 }
 
+// expr = equality
+bool Parser::MatchedExpression(ParseNode& node) {
+    return MatchedEquality(node);
+}
+
 // equality   = comparison (  ('!=' | '==') comparison)*
 bool Parser::MatchedEquality(ParseNode& node) {
     return MatchedBinaryExpr(node, IsEqualityOp, &Parser::MatchedComparison, Rule::Equality);
+}
+
+// comparison = term ( ('>' | '>=' | '<' | '<=') term)*
+bool Parser::MatchedComparison(ParseNode& node) {
+    return MatchedBinaryExpr(node, IsComparisonOp, &Parser::MatchedTerm, Rule::Comparison);
+}
+
+// term = factor ( ('-' | '+') factor)*
+bool Parser::MatchedTerm(ParseNode& node) {
+    return MatchedBinaryExpr(node, IsTermOp, &Parser::MatchedFactor, Rule::Term);
+}
+
+// factor = unary ( ('/' | '*') unary )*
+bool Parser::MatchedFactor(ParseNode& node) {
+    return MatchedBinaryExpr(node, IsFactorOp, &Parser::MatchedUnary, Rule::Factor);
 }
 
 bool Parser::MatchedBinaryExpr(ParseNode&           node,
@@ -616,7 +621,6 @@ bool Parser::MatchedBinaryExpr(ParseNode&           node,
             return true;
         }
     }
-
 
     binary_expr.AcquireBranchesOf(node, rhs_index + 1);
 

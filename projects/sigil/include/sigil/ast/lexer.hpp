@@ -46,7 +46,7 @@ private:
 
     void LexUnknown();
 
-    SIGIL_NODISCARD bool MatchedKeyword(const std::string& identifier_buffer);
+    SIGIL_NODISCARD bool MatchedKeyword(std::string_view identifier);
 
     SIGIL_NODISCARD bool IsWhitespace(char c) const;
     SIGIL_NODISCARD bool IsLineComment(char c) const;

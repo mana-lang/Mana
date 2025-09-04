@@ -303,13 +303,13 @@ bool Lexer::LexedOperator() {
         token_type = Op_GreaterThan;
         break;
     case '&':
-        token_type = Op_ExplicitRef;
+        token_type = Op_Assign_Ref;
         break;
     case '~':
-        token_type = Op_ExplicitMove;
+        token_type = Op_Assign_Move;
         break;
     case '$':
-        token_type = Op_ExplicitCopy;
+        token_type = Op_Assign_Copy;
         break;
     case '\"':
     case '\'':
@@ -356,12 +356,10 @@ void Lexer::LexUnknown() {
     }
 }
 
-// we take a string ref because
-// we have a string that we'd otherwise need to construct from a string_view anyway
-bool Lexer::MatchedKeyword(const std::string& identifier_buffer) {
-    if (const auto keyword = keyword_map.find(identifier_buffer.c_str());
+bool Lexer::MatchedKeyword(const std::string_view identifier) {
+    if (const auto keyword = keyword_map.find(identifier.data());
         keyword != keyword_map.end()) {
-        AddToken(keyword->second, identifier_buffer.length());
+        AddToken(keyword->second, identifier.length());
         return true;
     }
 

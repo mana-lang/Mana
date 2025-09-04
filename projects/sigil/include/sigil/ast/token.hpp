@@ -40,9 +40,9 @@ enum class TokenType : ml::u8 {
 
     Op_Arrow,
 
-    Op_ExplicitRef,
-    Op_ExplicitCopy,
-    Op_ExplicitMove,
+    Op_Assign_Ref,
+    Op_Assign_Copy,
+    Op_Assign_Move,
 
     Lit_String,
     Lit_Char,
@@ -76,10 +76,8 @@ enum class TokenType : ml::u8 {
     KW_fn,
     KW_mut,
     KW_const,
-    KW_raw,
-    KW_override,
 
-    KW_pack,
+    KW_type,
     KW_struct,
     KW_enum,
     KW_generic,

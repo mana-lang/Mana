@@ -3,7 +3,7 @@
   "attachmentFolderPath": "_Assets",
   "newFileLocation": "current",
   "useMarkdownLinks": true,
-  "strictLineBreaks": true,
+  "strictLineBreaks": false,
   "showIndentGuide": false,
   "pdfExportSettings": {
     "includeName": false,
