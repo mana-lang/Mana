@@ -6,7 +6,7 @@
   "strictLineBreaks": false,
   "showIndentGuide": false,
   "pdfExportSettings": {
-    "includeName": false,
+    "includeName": true,
     "pageSize": "Letter",
     "landscape": false,
     "margin": "0",
@@ -14,5 +14,6 @@
   },
   "showInlineTitle": false,
   "alwaysUpdateLinks": true,
-  "promptDelete": false
+  "promptDelete": false,
+  "readableLineLength": true
 }

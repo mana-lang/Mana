@@ -14,7 +14,7 @@
               "type": "markdown",
               "state": {
                 "file": "Ecosystem/Syntax/Enumerations.md",
-                "mode": "preview",
+                "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
@@ -89,8 +89,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 264.5,
-    "collapsed": true
+    "width": 264.5
   },
   "right": {
     "id": "54e53a07588f83e2",
@@ -178,6 +177,7 @@
   },
   "active": "60728bd41bf96200",
   "lastOpenFiles": [
+    "Ecosystem/Syntax/Enumerations.html",
     "Ecosystem/Syntax/Enumerations.md",
     "Ecosystem/Syntax/Procedures.md",
     "Ecosystem/Syntax/Data.md",
@@ -217,7 +217,6 @@
     "Characters/Kayanna Litchi.md",
     "Meta/Ideas/Region Drafts.md",
     "Meta/Ideas/Megadump.md",
-    "Gameplay/Regions/Exulas, Remnant Wastes/Boss Fights/Vortex - Carmilla ~ Sanguine Cinder.md",
     "Characters/Niandes",
     "Characters/Altire",
     "Characters/Esteria",
