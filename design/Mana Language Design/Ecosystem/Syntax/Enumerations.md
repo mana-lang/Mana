@@ -30,7 +30,7 @@ Much like in **C++**, *enums* in **Mana** are *scoped* and can *not* be implicit
 **Mana** also offers the ability to extend an enum by *appending* new labels to it. To make an enum extensible, you must annotate it with the `mut` keyword.
 
 You may only append labels to an extensible enum from another enum. If you wish to add single values, this is possible by creating an *anonymous enum* inline. That label will then be parented to the enum it's being appended to. 
-```rust
+```kotlin
 mut enum Dog {
 	Terrier
 	Bulldog
@@ -194,8 +194,3 @@ enum Pattern : u8 {
 ```
 >[!note] Note
 When you manually specify an enum's underlying type, that enum *cannot* be used as an *enum tag*, but it can still be extended. The appended labels will follow the same pattern as the base enum
-
-##### Tag Enums
-**Mana** enums can also be used as *hierarchical tags*. These are called *tag enums*. 
-
-This applies *only* to *non-const* enums whose underlying type has *not* been specified.

@@ -1,0 +1,1 @@
+*Variants* in **Mana** work very similarly to **Rust** *enums*.
