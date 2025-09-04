@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecosystem/Syntax/Variants.md",
+                "file": "Ecosystem/Syntax/Procedures.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Variants"
+              "title": "Procedures"
             }
           }
         ]
@@ -178,13 +178,14 @@
   },
   "active": "60728bd41bf96200",
   "lastOpenFiles": [
+    "Ecosystem/Syntax/Data.md",
+    "Ecosystem/Syntax/Procedures.md",
+    "Ecosystem/Syntax/Hello World.md",
     "Ecosystem/Syntax/Enumerations.md",
     "Ecosystem/Syntax/Variants.md",
+    "Ecosystem/Syntax/Pattern Matching.md",
     "Ecosystem/Syntax/Tags.md",
     "Ecosystem/Syntax/Enumerations.html",
-    "Ecosystem/Syntax/Procedures.md",
-    "Ecosystem/Syntax/Data.md",
-    "Ecosystem/Syntax/Hello World.md",
     "Ecosystem/Ecosystem.md",
     "Ecosystem/Overview.md",
     "Ecosystem/Syntax",
@@ -218,7 +219,6 @@
     "Narrative/Silverscale Echoes/Act I ~ The Blind.md",
     "Characters/Kurotsuchi Akira.md",
     "Characters/Kayanna Litchi.md",
-    "Meta/Ideas/Region Drafts.md",
     "Characters/Niandes",
     "Characters/Altire",
     "Characters/Esteria",
