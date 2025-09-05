@@ -1,3 +1,11 @@
+##### Loop
+```kotlin
+// equivalent to 'while true'
+loop {
+	do_something()
+}
+```
+
 *Pattern matching* in **Mana** works roughly the same as **Rust**'s pattern matching.
 
 ```rust
