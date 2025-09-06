@@ -192,5 +192,6 @@ enum Pattern : u8 {
 	H  // 19, etc
 }
 ```
+
 >[!note] Note
 When you manually specify an enum's underlying type, that enum *cannot* be used as an *enum tag*, but it can still be extended. The appended labels will follow the same pattern as the base enum

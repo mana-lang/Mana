@@ -1,19 +1,39 @@
+
+##### If
+`if` statements in **Mana** evaluate a *boolean* and execute code when that boolean evaluates to *true*.
+
+An `if` statement may be followed by an `else` statement, which itself may contain an `if` condition.
+
+When the `else` statement contains no `if` statement, it is executed when *all* preceding conditions have failed.
+```kotlin
+data x = true
+data y = 3 < 7
+
+if x {
+	DoSomeStuff()
+} else if y {
+	DoSomeOtherStuff()
+} else {
+	DoSomeCrazyStuff()
+}
+```
+
 ##### Loop
 ```rust
 // 'while true'
 loop {
-	do_something()
+	DoSomething()
 }
 
 // repeats 5 times
 loop 5 {
-	do_something()
+	DoSomething()
 }
 
 // for (int i = 0; i <= 5; ++i)
 loop ~5 i {
 // 'loop 5~ i' to count from 5 to 0
-	thing[i].do_something()
+	thing[i].DoSomething()
 }
 
 // all loops are scoped, so from here on out
@@ -42,13 +62,13 @@ loop { ... } if x == 5
 // and is initially zeroed
 data x = loop {
 	// do stuff
-	x = something()
+	x = Something()
 } // after the loop block, 'x' is immutable
 
 loop {
-	if some_condition() {
+	if SomeCondition() {
 		skip // jumps to start of loop
-	} else if other_cond() {
+	} else if OtherCondition() {
 		break // exits current loop
 	}
 }
@@ -56,7 +76,7 @@ loop {
 // loops may be labeled
 loop A: 2..10 i {
 	loop B: if i % 5 == 0 {
-		if cond() {
+		if cond {
 			skip -> A // go back to the start of A
 		}
 		break -> A // exits from outer loop A
@@ -83,8 +103,7 @@ for elem in values {
 ##### Match
 *Pattern matching* in **Mana** works roughly the same as **Rust**'s pattern matching.
 
-Expressions on the left side of arms in a match block are compared to the matched *subject*.
-If the expression matches, it will execute that arm.
+Expressions on the left side of *match arms* in a match block are compared to the matched *subject*. If the expression matches, it will execute that arm.
 ```rust
 match x {
 	Animal.Dog => DoDogThing()
@@ -96,8 +115,12 @@ match x {
 	_ => DoGeneralThings()
 }
 ```
+Keep in mind that, because the left side of a match arm is compared against the *subject*, this means that all left-side match arm expressions *must* be *valid comparisons* against the subject.
 
-It's important to note that `match` will execute *only* the *first* arm that matches, and it will run comparison *from top to bottom*. To continue matching after a match has succeeded, the *match operator* `=>` must be used at the *end* of a match arm.
+This means that either a built-in comparison exists, or a valid *equality operator* has been defined for the two types being compared, just like with any other comparison.
+
+
+It's important to note that `match` will execute *only* the *first* arm that matches, and it will run comparisons *from top to bottom*. To continue matching after a match has succeeded, the *match operator* `=>` must be used at the *end* of a match arm.
 
 If the match arm is a *single* expression, then it must be used *after* the expression.
 Otherwise, it must be placed on an *otherwise empty* statement at the *end* of an expression block.

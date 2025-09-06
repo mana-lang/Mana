@@ -2,9 +2,9 @@
 ##### Tags
 *Tags* are a hierarchical labeling system in **Mana**.
 
-If you are familiar with **Unreal Engine**'s **GameplayTag** system, then tags should make intuitive sense to you.
+They are essentially hierarchical enums, which may be compared against their hierarchy through various comparison operators. 
 
-They are essentially hierarchical enums, which may be compared against their hierarchy through various comparison operators. They can efficiently compress a lot of categorical state information into a small space.
+They can efficiently compress a lot of categorical state information into a small space, and allow for expressive querying against other tags.
 
 Unlike most keywords in **Mana**, the `Tag` keyword is capitalized.
 ```kotlin

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecosystem/Syntax/Control Flow.md",
+                "file": "Ecosystem/Syntax & Features/Procedures.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Control Flow"
+              "title": "Procedures"
             }
           }
         ]
@@ -89,7 +89,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 264.5
+    "width": 264.5,
+    "collapsed": true
   },
   "right": {
     "id": "54e53a07588f83e2",
@@ -178,13 +179,21 @@
   },
   "active": "60728bd41bf96200",
   "lastOpenFiles": [
-    "Ecosystem/Syntax/Data.md",
-    "Ecosystem/Syntax/Hello World.md",
-    "Ecosystem/Syntax/Control Flow.md",
+    "Ecosystem/Syntax & Features/Control Flow.md",
+    "Ecosystem/Syntax & Features/Data.md",
+    "Ecosystem/Syntax & Features/Procedures.md",
+    "Ecosystem/Syntax & Features/Enumerations.md",
+    "Ecosystem/Syntax & Features/Tags.md",
+    "Ecosystem/Syntax & Features/Hello World.md",
+    "Ecosystem/Syntax & Features/Variants.md",
     "Ecosystem/Syntax/Tags.md",
+    "Ecosystem/Syntax & Features",
+    "Ecosystem/Syntax/Variants.md",
+    "Ecosystem/Syntax/Control Flow.md",
     "Ecosystem/Syntax/Procedures.md",
     "Ecosystem/Syntax/Enumerations.md",
-    "Ecosystem/Syntax/Variants.md",
+    "Ecosystem/Syntax/Data.md",
+    "Ecosystem/Syntax/Hello World.md",
     "Ecosystem/Syntax/Enumerations.html",
     "Ecosystem/Ecosystem.md",
     "Ecosystem/Overview.md",
@@ -212,18 +221,10 @@
     "Gameplay/Regions/Veralis, Lustrous Arboreas/Boss Fights/Vortex - Ashdyr ~ Thousand-blade Sentinel.md",
     "_Assets/Pasted image 20250722233943.png",
     "_Assets/Pasted image 20250722233816.png",
-    "Gameplay/Regions/Veralis, Lustrous Arboreas/Boss Fights/2. Anomaly/Hakti ~ Silverscale Tempest.md",
-    "Lore/Clans/Saeris.md",
-    "Lore/Clans/Akhanti Clan.md",
-    "Characters/Saeris/Hakti.md",
-    "Narrative/Silverscale Echoes/Act I ~ The Blind.md",
-    "Characters/Kurotsuchi Akira.md",
-    "Characters/Kayanna Litchi.md",
     "Characters/Niandes",
     "Characters/Altire",
     "Characters/Esteria",
     "Gameplay/Regions/Calmerra, Lands Astray/Boss Fights/2. Anomaly",
-    "Gameplay/Regions/Calmerra, Lands Astray/Boss Fights/1. Chief",
     "Gameplay/Regions/Lumina/Map.canvas",
     "Untitled.canvas"
   ]
