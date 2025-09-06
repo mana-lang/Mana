@@ -1,12 +1,12 @@
 
 ##### Expressions
 ```kotlin
-import std.io.print
+import std.fmt
     
 fn main() {
-    std.println(5 + 2)
-    std.print("Hello" + " world!\n")
-    std.print("I have {} oranges", 3)
+    fmt.PrintLine(5 + 2)
+    fmt.Print("Hello" + " world!\n")
+    fmt.Print("I have {} oranges", 3)
 }
 ```
 >[!tip] Output
@@ -31,63 +31,66 @@ fn main() {
 ##### Mutability
 To make data mutable, it must be annotated with the `mut` keyword
 ```kotlin
-import std.io.print
+import std.fmt
     
 fn main() {
 	mut data number = 15
 	number += 7
-	std.print("Catch-{number}")
+	fmt.Print("Catch-{number}")
 }
 ```
 >[!tip] Output
 >Catch-22
 
-##### Assignment
+##### Assignment Deduction
 **Mana** makes certain assumptions about data when it's assigned to other data.
 Depending on the context, it may *copy*, *reference*, or *move* the data.
 
-- A *copy* simply *duplicates* the data, and takes up more space as a result
-- A *reference* takes up a fixed amount of space by only *referring* to the actual data container
-- A *move* takes up the same amount of space, and invalidates the original data container
+- A *copy* simply *duplicates* the data
+- A *reference* takes up a *fixed* amount of *additional* space by only *referring* to the actual data
+- A *move* takes up the *same* amount of space, and *invalidates* the original data
 
 **Mana** will, by default, attempt to *copy* assigned data, unless it would be cheaper to *reference* that data instead. How it determines this depends on the context, but the *memory size* of the data being assigned is always a key factor.
 
-**Mana** will *almost never* perform a *move* by default, because a *move* invalidates the data being assigned from.
+**Mana** will *almost never* perform a *move* by default, because a move *invalidates* the data being assigned from.
 
-Keep in mind that these rules *only* apply to `data` - `mut data` will always be copied, because **Mana** wouldn't invisibly create a mutable reference, as that would be extremely bug-prone.
+Keep in mind that these rules *only* apply when assigning to `data`. If the data is *mutable*, it will always be copied; **Mana** wouldn't invisibly create a mutable reference, as that would be extremely bug-prone.
 ```kotlin
-import std.io.print
+import std.fmt
     
 fn main() {
-	data hey = "hello"
-	data hi = hey // this is a reference
+	mut data hey = "hey"
+	data hi = hey       // this is a reference
+	mut data hiya = hey // this is a copy
+	hey = "hello"
 	
-	data five = 5
+	mut data five = 5
 	data num = five // this is a copy
+	five = 1
 	
-	std.print(hey, five, hi, num)
+	fmt.Print(hey, five, hi, num, hiya)
 }
 ```
 >[!tip] Output
-> hello5hello5
+> hello1hello5hey
 
-##### Assignment Operator
+##### Assignment Annotation
 You can explicitly tell **Mana** how you want it to handle the assignment using one of the three *assignment operators*.
 ```kotlin
-import std.io.print
+import std.fmt
     
 fn main() {
 	data spell = "Stupefy"
 	
-	data copy = $spell
+	data copy = ~spell
 	data ref  = &spell
-	data move = ~spell
+	data move = $spell
 	
-	std.print(ref) // ok
-	std.print(copy) // ok
-	std.print(move) // ok
+	fmt.Print(ref) // ok
+	fmt.Print(copy) // ok
+	fmt.Print(move) // ok
 	
-	std.print(spell) // won't compile
+	fmt.Print(spell) // won't compile
 }
 ```
 >[!danger] Error
@@ -97,7 +100,6 @@ In the above example, `spell` became invalidated, because it was *moved* into `m
 
 This feature is an important part of how **Mana** handles *ownership*, which will be discussed later.
 
-
 ##### Type annotations
 All data in **Mana** is *strongly and statically typed*. 
 
@@ -105,7 +107,7 @@ This means the types of all values must be known at compile-time, and data may n
 
 Data declarations may have *explicit* type annotations. This may be useful if you want to convert certain types, or ensure a variable's type doesn't silently change e.g. in the case of a function's return type being modified unexpectedly.
 ```kotlin
-import std.io.print
+import std.fmt
     
 fn main() {
 	data x: i32 = 5
@@ -116,7 +118,7 @@ fn main() {
 	// unassigned data is zeroed by default
 	data z: i64
 	
-	std.print("x: {x}\nf: {f}\nz: {z}")
+	fmt.Print("x: {x}\nf: {f}\nz: {z}")
 }
 ```
 >[!tip] Output
@@ -127,14 +129,14 @@ fn main() {
 ##### Uninitialized Data
 Unassigned data declarations are zeroed by default in **Mana**. To leave it uninitialized, you must do so explicitly with the `null` keyword.
 ```kotlin  
-import std.io.print
+import std.fmt
 
 fn main() {
 	// data will be uninitialized.
     data x: bool = null
     
     // using it is either a compile error, or undefined behaviour
-    std.print(x) 
+    fmt.Print(x) 
 }
 ```
 >[!danger] Error
@@ -156,3 +158,46 @@ const Something: string
 >[!danger] Error
 > Constant `SolPlanets` was not annotated
 > Constant `Something` was not assigned
+
+##### Arrays
+Arrays may be declared with the square *bracket* operators, and indexed the *same* way.
+```kotlin
+data numbers = [1, 2, 3, 4, 5]
+fmt.Print("{numbers[2]}")
+```
+>[!tip] Output
+ 3
+
+Array types are deduced from their members. If all members in a list literal are of the *same* type, that list is an *array*. If any of the types differ, that list will be treated as a *tuple* instead.
+
+To enforce that a data member is an array, you may annotate it with the array type specifier.
+```kotlin
+data tuple = [3.5, 2.2859, 8.3, "how'd i get here", 16.323]
+data array: [f32] = [3.5, 2.2859, 8.3, "how'd i get here", 16.323]
+```
+>[!danger] Error
+> Data `values` was declared as an array of `f32`, but was assigned a `string`
+
+The array type specifier may contain either a type, or a type and an integer value, separated by a comma. The value specifies the *size* of the array, though this may be omitted in any scenario where the array is immediately assigned.
+
+If the array is not immediately assigned, its size *must* be specified in the declaration.
+
+An array which is not immediately assigned will have all its values *zeroed* by default. Much like scalar data, if you want it to be uninitialized, it must be assigned `null`.
+```kotlin
+// creates immutable 'x' of size '5' with type 'f64'
+// all its elements will have the value '0.0'
+data x: [f64, 5] 
+
+// error
+data y: [f64] 
+
+// will be uninitialized
+mut data z: [i32, 8] = null
+
+// error
+data w: [i32, 8] = null
+```
+>[!danger] Error
+> Data `y` was declared as an array of `f64`, but was not assigned, and has no size specifier
+> 
+> Data `w` was assigned `null`, but it is immutable. There is no situation where it could be used

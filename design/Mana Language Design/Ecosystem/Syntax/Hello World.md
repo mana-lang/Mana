@@ -1,12 +1,12 @@
 
 ##### Hello World
-```rust
-    import std.io.print
-    
-    fn main() {
-	    // This is a comment
-	    std.print("Hello world!")
-    }
+```kotlin
+import std.fmt
+
+// This is a comment    
+fn main() {
+	fmt.Print("Hello world!")
+}
 ```
 >[!tip] Output
 > Hello world!

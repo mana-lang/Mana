@@ -306,10 +306,10 @@ bool Lexer::LexedOperator() {
         token_type = Op_Assign_Ref;
         break;
     case '~':
-        token_type = Op_Assign_Move;
+        token_type = Op_Assign_Copy;
         break;
     case '$':
-        token_type = Op_Assign_Copy;
+        token_type = Op_Assign_Move;
         break;
     case '\"':
     case '\'':
