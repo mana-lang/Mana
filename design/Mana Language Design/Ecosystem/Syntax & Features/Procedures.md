@@ -3,7 +3,7 @@ The term *procedure* is used as a catch-all term for *executable things* in **Ma
 - Functions
 - Constant Functions
 - Pure Functions
-- Type Functions
+- Type Interface Functions
 - Polymorphic Functions
 	- Generic Functions
 	- Multi-Functions
@@ -120,7 +120,8 @@ fn Sqrt(v: i32) {
 ```
 
 
-##### Type Functions
+##### Type Interface Functions
+**Mana**'s goal is to define
 ```rust
 type Foo {
 	a: i32
@@ -130,13 +131,13 @@ type Foo {
 
 interface Bar for type Foo {
 	mut fn Baz() -> i32 {
-		this.a *= 3
-		return this.a
+		.a *= 3
+		return .a
 	}
 	
 	[Pure, Inline]
 	fn Fuzz() -> f64 {
-		return this.b * Pi / 180
+		return .b * Pi / 180
 	}
 }
 
