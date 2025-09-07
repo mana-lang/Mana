@@ -178,10 +178,10 @@
   },
   "active": "60728bd41bf96200",
   "lastOpenFiles": [
-    "Ecosystem/Syntax & Features/Procedures.md",
-    "Ecosystem/Syntax & Features/Types.md",
-    "Ecosystem/Syntax & Features/Control Flow.md",
     "Ecosystem/Syntax & Features/Data.md",
+    "Ecosystem/Syntax & Features/Types.md",
+    "Ecosystem/Syntax & Features/Procedures.md",
+    "Ecosystem/Syntax & Features/Control Flow.md",
     "Ecosystem/Syntax & Features/Enumerations.md",
     "Ecosystem/Syntax & Features/Tags.md",
     "Ecosystem/Syntax & Features/Hello World.md",
