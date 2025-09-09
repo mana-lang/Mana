@@ -1,3 +1,4 @@
+
 ##### Procedure
 The term *procedure* is used as a catch-all term for *executable things* in **Mana**. This includes:
 - Functions
@@ -5,9 +6,9 @@ The term *procedure* is used as a catch-all term for *executable things* in **Ma
 - Pure Functions
 - Type Interface Functions
 - Polymorphic Functions
-	- Generic Functions
 	- Multi-Functions
 	- Operators
+	- Generic Functions
 - Closures
 - Delegates
 - Functors
@@ -54,19 +55,19 @@ fn main() {
 fn Foo(a: i32, b: mut &string, c: [f64, 5]) -> mut &string
 ```
 ##### Inline
-Functions *may* be annotated with the `[Inline]` *attribute* to declare the function *inlined*. 
+Functions *may* be annotated with the `@[Inline]` *attribute* to declare the function *inlined*. 
 
 An *inlined function* has two properties:
 1. It will be expanded in-place at its call site instead of performing the usual function call
 2. It will attempt to execute at compile time, if possible
 	- In this case, inlined calls are replaced with their computed values instead 
 ```rust
-[Inline]
+@[Inline]
 fn Sqrt(x: f64) -> f64 {
 	return x * x
 }
 ```
-If a function *cannot* be inlined, the compiler will raise an error.
+If a function *cannot* be inlined, the compiler *may* raise a *warning*. The function will then behave as normal.
 
 ##### Constant Functions
 *Constant functions* are written exactly the same as regular functions, with three major differences:
@@ -95,7 +96,7 @@ const fn ToRadians(degrees: f64) -> f64 {
 ##### Pure Functions
 *Pure functions* are written exactly the same as regular functions, with five major differences:
 
-1. They must be annotated with the [Pure] *attribute*
+1. They must be annotated with the `@[Pure]` *attribute*
 2. They may *not* have *mutable references* as parameters
 3. They may *not* have *mutable ownership* over their parameters
 4. They may *not write* to *mutable data* that was not declared within their function body
@@ -107,13 +108,13 @@ Data local to the pure function's scope may be freely modified *within function 
 
 Failing to meet a pure function's requirements results in a *compile error*.
 ```rust
-[Pure]             // OK -- immutable ref
+@[Pure]            // OK -- immutable ref
 fn DotProduct(v1, v2: &Vec2) {
 	return v1.x * v2.x + v1.y * v2.y
 }
 
 // Pure often pairs well with Inline
-[Pure, Inline]
+@[Pure, Inline]
 fn Sqrt(v: i32) {
 	return v * v
 }
@@ -121,10 +122,17 @@ fn Sqrt(v: i32) {
 
 
 ##### Type Interface Functions
-**Mana**'s goal is to define
+You may associate functions to types by creating *type interfaces*. 
+
+Type interface functions are mostly like regular functions, save for a few key differences:
+- They may be declared `mut`
+	- `mut` functions may modify type members, if the type is also declared `mut`
+	- This includes `@[Locked]` type members
+- They may access members of that type via the `this` keyword
+	- `this` may be omitted, and the members accessed with a leading access operator `.`
 ```rust
 type Foo {
-	a: i32
+	a: i32 @[Locked]
 	b: f64
 	c: bool
 }
@@ -135,7 +143,7 @@ interface Bar for type Foo {
 		return .a
 	}
 	
-	[Pure, Inline]
+	@[Pure, Inline]
 	fn Fuzz() -> f64 {
 		return .b * Pi / 180
 	}
@@ -151,8 +159,3 @@ interface Bar for type Foo {
 data foo = Foo {1, 2, false}
 data x = foo.Fuzz()
 ```
-
-
-**TODO:** 
-- **describe attribute-specifiers**
-- **add "attribute groups" where commonly used sets of attributes can be grouped under a new name**

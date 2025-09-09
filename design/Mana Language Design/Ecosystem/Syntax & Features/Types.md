@@ -48,7 +48,7 @@ string
 	// and functions can not return this type
 null
 ```
-
+Attempting to create data of type `null` will result in a compile error. Setting a function's return type to `null` indicates it may not return any value; it would be equivalent to a `void` function in *C*.
 ##### Custom Types
 You may also create your own types in **Mana**. You do so using the `type` keyword.
 
@@ -93,64 +93,39 @@ type Foo {
 data foo = Foo {.a = 102, .c = "hello"}
 ```
 
+##### Locking Mutable Data
+Mutable data may be annotated with the `@[Locked]` attribute to indicate that anything from an outer scope is not allowed to write to it. This is particularly useful inside custom types.
 
-##### Flexibility
-Types may be annotated with the `Flexible` attribute. 
+**Mana** does *not* have the concept of granular private access specifiers for individual type members. However, sometimes you want a value which may be modified by an associated function, but not by anything else. In these scenarios, you would want to use `@[Locked]`.
+```rust
+// 'a' may only be modified by interface functions, 
+// even if `Foo` has been declared 'mut'
+type Foo {
+	a: i32 @[Locked]
+	b: f64 = 32.99
+	c: string
+}
 
-This allows **Salem** (but *not* **Circe**) to do manipulate the type under the hood to *optimize* it for *cache locality* based on context such as its access patterns.
+interface Bar for type Foo {
+	mut fn Baz() -> i32 {
+		.a += 2
+		return .a
+	}
+}
+```
+Attempting to modify `[Locked]` data results in a *compile error*.
 
-In the below case, type `Foo` is taking up more space than necessary due to *alignment requirements*. It is taking up 40 bytes, while only using 23 bytes of data. On its own, 17 bytes of wasted data isn't that big of a deal; however, once you have 100K `Foo` objects that you are accessing regularly, you will encounter far more cache misses than necessary, leading to a degradation in performance.
-
-These issues can compound and cause your game to run at lower frame-rates, which gives you less room to add fancy assets, effects and features.
+You may also specify a `[Locked]` block:
 ```rust
 type Foo {
-	a: i32   // 4 bytes + 4 padding
-	b: f64   // 8 bytes
-	c: bool  // 1 byte + 7 padding
-	d: i64   // 8 bytes
-	e: u16   // 2 bytes + 6 padding
+	@[Locked] {
+		a: i32
+		b: f64 = 32.99
+	}
+	
+	c: string
 }
 ```
 
-With the `[Flexible]` attribute, **Salem** can automatically reorder these type members to waste the least amount of space.
-
-You can *still write the type the same way*, and **Salem** will reorder the type *under the hood*.
-
-This reduces the padding down to 1: 
-```rust
-[Flexible]
-type Foo {
-	a: i32   // 4 bytes
-	b: f64   // 8 bytes
-	c: bool  // 1 byte
-	d: i64   // 8 bytes
-	e: u16   // 2 bytes + 1 padding
-}
-```
-
-Because the type has been *reordered* to:
-```rust
-type Foo {
-	b: f64   // 8 bytes
-	d: i64   // 8 bytes
-	a: i32   // 4 bytes
-	c: bool  // 1 byte
-	e: u16   // 2 bytes + 1 padding
-}
-```
-
-Note that **Salem** will reorder *as few members as possible* to respect as much of the specified order as it can. As a result, the first two and last three members are still in alphabetical order, respectively.
-
-Reordering is only one of the things the `[Flexible]` attribute does. The other is far bigger, and is related to *access patterns*.
-
-Suppose you create a `[Foo, 5]`. Ordinarily, **Mana** orders that array as follows:
-
-`[a][b][c][d][e][a][b][c][d][e][a][b][c][d][e][a][b][c][d][e][a][b][c][d][e]`
-
-Each of the members are laid out sequentially in memory.
-
-If the type is `[Flexible]` however, **Salem** might do something like this:
-
-`[a][a][a][a][a][b][b][b][b][b][c][c][c][c][c][d][d][d][d][d][e][e][e][e][e]`
-
-It *reordered* the array to optimize for accessing the same member in each `Foo`, rather than skipping over to the next `Foo` on every access.
+> [!note]
+`[Locked]` data is restricted to only be modifiable by associated functions. However, **Mana** allows anywhere to create an associated function for a type. `[Locked]` is merely an indicator that a type member *shouldn't* freely be modified, for some reason or another.

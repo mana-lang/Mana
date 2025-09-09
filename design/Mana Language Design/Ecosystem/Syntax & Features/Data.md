@@ -144,9 +144,9 @@ fn main() {
 ##### Constants
 Compile-time constants are created with the `const` keyword.
 They *must* have their type annotated, and cannot be unassigned.
+
 Constants may only be assigned *constant expressions*. 
 This includes other constants, as well as any other expressions that evaluate to a constant, such as value literals and constant procedures.
-
 ```kotlin
 const Pi: f64 = 3.14159265358979
 const RadCircle: f64 = 2 * Pi
@@ -200,8 +200,3 @@ data w: [i32, 8] = null
 > Data `y` was declared as an array of `f64`, but was not assigned, and has no size specifier
 > 
 > Data `w` was assigned `null`, but it is immutable. There is no situation where it could be used
-
-##### Read-only Data
-Mutable data may be annotated with the `[ReadOnly]` attribute to indicate that anything from an outer scope is not allowed to write to it. This is particularly useful inside custom types.
-
-**Mana** does not have the concept of granular private access specifiers for individual type members. However, sometimes you want a value which may be modified by an associated type function, but not by anything else. In these scenarios, you would want to use `[ReadOnly]`
