@@ -28,8 +28,8 @@ f32, f64
 [u8]   // treated by mana as utf-8 string
 char   // unicode scalar value, 32 bits in size
 
-	// non-type
-null
+	// function type
+fn
 ```
 
 

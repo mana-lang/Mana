@@ -13,6 +13,23 @@ The term *procedure* is used as a catch-all term for *executable things* in **Ma
 - Delegates
 - Functors
 
+In **Mana**, *everything is data*. This includes *functions*.
+
+When you declare a function, you are creating *executable data*; it is helpful to think of **Mana** functions as no different from other data declarations.
+
+For example, the two declarations below are identical.
+```rust
+fn Foo() -> i32 {
+	return 5 + 6
+}
+
+data Foo: fn() -> i32 {
+	return 5 + 6
+}
+```
+
+A function in **Mana** may be thought of as data containing information about how to *process* other data.
+
 ##### Functions
 Functions in **Mana** are declared with the `fn` keyword. 
 
@@ -54,6 +71,54 @@ fn main() {
 ```rust
 fn Foo(a: i32, b: mut &string, c: [f64, 5]) -> mut &string
 ```
+
+##### The `fn` Type
+The `fn` keyword denotes a special data declaration of type `fn`. The components of this type describe:
+- What types of parameters the function takes (*if any*)
+- What type of value the function returns (*if any*)
+- A block of statements to be executed by the function (*if any*)
+
+Data of type `fn` may be executed by putting it in an *invocation expression*, also known as a function call. 
+
+Data of type `fn` may be declared in *any* situation where data may be declared.
+```rust
+/// Type member
+type Foo {
+	a: f64
+	b: fn(f64, string) -> i16
+	c: string
+}
+
+fn Bar(a: f64, b: string) -> i16 {
+	fmt.Print("{a} | {b}")
+}
+
+data foo = Foo {.a = 95.4, .b = Bar, .c = "hey"}
+
+foo.b(22.7, foo.c) // identical to Bar(22.7, "hey")
+
+
+/// Parameter
+fn Invoke(baz: fn(f64, string) -> i16, a: f64, b: string) {
+	baz(a, b)
+}
+
+// both of these are effectively the same
+Invoke(foo.b, foo.a, foo.c)
+Invoke(Bar, 95.4, "hey")
+
+
+/// Within a function block
+fn Blep() {
+	data x = 32
+	fn Closure(): x -> i32 {
+		fmt.PrintLine("{x}")
+	}
+	
+	Closure()
+}
+```
+
 ##### Inline
 Functions *may* be annotated with the `@[Inline]` *attribute* to declare the function *inlined*. 
 
@@ -120,14 +185,14 @@ fn Sqrt(v: i32) {
 }
 ```
 
-
 ##### Type Interface Functions
 You may associate functions to types by creating *type interfaces*. 
 
 Type interface functions are mostly like regular functions, save for a few key differences:
 - They may be declared `mut`
-	- `mut` functions may modify type members, if the type is also declared `mut`
-	- This includes `@[Locked]` type members
+	- `mut` functions may modify type members
+		- This includes `@[Locked]` type members
+	- They may *only* be invoked on mutable data of that type
 - They may access members of that type via the `this` keyword
 	- `this` may be omitted, and the members accessed with a leading access operator `.`
 ```rust
@@ -159,3 +224,29 @@ interface Bar for type Foo {
 data foo = Foo {1, 2, false}
 data x = foo.Fuzz()
 ```
+
+##### Multi-Functions
+Multi-functions are *polymorphic functions* which
+
+##### Functors
+Functors are *types* with a defined `()` operator.
+
+```rust
+type Functor {
+	a: i32
+	b: string
+}
+
+interface for type Functor {
+	operator () => mut fn(x: i32) -> i32 {
+		.a += x
+		return .a
+	}
+}
+
+data foo = Functor { .a = 12, .b = "hey" }
+data bar = foo(32)
+fmt.Print("{bar}")
+```
+> [!tip] Output
+> 44

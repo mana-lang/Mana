@@ -103,6 +103,8 @@ for elem in values {
 ##### Match
 *Pattern matching* in **Mana** works roughly the same as **Rust**'s pattern matching.
 
+They are blocks which may contain a series of statements separated by the *map operator* `=>`
+
 Expressions on the left side of *match arms* in a match block are compared to the matched *subject*. If the expression matches, it will execute that arm.
 ```rust
 match x {

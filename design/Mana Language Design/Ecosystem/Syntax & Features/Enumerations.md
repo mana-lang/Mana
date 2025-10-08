@@ -1,4 +1,5 @@
-**Mana** provides two means of creating enumerations; *enums* and *variants*.
+
+**Mana** provides three means of creating enumerations; *enums*, *tags* and *variants*.
 
 **Mana**'s *enums*, like many other languages, offer a simple means of creating labeled values. However, they can do a lot more than that.
 ##### C++ Style Enums
@@ -192,6 +193,3 @@ enum Pattern : u8 {
 	H  // 19, etc
 }
 ```
-
->[!note] Note
-When you manually specify an enum's underlying type, that enum *cannot* be used as an *enum tag*, but it can still be extended. The appended labels will follow the same pattern as the base enum

@@ -90,5 +90,11 @@ mut data new_tag = john.tag + Tag {Painter}
 new_tag -= Tag.Entity
 
 new_tag -= Tag // won't compile
-
 ```
+
+##### Tag Imports
+Normally, Tags belonging to a foreign Artifact must be accessed via the scope resolution operator `::`
+
+`SomeArtifact::Tag.Status.Burning`
+
+One may expose
