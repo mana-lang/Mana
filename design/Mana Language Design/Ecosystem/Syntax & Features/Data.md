@@ -24,7 +24,7 @@ fn main() {
 }
 ```
 >[!danger] Error
->Data `four` is not mutable. You can make it mutable by annotating its declaration:
+>Datum `four` is not mutable. You can make it mutable by annotating its declaration:
 > `mut data four: f32 = two + two`
 
 ##### Mutability
@@ -141,7 +141,9 @@ fn main() {
 >[!danger] Error
 >Data `x` was not initialized, but an attempt was made to read from it
 
-##### Constants
+Note: In the above example, `x` can never be initialized, because it's not `mut`.
+ 
+ ##### Constants
 Compile-time constants are created with the `const` keyword.
 They *must* have their type annotated, and cannot be unassigned.
 

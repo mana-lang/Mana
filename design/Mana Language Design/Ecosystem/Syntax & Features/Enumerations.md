@@ -1,9 +1,9 @@
 
 **Mana** provides three means of creating enumerations; *enums*, *tags* and *variants*.
 
-**Mana**'s *enums*, like many other languages, offer a simple means of creating labeled values. However, they can do a lot more than that.
+Mana's *enums*, like many other languages, offer a simple means of creating labeled values. However, they can do a lot more than that.
 ##### C++ Style Enums
-If you're familiar with **C++** enums, that is how **Mana** enums work in their most basic form.
+If you're familiar with **C++** enums, that is how Mana enums work in their most basic form.
 ```kotlin
 enum Colour {
 	Red    // 0
@@ -25,7 +25,7 @@ data animal = Cat // won't compile
 >[!danger] Error
 > Attempted to assign unknown value `Cat` to data `animal`. Did you mean `Animal.Cat`?
 
-Much like in **C++**, *enums* in **Mana** are *scoped* and can *not* be implicitly converted to their underlying type by default.
+Much like in C++, *enums* in Mana are *scoped* and can *not* be implicitly converted to their underlying type by default.
 
 ##### Extensibility
 **Mana** also offers the ability to extend an enum by *appending* new labels to it. To make an enum extensible, you must annotate it with the `mut` keyword.
@@ -75,7 +75,7 @@ data flail = Weapon.Flail
 // 'MeleeWeapon' is still considered its own valid enum
 data melee_flail = MeleeWeapon.Flail
 
-	// enums can easily be serialized to strings
+// enums can easily be serialized to strings
 std.println("{1}: {2}", enum.to_string(flail), enum.underlying(flail))
 std.print("{1}: {2}", enum.to_string(melee_flail), enum.underlying(melee_flail))
 ```
@@ -151,7 +151,7 @@ enum Specified : u8 {
 }
 ```
 
-By default, each next label will increase the previous label's value by 1. However, this behaviour can be overridden by specifying *at least two* label values explicitly. **Mana** will then follow the pattern described by the programmer until it encounters another set of *two* explicit values, or the enum ends.
+By default, each next label will increase the previous label's value by 1. However, this behaviour can be overridden by specifying *at least two* label values explicitly. Mana will then follow the pattern described by the programmer until it encounters another set of *two* explicit values, or the enum ends.
 ```kotlin
 // normally, enums increment...
 enum Countdown : u8 {

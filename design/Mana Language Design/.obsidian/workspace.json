@@ -13,12 +13,36 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecosystem/Syntax & Features/Variants.md",
+                "file": "Ecosystem/Ecosystem.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Variants"
+              "title": "Ecosystem"
+            }
+          },
+          {
+            "id": "b5f9a4a6b34a4639",
+            "type": "leaf",
+            "state": {
+              "type": "image",
+              "state": {
+                "file": "_Assets/Info_Artifacts.png"
+              },
+              "icon": "lucide-image",
+              "title": "Info_Artifacts"
+            }
+          },
+          {
+            "id": "9b358ec60850d23c",
+            "type": "leaf",
+            "state": {
+              "type": "image",
+              "state": {
+                "file": "_Assets/ManaEcosystem.png"
+              },
+              "icon": "lucide-image",
+              "title": "ManaEcosystem"
             }
           },
           {
@@ -33,8 +57,7 @@
               "title": "Release Notes 1.9.14"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -189,22 +212,25 @@
       "webpage-html-export:Export as HTML": false
     }
   },
-  "active": "1190df4178ff6203",
+  "active": "60728bd41bf96200",
   "lastOpenFiles": [
-    "Ecosystem/Syntax & Features/Tags.md",
     "Ecosystem/Syntax & Features/Enumerations.md",
+    "Ecosystem/Syntax & Features/Flexible Data.md",
+    "Ecosystem/Syntax & Features/Attributes.md",
     "Ecosystem/Syntax & Features/Procedures.md",
-    "Ecosystem/Syntax & Features/Control Flow.md",
     "Ecosystem/Syntax & Features/Types.md",
     "Ecosystem/Syntax & Features/Data.md",
-    "Ecosystem/Syntax & Features/Hello World.md",
+    "Ecosystem/Ecosystem.md",
+    "_Assets/Info_Artifacts.png",
+    "_Assets/ManaEcosystem.png",
     "Ecosystem/Overview.md",
-    "Ecosystem/Syntax & Features/Flexible Data.md",
+    "Ecosystem/Syntax & Features/Hello World.md",
+    "Ecosystem/Syntax & Features/Tags.md",
     "Ecosystem/Syntax & Features/Variants.md",
+    "Ecosystem/Syntax & Features/Control Flow.md",
     "Ecosystem/Syntax & Features/Compile Time.md",
     "Ecosystem/Syntax & Features/v.md",
     "_Assets/Pasted image 20250912060624.png",
-    "Ecosystem/Syntax & Features/Attributes.md",
     "_Assets/Pasted image 20250908005720.png",
     "Ecosystem/Syntax/Tags.md",
     "Ecosystem/Syntax & Features",
@@ -215,13 +241,10 @@
     "Ecosystem/Syntax/Data.md",
     "Ecosystem/Syntax/Hello World.md",
     "Ecosystem/Syntax/Enumerations.html",
-    "Ecosystem/Ecosystem.md",
     "Ecosystem/Syntax",
     "_Assets/Pasted image 20250903011646.png",
-    "_Assets/Info_Artifacts.png",
     "_Assets/Info_Troves.png",
     "_Assets/Pasted image 20250902210535.png",
-    "_Assets/ManaEcosystem.png",
     "Tags",
     "Mana",
     "_Templates/Dummy.md",
@@ -231,7 +254,6 @@
     "Gameplay/Systems/Player/Special Combos.md",
     "_Assets/Pasted image 20250812214022.png",
     "_Assets/Pasted image 20250812213834.png",
-    "Gameplay/Systems/Player/Untitled.md",
     "_Assets/Pasted image 20250723010416.png",
     "Characters/Niandes",
     "Characters/Altire",

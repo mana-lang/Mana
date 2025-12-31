@@ -1,6 +1,6 @@
 #pragma once
 
-#include "primitive-type.hpp"
+#include <mana/vm/primitive-type.hpp>
 #include <mana/literals.hpp>
 
 #include <array>

@@ -1,8 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <mana/literals.hpp>
 #include <mana/vm/slice.hpp>
 
+using namespace mana;
 using namespace mana::vm;
 using namespace mana::literals;
 
@@ -18,21 +20,22 @@ TEST_CASE("Bytecode", "[serde][bytecode]") {
 
             const auto bytes = slice.Serialize();
 
-            constexpr auto value_size = sizeof(Value::Data) + sizeof(Value::Type);
-            REQUIRE(bytes.size() == sizeof(u64) + slice.Instructions().size() + value_size * slice.Constants().size());
+            Slice deserialized;
+            deserialized.Deserialize(bytes);
 
-            Slice deser_slice;
-            deser_slice.Deserialize(bytes);
-
-            REQUIRE(deser_slice.Constants().size() == slice.Constants().size());
+            REQUIRE(deserialized.Constants().size() == slice.Constants().size());
             for (u64 i = 0; i < slice.Constants().size(); ++i) {
-                CHECK(deser_slice.Constants()[i] == slice.Constants()[i]);
+                CHECK(deserialized.Constants()[i] == slice.Constants()[i]);
             }
 
-            REQUIRE(deser_slice.Instructions().size() == slice.Instructions().size());
+            REQUIRE(deserialized.Instructions().size() == slice.Instructions().size());
             for (u64 i = 0; i < slice.Instructions().size(); ++i) {
-                CHECK(deser_slice.Instructions()[i] == slice.Instructions()[i]);
+                CHECK(deserialized.Instructions()[i] == slice.Instructions()[i]);
             }
+
+            REQUIRE(deserialized.Constants()[0].GetType() == Float64);
+            CHECK_THAT(deserialized.Constants()[0].AsFloat(),
+                       Catch::Matchers::WithinAbs(23.65, 0.001));
         }
     }
 }
