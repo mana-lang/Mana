@@ -60,4 +60,56 @@ TEST_CASE("Values") {
         REQUIRE(f <= fcmp);
         REQUIRE(u >= i);
     }
+
+    SECTION("Arithmetic operations") {
+        Value x {i64{23}};
+        Value y {f64{41.53}};
+
+        x += i;
+        REQUIRE(x.AsInt() == 65);
+
+        x -= Value{i64{2}};
+        REQUIRE(x.AsInt() == 63);
+
+        x *= Value{i64{2}};
+        REQUIRE(x.AsInt() == 126);
+
+        x /= Value{i64{3}};
+        REQUIRE(x.AsInt() == 42);
+    }
+
+    SECTION("Copy semantics") {
+        Value x {i64{71}};
+        Value y = x;
+
+        REQUIRE(x == y);
+
+        x += Value{i64{1}};
+        REQUIRE(x.AsInt() == 72);
+        REQUIRE(y.AsInt() == 71);
+    }
+
+    SECTION("Move semantics") {
+        Value x {i64{12}};
+        Value y = std::move(x);
+
+        REQUIRE(x.GetType() == Invalid);
+        REQUIRE(x.Length() == 0);
+
+        REQUIRE(y.AsInt() == 12);
+        REQUIRE(y.GetType() == Int64);
+        REQUIRE(y.Length() == 1);
+    }
+
+    SECTION("Array construction") {
+        std::vector<i64> v {8, 12, 31, 24, 15};
+        Value x {v};
+
+        REQUIRE(x.GetType() == Int64);
+        REQUIRE(x.Length() == v.size());
+
+        for (u64 j = 0; j < v.size(); ++j) {
+            REQUIRE(x.BitCasted(j) == std::bit_cast<u64>(v[j]));
+        }
+    }
 }
