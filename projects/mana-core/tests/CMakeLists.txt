@@ -3,6 +3,7 @@ project(mana-core)
 
 add_executable(mana-core-tests
         tests/values.cpp
+        tests/slices.cpp
 )
 
 target_include_directories(mana-core-tests PRIVATE include/)
