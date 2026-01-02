@@ -116,7 +116,7 @@ bool Slice::Deserialize(const ByteCode& bytes) {
 
     const IndexRange pool_range {
         sizeof(count_bytes), // start from end of pool count
-        std::bit_cast<u64>(count_bytes),
+        std::bit_cast<i64>(count_bytes),
     };
 
     std::array<u8, sizeof(Value::Data)>       value_bytes {};
