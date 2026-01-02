@@ -12,9 +12,9 @@ namespace mana::vm {
 using namespace literals;
 
 struct IndexRange {
-    u64 start, end;
+    i64 start, end;
 
-    IndexRange(u64 init_offset, u64 range);
+    IndexRange(i64 init_offset, i64 range);
     IndexRange() = delete;
 };
 
