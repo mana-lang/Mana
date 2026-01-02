@@ -38,7 +38,7 @@ public:
     // for now, the sequence is:
     // - constant pool size in bytes (u64) -> 8
     // - constant pool
-    // --- where (size_bytes) elem:
+    // --- where (size in bytes) elem:
     // ----- (1) type
     // ----- (4) length
     // ----- (8 * length) value(s)

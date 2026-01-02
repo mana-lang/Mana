@@ -52,7 +52,7 @@ ByteCode Slice::SerializeConstants() const {
     ByteCode out;
 
     if (ConstantCount() > std::numeric_limits<u16>::max()) {
-        throw std::runtime_error("Constant count too large to serialize");
+        throw std::runtime_error("Constant Pool too large to serialize");
     }
 
     // serialize all values, including array indices
@@ -85,16 +85,15 @@ u64 Slice::ConstantPoolBytesCount() const {
     u64 out = 0;
 
     for (const auto& value : values) {
-        out += value.length * sizeof(Value::Data);
+        out += value.length * sizeof(Value::Data); // num elements
         out += sizeof(value.type);
-        out += sizeof(value.length);
+        out += sizeof(value.length);               // array length still has to be included
     }
     return out;
 }
 
 u64 Slice::ConstantCount() const {
     u64 out = 0;
-
     for (const auto& value : values) {
         out += value.length;
     }
