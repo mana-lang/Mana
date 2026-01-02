@@ -108,8 +108,8 @@ TEST_CASE("Values") {
         REQUIRE(x.GetType() == Int64);
         REQUIRE(x.Length() == v.size());
 
-        for (u64 j = 0; j < v.size(); ++j) {
-            REQUIRE(x.BitCasted(j) == std::bit_cast<u64>(v[j]));
+        for (u64 k = 0; k < v.size(); ++k) {
+            REQUIRE(x.BitCasted(k) == std::bit_cast<u64>(v[k]));
         }
     }
 }
