@@ -1,4 +1,4 @@
-
+	
 ##### Typing
 All data in **Mana** has a *type*. 
 
@@ -43,12 +43,12 @@ byte
 	// offers an interface over the [u8] type
 string
 
-	// non-type
+	// unit type/non-type
 	// data of this type may not be declared
 	// and functions can not return this type
-null
+none
 ```
-Attempting to create data of type `null` will result in a compile error. Setting a function's return type to `null` indicates it may not return any value; it would be equivalent to a `void` function in *C*.
+Attempting to create data of type `none` will result in a compile error. Setting a function's return type to `none` indicates it *may not* return any value; it would be equivalent to a `void` function in *C*.
 ##### Custom Types
 You may also create your own types in **Mana**. You do so using the `type` keyword.
 
