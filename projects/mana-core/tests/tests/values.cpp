@@ -52,8 +52,8 @@ TEST_CASE("Values") {
         REQUIRE(i != u);
         REQUIRE(i < u);
 
-        Value icmp {i64{42}};
-        Value fcmp {54.3};
+        Value icmp = 42;
+        Value fcmp = 54.3;
 
         REQUIRE(i == icmp);
         REQUIRE(u > fcmp);
@@ -62,35 +62,35 @@ TEST_CASE("Values") {
     }
 
     SECTION("Arithmetic operations") {
-        Value x {i64{23}};
-        Value y {f64{41.53}};
+        Value x = 23;
+        Value y = 41.53;
 
         x += i;
         REQUIRE(x.AsInt() == 65);
 
-        x -= Value{i64{2}};
+        x -= 2;
         REQUIRE(x.AsInt() == 63);
 
-        x *= Value{i64{2}};
+        x *= 2;
         REQUIRE(x.AsInt() == 126);
 
-        x /= Value{i64{3}};
+        x /= 3;
         REQUIRE(x.AsInt() == 42);
     }
 
     SECTION("Copy semantics") {
-        Value x {i64{71}};
+        Value x = 71;
         Value y = x;
 
         REQUIRE(x == y);
 
-        x += Value{i64{1}};
+        x += 1;
         REQUIRE(x.AsInt() == 72);
         REQUIRE(y.AsInt() == 71);
     }
 
     SECTION("Move semantics") {
-        Value x {i64{12}};
+        Value x = 12;
         Value y = std::move(x);
 
         REQUIRE(x.GetType() == Invalid);
