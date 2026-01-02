@@ -28,29 +28,37 @@ TEST_CASE("Slices") {
         Slice s;
 
         // Each Push instruction references a Constant in the Constant Pool
-        // Each constant takes up 2 bytes, allowing for up to 65535 constants
+        // Constant indices are encoded as 16-bit values, allowing up to 65535 constants
         // This means each Push instruction takes up 3 bytes
 
         // Add instructions add the two topmost values on the stack, so they take up 1 byte
         // Return returns the topmost value on the stack, so it takes up only 1 byte
-        s.Write(Op::Push, s.AddConstant(123));  // 3
-        s.Write(Op::Push, s.AddConstant(45));   // 6
-        s.Write(Op::Add);                       // 7
-        s.Write(Op::Return);                    // 8
+        s.Write(Op::Push, s.AddConstant(123)); // 3
+        s.Write(Op::Push, s.AddConstant(45));  // 6
+        s.Write(Op::Push, s.AddConstant(678)); // 9
+        s.Write(Op::Add);                      // 10
+        s.Write(Op::Return);                   // 11
 
         const auto& instr = s.Instructions();
-        REQUIRE(instr.size() == 8);
+        REQUIRE(instr.size() == 11);
 
         REQUIRE(instr[0] == static_cast<u8>(Op::Push));
         REQUIRE(instr[3] == static_cast<u8>(Op::Push));
-        REQUIRE(instr[6] == static_cast<u8>(Op::Add));
-        REQUIRE(instr[7] == static_cast<u8>(Op::Return));
+        REQUIRE(instr[6] == static_cast<u8>(Op::Push));
+        REQUIRE(instr[9] == static_cast<u8>(Op::Add));
+        REQUIRE(instr[10] == static_cast<u8>(Op::Return));
 
-        REQUIRE((instr[1] == 0 && instr[2] == 0)); // points to zeroeth pool element
-        REQUIRE((instr[4] == 0 && instr[5] == 1));
+        auto read_u16_be = [&instr](const u64 i) {
+            return static_cast<u16>(instr[i]) << 8 | static_cast<u16>(instr[i + 1]);
+        };
+
+        REQUIRE(read_u16_be(1) == 0); // points to zeroeth pool element
+        REQUIRE(read_u16_be(4) == 1);
+        REQUIRE(read_u16_be(7) == 2);
 
         REQUIRE(s.Constants()[0] == 123);
         REQUIRE(s.Constants()[1] == 45);
+        REQUIRE(s.Constants()[2] == 678);
     }
 
     SECTION("Serialization") {
