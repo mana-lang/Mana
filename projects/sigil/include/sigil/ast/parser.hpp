@@ -63,16 +63,16 @@ private:
     bool MatchedAssignment(ParseNode& node);
 
     bool MatchedExpression(ParseNode& node);
+    bool MatchedEquality(ParseNode& node);
+    bool MatchedComparison(ParseNode& node);
+    bool MatchedTerm(ParseNode& node);
+    bool MatchedFactor(ParseNode& node);
 
     bool MatchedElemList(ParseNode& node);
     bool MatchedArrayLiteral(ParseNode& node);
     bool MatchedGrouping(ParseNode& node);
     bool MatchedPrimary(ParseNode& node);
     bool MatchedUnary(ParseNode& node);
-    bool MatchedFactor(ParseNode& node);
-    bool MatchedTerm(ParseNode& node);
-    bool MatchedComparison(ParseNode& node);
-    bool MatchedEquality(ParseNode& node);
 
     using MatcherFnPtr   = bool (Parser::*)(ParseNode&);
     using OpCheckerFnPtr = bool (*)(TokenType);

@@ -4,7 +4,7 @@
 
 namespace mana::vm {
 
-IndexRange::IndexRange(const u64 init_offset, const u64 range)
+IndexRange::IndexRange(const i64 init_offset, const i64 range)
     : start(init_offset)
     , end(init_offset + range) {
     if (range < init_offset) {
@@ -37,6 +37,10 @@ const std::vector<Value>& Slice::Constants() const {
 }
 
 ByteCode Slice::Serialize() {
+    if (instructions.empty() && values.empty()) {
+        return {};
+    }
+
     ByteCode out = SerializeConstants();
 
     out.insert(out.end(), instructions.begin(), instructions.end());
@@ -48,7 +52,7 @@ ByteCode Slice::SerializeConstants() const {
     ByteCode out;
 
     if (ConstantCount() > std::numeric_limits<u16>::max()) {
-        throw std::runtime_error("Constant count too large to serialize");
+        throw std::runtime_error("Constant Pool too large to serialize");
     }
 
     // serialize all values, including array indices
@@ -81,16 +85,15 @@ u64 Slice::ConstantPoolBytesCount() const {
     u64 out = 0;
 
     for (const auto& value : values) {
-        out += value.length * sizeof(Value::Data);
+        out += value.length * sizeof(Value::Data); // num elements
         out += sizeof(value.type);
-        out += sizeof(value.length);
+        out += sizeof(value.length);               // array length still has to be included
     }
     return out;
 }
 
 u64 Slice::ConstantCount() const {
     u64 out = 0;
-
     for (const auto& value : values) {
         out += value.length;
     }
@@ -98,21 +101,25 @@ u64 Slice::ConstantCount() const {
 }
 
 bool Slice::Deserialize(const ByteCode& bytes) {
+    if (bytes.empty()) {
+        return false;
+    }
+
     values.clear();
 
     // bytes taken up by value-count slot in the constant pool
-    std::array<u8, sizeof(u64)> count_bytes;
+    std::array<u8, sizeof(u64)> count_bytes {};
     for (i64 i = 0; i < count_bytes.size(); ++i) {
         count_bytes[i] = bytes[i];
     }
 
     const IndexRange pool_range {
         sizeof(count_bytes), // start from end of pool count
-        std::bit_cast<u64>(count_bytes),
+        std::bit_cast<i64>(count_bytes),
     };
 
-    std::array<u8, sizeof(Value::Data)>       value_bytes;
-    std::array<u8, sizeof(Value::LengthType)> length_bytes;
+    std::array<u8, sizeof(Value::Data)>       value_bytes {};
+    std::array<u8, sizeof(Value::LengthType)> length_bytes {};
 
     for (i64 offset = pool_range.start; offset < pool_range.end;) {
         const auto type = static_cast<PrimitiveType>(bytes[offset]);

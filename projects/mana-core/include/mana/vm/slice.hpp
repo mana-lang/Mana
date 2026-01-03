@@ -12,9 +12,9 @@ namespace mana::vm {
 using namespace literals;
 
 struct IndexRange {
-    u64 start, end;
+    i64 start, end;
 
-    IndexRange(u64 init_offset, u64 range);
+    IndexRange(i64 init_offset, i64 range);
     IndexRange() = delete;
 };
 
@@ -38,7 +38,7 @@ public:
     // for now, the sequence is:
     // - constant pool size in bytes (u64) -> 8
     // - constant pool
-    // --- where (size_bytes) elem:
+    // --- where (size in bytes) elem:
     // ----- (1) type
     // ----- (4) length
     // ----- (8 * length) value(s)

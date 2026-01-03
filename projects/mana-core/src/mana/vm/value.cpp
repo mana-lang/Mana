@@ -1,11 +1,10 @@
-#include <cstring>
 #include <mana/vm/value.hpp>
 
 #include <stdexcept>
+#include <cstring>
 #include <utility>
 
 namespace mana::vm {
-
 #ifdef __GNUC__
 #    define FUNCSTR std::string(__PRETTY_FUNCTION__)
 #else
@@ -20,24 +19,28 @@ namespace mana::vm {
 #endif
 
 Value::Value(const i64 i)
-    : data(new Data {.as_i64 = i})
-    , length(1)
-    , type(static_cast<u8>(Int64)) {}
+    : data(new Data{.as_i64 = i})
+      , length(1)
+      , type(static_cast<u8>(Int64)) {}
 
 Value::Value(const u64 u)
-    : data(new Data {.as_u64 = u})
-    , length(1)
-    , type(static_cast<u8>(Uint64)) {}
+    : data(new Data{.as_u64 = u})
+      , length(1)
+      , type(static_cast<u8>(Uint64)) {}
 
 Value::Value(const f64 f)
-    : data(new Data {.as_f64 = f})
-    , length(1)
-    , type(static_cast<u8>(Float64)) {}
+    : data(new Data{.as_f64 = f})
+      , length(1)
+      , type(static_cast<u8>(Float64)) {}
 
 Value::Value(const bool b)
-    : data(new Data {.as_bool = b})
-    , length(1)
-    , type(static_cast<u8>(Bool)) {}
+    : data(new Data{.as_bool = b})
+      , length(1)
+      , type(static_cast<u8>(Bool)) {}
+
+Value::Value(const i32 i) : Value(i64{i}) {}
+
+Value::Value(const u32 u) : Value(u64{u}) {}
 
 Value::LengthType Value::Length() const {
     return length;
@@ -45,10 +48,10 @@ Value::LengthType Value::Length() const {
 
 Value::Value(const PrimitiveType t, const LengthType l)
     : length(l)
-    , type(static_cast<u8>(t)) {
+      , type(static_cast<u8>(t)) {
     if (length == 0 || type == Invalid) {
-        data   = nullptr;
-        type   = Invalid;
+        data = nullptr;
+        type = Invalid;
         length = 0;
         return;
     }
@@ -60,19 +63,19 @@ Value::Value(const PrimitiveType t, const LengthType l)
 
     switch (type) {
     case Int64:
-        data = new Data {.as_i64 = 0};
+        data = new Data{.as_i64 = 0};
         break;
     case Uint64:
-        data = new Data {.as_u64 = 0u};
+        data = new Data{.as_u64 = 0u};
         break;
     case Float64:
-        data = new Data {.as_f64 = 0.0};
+        data = new Data{.as_f64 = 0.0};
         break;
     case Bool:
-        data = new Data {.as_bool = false};
+        data = new Data{.as_bool = false};
         break;
     case Null:
-        data   = nullptr;
+        data = nullptr;
         length = 0;
         break;
     default:
@@ -89,7 +92,7 @@ u64 Value::BitCasted(const u32 at) const {
     case Float64:
         return std::bit_cast<u64>(data[at].as_f64);
     case Bool:
-        return data[at].as_bool;  // sobbing and weeping
+        return data[at].as_bool; // sobbing and weeping
     default:
         UNREACHABLE();
     }
@@ -99,7 +102,8 @@ PrimitiveType Value::GetType() const {
     return static_cast<PrimitiveType>(type);
 }
 
-void Value::WriteValueBytes(const std::array<u8, sizeof(Data)>& bytes, const u32 index) {
+void Value::WriteValueBytes(const std::array<u8, sizeof(Data)>& bytes,
+                            const u32 index) {
     if (index >= length) {
         throw std::runtime_error("Value::WriteValueBytes: Out of bounds write");
     }
@@ -176,8 +180,8 @@ CASE_BOOL:
 
 Value::Value(const Value& other)
     : data(nullptr)
-    , length(other.length)
-    , type(other.type) {
+      , length(other.length)
+      , type(other.type) {
     if (other.data == nullptr || length == 0) {
         return;
     }
@@ -193,20 +197,20 @@ Value::Value(const Value& other)
 
 Value::Value(Value&& other) noexcept
     : data(nullptr)
-    , length(other.length)
-    , type(other.type) {
+      , length(other.length)
+      , type(other.type) {
     if (other.data == nullptr || length == 0) {
         other.length = 0;
-        other.type   = Invalid;
-        other.data   = nullptr;
+        other.type = Invalid;
+        other.data = nullptr;
         return;
     }
 
     data = other.data;
 
-    other.data   = nullptr;
+    other.data = nullptr;
     other.length = 0;
-    other.type   = Invalid;
+    other.type = Invalid;
 }
 
 Value& Value::operator=(const Value& other) {
@@ -217,20 +221,21 @@ Value& Value::operator=(const Value& other) {
     if (data != nullptr) {
         if (length == 1) {
             delete data;
-        } else {
+        }
+        else {
             delete[] data;
         }
     }
 
     if (other.data == nullptr || other.length == 0) {
         length = 0;
-        type   = Invalid;
-        data   = nullptr;
+        type = Invalid;
+        data = nullptr;
         return *this;
     }
 
     length = other.length;
-    type   = other.type;
+    type = other.type;
 
     if (length == 1) {
         data = new Data(*other.data);
@@ -250,25 +255,26 @@ Value& Value::operator=(Value&& other) noexcept {
     if (data != nullptr) {
         if (length == 1) {
             delete data;
-        } else {
+        }
+        else {
             delete[] data;
         }
     }
 
     if (other.data == nullptr || length == 0) {
         length = 0;
-        type   = Invalid;
-        data   = nullptr;
+        type = Invalid;
+        data = nullptr;
         return *this;
     }
 
     length = other.length;
-    type   = other.type;
-    data   = other.data;
+    type = other.type;
+    data = other.data;
 
-    other.data   = nullptr;
+    other.data = nullptr;
     other.length = 0;
-    other.type   = Invalid;
+    other.type = Invalid;
 
     return *this;
 }
@@ -424,5 +430,4 @@ bool Value::BDispatchF(const Data* val) {
 bool Value::BDispatchB(const Data* val) {
     return val->as_bool;
 }
-
-}  // namespace mana::vm
+} // namespace mana::vm

@@ -34,11 +34,9 @@ static const KeywordMap keyword_map = {
     {"data",     TokenType::KW_data      },
     {"fn",       TokenType::KW_fn        },
     {"mut",      TokenType::KW_mut       },
-    {"raw",      TokenType::KW_raw       },
     {"const",    TokenType::KW_const     },
-    {"override", TokenType::KW_override  },
 
-    {"pack",     TokenType::KW_pack      },
+    {"pack",     TokenType::KW_type      },
     {"struct",   TokenType::KW_struct    },
     {"enum",     TokenType::KW_enum      },
     {"generic",  TokenType::KW_generic   },

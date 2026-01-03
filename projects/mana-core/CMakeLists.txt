@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.28)
 project(mana-core VERSION 0.0.1)
 
+enable_testing()
+
 set(MANA_SOURCES
         src/mana/logger.cpp
 
@@ -40,3 +42,5 @@ target_compile_definitions(mana-core PUBLIC MANA_VER_PATCH=${PROJECT_VERSION_PAT
 
 target_compile_definitions(mana-core PUBLIC MANA_VER_STRING="${PROJECT_VERSION}")
 target_compile_definitions(mana-core PUBLIC MANA_NAME="Mana")
+
+add_subdirectory(tests)

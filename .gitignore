@@ -1,6 +1,10 @@
 # Prerequisites
 *.d
 
+# Obsidian cache
+.makemd/
+*.mdb
+
 # clangd cache
 .cache/ 
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "primitive-type.hpp"
+#include <mana/vm/primitive-type.hpp>
 #include <mana/literals.hpp>
 
 #include <array>
@@ -41,6 +41,11 @@ struct Value {
     Value(u64 u);
     Value(f64 f);
     Value(bool b);
+
+    // These constructors exist only to redirect to their long/64-bit variants
+    // To avoid having to be explicit when initializing Values
+    Value(i32 i);
+    Value(u32 u);
 
     MANA_NODISCARD LengthType Length() const;
     MANA_NODISCARD u64        BitCasted(u32 at) const;
