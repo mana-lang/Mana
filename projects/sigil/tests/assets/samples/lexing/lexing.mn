@@ -1,0 +1,64 @@
+// Operators
+! -
++ / - *
+: = => ->
++= *= /= -=
+{} [] () " '
+== != >= <= > <
+. .. :: ; %
+| || &&
+~ & $
+@
+
+
+// Primitives
+i8 i16 i32 i64 isize
+
+u8 u16 u32 u64 usize
+
+f32 f64
+
+bool
+
+fn
+
+char string
+
+byte
+
+none
+
+
+// Literals
+true
+false
+12
+34.56
+
+
+// Control Flow
+return
+
+if else match
+
+loop for in
+
+break skip
+
+and or not
+
+
+// Declarations
+import as module public private
+
+mut data
+
+type interface
+
+enum variant Tag
+
+
+// Compile time
+const when
+
+

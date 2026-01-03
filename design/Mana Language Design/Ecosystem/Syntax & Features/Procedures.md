@@ -78,7 +78,7 @@ The `fn` keyword denotes a special data declaration of type `fn`. The components
 - What type of value the function returns (*if any*)
 - A block of statements to be executed by the function (*if any*)
 
-Data of type `fn` may be executed by putting it in an *invocation expression*, also known as a function call. 
+Data of type `fn` may be executed by putting it in an *invocation expression*, also known as a function call. In these docs we differentiate between the two because a conventional function is only one type of **Procedure**, all of which are covered in this document.
 
 Data of type `fn` may be declared in *any* situation where data may be declared.
 ```rust
@@ -89,12 +89,14 @@ type Foo {
 	c: string
 }
 
+/// Module scope
 fn Bar(a: f64, b: string) -> i16 {
 	fmt.Print("{a} | {b}")
 }
 
 data foo = Foo {.a = 95.4, .b = Bar, .c = "hey"}
 
+// invoked via member access operator
 foo.b(22.7, foo.c) // identical to Bar(22.7, "hey")
 
 
@@ -227,6 +229,14 @@ data x = foo.Fuzz()
 
 ##### Multi-Functions
 Multi-functions are *polymorphic functions* which
+
+##### Operators
+
+##### Generic Functions
+
+##### Closures
+
+##### Delegates
 
 ##### Functors
 Functors are *types* with a defined `()` operator.

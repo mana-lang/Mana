@@ -13,4 +13,4 @@ variant Action {
 }
 ```
 
-Variants are similar to *enums* in that they indicate a list of possibilities, however, variants can hold *any* kind of data, whereas enums are always some kind of integral constant.
+Variants are similar to *enums* in that they indicate a list of possibilities, however, variants can hold *any* kind of data, whereas enums are always some kind of integral constant. This makes Variants a *sum type* and allows you to utilise all the power you would expect from Rust enums.

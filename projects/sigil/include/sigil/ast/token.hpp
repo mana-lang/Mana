@@ -48,7 +48,8 @@ enum class TokenType : ml::u8 {
     Lit_Char,
     Lit_Int,
     Lit_Float,
-    Lit_null,
+
+    Lit_none,
     Lit_true,
     Lit_false,
 
@@ -56,13 +57,13 @@ enum class TokenType : ml::u8 {
     KW_i16,
     KW_i32,
     KW_i64,
-    KW_i128,
+    KW_isize,
 
     KW_u8,
     KW_u16,
     KW_u32,
     KW_u64,
-    KW_u128,
+    KW_usize,
 
     KW_f32,
     KW_f64,
@@ -78,11 +79,12 @@ enum class TokenType : ml::u8 {
     KW_const,
 
     KW_type,
-    KW_struct,
+    KW_Tag,
     KW_enum,
-    KW_generic,
+    KW_variant,
+    KW_interface,
 
-    KW_artifact,
+    KW_module,
     KW_public,
     KW_private,
     KW_import,
@@ -94,10 +96,12 @@ enum class TokenType : ml::u8 {
     KW_match,
 
     KW_loop,
-    KW_while,
     KW_for,
+    KW_in,
     KW_break,
     KW_skip,
+
+    KW_when,
 
     Terminator,
     Eof,

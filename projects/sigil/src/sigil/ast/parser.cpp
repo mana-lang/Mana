@@ -253,7 +253,7 @@ void Parser::ConstructAST(const ParseNode& node) {
 
 bool Parser::Expect(const bool             condition,
                     ParseNode&             node,
-                    const std::string_view error_message) {
+                    const std::string_view error_message) const {
     if (not condition) {
         Log->error("Line {} -> {}", CurrentToken().line, error_message);
         node.rule = Rule::Mistake;
@@ -457,7 +457,7 @@ bool IsLiteral(const TokenType token) {
 
     case Lit_true:
     case Lit_false:
-    case Lit_null:
+    case Lit_none:
         return true;
     default:
         return false;

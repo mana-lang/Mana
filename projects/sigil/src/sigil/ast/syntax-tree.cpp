@@ -57,7 +57,7 @@ LiteralData MakeLiteral(const Token& token) {
     case Lit_Float:
         return {MakeLiteral<f64>(token), mana::PrimitiveType::Float64};
 
-    case Lit_null:
+    case Lit_none:
         return {MakeNullLiteral(), mana::PrimitiveType::Null};
 
     default:

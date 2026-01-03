@@ -114,7 +114,7 @@ match x {
 			CatThings()
 		}
 	Animal.Lizard => DoLizardThings()
-	_ => DoGeneralThings()
+	none => DoGeneralThings()
 }
 ```
 Keep in mind that, because the left side of a match arm is compared against the *subject*, this means that all left-side match arm expressions *must* be *valid comparisons* against the subject.
@@ -135,7 +135,7 @@ match x {
 			=> // keep matching
 		}
 	Animal.Lizard => DoLizardThings()
-	_ => DoGeneralThings()
+	none => DoGeneralThings()
 }
 ```
 
