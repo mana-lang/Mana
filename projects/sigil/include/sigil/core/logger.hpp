@@ -18,4 +18,5 @@
 
 namespace sigil {
 extern mana::SpdLogger Log;
+extern mana::SpdLogger FileLog;
 }

@@ -27,7 +27,7 @@ void Lexer::TokenizeLine() {
     line_start = cursor;
 
     while (cursor < Source.Size() && not IsTerminator()) {
-        if (IsLineComment(Source[cursor])) {
+        if (IsLineComment()) {
             do { ++cursor; }
             while (not IsTerminator());
 
@@ -74,10 +74,15 @@ bool Lexer::Tokenize(const std::filesystem::path& file_path) {
     return true;
 }
 
-void Lexer::PrintTokens() const {
+void Lexer::PrintTokens(const PrintingMode mode, const PrintingPolicy policy) const {
     if (tokens.empty()) {
         Log->error("Lexer token print requested, but token stream was empty.");
         return;
+    }
+
+    if (mode == PrintingMode::Emit) {
+        mana::GlobalLoggerSink().AppendFileLogger("LexResult.tks", Log);
+        Log->set_pattern("%v");
     }
 
     Log->debug("--- Printing Token Stream ---\n");
@@ -91,10 +96,12 @@ void Lexer::PrintTokens() const {
             continue;
         }
         if (type == TokenType::Terminator) {
-            Log->info("[{}:{}] {}: \\n",
-                      line,
-                      column,
-                      magic_enum::enum_name(type));
+            if (policy != PrintingPolicy::SkipTerminators) {
+                Log->info("[{}:{}] {}: \\n",
+                         line,
+                         column,
+                         magic_enum::enum_name(type));
+            }
             continue;
         }
         Log->info("[{}:{}] {}: {}",
@@ -104,6 +111,11 @@ void Lexer::PrintTokens() const {
                   Source.Slice(offset, length));
     }
     Log->debug("End of token stream.\n");
+
+    if (mode == PrintingMode::Emit) {
+        Log->sinks().pop_back();
+        Log->set_pattern(mana::GlobalLoggerSink().DefaultPattern);
+    }
 }
 
 void Lexer::Reset() {
@@ -239,7 +251,7 @@ bool Lexer::LexedOperator() {
         break;
     case '-':
         if (next == '>') {
-            token_type = Op_Arrow; // ->
+            token_type = Op_ReturnType; // ->
             break;
         }
         token_type = Op_Minus;
@@ -252,10 +264,10 @@ bool Lexer::LexedOperator() {
         break;
     case ':':
         if (next == ':') {
-            token_type = Op_ModuleElementAccess; // ::
+            token_type = Op_ScopeResolution; // ::
             break;
         }
-        token_type = Op_Colon;
+        token_type = Op_Annotation;
         break;
     case ',':
         token_type = Op_Comma;
@@ -279,7 +291,7 @@ bool Lexer::LexedOperator() {
         token_type = Op_BracketRight;
         break;
     case '.':
-        token_type = Op_Period;
+        token_type = Op_Access;
         break;
     case '!':
         if (next == '=') {
@@ -303,13 +315,13 @@ bool Lexer::LexedOperator() {
         token_type = Op_GreaterThan;
         break;
     case '&':
-        token_type = Op_Assign_Ref;
+        token_type = Op_Ref;
         break;
     case '~':
-        token_type = Op_Assign_Copy;
+        token_type = Op_Move;
         break;
     case '$':
-        token_type = Op_Assign_Move;
+        token_type = Op_Copy;
         break;
     case '\"':
     case '\'':
@@ -324,12 +336,12 @@ bool Lexer::LexedOperator() {
     switch (token_type) {
         using enum TokenType;
 
-    case Op_ModuleElementAccess:
+    case Op_ScopeResolution:
     case Op_Equality:
     case Op_NotEqual:
     case Op_LessEqual:
     case Op_GreaterEqual:
-    case Op_Arrow:
+    case Op_ReturnType:
         ++token_length;
         ++cursor;
         break;
@@ -370,8 +382,8 @@ bool Lexer::IsWhitespace(const char c) const {
     return c == ' ' || c == '\0' || c == '\n' || c == '\r' || c == '\t';
 }
 
-bool Lexer::IsLineComment(const char c) const {
-    return c == '#';
+bool Lexer::IsLineComment() const {
+    return Source[cursor] == '/' && Source[cursor + 1] == '/';
 }
 
 u16 Lexer::GetTokenColumnIndex(const u16 token_length) const {
