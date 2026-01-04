@@ -81,9 +81,9 @@ import std.fmt
 fn main() {
 	data spell = "Stupefy"
 	
-	data copy = ~spell
+	data copy = $spell
 	data ref  = &spell
-	data move = $spell
+	data move = ~spell
 	
 	fmt.Print(ref) // ok
 	fmt.Print(copy) // ok
@@ -174,7 +174,7 @@ Array types are deduced from their members. If all members in a list literal are
 To enforce that a data member is an array, you may annotate it with the array type specifier.
 ```kotlin
 data tuple = [3.5, 2.2859, 8.3, "how'd i get here", 16.323]
-data array: [f32] = [3.5, 2.2859, 8.3, "how'd i get here", 16.323]
+data values: [f32] = [3.5, 2.2859, 8.3, "how'd i get here", 16.323]
 ```
 >[!danger] Error
 > Data `values` was declared as an array of `f32`, but was assigned a `string`

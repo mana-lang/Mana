@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecosystem/Syntax & Features/Compile Time.md",
+                "file": "Ecosystem/Syntax & Features/Operators.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Compile Time"
+              "title": "Operators"
             }
           }
         ]
@@ -178,23 +178,24 @@
   },
   "active": "6a57afca6b64d7ce",
   "lastOpenFiles": [
-    "Ecosystem/Syntax & Features/Control Flow.md",
-    "Ecosystem/Syntax & Features/Compile Time.md",
-    "Ecosystem/Syntax & Features/Variants.md",
-    "Ecosystem/Syntax & Features/Procedures.md",
-    "Ecosystem/Syntax & Features/Enumerations.md",
-    "Ecosystem/Syntax & Features/Tags.md",
-    "Ecosystem/Syntax & Features/Types.md",
     "Ecosystem/Syntax & Features/Data.md",
-    "Ecosystem/Syntax & Features/Flexible Data.md",
+    "Ecosystem/Syntax & Features/Operators.md",
+    "Ecosystem/Syntax & Features/Tags.md",
+    "Ecosystem/Syntax & Features/Enumerations.md",
+    "Ecosystem/Syntax & Features/Types.md",
+    "Ecosystem/Syntax & Features/Control Flow.md",
+    "Ecosystem/Syntax & Features/Procedures.md",
+    "Ecosystem/Syntax & Features/Compile Time.md",
+    "Ecosystem/Syntax & Features/Attributes.md",
     "Ecosystem/Syntax & Features/Hello World.md",
+    "Ecosystem/Syntax & Features/Variants.md",
+    "Ecosystem/Syntax & Features/Flexible Data.md",
     "_Templates/Dummy.md",
     "_Templates",
     "_Assets/ManaEcosystem.png",
     "_Assets/Info_Troves.png",
     "_Assets/Info_Artifacts.png",
     "_Assets",
-    "Ecosystem/Syntax & Features/Attributes.md",
     "Ecosystem/Syntax & Features",
     "Ecosystem/Overview.md",
     "Ecosystem/Ecosystem.md",

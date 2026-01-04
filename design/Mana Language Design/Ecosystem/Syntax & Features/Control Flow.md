@@ -52,11 +52,10 @@ loop 3..5 i // exclusive variant
 loop if x == 5
 
 // do while x == 5
-loop { ... } if x == 5
-// keep in mind that the 'if' must be
-// on the same line as '}'
+loop { /* some code */ } if x == 5
+// keep in mind that the 'if' must be on the same line as '}'
 // or terminated with a semicolon
-// or it will be considered a separate if statement
+// for it to be part of the loop
 
 // within this loop, 'x' is temporarily mutable
 // and is initially zeroed
