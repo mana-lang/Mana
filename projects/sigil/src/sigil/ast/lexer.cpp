@@ -114,6 +114,8 @@ void Lexer::PrintTokens(const PrintingMode mode, const PrintingPolicy policy) co
                   magic_enum::enum_name(type),
                   Source.Slice(offset, length));
     }
+    
+    Log->debug("");
     Log->debug("End of token stream.\n");
 
     if (mode == PrintingMode::Emit) {
