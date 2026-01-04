@@ -19,17 +19,17 @@ Lexer::Lexer()
     , line_start(0)
     , line_number{0} {}
 
-bool Lexer::IsTerminator() const {
-    return Source[cursor] == '\n'; // add semicolons in the future?
+bool Lexer::IsNewline() const {
+    return Source[cursor] == '\n';
 }
 
 void Lexer::TokenizeLine() {
     line_start = cursor;
 
-    while (cursor < Source.Size() && not IsTerminator()) {
+    while (cursor < Source.Size() && not IsNewline()) {
         if (IsLineComment()) {
             do { ++cursor; }
-            while (not IsTerminator());
+            while (not IsNewline());
 
             break;
         }
