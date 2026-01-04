@@ -1,12 +1,13 @@
 #pragma once
 
+#include <string_view>
 #include <sigil/ast/token.hpp>
 
 #include <unordered_map>
 
 namespace sigil {
 
-using KeywordMap = std::unordered_map<const char*, TokenType>;
+using KeywordMap = std::unordered_map<std::string_view, TokenType>;
 
 // @formatter:off
 static const KeywordMap keyword_map = {

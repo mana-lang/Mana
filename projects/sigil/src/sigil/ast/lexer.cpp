@@ -182,17 +182,20 @@ bool Lexer::LexedString() {
             return false;
         }
 
+        const auto starting_char = current_char;
         current_char = Source[cursor];
 
         // strings must close on the line they're started
         if (current_char == '\n' || (current_char == '\\' && Source[cursor + 1] == 'n')) {
+            Log->error("Unexpected end of string literal");
+            AddToken(TokenType::Unknown, length);
             return false;
         }
 
         ++length;
 
         // end of string
-        if (current_char == '\'' || current_char == '\"') {
+        if (current_char == starting_char) {
             ++cursor;
             break;
         }
@@ -430,7 +433,7 @@ void Lexer::LexUnknown() {
 }
 
 bool Lexer::MatchedKeyword(const std::string_view identifier) {
-    if (const auto keyword = keyword_map.find(identifier.data());
+    if (const auto keyword = keyword_map.find(identifier);
         keyword != keyword_map.end()) {
         AddToken(keyword->second, identifier.length());
         return true;
