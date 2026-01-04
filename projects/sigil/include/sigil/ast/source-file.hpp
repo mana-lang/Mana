@@ -10,28 +10,30 @@ class GlobalSourceFile {
 
     std::string name;
     std::string contents;
-    std::size_t size;
+    std::size_t size = 0;
 
     std::string_view view;
 
     GlobalSourceFile() = default;
-    GlobalSourceFile(const GlobalSourceFile&)            = delete;
-    GlobalSourceFile& operator=(const GlobalSourceFile&) = delete;
-    GlobalSourceFile(GlobalSourceFile&&)                 = delete;
-    GlobalSourceFile& operator=(GlobalSourceFile&&)      = delete;
 
 private:
     bool Load(const std::filesystem::path& file_path);
     void Reset();
 
 public:
-    std::size_t Size() const;
+    SIGIL_NODISCARD std::size_t Size() const;
 
-    std::string_view Name() const;
-    std::string_view Content() const;
-    std::string_view Slice(std::size_t start, std::size_t length) const;
+    SIGIL_NODISCARD std::string_view Name() const;
+    SIGIL_NODISCARD std::string_view Content() const;
+    SIGIL_NODISCARD std::string_view Slice(std::size_t start, std::size_t length) const;
 
     char operator[](std::size_t index) const;
+
+public:
+    GlobalSourceFile(const GlobalSourceFile&)            = delete;
+    GlobalSourceFile& operator=(const GlobalSourceFile&) = delete;
+    GlobalSourceFile(GlobalSourceFile&&)                 = delete;
+    GlobalSourceFile& operator=(GlobalSourceFile&&)      = delete;
 };
 
 SIGIL_NODISCARD const GlobalSourceFile& Source();

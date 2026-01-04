@@ -3,6 +3,7 @@
 #include <sigil/ast/lexer.hpp>
 
 #include <filesystem>
+#include <fstream>
 
 using namespace sigil;
 namespace fs = std::filesystem;
@@ -13,6 +14,14 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
 
     REQUIRE(lexer.Tokenize("assets/samples/lex-tests.mn"));
     lexer.PrintTokens(Lexer::PrintingMode::Emit, Lexer::PrintingPolicy::SkipTerminators);
-    lexer.Reset();
 
+    std::ifstream control_file("assets/control/lex-control.tks");
+    REQUIRE(control_file.good());
+    const std::string control(std::istreambuf_iterator{control_file}, {});
+
+    std::ifstream output_file("lex-tests.tks");
+    REQUIRE(output_file.good());
+    const std::string output(std::istreambuf_iterator{output_file}, {});
+
+    REQUIRE(output == control);
 }
