@@ -114,7 +114,7 @@ void Lexer::PrintTokens(const PrintingMode mode, const PrintingPolicy policy) co
                   magic_enum::enum_name(type),
                   Source.Slice(offset, length));
     }
-    
+
     Log->debug("");
     Log->debug("End of token stream.\n");
 
@@ -141,14 +141,16 @@ std::vector<Token>&& Lexer::RelinquishTokens() {
 bool Lexer::LexedIdentifier() {
     if (char current = Source[cursor];
         current == '_' || std::isalpha(current)) {
-        std::string buffer;
+        const u16 start = cursor;
+        u16 length      = 0;
+
         while (current == '_' || std::isalnum(current)) {
-            buffer.push_back(current);
+            ++length;
             current = Source[++cursor];
         }
 
-        if (not MatchedKeyword(buffer)) {
-            AddToken(TokenType::Identifier, static_cast<u16>(buffer.length()));
+        if (not MatchedKeyword(Source.Slice(start, length))) {
+            AddToken(TokenType::Identifier, length);
         }
         return true;
     }
@@ -185,7 +187,7 @@ bool Lexer::LexedString() {
         }
 
         const auto starting_char = current_char;
-        current_char = Source[cursor];
+        current_char             = Source[cursor];
 
         // strings must close on the line they're started
         if (current_char == '\n' || (current_char == '\\' && Source[cursor + 1] == 'n')) {
@@ -234,6 +236,13 @@ bool Lexer::LexedNumber() {
     // have to eat the dot first
     ++length;
     ++cursor;
+
+    if (not std::isdigit(Source[cursor])) {
+        Log->error("Incomplete float literal.");
+        AddToken(TokenType::Unknown, length);
+        return false;
+    }
+
     eat_digits();
 
     AddToken(TokenType::Lit_Float, length);
