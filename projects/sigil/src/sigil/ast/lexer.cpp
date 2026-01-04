@@ -81,7 +81,11 @@ void Lexer::PrintTokens(const PrintingMode mode, const PrintingPolicy policy) co
     }
 
     if (mode == PrintingMode::Emit) {
-        mana::GlobalLoggerSink().AppendFileLogger("LexResult.tks", Log);
+        Log->sinks().push_back(
+            std::make_shared<spdlog::sinks::basic_file_sink_mt>(
+                std::string(Source.Name()) + ".tks", true
+            )
+        );
         Log->set_pattern("%v");
     }
 
@@ -98,9 +102,9 @@ void Lexer::PrintTokens(const PrintingMode mode, const PrintingPolicy policy) co
         if (type == TokenType::Terminator) {
             if (policy != PrintingPolicy::SkipTerminators) {
                 Log->info("[{}:{}] {}: \\n",
-                         line,
-                         column,
-                         magic_enum::enum_name(type));
+                          line,
+                          column,
+                          magic_enum::enum_name(type));
             }
             continue;
         }
@@ -153,7 +157,7 @@ bool Lexer::LexedIdentifier() {
 // only to be entered when current char is " or '
 bool Lexer::LexedString() {
     // start with current char, so length is 1
-    u16       length = 1;
+    u16 length = 1;
     TokenType literal_type;
 
     char current_char = Source[cursor];
@@ -234,7 +238,7 @@ bool Lexer::LexedNumber() {
 bool Lexer::LexedOperator() {
     const auto current = Source[cursor];
     const auto next    = Source[cursor + 1];
-    TokenType  token_type;
+    TokenType token_type;
 
     switch (current) {
         using enum TokenType;
@@ -393,11 +397,11 @@ u16 Lexer::GetTokenColumnIndex(const u16 token_length) const {
 
 void Lexer::AddToken(const TokenType type, const u16 length) {
     tokens.emplace_back(Token{
-        .line = line_number,
+        .line   = line_number,
         .offset = cursor - length,
         .column = GetTokenColumnIndex(length),
         .length = length,
-        .type = type,
+        .type   = type,
     });
 }
 
@@ -405,11 +409,11 @@ void Lexer::AddEOF() {
     // line number will be out of bounds once this gets called,
     // which is what we want for EOF
     tokens.emplace_back(Token{
-        .line = line_number,
+        .line   = line_number,
         .offset = cursor,
         .column = 0,
         .length = 0,
-        .type = TokenType::Eof,
+        .type   = TokenType::Eof,
     });
 }
 } // namespace sigil

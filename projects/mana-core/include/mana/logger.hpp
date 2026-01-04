@@ -29,7 +29,6 @@ public:
     LoggerSink();
 
     auto CreateLogger(std::string_view name, LogLevel default_level = LogLevel::Debug) -> SpdLogger;
-    void AppendFileLogger(std::string_view file_name, const SpdLogger& logger) const;
 
     std::string DefaultPattern;
 };
