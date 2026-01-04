@@ -18,7 +18,7 @@ auto LoggerSink::CreateLogger(const std::string_view name, LogLevel default_leve
 
 void LoggerSink::AppendFileLogger(const std::string_view file_name, const SpdLogger& logger) const {
     logger->sinks().push_back(
-        std::make_shared<spdlog::sinks::basic_file_sink_mt>(std::string(file_name))
+        std::make_shared<spdlog::sinks::basic_file_sink_mt>(std::string(file_name), true)
     );
 
     logger->set_pattern(DefaultPattern);

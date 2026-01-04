@@ -85,7 +85,7 @@ void Lexer::PrintTokens(const PrintingMode mode, const PrintingPolicy policy) co
         Log->set_pattern("%v");
     }
 
-    Log->debug("--- Printing Token Stream ---\n");
+    Log->debug("Token Stream for '{}'\n", Source.Name());
 
     for (const auto& [line, offset, column, length, type] : tokens) {
         if (type == TokenType::Eof) {
