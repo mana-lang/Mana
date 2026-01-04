@@ -40,7 +40,7 @@ Not all of these operators may be overloaded.
 	- Match arm resolution
 		- `Thing => Stuff()`
 - `|`
-	- Match condition expansion
+	- Multi-match
 		- `Thing | Thung => Stuff()` 
 - `->`  
 	- Return type

@@ -248,9 +248,17 @@ bool Lexer::LexedOperator() {
             token_type = Op_Equality; // ==
             break;
         }
+        if (next == '>') {
+            token_type = Op_MatchArm; // =>
+            break;
+        }
         token_type = Op_Assign;
         break;
     case '+':
+        if (next == '=') {
+            token_type = Op_AddAssign;
+            break;
+        }
         token_type = Op_Plus;
         break;
     case '-':
@@ -258,13 +266,32 @@ bool Lexer::LexedOperator() {
             token_type = Op_ReturnType; // ->
             break;
         }
+        if (next == '=') {
+            token_type = Op_SubAssign;
+            break;
+        }
         token_type = Op_Minus;
         break;
     case '*':
+        if (next == '=') {
+            token_type = Op_MulAssign;
+            break;
+        }
         token_type = Op_Asterisk;
         break;
     case '/':
+        if (next == '=') {
+            token_type = Op_DivAssign;
+            break;
+        }
         token_type = Op_FwdSlash;
+        break;
+    case '%':
+        if (next == '=') {
+            token_type = Op_ModAssign;
+            break;
+        }
+        token_type = Op_Modulo;
         break;
     case ':':
         if (next == ':') {
@@ -295,6 +322,10 @@ bool Lexer::LexedOperator() {
         token_type = Op_BracketRight;
         break;
     case '.':
+        if (next == '.') {
+            token_type = Op_ExclusiveRange;
+            break;
+        }
         token_type = Op_Access;
         break;
     case '!':
@@ -318,7 +349,18 @@ bool Lexer::LexedOperator() {
         }
         token_type = Op_GreaterThan;
         break;
+    case '|':
+        if (next == '|') {
+            token_type = Op_LogicalOr; // ||
+            break;
+        }
+        token_type = Op_MultiMatch;
+        break;
     case '&':
+        if (next == '&') {
+            token_type = Op_LogicalAnd; // &&
+            break;
+        }
         token_type = Op_Ref;
         break;
     case '~':
@@ -326,6 +368,12 @@ bool Lexer::LexedOperator() {
         break;
     case '$':
         token_type = Op_Copy;
+        break;
+    case ';':
+        token_type = Terminator;
+        break;
+    case '@':
+        token_type = Op_Attribute;
         break;
     case '\"':
     case '\'':
@@ -346,6 +394,15 @@ bool Lexer::LexedOperator() {
     case Op_LessEqual:
     case Op_GreaterEqual:
     case Op_ReturnType:
+    case Op_LogicalAnd:
+    case Op_LogicalOr:
+    case Op_MatchArm:
+    case Op_ExclusiveRange:
+    case Op_AddAssign:
+    case Op_SubAssign:
+    case Op_MulAssign:
+    case Op_DivAssign:
+    case Op_ModAssign:
         ++token_length;
         ++cursor;
         break;

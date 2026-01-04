@@ -12,6 +12,13 @@ enum class TokenType : ml::u8 {
     Op_Minus,
     Op_Asterisk,
     Op_FwdSlash,
+    Op_Modulo,
+
+    Op_AddAssign,
+    Op_SubAssign,
+    Op_MulAssign,
+    Op_DivAssign,
+    Op_ModAssign,
 
     Op_Annotation,
     Op_Comma,
@@ -25,6 +32,7 @@ enum class TokenType : ml::u8 {
     Op_BracketRight,
 
     Op_Access,
+    Op_ExclusiveRange,
     Op_ScopeResolution,
 
     Op_LogicalNot,
@@ -38,7 +46,11 @@ enum class TokenType : ml::u8 {
     Op_LogicalAnd,
     Op_LogicalOr,
 
+    Op_MatchArm,
+    Op_MultiMatch,
+
     Op_ReturnType,
+    Op_Attribute,
 
     Op_Ref,
     Op_Move,
