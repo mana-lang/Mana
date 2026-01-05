@@ -13,12 +13,36 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecosystem/Syntax & Features/Control Flow.md",
+                "file": "Ecosystem/Pitch.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Control Flow"
+              "title": "Pitch"
+            }
+          },
+          {
+            "id": "d4fe36da7b5ca1e8",
+            "type": "leaf",
+            "state": {
+              "type": "image",
+              "state": {
+                "file": "_Assets/Info_Troves.png"
+              },
+              "icon": "lucide-image",
+              "title": "Info_Troves"
+            }
+          },
+          {
+            "id": "240c512a2991fe54",
+            "type": "leaf",
+            "state": {
+              "type": "image",
+              "state": {
+                "file": "_Assets/Info_Artifacts.png"
+              },
+              "icon": "lucide-image",
+              "title": "Info_Artifacts"
             }
           }
         ]
@@ -178,13 +202,17 @@
   },
   "active": "6a57afca6b64d7ce",
   "lastOpenFiles": [
+    "Ecosystem/Ecosystem.md",
+    "Ecosystem/Pitch.md",
+    "_Assets/Info_Artifacts.png",
+    "_Assets/Info_Troves.png",
+    "Ecosystem/Syntax & Features/Control Flow.md",
     "Ecosystem/Syntax & Features/Hello World.md",
     "Ecosystem/Syntax & Features/Operators.md",
     "Ecosystem/Syntax & Features/Types.md",
     "Ecosystem/Syntax & Features/Data.md",
     "Ecosystem/Syntax & Features/Tags.md",
     "Ecosystem/Syntax & Features/Enumerations.md",
-    "Ecosystem/Syntax & Features/Control Flow.md",
     "Ecosystem/Syntax & Features/Procedures.md",
     "Ecosystem/Syntax & Features/Compile Time.md",
     "Ecosystem/Syntax & Features/Attributes.md",
@@ -193,12 +221,8 @@
     "_Templates/Dummy.md",
     "_Templates",
     "_Assets/ManaEcosystem.png",
-    "_Assets/Info_Troves.png",
-    "_Assets/Info_Artifacts.png",
     "_Assets",
     "Ecosystem/Syntax & Features",
-    "Ecosystem/Overview.md",
-    "Ecosystem/Ecosystem.md",
     "Ecosystem",
     "Ecosystem/Syntax & Features/v.md",
     "_Assets/Pasted image 20250912060624.png",
@@ -218,7 +242,6 @@
     "Mana",
     "Gameplay/Systems/Player/Combat.md",
     "Gameplay/Systems/Player/Injectors.md",
-    "Gameplay/Systems/Player/Special Combos.md",
     "_Assets/Pasted image 20250812214022.png",
     "_Assets/Pasted image 20250812213834.png",
     "_Assets/Pasted image 20250723010416.png",
