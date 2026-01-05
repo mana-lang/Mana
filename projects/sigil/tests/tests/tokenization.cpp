@@ -2,11 +2,9 @@
 
 #include <sigil/ast/lexer.hpp>
 
-#include <filesystem>
 #include <fstream>
 
 using namespace sigil;
-namespace fs = std::filesystem;
 
 TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
     using enum TokenType;

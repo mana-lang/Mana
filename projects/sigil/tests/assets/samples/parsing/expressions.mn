@@ -1,41 +1,41 @@
-# Literals
+// Literals
 27
 7.27
 "Blue"
 'z'
 true
 false
-null
+none
 
-# Unaries
+// Unaries
 -6
 -45.795
 !true
 
-# Groupings
+// Groupings
 (94)
 (false)
 (34.853)
 !(!false)
 
-# Factors
+// Factors
 26 * 2
 943 / 27.54 * 12.95 / 599 / 2 * 94.323
 5 * ((27 / 5) * 2.5)
 
-# Terms
+// Terms
 63 + 12
 358 - 54.91 + 263.12 - 958 - 23 + 6.37
 97 + ((40 - 17) + 5.2)
 
-# Comparisons
+// Comparisons
 55 > 23
 72 >= 125
 953 <= 24 < 12 > 2384.5 >= false
 
-# Equality
+// Equality
 true == false
 94 != 94
 
-# Expr
+// Expr
 83 == -24 + 94 / (3 * (12 - 34)) < 85.32 >= 120 != !false

@@ -178,6 +178,7 @@ bool Lexer::LexedString() {
         return false;
     }
 
+    const auto starting_char = current_char;
     while (true) {
         if (static_cast<usize>(++cursor) >= Source.Size()) {
             Log->warn("Unexpected EOF while lexing string literal");
@@ -186,7 +187,6 @@ bool Lexer::LexedString() {
             return false;
         }
 
-        const auto starting_char = current_char;
         current_char             = Source[cursor];
 
         // strings must close on the line they're started

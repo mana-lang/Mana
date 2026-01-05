@@ -1,11 +1,6 @@
-# import-decl
-import std.io as io
+import std.fmt
 
-# module-decl
-public module Hello:
-
-# function-decl
+// This is a comment
 fn main() {
-    # module-member-access call-expr
-    io.println("Hello world!")
+	fmt.Print("Hello world!")
 }

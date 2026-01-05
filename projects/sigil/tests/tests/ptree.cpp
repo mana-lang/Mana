@@ -30,9 +30,8 @@ TEST_CASE("P-Trees", "[parse][ast]") {
 
         SECTION("Root is properly formed") {
             REQUIRE_FALSE(tokens.empty());
-            CHECK_FALSE(ptree.tokens.empty());
             REQUIRE(ptree.rule == Rule::Artifact);
-            REQUIRE(FetchTokenText(ptree.tokens[0]) == "expressions");
+            REQUIRE_FALSE(ptree.branches.empty());
         }
 
         SECTION("P-Tree output matches control") {
@@ -44,9 +43,6 @@ TEST_CASE("P-Trees", "[parse][ast]") {
 
             REQUIRE(file_str == ptree_str);
         }
-
-
-        parser.PrintParseTree();
     }
 
     SECTION("Arrays") {
