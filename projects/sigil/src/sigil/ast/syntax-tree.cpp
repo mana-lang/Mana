@@ -99,18 +99,22 @@ If::If(const ParseNode& node) {
     switch (node.branches[0]->rule) {
     case Rule::Literal:
         condition = MakeLiteral(node.branches[0]->tokens[0]).value;
+        condition_type = Rule::Literal;
         break;
     case Rule::Unary:
         condition = std::make_shared<UnaryExpr>(*node.branches[0]);
+        condition_type = Rule::Unary;
         break;
     case Rule::Factor:
     case Rule::Comparison:
     case Rule::Equality:
     case Rule::Term:
         condition = std::make_shared<BinaryExpr>(*node.branches[0]);
+        condition_type = Rule::Expression;
         break;
     default:
         Log->error("Unexpected rule in if-block");
+        condition_type = Rule::Undefined;
         return;
     }
 
@@ -140,11 +144,17 @@ const NodePtr& If::GetElseBranch() const {
     return else_branch;
 }
 
-void If::Accept(Visitor& visitor) const {}
+Rule If::ConditionType() const {
+    return condition_type;
+}
+
+void If::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
 
 /// Statement
 Statement::Statement(const NodePtr&& node)
-    : child(std::move(node)) {}
+    : child(node) {}
 
 void Statement::Accept(Visitor& visitor) const {
     child->Accept(visitor); // forward the visitor, statements don't do anything on their own

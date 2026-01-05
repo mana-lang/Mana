@@ -89,7 +89,7 @@ void MainVisitor::Visit(const ArrayLiteral& node) {
         return;
     }
 
-    const auto ConstructValues = [&array_elems, this] <typename T> () {
+    const auto ConstructValues = [&array_elems, this] <typename T>() {
         std::vector<T> values;
         for (const auto& val : array_elems) {
             values.push_back(dynamic_cast<Literal<T>&>(*val).Get());
@@ -124,6 +124,34 @@ void MainVisitor::Visit(const Statement& node) {
     slice.Write(Op::Return);
 }
 
+void MainVisitor::Visit(const Scope& node) {
+    node.Accept(*this);
+}
+
+void MainVisitor::Visit(const If& node) {
+    // first resolve condition
+    node.GetCondition()->Accept(*this);
+    const u64 jmp_idx = slice.Write(Op::JumpNotEquals, 0xFFFF);
+
+    node.GetThenBlock()->Accept(*this);
+
+    constexpr u64 payload_bytes = 2;
+    const u64 jmp_dist = slice.BackIndex() - (jmp_idx - payload_bytes);
+
+    if (jmp_dist > std::numeric_limits<u16>::max()) {
+        Log->error("Jump distance '{}' exceeded maximum jump size of {}",
+                   jmp_dist,
+                   std::numeric_limits<u16>::max()
+        );
+        slice.Patch(jmp_idx, 0);
+        return;
+    }
+
+    slice.Patch(jmp_idx, jmp_dist);
+
+    //TODO: add jump instruction to Hex and then verify the entire thing
+}
+
 void MainVisitor::Visit(const UnaryExpr& node) {
     node.GetVal().Accept(*this);
 
@@ -144,4 +172,4 @@ void MainVisitor::Visit(const UnaryExpr& node) {
         break;
     }
 }
-}  // namespace circe
+} // namespace circe

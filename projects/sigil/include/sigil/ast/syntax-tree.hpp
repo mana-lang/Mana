@@ -73,21 +73,24 @@ public:
 
     void Accept(Visitor& visitor) const override;
 
-    const std::vector<NodePtr>& GetStatements() const;
+    SIGIL_NODISCARD const std::vector<NodePtr>& GetStatements() const;
 };
 
 class If final : public Node {
+    Rule condition_type;
+
     NodePtr condition;
     NodePtr then_block;
     NodePtr else_branch;
 
 public:
-    If(const ParseNode& node);
-    // If(NodePtr condition, NodePtr then_block, NodePtr else_branch = nullptr);
+    explicit If(const ParseNode& node);
 
-    const NodePtr& GetCondition() const;
-    const NodePtr& GetThenBlock() const;
-    const NodePtr& GetElseBranch() const;
+    SIGIL_NODISCARD const NodePtr& GetCondition() const;
+    SIGIL_NODISCARD const NodePtr& GetThenBlock() const;
+    SIGIL_NODISCARD const NodePtr& GetElseBranch() const;
+
+    SIGIL_NODISCARD Rule ConditionType() const;
 
     void Accept(Visitor& visitor) const override;
 };
@@ -126,10 +129,10 @@ class ArrayLiteral final : public Node {
     mana::PrimitiveType type;
 
 public:
-    ArrayLiteral(const ParseNode& node);
+    explicit ArrayLiteral(const ParseNode& node);
 
-    const std::vector<NodePtr>& GetValues() const;
-    mana::PrimitiveType GetType() const;
+    SIGIL_NODISCARD const std::vector<NodePtr>& GetValues() const;
+    SIGIL_NODISCARD mana::PrimitiveType GetType() const;
 
     void Accept(Visitor& visitor) const override;
 
@@ -144,7 +147,7 @@ class BinaryExpr final : public Node {
 public:
     explicit BinaryExpr(const ParseNode& node);
     explicit BinaryExpr(const std::string& op, const ParseNode& left, const ParseNode& right);
-    explicit BinaryExpr(const std::string_view op, const ParseNode& left, const ParseNode& right);
+    explicit BinaryExpr(std::string_view op, const ParseNode& left, const ParseNode& right);
 
     SIGIL_NODISCARD std::string_view GetOp() const;
 
