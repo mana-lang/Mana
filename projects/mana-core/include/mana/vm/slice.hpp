@@ -26,8 +26,19 @@ class Slice {
     std::vector<Value> values;
 
 public:
-    void Write(Op opcode);
-    void Write(Op opcode, u16 const_pool_index);
+    // returns index where opcode was written
+    u64 Write(Op opcode);
+
+    // returns the index of the opcode, not the payload
+    u64 Write(Op opcode, u16 payload);
+
+    // Modifies a payload for the given opcode
+    // This function exists to amend instruction payloads,
+    // and thus it assumes the index given is for the opcode whose payload you wish to patch,
+    // not the payload itself
+    void Patch(u64 instruction_index, u16 new_value);
+
+    MANA_NODISCARD u64 BackIndex() const;
 
     MANA_NODISCARD const ByteCode& Instructions() const;
     MANA_NODISCARD ByteCode&       Instructions();
