@@ -67,33 +67,30 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
-// class Scope final : public Node {
-//     std::vector<NodePtr> statements;
-//
-// public:
-//     explicit Scope(const ParseNode& node);
-//     explicit Scope(const std::vector<NodePtr>& statements);
-//
-//     void Accept(Visitor& visitor) const override;
-//
-//     const std::vector<NodePtr>& GetStatements() const;
-// };
-//
-// class If final : public Node {
-//     NodePtr condition;
-//     NodePtr then_block;
-//     NodePtr else_branch;
-//
-// public:
-//     If(const ParseNode& node);
-//     If(NodePtr condition, NodePtr then_block, NodePtr else_branch = nullptr);
-//
-//     const Node& GetCondition() const;
-//     const Node& GetThenBlock() const;
-//     const Node& GetElseBranch() const;
-//
-//     void Accept(Visitor& visitor) const override;
-// };
+class Scope final : public Node, public StatementContainer {
+public:
+    explicit Scope(const ParseNode& node);
+
+    void Accept(Visitor& visitor) const override;
+
+    const std::vector<NodePtr>& GetStatements() const;
+};
+
+class If final : public Node {
+    NodePtr condition;
+    NodePtr then_block;
+    NodePtr else_branch;
+
+public:
+    If(const ParseNode& node);
+    // If(NodePtr condition, NodePtr then_block, NodePtr else_branch = nullptr);
+
+    const NodePtr& GetCondition() const;
+    const NodePtr& GetThenBlock() const;
+    const NodePtr& GetElseBranch() const;
+
+    void Accept(Visitor& visitor) const override;
+};
 
 template <LiteralType T>
 class Literal final : public Node {
@@ -195,6 +192,9 @@ void PropagateStatements(const ParseNode& node, SC* root) {
                 break;
             case ArrayLiteral:
                 root->Add<ast::ArrayLiteral>(*n);
+                break;
+            case IfBlock:
+                root->Add<If>(*n);
                 break;
             default:
                 break;

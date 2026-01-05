@@ -34,12 +34,12 @@ auto MakeLiteral<bool>(const Token& token) {
     return std::make_shared<Literal<bool>>(val);
 }
 
-auto MakeNullLiteral() {
+auto MakeNoneLiteral() {
     return std::make_shared<Literal<void>>();
 }
 
 struct LiteralData {
-    NodePtr           value;
+    NodePtr             value;
     mana::PrimitiveType type;
 };
 
@@ -58,7 +58,7 @@ LiteralData MakeLiteral(const Token& token) {
         return {MakeLiteral<f64>(token), mana::PrimitiveType::Float64};
 
     case Lit_none:
-        return {MakeNullLiteral(), mana::PrimitiveType::Null};
+        return {MakeNoneLiteral(), mana::PrimitiveType::None};
 
     default:
         break;
@@ -80,6 +80,67 @@ auto Artifact::GetChildren() const -> const std::vector<NodePtr>& {
 void Artifact::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
+
+Scope::Scope(const ParseNode& node) {
+    PropagateStatements(node, this);
+}
+
+void Scope::Accept(Visitor& visitor) const {
+    for (const auto& stmt : statements) {
+        stmt->Accept(visitor);
+    }
+}
+
+const std::vector<NodePtr>& Scope::GetStatements() const {
+    return statements;
+}
+
+If::If(const ParseNode& node) {
+    switch (node.branches[0]->rule) {
+    case Rule::Literal:
+        condition = MakeLiteral(node.branches[0]->tokens[0]).value;
+        break;
+    case Rule::Unary:
+        condition = std::make_shared<UnaryExpr>(*node.branches[0]);
+        break;
+    case Rule::Factor:
+    case Rule::Comparison:
+    case Rule::Equality:
+    case Rule::Term:
+        condition = std::make_shared<BinaryExpr>(*node.branches[0]);
+        break;
+    default:
+        Log->error("Unexpected rule in if-block");
+        return;
+    }
+
+    then_block = std::make_shared<Scope>(*node.branches[1]);
+
+    if (node.branches.size() > 2) {
+        auto& tail = *node.branches[2]->branches[0];
+        if (tail.rule == Rule::Scope) {
+            else_branch = std::make_shared<Scope>(tail);
+        } else if (tail.rule == Rule::IfBlock) {
+            else_branch = std::make_shared<If>(tail);
+        } else {
+            Log->error("Unexpected rule in else-branch");
+        }
+    }
+}
+
+const NodePtr& If::GetCondition() const {
+    return condition;
+}
+
+const NodePtr& If::GetThenBlock() const {
+    return then_block;
+}
+
+const NodePtr& If::GetElseBranch() const {
+    return else_branch;
+}
+
+void If::Accept(Visitor& visitor) const {}
 
 /// Statement
 Statement::Statement(const NodePtr&& node)

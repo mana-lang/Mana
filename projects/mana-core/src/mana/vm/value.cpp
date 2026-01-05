@@ -74,7 +74,7 @@ Value::Value(const PrimitiveType t, const LengthType l)
     case Bool:
         data = new Data{.as_bool = false};
         break;
-    case Null:
+    case None:
         data = nullptr;
         length = 0;
         break;

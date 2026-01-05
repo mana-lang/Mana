@@ -30,6 +30,9 @@ bool Parser::Parse() {
 
     ConstructAST(parse_tree);
 
+    // In case there's any trailing newlines
+    SkipNewlines();
+
     return Expect(CurrentToken().type == TokenType::Eof,
                   parse_tree,
                   "Expected EOF");
@@ -159,7 +162,7 @@ bool Parser::SkipNewlines() {
 
     while (cursor < tokens.size()
            && CurrentToken().type == TokenType::Terminator
-           && FetchTokenText(CurrentToken()) == "\n") {
+           && FetchTokenText(CurrentToken()) != ";") {
         ret = true;
         ++cursor;
     }
@@ -222,12 +225,6 @@ void Parser::ConstructAST(const ParseNode& node) {
 
     syntax_tree = std::make_unique<Artifact>(Source().Name());
 
-    // Hi from the future: tf does this comment even mean
-    //TODO: this is kind of a bug.
-    // instead of adding all statements to 'root',
-    // we should have a Statement node which can contain different things
-    // the Statement nodes get added to 'root', and the expressions get added to Statement nodes
-
     PropagateStatements(node, syntax_tree.get());
 }
 
@@ -279,12 +276,19 @@ bool Parser::MatchedScope(ParseNode& node) {
     }
 
     auto& scope = node.NewBranch(Rule::Scope);
+    AddCycledTokenTo(scope);
+
+    SkipNewlines();
 
     // exhaust all statements within the scope
     // no Expect() because empty scopes are valid
     while (MatchedStatement(scope)) {}
 
-    Expect(CurrentToken().type == TokenType::Op_BraceRight, scope, "Expected closing brace '}' at end of scope");
+    SkipNewlines();
+
+    if (Expect(CurrentToken().type == TokenType::Op_BraceRight, scope, "Expected closing brace '}' at end of scope")) {
+        AddCycledTokenTo(scope);
+    };
 
     return true;
 }
@@ -295,7 +299,7 @@ bool Parser::MatchedIfBlock(ParseNode& node) {
         return false;
     }
 
-    auto& if_stmt = node.NewBranch(Rule::IfStatement);
+    auto& if_stmt = node.NewBranch(Rule::IfBlock);
     AddCycledTokenTo(if_stmt);
 
     if (not Expect(MatchedExpression(if_stmt), if_stmt, "Expected expression")) {
@@ -556,6 +560,7 @@ bool IsFactorOp(const TokenType token) {
 
     case Op_FwdSlash:
     case Op_Asterisk:
+    case Op_Modulo:
         return true;
     default:
         return false;
