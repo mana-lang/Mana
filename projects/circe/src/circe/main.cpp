@@ -64,7 +64,5 @@ int main() {
     using namespace circe;
     Log->info("Hello from Circe!");
 
-    CreateFile("expr-a.mn");
-    CreateFile("expr-b.mn");
-    CreateFile("expr-c.mn");
+    CreateFile("5-conditionals.mn");
 }

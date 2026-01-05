@@ -136,7 +136,7 @@ void MainVisitor::Visit(const If& node) {
     node.GetThenBlock()->Accept(*this);
 
     constexpr u64 payload_bytes = 2;
-    const u64 jmp_dist = slice.BackIndex() - (jmp_idx - payload_bytes);
+    const u64 jmp_dist = slice.BackIndex() - jmp_idx - payload_bytes;
 
     if (jmp_dist > std::numeric_limits<u16>::max()) {
         Log->error("Jump distance '{}' exceeded maximum jump size of {}",
