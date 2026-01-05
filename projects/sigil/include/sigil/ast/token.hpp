@@ -12,8 +12,15 @@ enum class TokenType : ml::u8 {
     Op_Minus,
     Op_Asterisk,
     Op_FwdSlash,
+    Op_Modulo,
 
-    Op_Colon,
+    Op_AddAssign,
+    Op_SubAssign,
+    Op_MulAssign,
+    Op_DivAssign,
+    Op_ModAssign,
+
+    Op_Annotation,
     Op_Comma,
     Op_Assign,
 
@@ -24,8 +31,9 @@ enum class TokenType : ml::u8 {
     Op_BracketLeft,
     Op_BracketRight,
 
-    Op_Period,
-    Op_ModuleElementAccess,
+    Op_Access,
+    Op_ExclusiveRange,
+    Op_ScopeResolution,
 
     Op_LogicalNot,
     Op_Equality,
@@ -38,17 +46,22 @@ enum class TokenType : ml::u8 {
     Op_LogicalAnd,
     Op_LogicalOr,
 
-    Op_Arrow,
+    Op_MatchArm,
+    Op_MultiMatch,
 
-    Op_Assign_Ref,
-    Op_Assign_Copy,
-    Op_Assign_Move,
+    Op_ReturnType,
+    Op_Attribute,
+
+    Op_Ref,
+    Op_Move,
+    Op_Copy,
 
     Lit_String,
     Lit_Char,
     Lit_Int,
     Lit_Float,
-    Lit_null,
+
+    Lit_none,
     Lit_true,
     Lit_false,
 
@@ -56,13 +69,13 @@ enum class TokenType : ml::u8 {
     KW_i16,
     KW_i32,
     KW_i64,
-    KW_i128,
+    KW_isize,
 
     KW_u8,
     KW_u16,
     KW_u32,
     KW_u64,
-    KW_u128,
+    KW_usize,
 
     KW_f32,
     KW_f64,
@@ -78,11 +91,12 @@ enum class TokenType : ml::u8 {
     KW_const,
 
     KW_type,
-    KW_struct,
+    KW_Tag,
     KW_enum,
-    KW_generic,
+    KW_variant,
+    KW_interface,
 
-    KW_artifact,
+    KW_module,
     KW_public,
     KW_private,
     KW_import,
@@ -94,10 +108,12 @@ enum class TokenType : ml::u8 {
     KW_match,
 
     KW_loop,
-    KW_while,
     KW_for,
+    KW_in,
     KW_break,
     KW_skip,
+
+    KW_when,
 
     Terminator,
     Eof,

@@ -6,16 +6,18 @@ using namespace mana::literals;
 using namespace ast;
 
 ParseNode::ParseNode(const Rule r)
-    : parent {nullptr}
-    , rule {r} {}
+    : parent{nullptr}
+    , rule{r} {}
 
 ParseNode::ParseNode(ParseNode* p, const Rule r)
-    : parent {p}
-    , rule {r} {}
+    : parent{p}
+    , rule{r} {}
 
 ParseNode& ParseNode::NewBranch(const Rule new_rule) {
     // because the module node is the root, it's useless to list it as a parent
-    return *branches.emplace_back(std::make_shared<ParseNode>(rule == Rule::Artifact ? nullptr : this, new_rule));
+    return *branches.emplace_back(
+        std::make_shared<ParseNode>(rule == Rule::Artifact ? nullptr : this, new_rule)
+    );
 }
 
 void ParseNode::PopBranch() {
@@ -92,4 +94,4 @@ void ParseNode::AcquireTailBranchOf(ParseNode& target) {
     branches.back()->parent = this;
     target.branches.erase(target.branches.end() - 1);
 }
-}  // namespace sigil
+} // namespace sigil

@@ -1,0 +1,123 @@
+
+##### List of Mana operators
+Not all of these operators may be overloaded.
+
+- `!`
+	- Logical NOT
+		- `!expr`
+- `-`
+	- Unary negation
+		- `-23`
+	- Subtraction
+		- `a - b`
+- `-=`  
+	- Subtract-and-assign
+		- `a -= b`
+- `+`
+	- Addition
+		- `a + b`
+- `+=` 
+	- Add-and-assign
+		- `a += b`
+- `/`
+	- Division
+		- `a / b`
+- `/=` 
+	- Divide-and-assign
+		- `a /= b`
+- `*`
+	- Multiplication
+		- `a * b`
+- `*=` 
+	- Multiply-and-assign
+		- `a *= b`
+- `:`
+	- Annotation
+		- `x: i32`
+-  `=` 
+	- Assignment
+		- `x = y`
+- `=>` 
+	- Match arm resolution
+		- `Thing => Stuff()`
+- `|`
+	- Multi-match
+		- `Thing | Thung => Stuff()` 
+- `->`  
+	- Return type
+		- `fn() -> i32`
+- `{}` 
+	- Scope
+		- `{ data x = 23 }`
+- `[]` 
+	- List Literal
+		- `[a, b, c]`
+- `()`
+	- Parameter List
+		- `fn (a: i32, b: bool)`
+	- Invocation Argument List
+		- `foo(a, b)`
+	- Parenthesized Expression (Grouping)
+		- `(a + b) / c`
+- `"` 
+	- String Literal
+		- `"Hey"`
+- `'`
+	- Character Literal
+		- `'\n'`
+- `==` 
+	- Equality Comparison
+		- `a == b`
+- `!=` 
+	- Non-Equality Comparison
+		- `a != b`
+- `>=` 
+	- Greater-than-or-equal-to Comparison
+		- `a >= b`
+- `<=` 
+	- Lesser-than-or-equal-to Comparison
+		- `a <= b`
+- `>` 
+	- Greater-than Comparison
+		- `a > b`
+- `<`
+	- Lesser-than Comparison
+		- `a < b`
+- `.` 
+	-  Member access
+		- `a.foo(c.bar)`
+- `..`
+	- Exclusive range
+		- `5..12`
+- `::` 
+	- Scope resolution
+		- `import Foo::Bar`
+- `;` 
+	- Statement terminator
+		- `data x = 5;`
+- `%`
+	- Remainder
+		- `z = 5 % 3`
+- `%=`
+	- Remainder-and-assign
+		- `z %= y`
+- `||`
+	- Short-circuiting logical OR
+		- `a || b`
+- `&&`
+	- Short-circuiting logical AND
+		- `a && b`
+- `~`
+	- Inclusive range
+		- `2~5`
+	- Explicit move
+		- `data x = ~y`
+- `&` 
+	- Explicit reference
+		- `data x = &y`
+- `$`
+	- Explicit copy
+		- `data x = $y`
+- `@`
+	- Attribute
+		- `@[Flexible]`

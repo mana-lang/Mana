@@ -19,17 +19,17 @@ Lexer::Lexer()
     , line_start(0)
     , line_number{0} {}
 
-bool Lexer::IsTerminator() const {
-    return Source[cursor] == '\n'; // add semicolons in the future?
+bool Lexer::IsNewline() const {
+    return Source[cursor] == '\n';
 }
 
 void Lexer::TokenizeLine() {
     line_start = cursor;
 
-    while (cursor < Source.Size() && not IsTerminator()) {
-        if (IsLineComment(Source[cursor])) {
+    while (cursor < Source.Size() && not IsNewline()) {
+        if (IsLineComment()) {
             do { ++cursor; }
-            while (not IsTerminator());
+            while (not IsNewline());
 
             break;
         }
@@ -74,13 +74,22 @@ bool Lexer::Tokenize(const std::filesystem::path& file_path) {
     return true;
 }
 
-void Lexer::PrintTokens() const {
+void Lexer::PrintTokens(const PrintingMode mode, const PrintingPolicy policy) const {
     if (tokens.empty()) {
         Log->error("Lexer token print requested, but token stream was empty.");
         return;
     }
 
-    Log->debug("--- Printing Token Stream ---\n");
+    if (mode == PrintingMode::Emit) {
+        Log->sinks().push_back(
+            std::make_shared<spdlog::sinks::basic_file_sink_mt>(
+                std::string(Source.Name()) + ".tks", true
+            )
+        );
+        Log->set_pattern("%v");
+    }
+
+    Log->debug("Token Stream for '{}'\n", Source.Name());
 
     for (const auto& [line, offset, column, length, type] : tokens) {
         if (type == TokenType::Eof) {
@@ -91,10 +100,12 @@ void Lexer::PrintTokens() const {
             continue;
         }
         if (type == TokenType::Terminator) {
-            Log->info("[{}:{}] {}: \\n",
-                      line,
-                      column,
-                      magic_enum::enum_name(type));
+            if (policy != PrintingPolicy::SkipTerminators) {
+                Log->info("[{}:{}] {}: \\n",
+                          line,
+                          column,
+                          magic_enum::enum_name(type));
+            }
             continue;
         }
         Log->info("[{}:{}] {}: {}",
@@ -103,7 +114,14 @@ void Lexer::PrintTokens() const {
                   magic_enum::enum_name(type),
                   Source.Slice(offset, length));
     }
+
+    Log->debug("");
     Log->debug("End of token stream.\n");
+
+    if (mode == PrintingMode::Emit) {
+        Log->sinks().pop_back();
+        Log->set_pattern(mana::GlobalLoggerSink().DefaultPattern);
+    }
 }
 
 void Lexer::Reset() {
@@ -123,14 +141,16 @@ std::vector<Token>&& Lexer::RelinquishTokens() {
 bool Lexer::LexedIdentifier() {
     if (char current = Source[cursor];
         current == '_' || std::isalpha(current)) {
-        std::string buffer;
+        const u16 start = cursor;
+        u16 length      = 0;
+
         while (current == '_' || std::isalnum(current)) {
-            buffer.push_back(current);
+            ++length;
             current = Source[++cursor];
         }
 
-        if (not MatchedKeyword(buffer)) {
-            AddToken(TokenType::Identifier, static_cast<u16>(buffer.length()));
+        if (not MatchedKeyword(Source.Slice(start, length))) {
+            AddToken(TokenType::Identifier, length);
         }
         return true;
     }
@@ -141,7 +161,7 @@ bool Lexer::LexedIdentifier() {
 // only to be entered when current char is " or '
 bool Lexer::LexedString() {
     // start with current char, so length is 1
-    u16       length = 1;
+    u16 length = 1;
     TokenType literal_type;
 
     char current_char = Source[cursor];
@@ -158,6 +178,7 @@ bool Lexer::LexedString() {
         return false;
     }
 
+    const auto starting_char = current_char;
     while (true) {
         if (static_cast<usize>(++cursor) >= Source.Size()) {
             Log->warn("Unexpected EOF while lexing string literal");
@@ -166,17 +187,19 @@ bool Lexer::LexedString() {
             return false;
         }
 
-        current_char = Source[cursor];
+        current_char             = Source[cursor];
 
         // strings must close on the line they're started
         if (current_char == '\n' || (current_char == '\\' && Source[cursor + 1] == 'n')) {
+            Log->error("Unexpected end of string literal");
+            AddToken(TokenType::Unknown, length);
             return false;
         }
 
         ++length;
 
         // end of string
-        if (current_char == '\'' || current_char == '\"') {
+        if (current_char == starting_char) {
             ++cursor;
             break;
         }
@@ -213,6 +236,13 @@ bool Lexer::LexedNumber() {
     // have to eat the dot first
     ++length;
     ++cursor;
+
+    if (not std::isdigit(Source[cursor])) {
+        Log->error("Incomplete float literal.");
+        AddToken(TokenType::Unknown, length);
+        return false;
+    }
+
     eat_digits();
 
     AddToken(TokenType::Lit_Float, length);
@@ -222,7 +252,7 @@ bool Lexer::LexedNumber() {
 bool Lexer::LexedOperator() {
     const auto current = Source[cursor];
     const auto next    = Source[cursor + 1];
-    TokenType  token_type;
+    TokenType token_type;
 
     switch (current) {
         using enum TokenType;
@@ -232,30 +262,57 @@ bool Lexer::LexedOperator() {
             token_type = Op_Equality; // ==
             break;
         }
+        if (next == '>') {
+            token_type = Op_MatchArm; // =>
+            break;
+        }
         token_type = Op_Assign;
         break;
     case '+':
+        if (next == '=') {
+            token_type = Op_AddAssign;
+            break;
+        }
         token_type = Op_Plus;
         break;
     case '-':
         if (next == '>') {
-            token_type = Op_Arrow; // ->
+            token_type = Op_ReturnType; // ->
+            break;
+        }
+        if (next == '=') {
+            token_type = Op_SubAssign;
             break;
         }
         token_type = Op_Minus;
         break;
     case '*':
+        if (next == '=') {
+            token_type = Op_MulAssign;
+            break;
+        }
         token_type = Op_Asterisk;
         break;
     case '/':
+        if (next == '=') {
+            token_type = Op_DivAssign;
+            break;
+        }
         token_type = Op_FwdSlash;
+        break;
+    case '%':
+        if (next == '=') {
+            token_type = Op_ModAssign;
+            break;
+        }
+        token_type = Op_Modulo;
         break;
     case ':':
         if (next == ':') {
-            token_type = Op_ModuleElementAccess; // ::
+            token_type = Op_ScopeResolution; // ::
             break;
         }
-        token_type = Op_Colon;
+        token_type = Op_Annotation;
         break;
     case ',':
         token_type = Op_Comma;
@@ -279,7 +336,11 @@ bool Lexer::LexedOperator() {
         token_type = Op_BracketRight;
         break;
     case '.':
-        token_type = Op_Period;
+        if (next == '.') {
+            token_type = Op_ExclusiveRange;
+            break;
+        }
+        token_type = Op_Access;
         break;
     case '!':
         if (next == '=') {
@@ -302,14 +363,31 @@ bool Lexer::LexedOperator() {
         }
         token_type = Op_GreaterThan;
         break;
+    case '|':
+        if (next == '|') {
+            token_type = Op_LogicalOr; // ||
+            break;
+        }
+        token_type = Op_MultiMatch;
+        break;
     case '&':
-        token_type = Op_Assign_Ref;
+        if (next == '&') {
+            token_type = Op_LogicalAnd; // &&
+            break;
+        }
+        token_type = Op_Ref;
         break;
     case '~':
-        token_type = Op_Assign_Copy;
+        token_type = Op_Move;
         break;
     case '$':
-        token_type = Op_Assign_Move;
+        token_type = Op_Copy;
+        break;
+    case ';':
+        token_type = Terminator;
+        break;
+    case '@':
+        token_type = Op_Attribute;
         break;
     case '\"':
     case '\'':
@@ -324,12 +402,21 @@ bool Lexer::LexedOperator() {
     switch (token_type) {
         using enum TokenType;
 
-    case Op_ModuleElementAccess:
+    case Op_ScopeResolution:
     case Op_Equality:
     case Op_NotEqual:
     case Op_LessEqual:
     case Op_GreaterEqual:
-    case Op_Arrow:
+    case Op_ReturnType:
+    case Op_LogicalAnd:
+    case Op_LogicalOr:
+    case Op_MatchArm:
+    case Op_ExclusiveRange:
+    case Op_AddAssign:
+    case Op_SubAssign:
+    case Op_MulAssign:
+    case Op_DivAssign:
+    case Op_ModAssign:
         ++token_length;
         ++cursor;
         break;
@@ -357,7 +444,7 @@ void Lexer::LexUnknown() {
 }
 
 bool Lexer::MatchedKeyword(const std::string_view identifier) {
-    if (const auto keyword = keyword_map.find(identifier.data());
+    if (const auto keyword = keyword_map.find(identifier);
         keyword != keyword_map.end()) {
         AddToken(keyword->second, identifier.length());
         return true;
@@ -370,8 +457,8 @@ bool Lexer::IsWhitespace(const char c) const {
     return c == ' ' || c == '\0' || c == '\n' || c == '\r' || c == '\t';
 }
 
-bool Lexer::IsLineComment(const char c) const {
-    return c == '#';
+bool Lexer::IsLineComment() const {
+    return Source[cursor] == '/' && Source[cursor + 1] == '/';
 }
 
 u16 Lexer::GetTokenColumnIndex(const u16 token_length) const {
@@ -381,11 +468,11 @@ u16 Lexer::GetTokenColumnIndex(const u16 token_length) const {
 
 void Lexer::AddToken(const TokenType type, const u16 length) {
     tokens.emplace_back(Token{
-        .line = line_number,
+        .line   = line_number,
         .offset = cursor - length,
         .column = GetTokenColumnIndex(length),
         .length = length,
-        .type = type,
+        .type   = type,
     });
 }
 
@@ -393,11 +480,11 @@ void Lexer::AddEOF() {
     // line number will be out of bounds once this gets called,
     // which is what we want for EOF
     tokens.emplace_back(Token{
-        .line = line_number,
+        .line   = line_number,
         .offset = cursor,
         .column = 0,
         .length = 0,
-        .type = TokenType::Eof,
+        .type   = TokenType::Eof,
     });
 }
 } // namespace sigil

@@ -7,5 +7,6 @@
   "textFontFamily": "Century Gothic",
   "baseFontSize": 16,
   "showViewHeader": true,
-  "showRibbon": false
+  "showRibbon": false,
+  "monospaceFontFamily": "Fira Code,MesloLGS NF"
 }

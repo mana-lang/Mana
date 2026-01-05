@@ -29,7 +29,7 @@ literal    = number
            | string
            | "true"
            | "false"
-           | "null"
+           | "none"
            ;
 array_literal = '[' elem_list? ']'   ;
 elem_list = expr (',' expr)* (',')?  ;

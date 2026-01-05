@@ -22,12 +22,24 @@ class Lexer {
     std::vector<Token> tokens;
 
 public:
+    enum class PrintingMode {
+        Print,
+        Emit,
+    };
+
+    enum class PrintingPolicy {
+        All,
+        SkipTerminators,
+    };
+
+public:
     static thread_local GlobalSourceFile Source;
 
     Lexer();
 
     bool Tokenize(const std::filesystem::path& file_path);
-    void PrintTokens() const;
+    void PrintTokens(PrintingMode mode     = PrintingMode::Print,
+                     PrintingPolicy policy = PrintingPolicy::All) const;
     void Reset();
 
     SIGIL_NODISCARD std::vector<Token>&& RelinquishTokens();
@@ -49,10 +61,9 @@ private:
     SIGIL_NODISCARD bool MatchedKeyword(std::string_view identifier);
 
     SIGIL_NODISCARD bool IsWhitespace(char c) const;
-    SIGIL_NODISCARD bool IsLineComment(char c) const;
-    SIGIL_NODISCARD bool IsTerminator() const;
+    SIGIL_NODISCARD bool IsLineComment() const;
+    SIGIL_NODISCARD bool IsNewline() const;
 
     void AddEOF();
 };
-
 } // namespace sigil

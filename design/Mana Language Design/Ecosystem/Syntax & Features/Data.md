@@ -81,9 +81,9 @@ import std.fmt
 fn main() {
 	data spell = "Stupefy"
 	
-	data copy = ~spell
+	data copy = $spell
 	data ref  = &spell
-	data move = $spell
+	data move = ~spell
 	
 	fmt.Print(ref) // ok
 	fmt.Print(copy) // ok
@@ -126,13 +126,13 @@ fn main() {
 > z: 0
 
 ##### Uninitialized Data
-Unassigned data declarations are zeroed by default in **Mana**. To leave it uninitialized, you must do so explicitly with the `null` keyword.
+Unassigned data declarations are zeroed by default in **Mana**. To leave it uninitialized, you must do so explicitly with the `none` keyword.
 ```kotlin  
 import std.fmt
 
 fn main() {
 	// data will be uninitialized.
-    data x: bool = null
+    data x: bool = none
     
     // using it is either a compile error, or undefined behaviour
     fmt.Print(x) 
@@ -161,7 +161,7 @@ const Something: string
 > Constant `Something` was not assigned
 
 ##### Arrays
-Arrays may be declared with the square *bracket* operators, and indexed the *same* way.
+Arrays may be declared with the *list* operator, and indexed the *same* way.
 ```kotlin
 data numbers = [1, 2, 3, 4, 5]
 fmt.Print("{numbers[2]}")
@@ -174,7 +174,7 @@ Array types are deduced from their members. If all members in a list literal are
 To enforce that a data member is an array, you may annotate it with the array type specifier.
 ```kotlin
 data tuple = [3.5, 2.2859, 8.3, "how'd i get here", 16.323]
-data array: [f32] = [3.5, 2.2859, 8.3, "how'd i get here", 16.323]
+data values: [f32] = [3.5, 2.2859, 8.3, "how'd i get here", 16.323]
 ```
 >[!danger] Error
 > Data `values` was declared as an array of `f32`, but was assigned a `string`
@@ -183,7 +183,7 @@ The array type specifier may contain either a type, or a type and an integer val
 
 If the array is not immediately assigned, its size *must* be specified in the declaration.
 
-An array which is not immediately assigned will have all its values *zeroed* by default. Much like scalar data, if you want it to be uninitialized, it must be assigned `null`.
+An array which is not immediately assigned will have all its values *zeroed* by default. Much like scalar data, if you want it to be uninitialized, it must be assigned `none`.
 ```kotlin
 // creates immutable 'x' of size '5' with type 'f64'
 // all its elements will have the value '0.0'
@@ -193,12 +193,12 @@ data x: [f64, 5]
 data y: [f64] 
 
 // will be uninitialized
-mut data z: [i32, 8] = null
+mut data z: [i32, 8] = none
 
 // error
-data w: [i32, 8] = null
+data w: [i32, 8] = none
 ```
 >[!danger] Error
 > Data `y` was declared as an array of `f64`, but was not assigned, and has no size specifier
 > 
-> Data `w` was assigned `null`, but it is immutable. There is no situation where it could be used
+> Data `w` was assigned `none`, but it is immutable. There is no situation where it could be used

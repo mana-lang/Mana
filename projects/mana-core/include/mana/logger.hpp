@@ -7,6 +7,8 @@
 
 #include <memory>
 
+#include "../../../../.build/release/_deps/spdlog-src/include/spdlog/sinks/basic_file_sink.h"
+
 namespace mana {
 enum class LogLevel : literals::u8 {
     Trace,
@@ -14,7 +16,7 @@ enum class LogLevel : literals::u8 {
     Info,
     Warn,
     Error,
-    Critical,  // Terminates execution
+    Critical, // Terminates execution
     Off
 };
 
@@ -27,12 +29,13 @@ public:
     LoggerSink();
 
     auto CreateLogger(std::string_view name, LogLevel default_level = LogLevel::Debug) -> SpdLogger;
+
+    std::string DefaultPattern;
 };
 
 inline LoggerSink& GlobalLoggerSink() {
     static LoggerSink logger_sink;
     return logger_sink;
 }
-// extern LoggerSink GlobalLoggerSink;
 
-}  // namespace mana
+} // namespace mana

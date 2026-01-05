@@ -5,6 +5,8 @@
 
 #include <fstream>
 
+namespace ml = mana::literals;
+
 namespace sigil {
 bool GlobalSourceFile::Load(const std::filesystem::path& file_path) {
     std::ifstream source_file(file_path);
@@ -15,7 +17,7 @@ bool GlobalSourceFile::Load(const std::filesystem::path& file_path) {
 
     size = std::filesystem::file_size(file_path);
     contents.resize(size);
-    source_file.read(contents.data(), size);
+    source_file.read(contents.data(), static_cast<ml::i64>(size));
     source_file.close();
 
     name = file_path.filename().replace_extension("").string();

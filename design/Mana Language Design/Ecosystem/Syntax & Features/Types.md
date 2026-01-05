@@ -52,7 +52,7 @@ Attempting to create data of type `none` will result in a compile error. Setting
 ##### Custom Types
 You may also create your own types in **Mana**. You do so using the `type` keyword.
 
-A user-defined type block consists of the type keyword and the type's name, followed by a block of *type members* each with their own type specified.
+A user-defined type block consists of the type keyword and the type's name, followed by a block of *type members* or *fields*, each with their own type specified.
 ```rust
 type Foo {
 	a: i32

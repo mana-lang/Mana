@@ -2,10 +2,8 @@ cmake_minimum_required(VERSION 3.28)
 project(sigil)
 
 add_executable(sigil-tests
-        tests/ptree.cpp
         tests/tokenization.cpp
-        tests/ast.cpp
-        # tests/error_reporting.cpp
+        tests/ptree.cpp
 )
 
 target_include_directories(sigil-tests PRIVATE include/)

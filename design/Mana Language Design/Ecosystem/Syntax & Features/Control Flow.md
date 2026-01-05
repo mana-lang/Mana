@@ -52,11 +52,10 @@ loop 3..5 i // exclusive variant
 loop if x == 5
 
 // do while x == 5
-loop { ... } if x == 5
-// keep in mind that the 'if' must be
-// on the same line as '}'
+loop { /* some code */ } if x == 5
+// keep in mind that the 'if' must be on the same line as '}'
 // or terminated with a semicolon
-// or it will be considered a separate if statement
+// for it to be part of the loop
 
 // within this loop, 'x' is temporarily mutable
 // and is initially zeroed
@@ -114,7 +113,7 @@ match x {
 			CatThings()
 		}
 	Animal.Lizard => DoLizardThings()
-	_ => DoGeneralThings()
+	none => DoGeneralThings()
 }
 ```
 Keep in mind that, because the left side of a match arm is compared against the *subject*, this means that all left-side match arm expressions *must* be *valid comparisons* against the subject.
@@ -135,7 +134,7 @@ match x {
 			=> // keep matching
 		}
 	Animal.Lizard => DoLizardThings()
-	_ => DoGeneralThings()
+	none => DoGeneralThings()
 }
 ```
 
