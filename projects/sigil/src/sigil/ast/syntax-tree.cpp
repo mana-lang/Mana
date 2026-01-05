@@ -74,7 +74,7 @@ auto Artifact::GetName() const -> std::string_view {
 }
 
 auto Artifact::GetChildren() const -> const std::vector<NodePtr>& {
-    return children;
+    return statements;
 }
 
 void Artifact::Accept(Visitor& visitor) const {

@@ -222,33 +222,13 @@ void Parser::ConstructAST(const ParseNode& node) {
 
     syntax_tree = std::make_unique<Artifact>(Source().Name());
 
+    // Hi from the future: tf does this comment even mean
     //TODO: this is kind of a bug.
     // instead of adding all statements to 'root',
     // we should have a Statement node which can contain different things
     // the Statement nodes get added to 'root', and the expressions get added to Statement nodes
-    const auto root = dynamic_cast<Artifact*>(syntax_tree.get());
-    for (const auto& stmt : node.branches) {
-        for (const auto& n : stmt->branches) {
-            using enum Rule;
 
-            switch (n->rule) {
-            case Equality:
-            case Comparison:
-            case Term:
-            case Factor:
-                root->AddChild<BinaryExpr>(*n);
-                break;
-            case Unary:
-                root->AddChild<UnaryExpr>(*n);
-                break;
-            case ArrayLiteral:
-                root->AddChild<ast::ArrayLiteral>(*n);
-                break;
-            default:
-                break;
-            }
-        }
-    }
+    PropagateStatements(node, syntax_tree.get());
 }
 
 bool Parser::Expect(const bool condition,

@@ -16,7 +16,8 @@ class Parser {
     TokenStream tokens;
     ml::i64     cursor;
     ParseNode   parse_tree;
-    ASTNode     syntax_tree;
+
+    std::unique_ptr<ast::Artifact> syntax_tree;
 
 public:
     explicit Parser(const TokenStream&& tokens);
