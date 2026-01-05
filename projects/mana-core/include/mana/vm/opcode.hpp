@@ -27,6 +27,9 @@ enum class Op : u8 {
     NotEquals,
 
     Not,
+
+    Jump,
+    JumpNotEquals,
 };
 
 }  // namespace mana::vm

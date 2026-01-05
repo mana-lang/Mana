@@ -13,9 +13,13 @@ enum class Rule : ml::u8 {
 
     Statement,
 
+    Scope,
+
+    IfStatement,
+    IfTail,
+
     Declaration,
     Assignment,
-
     Expression,
 
     Grouping,

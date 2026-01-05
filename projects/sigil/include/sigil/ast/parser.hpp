@@ -54,10 +54,25 @@ private:
     bool ProgressedParseTree(ParseNode& node);
 
     void ConstructAST(const ParseNode& node);
+
+    /// Verifies a required parsing condition and records a recoverable syntax error.
+    ///
+    /// If `condition` is false, logs an error at the current token, marks `node` as
+    /// `Rule::Mistake`. On success, has no side effects.
+    ///
+    /// @param condition  Condition that must hold for parsing to proceed.
+    /// @param node       Parse node to mark as `Rule::Mistake` on failure.
+    /// @param error_message  Diagnostic message describing the expected syntax.
+    /// @return `true` if the condition holds; `false` otherwise.
     bool Expect(bool condition, ParseNode& node, std::string_view error_message) const;
 
     // Matchers
     bool MatchedStatement(ParseNode& node);
+
+    bool MatchedScope(ParseNode& node);
+
+    bool MatchedIfBlock(ParseNode& node);
+    bool MatchedIfTail(ParseNode& node);
 
     bool MatchedDeclaration(ParseNode& node);
     bool MatchedAssignment(ParseNode& node);

@@ -251,8 +251,8 @@ void Parser::ConstructAST(const ParseNode& node) {
     }
 }
 
-bool Parser::Expect(const bool             condition,
-                    ParseNode&             node,
+bool Parser::Expect(const bool condition,
+                    ParseNode& node,
                     const std::string_view error_message) const {
     if (not condition) {
         Log->error("Line {} -> {}", CurrentToken().line, error_message);
@@ -262,11 +262,16 @@ bool Parser::Expect(const bool             condition,
     return true;
 }
 
-// stmt = (decl | assign | expr) TERMINATOR
+// stmt = if_stmt | (decl | assign | expr) TERMINATOR
 bool Parser::MatchedStatement(ParseNode& node) {
     auto& stmt{node.NewBranch(Rule::Statement)};
 
-    const bool is_statement = MatchedDeclaration(stmt)
+    // if-blocks aren't terminated since they have a scope, so we exit early on match
+    if (MatchedIfBlock(stmt)) {
+        return true;
+    }
+
+    const bool is_statement =  MatchedDeclaration(stmt)
                               || MatchedAssignment(stmt)
                               || MatchedExpression(stmt);
 
@@ -288,6 +293,65 @@ bool Parser::MatchedStatement(ParseNode& node) {
     return true;
 }
 
+bool Parser::MatchedScope(ParseNode& node) {
+    if (CurrentToken().type != TokenType::Op_BraceLeft) {
+        return false;
+    }
+
+    auto& scope = node.NewBranch(Rule::Scope);
+
+    // exhaust all statements within the scope
+    // no Expect() because empty scopes are valid
+    while (MatchedStatement(scope)) {}
+
+    Expect(CurrentToken().type == TokenType::Op_BraceRight, scope, "Expected closing brace '}' at end of scope");
+
+    return true;
+}
+
+// if_stmt = KW_IF expr scope if_tail?
+bool Parser::MatchedIfBlock(ParseNode& node) {
+    if (CurrentToken().type != TokenType::KW_if) {
+        return false;
+    }
+
+    auto& if_stmt = node.NewBranch(Rule::IfStatement);
+    AddCycledTokenTo(if_stmt);
+
+    if (not Expect(MatchedExpression(if_stmt), if_stmt, "Expected expression")) {
+        return true;
+    }
+
+    if (not Expect(MatchedScope(if_stmt), if_stmt, "Expected scope for if-block")) {
+        return true;
+    }
+
+    // since if-tails are optional, we don't care whether they match successfully
+    MatchedIfTail(if_stmt);
+
+    return true;
+}
+
+// if_tail = KW_ELSE (if_stmt | scope)
+bool Parser::MatchedIfTail(ParseNode& node) {
+    if (CurrentToken().type != TokenType::KW_else) {
+        return false;
+    }
+
+    auto& if_tail = node.NewBranch(Rule::IfTail);
+    AddCycledTokenTo(if_tail);
+
+    // else if
+    if (MatchedIfBlock(if_tail)) {
+        return true;
+    }
+
+    // else
+    Expect(MatchedScope(if_tail), if_tail, "Expected scope for else-block");
+
+    return true;
+}
+
 // decl = KW_MUT? KW_DATA ID ('=' expr)?
 bool Parser::MatchedDeclaration(ParseNode& node) {
     const bool matched_keywords = CurrentToken().type == TokenType::KW_data
@@ -297,7 +361,7 @@ bool Parser::MatchedDeclaration(ParseNode& node) {
         return false;
     }
 
-    auto& decl{node.NewBranch(Rule::Declaration)};
+    auto& decl = node.NewBranch(Rule::Declaration);
     AddTokensTo(decl, TokenType::KW_data);
 
     if (not Expect(CurrentToken().type == TokenType::Identifier,
@@ -338,10 +402,6 @@ bool Parser::MatchedAssignment(ParseNode& node) {
     Expect(MatchedExpression(assignment), assignment, "Expected expression");
     return true;
 }
-
-// bool Parser::MatchedExpression(ParseNode& node) {
-//     return MatchedEquality(node);
-// }
 
 // elem_list = expr (',' expr)* (',')?  ;
 bool Parser::MatchedElemList(ParseNode& node) {
@@ -403,8 +463,12 @@ bool Parser::MatchedArrayLiteral(ParseNode& node) {
         return true;
     }
 
+    // if we're here, we have exhausted the elem list and yet haven't found a right bracket.
+    // We skip over any potential newlines to avoid leaving the cursor in an awkward state
+    // that could result in early parser termination.
     SkipNewlines();
 
+    // That's why we can't Expect() the earlier condition, and we just force an error here
     Expect(false, array_literal, "Expected ']'");
 
     return true;
@@ -581,10 +645,10 @@ bool Parser::MatchedFactor(ParseNode& node) {
     return MatchedBinaryExpr(node, IsFactorOp, &Parser::MatchedUnary, Rule::Factor);
 }
 
-bool Parser::MatchedBinaryExpr(ParseNode&           node,
+bool Parser::MatchedBinaryExpr(ParseNode& node,
                                const OpCheckerFnPtr is_valid_operator,
-                               const MatcherFnPtr   matched_operand,
-                               const Rule           rule) {
+                               const MatcherFnPtr matched_operand,
+                               const Rule rule) {
     if (not(this->*matched_operand)(node)) {
         return false;
     }
