@@ -96,7 +96,7 @@ data foo = Foo {.a = 102, .c = "hello"}
 ##### Locking Mutable Data
 Mutable data may be annotated with the `@[Locked]` attribute to indicate that anything from an outer scope is not allowed to write to it. This is particularly useful inside custom types.
 
-**Mana** does *not* have the concept of granular private access specifiers for individual type members. However, sometimes you want a value which may be modified by an associated function, but not by anything else. In these scenarios, you would want to use `@[Locked]`.
+**Mana** does *not* have the concept of granular private access specifiers for individual type members. However, sometimes you want a value which may be modified by an interface function, but not by anything else. In these scenarios, you would want to use `@[Locked]`.
 ```rust
 // 'a' may only be modified by interface functions, 
 // even if `Foo` has been declared 'mut'
@@ -128,4 +128,4 @@ type Foo {
 ```
 
 > [!note]
-`[Locked]` data is restricted to only be modifiable by associated functions. However, **Mana** allows anywhere to create an associated function for a type. `[Locked]` is merely an indicator that a type member *shouldn't* freely be modified, for some reason or another.
+`[Locked]` data is restricted to only be modifiable by interface functions. However, **Mana** allows anywhere to create an associated function for a type. `[Locked]` is merely an indicator that a type member *shouldn't* freely be modified, for some reason or another.
