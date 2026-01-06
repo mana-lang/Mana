@@ -39,7 +39,7 @@ static constexpr std::size_t STACK_MAX = 512;
 #   define LOG_TOP_TWO(msg)
 #   define FETCH_CONSTANT() *(values + READ_PAYLOAD)
 #   define CMP(op) *(stack_top - 2) op *(stack_top - 1)
-#   define LOGICAL_NOT() *(++stack_top) = !*(--stack_top)
+#   define LOGICAL_NOT() *(++stack_top) =! *(--stack_top)
 #endif
 // @formatter:on
 
