@@ -8,6 +8,41 @@ using namespace mana::vm;
 
 static constexpr std::size_t STACK_MAX = 512;
 
+// @formatter:off
+#define READ_PAYLOAD u16((0xFF00 & *ip) | (0x00FF & *(ip+1)))
+#define JNE_DIST (READ_PAYLOAD * (((stack_top - 1)->AsBool() - 1) * -1))
+
+#ifdef HEX_DEBUG
+#   define DISPATCH()                                                               \
+    {                                                                               \
+        auto  label = *ip >= 0 && *ip < dispatch_max ? dispatch_table[*ip++] : err; \
+        goto *label;                                                                \
+    }
+#   define PUSH(val) Push(val)
+#   define POP() Pop()
+#   define TOP_VAL() *StackTop()
+#   define LOG(msg) Log->debug(msg)
+#   define LOG_JMP(msg, dist) Log->debug(msg, dist)
+#   define LOG_TOP(msg) LogTop(msg)
+#   define LOG_TOP_TWO(msg) LogTopTwo(msg)
+#   define FETCH_CONSTANT() values[READ_PAYLOAD]
+#   define CMP(op) Pop() op Pop()
+#   define LOGICAL_NOT() Push(!Pop())
+#else
+#   define DISPATCH() goto* dispatch_table[*ip++]
+#   define PUSH(val) *(stack_top++) = val
+#   define POP() *(--stack_top)
+#   define TOP_VAL() *(stack_top - 1)
+#   define LOG(msg)
+#   define LOG_JMP(msg, dist)
+#   define LOG_TOP(msg)
+#   define LOG_TOP_TWO(msg)
+#   define FETCH_CONSTANT() *(values + READ_PAYLOAD)
+#   define CMP(op) *(stack_top - 2) op *(stack_top - 1)
+#   define LOGICAL_NOT() *(++stack_top) = !*(--stack_top)
+#endif
+// @formatter:on
+
 VirtualMachine::VirtualMachine() {
     stack.resize(STACK_MAX);
     stack_top = stack.data();
@@ -38,44 +73,12 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
         &&jmp_ne,
     };
 
-    constexpr auto payload_size = 2;
-
-    // clang-format off
-#define READ_U16 u16((0xFF00 & *ip) | (0x00FF & *(ip+1)))
-#define JMP_DIST (READ_U16 * (((stack_top - 1)->AsBool() - 1) * -1))
-
 #ifdef HEX_DEBUG
     constexpr auto err          = &&compile_error;
     constexpr auto dispatch_max = dispatch_table.size();
-#   define DISPATCH()                                                                   \
-        {                                                                               \
-            auto  label = *ip >= 0 && *ip < dispatch_max ? dispatch_table[*ip++] : err; \
-            goto *label;                                                                \
-        }
-#   define PUSH(val) Push(val)
-#   define POP() Pop()
-#   define TOP_VAL() *StackTop()
-#   define LOG(msg) Log->debug(msg)
-#   define LOG_JMP(msg) Log->debug(msg, JMP_DIST)
-#   define LOG_TOP(msg) LogTop(msg)
-#   define LOG_TOP_TWO(msg) LogTopTwo(msg)
-#   define FETCH_CONSTANT() values[READ_U16]
-#   define CMP(op) Pop() op Pop()
-#   define LOGICAL_NOT() Push(!Pop())
-#else
-#   define DISPATCH() goto* dispatch_table[*ip++]
-#   define PUSH(val) *(stack_top++) = val
-#   define POP() *(--stack_top)
-#   define TOP_VAL() *(stack_top - 1)
-#   define LOG(msg)
-#   define LOG_JMP(msg)
-#   define LOG_TOP(msg)
-#   define LOG_TOP_TWO(msg)
-#   define FETCH_CONSTANT() *(values + READ_U16)
-#   define CMP(op) *(stack_top - 2) op *(stack_top - 1)
-#   define LOGICAL_NOT() *(++stack_top) = !*(--stack_top)
 #endif
-    // clang-format on
+
+    constexpr auto payload_size = 2;
 
     // Start VM
     DISPATCH();
@@ -181,8 +184,8 @@ jmp:
     return InterpretResult::RuntimeError;
 
 jmp_ne:
-    LOG_JMP("Jumping by {}");
-    ip += JMP_DIST + payload_size;
+    LOG_JMP("Jumping by {}", JNE_DIST);
+    ip += JNE_DIST + payload_size;
 
     DISPATCH();
 
