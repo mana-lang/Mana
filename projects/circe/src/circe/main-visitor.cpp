@@ -129,27 +129,48 @@ void MainVisitor::Visit(const Scope& node) {
 }
 
 void MainVisitor::Visit(const If& node) {
+    constexpr u64 payload_bytes = 2;
+
     // first resolve condition
     node.GetCondition()->Accept(*this);
-    const u64 jmp_idx = slice.Write(Op::JumpNotEquals, 0xFFFF);
+    const u64 jne_index = slice.Write(Op::JumpNotEquals, 0xDEAD);
 
     node.GetThenBlock()->Accept(*this);
+    const u64 jne_dist = slice.BackIndex() - jne_index - payload_bytes;
 
-    constexpr u64 payload_bytes = 2;
-    const u64 jmp_dist = slice.BackIndex() - jmp_idx - payload_bytes;
+    if (jne_dist > std::numeric_limits<u16>::max()) {
+        Log->error("Jump distance '{}' exceeded maximum jump size of {}",
+                   jne_dist,
+                   std::numeric_limits<u16>::max()
+        );
+        slice.Patch(jne_index, 0);
+        return;
+    }
 
+    const auto& else_branch = node.GetElseBranch();
+    const u16 else_offset = else_branch == nullptr ? 0 : 3;
+    slice.Patch(jne_index, jne_dist + else_offset);
+
+    
+    // else
+    if (else_branch == nullptr) {
+        return;
+    }
+
+    const u64 jmp_index = slice.Write(Op::Jump, 0xDEAD);
+
+    else_branch->Accept(*this);
+
+    const u64 jmp_dist = slice.BackIndex() - jmp_index - payload_bytes;
     if (jmp_dist > std::numeric_limits<u16>::max()) {
         Log->error("Jump distance '{}' exceeded maximum jump size of {}",
                    jmp_dist,
                    std::numeric_limits<u16>::max()
         );
-        slice.Patch(jmp_idx, 0);
+        slice.Patch(jmp_index, 0);
         return;
     }
-
-    slice.Patch(jmp_idx, jmp_dist);
-
-    //TODO: add jump instruction to Hex and then verify the entire thing
+    slice.Patch(jmp_index, jmp_dist);
 }
 
 void MainVisitor::Visit(const UnaryExpr& node) {

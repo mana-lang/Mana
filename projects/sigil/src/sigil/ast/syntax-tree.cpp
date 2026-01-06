@@ -129,6 +129,8 @@ If::If(const ParseNode& node) {
         } else {
             Log->error("Unexpected rule in else-branch");
         }
+    } else {
+        else_branch = nullptr;
     }
 }
 
