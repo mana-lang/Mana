@@ -4,10 +4,11 @@ FLOAT      = INT.[0-9]+              ;
 STRING     = "\"(?:[^\"\\]|\\.)*\""  ; (*anything between double-quoted strings, minus escape sequences *)
 STRING_CH  = "'(?:[^'\\]|\\.)*'"     ; (* same but single quotes *)
 
-KW_DATA = "data";
-KW_MUT  = "mut" ;
-KW_IF   = "if"  ;
-KW_ELSE = "else";
+KW_DATA   = "data"   ;
+KW_MUT    = "mut"    ;
+KW_IF     = "if"     ;
+KW_ELSE   = "else"   ;
+KW_RETURN = "return" ;
 
 TERMINATOR = "\n" | ";";
 
@@ -21,6 +22,8 @@ scope  = "{" stmt* "}"
 
 if_stmt = KW_IF expr scope if_tail? ;
 if_tail = KW_ELSE (if_stmt | scope) ;
+
+return = KW_RETURN expr TERMINATOR ;
 
 expr       = equality                                 ;
 equality   = comparison (  ('!=' | '==') comparison)* ;
