@@ -11,6 +11,8 @@ enum class Op : u8 {
     Return,
 
     Push,
+    Pop,
+
     Negate,
 
     Add,

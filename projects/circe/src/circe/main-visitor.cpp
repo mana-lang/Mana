@@ -134,6 +134,7 @@ void MainVisitor::Visit(const If& node) {
     // 'if' only writes an early jwf
     node.GetCondition()->Accept(*this);
     const u64 jwf_index = slice.Write(Op::JumpWhenFalse, 0xDEAD);
+    slice.Write(Op::Pop);
 
     node.GetThenBlock()->Accept(*this);
 
@@ -161,6 +162,7 @@ void MainVisitor::Visit(const If& node) {
     }
 
     const u64 jmp_index = slice.Write(Op::Jump, 0xDEAD);
+    slice.Write(Op::Pop);
 
     else_branch->Accept(*this);
     slice.Patch(jmp_index, compute_dist(jmp_index));

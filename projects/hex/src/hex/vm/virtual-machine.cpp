@@ -57,6 +57,7 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
         &&halt,
         &&ret,
         &&push,
+        &&pop,
         &&negate,
         &&add,
         &&sub,
@@ -105,6 +106,12 @@ push:
     PUSH(FETCH_CONSTANT());
     ip += payload_size;
     LOG_TOP("[push:  {}]");
+
+    DISPATCH();
+
+pop:
+    LOG_TOP("[pop:  {}]");
+    POP();
 
     DISPATCH();
 

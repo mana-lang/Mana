@@ -50,6 +50,7 @@ void PrintBytecode(const Slice& c) {
         case JumpWhenFalse:
         case Jump:
             i += 2;
+        case Pop:
         case Negate:
         case Add:
         case Sub:
