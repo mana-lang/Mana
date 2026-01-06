@@ -10,7 +10,7 @@ static constexpr std::size_t STACK_MAX = 512;
 
 // @formatter:off
 #define READ_PAYLOAD u16((0xFF00 & *ip) | (0x00FF & *(ip+1)))
-#define JNE_DIST (READ_PAYLOAD * (((stack_top - 1)->AsBool() - 1) * -1))
+#define JWF_DIST (READ_PAYLOAD * (((stack_top - 1)->AsBool() - 1) * -1))
 
 #ifdef HEX_DEBUG
 #   define DISPATCH()                                                               \
@@ -70,7 +70,7 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
         &&not_equals,
         &&bool_not,
         &&jmp,
-        &&jmp_ne,
+        &&jwf,
     };
 
 #ifdef HEX_DEBUG
@@ -186,9 +186,9 @@ jmp:
 
     DISPATCH();
 
-jmp_ne:
-    LOG_JMP("Jumping by {}", JNE_DIST);
-    ip += JNE_DIST + payload_size;
+jwf:
+    LOG_JMP("(JWF) Jumping by {}", JWF_DIST);
+    ip += JWF_DIST + payload_size;
 
     DISPATCH();
 

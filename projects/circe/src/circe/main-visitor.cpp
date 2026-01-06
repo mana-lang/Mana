@@ -131,27 +131,30 @@ void MainVisitor::Visit(const Scope& node) {
 void MainVisitor::Visit(const If& node) {
     constexpr u64 payload_bytes = 2;
 
-    // first resolve condition
+    // 'if' only writes an early jwf
     node.GetCondition()->Accept(*this);
-    const u64 jne_index = slice.Write(Op::JumpNotEquals, 0xDEAD);
+    const u64 jwf_index = slice.Write(Op::JumpWhenFalse, 0xDEAD);
 
     node.GetThenBlock()->Accept(*this);
-    const u64 jne_dist = slice.BackIndex() - jne_index - payload_bytes;
 
-    if (jne_dist > std::numeric_limits<u16>::max()) {
-        Log->error("Jump distance '{}' exceeded maximum jump size of {}",
-                   jne_dist,
-                   std::numeric_limits<u16>::max()
-        );
-        slice.Patch(jne_index, 0);
-        return;
-    }
+    const auto compute_dist = [this](const u64 index) {
+        u64 dist = slice.BackIndex() - index - payload_bytes;
+
+        if (dist > std::numeric_limits<u16>::max()) {
+            Log->error("Jump distance '{}' exceeded maximum jump size of {}",
+                       dist,
+                       std::numeric_limits<u16>::max()
+            );
+            dist = 0;
+        }
+
+        return dist;
+    };
 
     const auto& else_branch = node.GetElseBranch();
-    const u16 else_offset = else_branch == nullptr ? 0 : 3;
-    slice.Patch(jne_index, jne_dist + else_offset);
+    const u16   else_offset = else_branch == nullptr ? 0 : 3;
+    slice.Patch(jwf_index, compute_dist(jwf_index) + else_offset);
 
-    
     // else
     if (else_branch == nullptr) {
         return;
@@ -160,17 +163,7 @@ void MainVisitor::Visit(const If& node) {
     const u64 jmp_index = slice.Write(Op::Jump, 0xDEAD);
 
     else_branch->Accept(*this);
-
-    const u64 jmp_dist = slice.BackIndex() - jmp_index - payload_bytes;
-    if (jmp_dist > std::numeric_limits<u16>::max()) {
-        Log->error("Jump distance '{}' exceeded maximum jump size of {}",
-                   jmp_dist,
-                   std::numeric_limits<u16>::max()
-        );
-        slice.Patch(jmp_index, 0);
-        return;
-    }
-    slice.Patch(jmp_index, jmp_dist);
+    slice.Patch(jmp_index, compute_dist(jmp_index));
 }
 
 void MainVisitor::Visit(const UnaryExpr& node) {

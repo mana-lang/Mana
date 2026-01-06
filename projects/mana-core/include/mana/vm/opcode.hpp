@@ -29,7 +29,7 @@ enum class Op : u8 {
     Not,
 
     Jump,
-    JumpNotEquals,
+    JumpWhenFalse,
 };
 
 }  // namespace mana::vm
