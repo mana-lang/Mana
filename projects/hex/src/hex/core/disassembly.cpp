@@ -47,6 +47,8 @@ void PrintBytecode(const Slice& c) {
             EmitConstant(i, c.Constants()[code[i + 2]]);
             i += 2;
             break;
+        case JumpNotEquals:
+            i += 2;
         case Negate:
         case Add:
         case Sub:
@@ -61,6 +63,7 @@ void PrintBytecode(const Slice& c) {
         case Equals:
         case NotEquals:
         case Not:
+        case Jump:
             EmitSimple(i, op);
             break;
         default:

@@ -18,7 +18,7 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
 
     const auto* values = slice->Constants().data();
 
-    constexpr std::array dispatch_table {
+    constexpr std::array dispatch_table{
         &&halt,
         &&ret,
         &&push,
@@ -34,10 +34,16 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
         &&equals,
         &&not_equals,
         &&bool_not,
+        &&jmp,
+        &&jmp_ne,
     };
 
+    constexpr auto payload_size = 2;
+
     // clang-format off
-#define CONSTANT_INDEX u16((0xFF00 & *ip) | (0x00FF & *(ip+1)))
+#define READ_U16 u16((0xFF00 & *ip) | (0x00FF & *(ip+1)))
+#define JMP_DIST (READ_U16 * (((stack_top - 1)->AsBool() - 1) * -1))
+
 #ifdef HEX_DEBUG
     constexpr auto err          = &&compile_error;
     constexpr auto dispatch_max = dispatch_table.size();
@@ -50,9 +56,10 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
 #   define POP() Pop()
 #   define TOP_VAL() *StackTop()
 #   define LOG(msg) Log->debug(msg)
+#   define LOG_JMP(msg) Log->debug(msg, JMP_DIST)
 #   define LOG_TOP(msg) LogTop(msg)
 #   define LOG_TOP_TWO(msg) LogTopTwo(msg)
-#   define FETCH_CONSTANT() values[CONSTANT_INDEX]
+#   define FETCH_CONSTANT() values[READ_U16]
 #   define CMP(op) Pop() op Pop()
 #   define LOGICAL_NOT() Push(!Pop())
 #else
@@ -61,9 +68,10 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
 #   define POP() *(--stack_top)
 #   define TOP_VAL() *(stack_top - 1)
 #   define LOG(msg)
+#   define LOG_JMP(msg)
 #   define LOG_TOP(msg)
 #   define LOG_TOP_TWO(msg)
-#   define FETCH_CONSTANT() *(values + CONSTANT_INDEX)
+#   define FETCH_CONSTANT() *(values + READ_U16)
 #   define CMP(op) *(stack_top - 2) op *(stack_top - 1)
 #   define LOGICAL_NOT() *(++stack_top) = !*(--stack_top)
 #endif
@@ -92,7 +100,7 @@ ret:
 
 push:
     PUSH(FETCH_CONSTANT());
-    ip += 2; // constant indices are 2 bytes long
+    ip += payload_size;
     LOG_TOP("[push:  {}]");
 
     DISPATCH();
@@ -169,6 +177,15 @@ bool_not:
 
     DISPATCH();
 
+jmp:
+    return InterpretResult::RuntimeError;
+
+jmp_ne:
+    LOG_JMP("Jumping by {}");
+    ip += JMP_DIST + payload_size;
+
+    DISPATCH();
+
 compile_error:
     return InterpretResult::CompileError;
 }
@@ -230,5 +247,4 @@ void VirtualMachine::LogTopTwo(const std::string_view msg) const {
         Log->debug(fmt::runtime(msg), (StackTop() - 1)->AsFloat(), ViewTop().AsFloat());
     }
 }
-
-}  // namespace hex
+} // namespace hex
