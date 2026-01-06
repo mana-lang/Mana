@@ -181,7 +181,10 @@ bool_not:
     DISPATCH();
 
 jmp:
-    return InterpretResult::RuntimeError;
+    LOG_JMP("Jumping by {}", READ_PAYLOAD);
+    ip += READ_PAYLOAD + payload_size;
+
+    DISPATCH();
 
 jmp_ne:
     LOG_JMP("Jumping by {}", JNE_DIST);
