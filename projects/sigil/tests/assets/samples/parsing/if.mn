@@ -6,7 +6,7 @@ if true {
 
 87.3 - 22.1
 
-if 44 > 44 {
+if 44 > 44 && 55 == 55 {
     false
 } else if 88 < 88 {
     true

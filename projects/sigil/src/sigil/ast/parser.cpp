@@ -605,12 +605,29 @@ bool IsEqualityOp(const TokenType token) {
     }
 }
 
-// expr = equality
-bool Parser::MatchedExpression(ParseNode& node) {
-    return MatchedEquality(node);
+bool IsLogicalOp(const TokenType token) {
+    switch (token) {
+        using enum TokenType;
+
+    case Op_LogicalAnd:
+    case Op_LogicalNot:
+        return true;
+    default:
+        return false;
+    }
 }
 
-// equality   = comparison (  ('!=' | '==') comparison)*
+// expr = logical
+bool Parser::MatchedExpression(ParseNode& node) {
+    return MatchedLogical(node);
+}
+
+// logical = equality ( ('&&' | '||') equality )*
+bool Parser::MatchedLogical(ParseNode& node) {
+    return MatchedBinaryExpr(node, IsLogicalOp, &Parser::MatchedEquality, Rule::Logical);
+}
+
+// equality = comparison (  ('!=' | '==') comparison)*
 bool Parser::MatchedEquality(ParseNode& node) {
     return MatchedBinaryExpr(node, IsEqualityOp, &Parser::MatchedComparison, Rule::Equality);
 }

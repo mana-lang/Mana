@@ -79,6 +79,7 @@ private:
     bool MatchedAssignment(ParseNode& node);
 
     bool MatchedExpression(ParseNode& node);
+    bool MatchedLogical(ParseNode& node);
     bool MatchedEquality(ParseNode& node);
     bool MatchedComparison(ParseNode& node);
     bool MatchedTerm(ParseNode& node);

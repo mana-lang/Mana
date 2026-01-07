@@ -109,6 +109,7 @@ If::If(const ParseNode& node) {
     case Rule::Comparison:
     case Rule::Equality:
     case Rule::Term:
+    case Rule::Logical:
         condition = std::make_shared<BinaryExpr>(*node.branches[0]);
         condition_type = Rule::Expression;
         break;
@@ -220,8 +221,7 @@ NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
         if (literal.type != type) {
             if (type == mana::PrimitiveType::Invalid) {
                 type = literal.type;
-            }
-            else {
+            } else {
                 Log->warn(
                     fmt::runtime(
                         "ArrayLiteral is of type '{}', "
@@ -330,11 +330,14 @@ NodePtr BinaryExpr::ConstructChild(const ParseNode& operand_node) {
     case Grouping:
         return ConstructChild(*operand_node.branches[0]);
 
+    case Logical:
+    case Equality:
     case Comparison:
     case Term:
     case Factor:
-        return std::make_shared<
-            BinaryExpr>(FetchTokenText(token), *operand_node.branches[0], *operand_node.branches[1]);
+        return std::make_shared<BinaryExpr>(
+            FetchTokenText(token), *operand_node.branches[0], *operand_node.branches[1]
+        );
 
     case Unary: {
         if (token.type == TokenType::Op_Minus) {
