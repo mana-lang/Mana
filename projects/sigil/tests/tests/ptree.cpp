@@ -6,6 +6,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <spdlog/fmt/bundled/chrono.h>
 
 constexpr auto PARSER_SAMPLE_PATH  = "assets/samples/parsing/";
 constexpr auto PARSER_CONTROL_PATH = "assets/control/ptree/";
@@ -47,8 +48,8 @@ TEST_CASE("P-Trees", "[parse][ast]") {
         parser.PrintParseTree();
     }
 
-    SECTION("Arrays") {
-        const auto path = Concatenate(PARSER_SAMPLE_PATH, "arrays.mn");
+    auto compare_ptree = [](const std::string_view module_name) {
+        const auto path = Concatenate(Concatenate(PARSER_SAMPLE_PATH, module_name), ".mn");
 
         Lexer lexer;
         REQUIRE(lexer.Tokenize(path));
@@ -56,7 +57,7 @@ TEST_CASE("P-Trees", "[parse][ast]") {
         Parser parser(lexer.RelinquishTokens());
         REQUIRE(parser.Parse());
 
-        std::ifstream file(Concatenate(PARSER_CONTROL_PATH, "arrays.ptree"));
+        std::ifstream file(Concatenate(Concatenate(PARSER_CONTROL_PATH, module_name), ".ptree"));
         REQUIRE((file && file.is_open()));
 
         const std::string file_str(std::istreambuf_iterator {file}, {});
@@ -64,17 +65,13 @@ TEST_CASE("P-Trees", "[parse][ast]") {
         parser.PrintParseTree();
 
         REQUIRE(file_str == ptree_str);
+    };
+
+    SECTION("Arrays") {
+        compare_ptree("arrays");
     }
 
     SECTION("Conditionals") {
-        const auto path = Concatenate(PARSER_SAMPLE_PATH, "if.mn");
-
-        Lexer lexer;
-        REQUIRE(lexer.Tokenize(path));
-
-        Parser parser(lexer.RelinquishTokens());
-        REQUIRE(parser.Parse());
-
-        parser.PrintParseTree();
+        compare_ptree("if");
     }
 }

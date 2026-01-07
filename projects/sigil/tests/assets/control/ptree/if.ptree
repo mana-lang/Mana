@@ -1,0 +1,93 @@
+[Artifact] -> if
+
+[Statement]
+== [IfBlock]
+-- --  [KW_if] -> if
+== == [Literal]
+-- -- --  [Lit_true] -> true
+== == [Scope]
+-- -- --  [Op_BraceLeft] -> {
+-- -- --  [Op_BraceRight] -> }
+== == == [Statement]
+== == == == [Term]
+-- -- -- -- --  [Op_Plus] -> +
+== == == == == [Literal]
+-- -- -- -- -- --  [Lit_Int] -> 23
+== == == == == [Literal]
+-- -- -- -- -- --  [Lit_Int] -> 5
+== == == [Statement]
+== == == == [Term]
+-- -- -- -- --  [Op_Plus] -> +
+== == == == == [Literal]
+-- -- -- -- -- --  [Lit_Int] -> 97
+== == == == == [Literal]
+-- -- -- -- -- --  [Lit_Int] -> 1
+== == == [Statement]
+== == == == [Term]
+-- -- -- -- --  [Op_Minus] -> -
+== == == == == [Literal]
+-- -- -- -- -- --  [Lit_Int] -> 874
+== == == == == [Literal]
+-- -- -- -- -- --  [Lit_Int] -> 123
+
+[Statement]
+== [Term]
+-- --  [Op_Minus] -> -
+== == [Literal]
+-- -- --  [Lit_Float] -> 87.3
+== == [Literal]
+-- -- --  [Lit_Float] -> 22.1
+
+[Statement]
+== [IfBlock]
+-- --  [KW_if] -> if
+== == [Logical]
+-- -- --  [Op_LogicalAnd] -> &&
+== == == [Comparison]
+-- -- -- --  [Op_GreaterThan] -> >
+== == == == [Literal]
+-- -- -- -- --  [Lit_Int] -> 44
+== == == == [Literal]
+-- -- -- -- --  [Lit_Int] -> 44
+== == == [Equality]
+-- -- -- --  [Op_Equality] -> ==
+== == == == [Literal]
+-- -- -- -- --  [Lit_Int] -> 55
+== == == == [Literal]
+-- -- -- -- --  [Lit_Int] -> 55
+== == [Scope]
+-- -- --  [Op_BraceLeft] -> {
+-- -- --  [Op_BraceRight] -> }
+== == == [Statement]
+== == == == [Literal]
+-- -- -- -- --  [Lit_false] -> false
+== == [IfTail]
+-- -- --  [KW_else] -> else
+== == == [IfBlock]
+-- -- -- --  [KW_if] -> if
+== == == == [Comparison]
+-- -- -- -- --  [Op_LessThan] -> <
+== == == == == [Literal]
+-- -- -- -- -- --  [Lit_Int] -> 88
+== == == == == [Literal]
+-- -- -- -- -- --  [Lit_Int] -> 88
+== == == == [Scope]
+-- -- -- -- --  [Op_BraceLeft] -> {
+-- -- -- -- --  [Op_BraceRight] -> }
+== == == == == [Statement]
+== == == == == == [Literal]
+-- -- -- -- -- -- --  [Lit_true] -> true
+== == == == [IfTail]
+-- -- -- -- --  [KW_else] -> else
+== == == == == [Scope]
+-- -- -- -- -- --  [Op_BraceLeft] -> {
+-- -- -- -- -- --  [Op_BraceRight] -> }
+== == == == == == [Statement]
+== == == == == == == [Factor]
+-- -- -- -- -- -- -- --  [Op_Modulo] -> %
+== == == == == == == == [Literal]
+-- -- -- -- -- -- -- -- --  [Lit_Int] -> 53
+== == == == == == == == [Literal]
+-- -- -- -- -- -- -- -- --  [Lit_Int] -> 4
+
+
