@@ -76,9 +76,9 @@ loop {
 loop A: 2..10 i {
 	loop B: if i % 5 == 0 {
 		if cond {
-			skip -> A // go back to the start of A
+			skip => A // go back to the start of A
 		}
-		break -> A // exits from outer loop A
+		break => A // exits from outer loop A
 	}
 }
 ```

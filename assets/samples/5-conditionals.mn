@@ -1,5 +1,25 @@
-if 5 > 7 {
-    return 3.14
+if true && false {
+    3.14 * 3.14
+} else if 4 >= 4 {
+    12 < 8
+} else {
+    9 + 5
 }
 
-return 97.1
+20 - 3
+
+if false || true {
+    69 / 69
+}
+
+if true || false {
+    67 - 43
+}
+
+if 4 > 3 && 5 == 5  {
+    20 != 12
+} else {
+    3 < 12
+}
+
+97.1 * 97.1

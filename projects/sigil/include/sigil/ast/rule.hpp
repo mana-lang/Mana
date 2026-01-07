@@ -13,9 +13,13 @@ enum class Rule : ml::u8 {
 
     Statement,
 
+    Scope,
+
+    IfBlock,
+    IfTail,
+
     Declaration,
     Assignment,
-
     Expression,
 
     Grouping,
@@ -28,44 +32,7 @@ enum class Rule : ml::u8 {
     Term,
     Comparison,
     Equality,
-
-    // ReachedEOF,
-    //
-    // Decl_Import,
-    // Decl_Access,
-    // Decl_Function,
-    // Decl_Global,
-    //
-    // Import_Module,
-    // Import_Access,
-    // Import_Alias,
-    //
-    // Access_Spec,
-    // Access_Decl,
-    //
-    // Param,
-    // Param_List,
-    //
-    // Type,
-    // Type_Annotation,
-    // Type_Association,
-    //
-    // Scope,
-    // Return,
-    // Arguments,
-    // MemberAccess,
-    //
-    // CompoundAssignment,
-    //
-    // Init_Mut,
-    // Init_Static,
-    //
-    // UDT,
-    // UDT_Struct,
-    // UDT_Pack,
-    // UDT_Enum,
-    // UDT_Body,
-    // UDT_Init,
+    Logical,
 };
 
 }  // namespace sigil::ast

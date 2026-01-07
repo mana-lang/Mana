@@ -8,6 +8,47 @@ using namespace mana::vm;
 
 static constexpr std::size_t STACK_MAX = 512;
 
+// @formatter:off
+
+// payloads are little endian
+#define READ_PAYLOAD u16((0xFF00 & *ip) | (0x00FF & *(ip+1)))
+
+// jwf inverts the bool output to avoid needing a branch in the vm
+// this way falsey multiplies by 1, and truthy multiplies by 0
+#define JWF_DIST (READ_PAYLOAD * (((stack_top - 1)->AsBool() - 1) * -1))
+#define JWT_DIST (READ_PAYLOAD * (stack_top - 1)->AsBool())
+
+#ifdef HEX_DEBUG
+#   define DISPATCH()                                                               \
+    {                                                                               \
+        auto  label = *ip >= 0 && *ip < dispatch_max ? dispatch_table[*ip++] : err; \
+        goto *label;                                                                \
+    }
+#   define PUSH(val) Push(val)
+#   define POP() Pop()
+#   define TOP_VAL() *StackTop()
+#   define LOG(msg) Log->debug(msg)
+#   define LOG_JMP(msg, dist) Log->debug(msg, dist)
+#   define LOG_TOP(msg) LogTop(msg)
+#   define LOG_TOP_TWO(msg) LogTopTwo(msg)
+#   define FETCH_CONSTANT() values[READ_PAYLOAD]
+#   define CMP(op) Pop() op Pop()
+#   define LOGICAL_NOT() Push(!Pop())
+#else
+#   define DISPATCH() goto* dispatch_table[*ip++]
+#   define PUSH(val) *(stack_top++) = val
+#   define POP() *(--stack_top)
+#   define TOP_VAL() *(stack_top - 1)
+#   define LOG(msg)
+#   define LOG_JMP(msg, dist)
+#   define LOG_TOP(msg)
+#   define LOG_TOP_TWO(msg)
+#   define FETCH_CONSTANT() *(values + READ_PAYLOAD)
+#   define CMP(op) *(stack_top - 2) op *(stack_top - 1)
+#   define LOGICAL_NOT() *(++stack_top) =! *(--stack_top)
+#endif
+// @formatter:on
+
 VirtualMachine::VirtualMachine() {
     stack.resize(STACK_MAX);
     stack_top = stack.data();
@@ -18,10 +59,11 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
 
     const auto* values = slice->Constants().data();
 
-    constexpr std::array dispatch_table {
+    constexpr std::array dispatch_table{
         &&halt,
         &&ret,
         &&push,
+        &&pop,
         &&negate,
         &&add,
         &&sub,
@@ -34,40 +76,17 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
         &&equals,
         &&not_equals,
         &&bool_not,
+        &&jmp,
+        &&jwf,
+        &&jwt,
     };
 
-    // clang-format off
-#define CONSTANT_INDEX u16((0xFF00 & *ip) | (0x00FF & *(ip+1)))
 #ifdef HEX_DEBUG
     constexpr auto err          = &&compile_error;
     constexpr auto dispatch_max = dispatch_table.size();
-#   define DISPATCH()                                                                   \
-        {                                                                               \
-            auto  label = *ip >= 0 && *ip < dispatch_max ? dispatch_table[*ip++] : err; \
-            goto *label;                                                                \
-        }
-#   define PUSH(val) Push(val)
-#   define POP() Pop()
-#   define TOP_VAL() *StackTop()
-#   define LOG(msg) Log->debug(msg)
-#   define LOG_TOP(msg) LogTop(msg)
-#   define LOG_TOP_TWO(msg) LogTopTwo(msg)
-#   define FETCH_CONSTANT() values[CONSTANT_INDEX]
-#   define CMP(op) Pop() op Pop()
-#   define LOGICAL_NOT() Push(!Pop())
-#else
-#   define DISPATCH() goto* dispatch_table[*ip++]
-#   define PUSH(val) *(stack_top++) = val
-#   define POP() *(--stack_top)
-#   define TOP_VAL() *(stack_top - 1)
-#   define LOG(msg)
-#   define LOG_TOP(msg)
-#   define LOG_TOP_TWO(msg)
-#   define FETCH_CONSTANT() *(values + CONSTANT_INDEX)
-#   define CMP(op) *(stack_top - 2) op *(stack_top - 1)
-#   define LOGICAL_NOT() *(++stack_top) = !*(--stack_top)
 #endif
-    // clang-format on
+
+    constexpr auto payload_size = 2;
 
     // Start VM
     DISPATCH();
@@ -92,8 +111,14 @@ ret:
 
 push:
     PUSH(FETCH_CONSTANT());
-    ip += 2; // constant indices are 2 bytes long
+    ip += payload_size;
     LOG_TOP("[push:  {}]");
+
+    DISPATCH();
+
+pop:
+    LOG_TOP("[pop:  {}]");
+    POP();
 
     DISPATCH();
 
@@ -169,6 +194,24 @@ bool_not:
 
     DISPATCH();
 
+jmp:
+    LOG_JMP("jmp: {}", READ_PAYLOAD);
+    ip += READ_PAYLOAD + payload_size;
+
+    DISPATCH();
+
+jwf:
+    LOG_JMP("jmp-false: {}", JWF_DIST);
+    ip += JWF_DIST + payload_size;
+
+    DISPATCH();
+
+jwt:
+    LOG_JMP("jmp-true: {}", JWT_DIST);
+    ip += JWT_DIST + payload_size;
+
+    DISPATCH();
+
 compile_error:
     return InterpretResult::CompileError;
 }
@@ -230,5 +273,4 @@ void VirtualMachine::LogTopTwo(const std::string_view msg) const {
         Log->debug(fmt::runtime(msg), (StackTop() - 1)->AsFloat(), ViewTop().AsFloat());
     }
 }
-
-}  // namespace hex
+} // namespace hex

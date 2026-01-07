@@ -15,6 +15,8 @@
 namespace sigil::ast {
 namespace ml = mana::literals;
 
+
+
 class Visitor;
 
 using NodePtr = std::shared_ptr<class Node>;
@@ -37,9 +39,23 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
-class Artifact final : public Node {
-    std::string          name;
-    std::vector<NodePtr> children;
+template <typename T>
+concept NodeType = std::is_base_of_v<Node, T>;
+
+class StatementContainer {
+protected:
+    std::vector<NodePtr> statements;
+
+public:
+    template <NodeType NodeT, typename... Args>
+    void AddStatement(Args&&... args) {
+        statements.emplace_back(std::make_shared<Statement>(
+            std::make_shared<NodeT>(std::forward<Args>(args)...)));
+    }
+};
+
+class Artifact final : public Node, public StatementContainer {
+    std::string name;
 
 public:
     explicit Artifact(const std::string_view name)
@@ -49,13 +65,34 @@ public:
     SIGIL_NODISCARD auto GetChildren() const -> const std::vector<NodePtr>&;
 
     void Accept(Visitor& visitor) const override;
+};
 
-    template <typename NodeT, typename... Args>
-        requires std::is_base_of_v<Node, NodeT>
-    void AddChild(Args&&... args) {
-        children.emplace_back(std::make_shared<Statement>(
-            std::make_shared<NodeT>(std::forward<Args>(args)...)));
-    }
+class Scope final : public Node, public StatementContainer {
+public:
+    explicit Scope(const ParseNode& node);
+
+    void Accept(Visitor& visitor) const override;
+
+    SIGIL_NODISCARD const std::vector<NodePtr>& GetStatements() const;
+};
+
+class If final : public Node {
+    Rule condition_type;
+
+    NodePtr condition;
+    NodePtr then_block;
+    NodePtr else_branch;
+
+public:
+    explicit If(const ParseNode& node);
+
+    SIGIL_NODISCARD const NodePtr& GetCondition() const;
+    SIGIL_NODISCARD const NodePtr& GetThenBlock() const;
+    SIGIL_NODISCARD const NodePtr& GetElseBranch() const;
+
+    SIGIL_NODISCARD Rule ConditionType() const;
+
+    void Accept(Visitor& visitor) const override;
 };
 
 template <LiteralType T>
@@ -89,13 +126,13 @@ public:
 
 class ArrayLiteral final : public Node {
     std::vector<NodePtr> values;
-    mana::PrimitiveType  type;
+    mana::PrimitiveType type;
 
 public:
-    ArrayLiteral(const ParseNode& node);
+    explicit ArrayLiteral(const ParseNode& node);
 
-    const std::vector<NodePtr>& GetValues() const;
-    mana::PrimitiveType         GetType() const;
+    SIGIL_NODISCARD const std::vector<NodePtr>& GetValues() const;
+    SIGIL_NODISCARD mana::PrimitiveType GetType() const;
 
     void Accept(Visitor& visitor) const override;
 
@@ -105,12 +142,12 @@ private:
 
 class BinaryExpr final : public Node {
     std::string op;
-    NodePtr     left, right;
+    NodePtr left, right;
 
 public:
     explicit BinaryExpr(const ParseNode& node);
     explicit BinaryExpr(const std::string& op, const ParseNode& left, const ParseNode& right);
-    explicit BinaryExpr(const std::string_view op, const ParseNode& left, const ParseNode& right);
+    explicit BinaryExpr(std::string_view op, const ParseNode& left, const ParseNode& right);
 
     SIGIL_NODISCARD std::string_view GetOp() const;
 
@@ -121,12 +158,12 @@ public:
 
 private:
     static NodePtr ConstructChild(const ParseNode& operand_node);
-    explicit       BinaryExpr(const ParseNode& binary_node, ml::i64 depth);
+    explicit BinaryExpr(const ParseNode& binary_node, ml::i64 depth);
 };
 
 class UnaryExpr final : public Node {
     std::string op;
-    NodePtr     val;
+    NodePtr val;
 
 public:
     explicit UnaryExpr(const ParseNode& unary_node);
@@ -134,6 +171,43 @@ public:
     void Accept(Visitor& visitor) const override;
 
     SIGIL_NODISCARD std::string_view GetOp() const;
-    SIGIL_NODISCARD const Node&      GetVal() const;
+    SIGIL_NODISCARD const Node& GetVal() const;
 };
+
+template <typename SC>
+    requires std::is_base_of_v<StatementContainer, SC>
+void PropagateStatements(const ParseNode& node, SC* root) {
+#define Add template AddStatement
+
+    for (const auto& stmt : node.branches) {
+        for (const auto& n : stmt->branches) {
+            using enum Rule;
+
+            switch (n->rule) {
+            case Equality:
+            case Comparison:
+            case Term:
+            case Factor:
+                root->Add<BinaryExpr>(*n);
+                break;
+            case Unary:
+                root->Add<UnaryExpr>(*n);
+                break;
+            case ArrayLiteral:
+                root->Add<ast::ArrayLiteral>(*n);
+                break;
+            case IfBlock:
+                root->Add<If>(*n);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
+#undef Add
+}
+
+
+
 } // namespace sigil::ast

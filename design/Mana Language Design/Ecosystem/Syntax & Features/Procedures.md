@@ -2,20 +2,26 @@
 ##### Procedure
 The term *procedure* is used as a catch-all term for *executable things* in **Mana**. This includes:
 - Functions
-- Constant Functions
-- Pure Functions
-- Type Interface Functions
-- Polymorphic Functions
-	- Multi-Functions
-	- Operators
-	- Generic Functions
 - Closures
 - Delegates
-- Functors
+- Invocators
+- Type Interfaces
 
+All procedures may also have the following **Attributes**:
+- Constant
+- Pure
+- Inline
+
+Additionally, some procedures are *polymorphic*:
+- Multi-Functions
+- Operators
+- Generic Functions
+
+
+##### Executable Data
 In **Mana**, *everything is data*. This includes *functions*.
 
-When you declare a function, you are creating *executable data*; it is helpful to think of **Mana** functions as no different from other data declarations.
+When you declare a procedure, you are creating *executable data*; it is helpful to think of Mana functions as no different from other data declarations.
 
 For example, the two declarations below are identical.
 ```rust
@@ -28,19 +34,21 @@ data Foo: fn() -> i32 {
 }
 ```
 
-A function in **Mana** may be thought of as data containing information about how to *process* other data.
+A function in Mana may be thought of as data containing information about how to *process* other data.
+
+Data which may be invoked to process other data is referred to as being *invocable*.
 
 ##### Functions
-Functions in **Mana** are declared with the `fn` keyword. 
+Functions in Mana are declared with the `fn` keyword. 
 
-They consist of a *name*, followed by a set of *parentheses* containing an *optional* list of *parameters*, separated by *commas*. They may also *optionally* specify a return type.
+They consist of a *name*, followed by a set of *parentheses* containing an *optional* list of *parameters*, separated by *commas*. They may also optionally specify a *return* type.
 
 *All* valid variable names are *also* valid function names.
 
 A parameter's type *must* be specified. Multiple parameters of the same type *may* be grouped under commas sharing the same type annotation.
  
 If a return type is *not* specified, it is *deduced* to be the type of the *first* return expression.
-If no return expression exists, the return type is deduced to be *null*.
+If no return expression exists, the return type is deduced to be `none`.
 ```rust
 fn Add(a: i32, b: i32) {
 	return a + b
@@ -51,11 +59,11 @@ fn Subtract(a, b: f32) -> f32 {
 }
 ```
 
- The `null` return type *may* be specified, in which case returning any value from a function results in a compile error.
+ The `none` return type *may* be specified, in which case returning any value from a function results in a compile error.
 ```rust
 import std.fmt
 
-fn PrintIf(b: bool) -> null {
+fn PrintIf(b: bool) -> none {
 	if not b: return false // error
 	
 	fmt.Print("Printing")
@@ -66,7 +74,7 @@ fn main() {
 }
 ```
 >[!danger] Error
-> Function `PrintIf` attempted to return a value despite having `null` return type
+> Function `PrintIf` attempted to return a value despite having `none` return type
 ##### Parameters
 ```rust
 fn Foo(a: i32, b: mut &string, c: [f64, 5]) -> mut &string
@@ -78,7 +86,7 @@ The `fn` keyword denotes a special data declaration of type `fn`. The components
 - What type of value the function returns (*if any*)
 - A block of statements to be executed by the function (*if any*)
 
-Data of type `fn` may be executed by putting it in an *invocation expression*, also known as a function call. In these docs we differentiate between the two because a conventional function is only one type of **Procedure**, all of which are covered in this document.
+Data of type `fn` may be executed by putting it in an *invocation expression*, also known as a function call. In these docs we differentiate between the two because a conventional function is only one type of procedure, all of which are covered in this document.
 
 Data of type `fn` may be declared in *any* situation where data may be declared.
 ```rust
@@ -228,33 +236,46 @@ data x = foo.Fuzz()
 ```
 
 ##### Multi-Functions
-Multi-functions are *polymorphic functions* which
+Multi-functions are *polymorphic functions* where many functions share the same name, but may have different argument lists and, if so, different return types as well.
 
 ##### Operators
 
 ##### Generic Functions
 
 ##### Closures
+- Defined with the `fn` keyword inside another invocable
+- May capture surrounding data
+    - If unspecified, capture is inferred by Mana’s type-checking semantics
+- Capture semantics are part of the closure’s type
+- May be named or anonymous
+- Otherwise behave like functions
 
 ##### Delegates
+- Type-safe multicast invocable references
+- May have an arbitrary number of invocables bound to them
+- Invocation forwards to all bound invocables
+- Lightweight and suitable for event-driven behavior
+- Commonly used for event-driven behavior
 
-##### Functors
-Functors are *types* with a defined `()` operator.
+##### Invocators
+Invocators are *types* with a defined `()` operator.
+
+They have all the state of any user-defined type, with associated invocation behaviour. They can be thought of as functions that carry state.
 
 ```rust
-type Functor {
+type Invocator {
 	a: i32
 	b: string
 }
 
-interface for type Functor {
+interface for type Invocator {
 	operator () => mut fn(x: i32) -> i32 {
 		.a += x
 		return .a
 	}
 }
 
-data foo = Functor { .a = 12, .b = "hey" }
+data foo = Invocator { .a = 12, .b = "hey" }
 data bar = foo(32)
 fmt.Print("{bar}")
 ```

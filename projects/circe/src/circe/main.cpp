@@ -43,7 +43,7 @@ int CreateFile(const std::string& filename) {
     slice = visitor.GetSlice();
     slice.Write(mana::vm::Op::Halt);
 
-    std::filesystem::path out = OUT_PATH + in.filename().replace_extension("mhm").string();
+    std::filesystem::path out = OUT_PATH + in.filename().replace_extension("hexe").string();
     std::ofstream         out_file(out, std::ios::binary);
     Log->info("Output file to '{}'", out.string());
 
@@ -64,7 +64,5 @@ int main() {
     using namespace circe;
     Log->info("Hello from Circe!");
 
-    CreateFile("expr-a.mn");
-    CreateFile("expr-b.mn");
-    CreateFile("expr-c.mn");
+    CreateFile("5-conditionals.mn");
 }

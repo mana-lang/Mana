@@ -43,7 +43,8 @@
     "//Ecosystem",
     "//Tags",
     "//Ecosystem/Ecosystem/Syntax",
-    "//Ecosystem/Ecosystem/Syntax & Features"
+    "//Ecosystem/Ecosystem/Syntax & Features",
+    "//_Assets"
   ],
   "expandFolderOnClick": true,
   "spacesFolder": "Tags",

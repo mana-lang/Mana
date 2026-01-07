@@ -12,16 +12,29 @@ IndexRange::IndexRange(const i64 init_offset, const i64 range)
     }
 }
 
-void Slice::Write(Op opcode) {
+u64 Slice::Write(Op opcode) {
     instructions.push_back(static_cast<u8>(opcode));
+    return instructions.size() - 1;
 }
 
-void Slice::Write(const Op opcode, const u16 const_pool_index) {
+u64 Slice::Write(const Op opcode, const u16 payload) {
     instructions.push_back(static_cast<u8>(opcode));
+    const auto ret = instructions.size() - 1;
 
-    // constant pool indices are little endian 16-bit unsigned
-    instructions.push_back((const_pool_index >> 8) & 0xFF);
-    instructions.push_back(const_pool_index & 0xFF);
+    // payloads are 16-bit unsigned little endian
+    instructions.push_back((payload >> 8) & 0xFF);
+    instructions.push_back(payload & 0xFF);
+
+    return ret;
+}
+
+void Slice::Patch(const u64 instruction_index, const u16 new_value) {
+    instructions[instruction_index + 1] = (new_value >> 8) & 0xFF;
+    instructions[instruction_index + 2] = new_value & 0xFF;
+}
+
+u64 Slice::BackIndex() const {
+    return instructions.size() - 1;
 }
 
 const ByteCode& Slice::Instructions() const {

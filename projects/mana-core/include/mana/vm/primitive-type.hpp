@@ -9,7 +9,7 @@ enum PrimitiveType : literals::u8 {
     Float64,
     Bool,
 
-    Null,
+    None,
 
     Invalid = 222,
 };

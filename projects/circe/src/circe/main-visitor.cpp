@@ -13,6 +13,21 @@ Slice MainVisitor::GetSlice() const {
     return slice;
 }
 
+u64 MainVisitor::ComputeJumpDist(const u64 index) const {
+    constexpr u64 payload_bytes = 2;
+    u64 dist = slice.BackIndex() - index - payload_bytes;
+
+    if (dist > std::numeric_limits<u16>::max()) {
+        Log->error("Jump distance '{}' exceeded maximum jump size of {}",
+                   dist,
+                   std::numeric_limits<u16>::max()
+        );
+        dist = 0;
+    }
+
+    return dist;
+}
+
 void MainVisitor::Visit(const Artifact& artifact) {
     for (const auto& child : artifact.GetChildren()) {
         child->Accept(*this);
@@ -20,10 +35,34 @@ void MainVisitor::Visit(const Artifact& artifact) {
 }
 
 void MainVisitor::Visit(const BinaryExpr& node) {
+    const auto op = node.GetOp();
+
+    // logical ops need special treatment as they are control flow due to short-circuiting
+    const auto jump = [this, &node] (const Op jump_op) {
+        node.GetLeft().Accept(*this);
+
+        const u64 idx = slice.Write(jump_op, 0xDEAD);
+        slice.Write(Op::Pop);
+
+        node.GetRight().Accept(*this);
+        slice.Patch(idx, ComputeJumpDist(idx));
+    };
+
+    if (op.size() == 2) {
+        if (op == "&&") {
+            jump(Op::JumpWhenFalse);
+            return;;
+        }
+
+        if (op == "||") {
+            jump(Op::JumpWhenTrue);
+            return;
+        }
+    }
+
+
     node.GetLeft().Accept(*this);
     node.GetRight().Accept(*this);
-
-    const auto op = node.GetOp();
 
     switch (op[0]) {
     case '+':
@@ -68,28 +107,28 @@ void MainVisitor::Visit(const BinaryExpr& node) {
     }
 }
 
-void MainVisitor::Visit(const Literal<f64>& node) {
-    slice.Write(Op::Push, slice.AddConstant(node.Get()));
+void MainVisitor::Visit(const Literal<f64>& literal) {
+    slice.Write(Op::Push, slice.AddConstant(literal.Get()));
 }
 
-void MainVisitor::Visit(const Literal<i64>& node) {
-    slice.Write(Op::Push, slice.AddConstant(node.Get()));
+void MainVisitor::Visit(const Literal<i64>& literal) {
+    slice.Write(Op::Push, slice.AddConstant(literal.Get()));
 }
 
 void MainVisitor::Visit(const Literal<void>& node) {}
 
-void MainVisitor::Visit(const Literal<bool>& node) {
-    slice.Write(Op::Push, slice.AddConstant(node.Get()));
+void MainVisitor::Visit(const Literal<bool>& literal) {
+    slice.Write(Op::Push, slice.AddConstant(literal.Get()));
 }
 
-void MainVisitor::Visit(const ArrayLiteral& node) {
-    const auto& array_elems = node.GetValues();
+void MainVisitor::Visit(const ArrayLiteral& array) {
+    const auto& array_elems = array.GetValues();
 
     if (array_elems.empty()) {
         return;
     }
 
-    const auto ConstructValues = [&array_elems, this] <typename T> () {
+    const auto ConstructValues = [&array_elems, this] <typename T>() {
         std::vector<T> values;
         for (const auto& val : array_elems) {
             values.push_back(dynamic_cast<Literal<T>&>(*val).Get());
@@ -97,7 +136,7 @@ void MainVisitor::Visit(const ArrayLiteral& node) {
         slice.Write(Op::Push, slice.AddConstants(values));
     };
 
-    switch (node.GetType()) {
+    switch (array.GetType()) {
         using enum mana::PrimitiveType;
 
     case Float64:
@@ -116,12 +155,39 @@ void MainVisitor::Visit(const ArrayLiteral& node) {
         break;
     }
 
-    Log->error("Unhandled array literal type '{}'", magic_enum::enum_name(node.GetType()));
+    Log->error("Unhandled array literal type '{}'", magic_enum::enum_name(array.GetType()));
 }
 
 void MainVisitor::Visit(const Statement& node) {
     node.Accept(*this);
     slice.Write(Op::Return);
+}
+
+void MainVisitor::Visit(const Scope& node) {
+    node.Accept(*this);
+}
+
+void MainVisitor::Visit(const If& node) {
+    // 'if' only writes an early jwf
+    node.GetCondition()->Accept(*this);
+    const u64 jwf_index = slice.Write(Op::JumpWhenFalse, 0xDEAD);
+    slice.Write(Op::Pop);
+
+    node.GetThenBlock()->Accept(*this);
+
+    const auto& else_branch = node.GetElseBranch();
+    const u16   else_offset = else_branch == nullptr ? 0 : 3;
+    slice.Patch(jwf_index, ComputeJumpDist(jwf_index) + else_offset);
+
+    // else
+    if (else_branch == nullptr) {
+        return;
+    }
+
+    const u64 jmp_index = slice.Write(Op::Jump, 0xDEAD);
+    slice.Write(Op::Pop);
+    else_branch->Accept(*this);
+    slice.Patch(jmp_index, ComputeJumpDist(jmp_index));
 }
 
 void MainVisitor::Visit(const UnaryExpr& node) {
@@ -143,5 +209,5 @@ void MainVisitor::Visit(const UnaryExpr& node) {
         Log->error("Invalid unary expression");
         break;
     }
-}
-}  // namespace circe
+}//
+} // namespace circe
