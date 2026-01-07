@@ -610,7 +610,7 @@ bool IsLogicalOp(const TokenType token) {
         using enum TokenType;
 
     case Op_LogicalAnd:
-    case Op_LogicalNot:
+    case Op_LogicalOr:
         return true;
     default:
         return false;
