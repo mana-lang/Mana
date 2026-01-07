@@ -25,7 +25,8 @@ if_tail = KW_ELSE (if_stmt | scope) ;
 
 return = KW_RETURN expr TERMINATOR ;
 
-expr       = equality                                 ;
+expr       = logical                                  ;  
+logical    = equality ( ('&&' | '||') equality )*     ;
 equality   = comparison (  ('!=' | '==') comparison)* ;
 comparison = term ( ('>' | '>=' | '<' | '<=') term)*  ;
 term       = factor ( ('-' | '+') factor)*            ;
