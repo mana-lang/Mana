@@ -8,8 +8,12 @@ if true && false {
 
 20 - 3
 
-if false && true {
+if false || true {
     69 / 69
+}
+
+if true || false {
+    67 - 43
 }
 
 if 4 > 3 && 5 == 5  {

@@ -38,20 +38,24 @@ void MainVisitor::Visit(const BinaryExpr& node) {
     const auto op = node.GetOp();
 
     // logical ops need special treatment as they are control flow due to short-circuiting
-    // so they have a different execution flow due to jump insertions
+    const auto jump = [this, &node] (const Op jump_op) {
+        node.GetLeft().Accept(*this);
+
+        const u64 idx = slice.Write(jump_op, 0xDEAD);
+        slice.Write(Op::Pop);
+
+        node.GetRight().Accept(*this);
+        slice.Patch(idx, ComputeJumpDist(idx));
+    };
+
     if (op.size() == 2) {
         if (op == "&&") {
-            node.GetLeft().Accept(*this);
-
-            const u64 idx = slice.Write(Op::JumpWhenFalse, 0xDEAD);
-            slice.Write(Op::Pop);
-
-            node.GetRight().Accept(*this);
-            slice.Patch(idx, ComputeJumpDist(idx));
-            return;
+            jump(Op::JumpWhenFalse);
+            return;;
         }
 
         if (op == "||") {
+            jump(Op::JumpWhenTrue);
             return;
         }
     }

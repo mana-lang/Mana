@@ -9,8 +9,14 @@ using namespace mana::vm;
 static constexpr std::size_t STACK_MAX = 512;
 
 // @formatter:off
+
+// payloads are little endian
 #define READ_PAYLOAD u16((0xFF00 & *ip) | (0x00FF & *(ip+1)))
+
+// jwf inverts the bool output to avoid needing a branch in the vm
+// this way falsey multiplies by 1, and truthy multiplies by 0
 #define JWF_DIST (READ_PAYLOAD * (((stack_top - 1)->AsBool() - 1) * -1))
+#define JWT_DIST (READ_PAYLOAD * (stack_top - 1)->AsBool())
 
 #ifdef HEX_DEBUG
 #   define DISPATCH()                                                               \
@@ -72,6 +78,7 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
         &&bool_not,
         &&jmp,
         &&jwf,
+        &&jwt,
     };
 
 #ifdef HEX_DEBUG
@@ -188,14 +195,20 @@ bool_not:
     DISPATCH();
 
 jmp:
-    LOG_JMP("Jumping by {}", READ_PAYLOAD);
+    LOG_JMP("jmp: {}", READ_PAYLOAD);
     ip += READ_PAYLOAD + payload_size;
 
     DISPATCH();
 
 jwf:
-    LOG_JMP("(JWF) Jumping by {}", JWF_DIST);
+    LOG_JMP("jmp-false: {}", JWF_DIST);
     ip += JWF_DIST + payload_size;
+
+    DISPATCH();
+
+jwt:
+    LOG_JMP("jmp-true: {}", JWT_DIST);
+    ip += JWT_DIST + payload_size;
 
     DISPATCH();
 

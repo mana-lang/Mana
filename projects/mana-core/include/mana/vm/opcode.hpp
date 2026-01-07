@@ -32,6 +32,7 @@ enum class Op : u8 {
 
     Jump,
     JumpWhenFalse,
+    JumpWhenTrue,
 };
 
 }  // namespace mana::vm
