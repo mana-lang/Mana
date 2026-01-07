@@ -1,0 +1,8 @@
+if true {
+    data x = 12
+    data y = 3.4
+
+    if true {
+        data z = false
+    }
+}
