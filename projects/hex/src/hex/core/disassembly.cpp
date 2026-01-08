@@ -44,16 +44,17 @@ void PrintBytecode(const Slice& c) {
     const auto& code = c.Instructions();
 
     for (i64 i = 0; i < code.size(); ++i) {
+        i64 increment_offset = 0;
         switch (const auto op = static_cast<Op>(code[i])) {
             using enum Op;
         case Push:
             EmitConstant(i, c.Constants()[code[i + 2]]);
-            i += 2;
+            increment_offset += 2;
             break;
         case JumpWhenFalse:
         case JumpWhenTrue:
         case Jump:
-            i += 2;
+            increment_offset += 2;
         case Pop:
         case Negate:
         case Add:
@@ -75,6 +76,8 @@ void PrintBytecode(const Slice& c) {
             Log->debug("???");
             break;
         }
+
+        i += increment_offset;
     }
 }
 } // namespace hex

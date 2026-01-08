@@ -226,7 +226,10 @@ void VirtualMachine::Reset() {
 
 void VirtualMachine::Push(const Value& value) {
     if (stack_top == &stack.back()) {
+        const auto offset = stack.size();
         stack.resize(stack.capacity() * 2);
+
+        stack_top = stack.data() + offset;
     }
 
     *stack_top = value;

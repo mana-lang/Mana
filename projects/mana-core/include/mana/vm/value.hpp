@@ -106,10 +106,13 @@ struct Value {
                 break;
             case Uint64:
                 data[i].as_u64 = values[i];
+                break;
             case Float64:
                 data[i].as_f64 = values[i];
+                break;
             case Bool:
                 data[i].as_bool = values[i];
+                break;
             default:
                 return;
             }
