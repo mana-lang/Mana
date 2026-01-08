@@ -28,6 +28,7 @@ public:
     void Visit(const ast::Statement& node) override;
     void Visit(const ast::Scope& node) override;
     void Visit(const ast::If& node) override;
+    void Visit(const ast::Datum& node) override;
 };
 
 }  // namespace circe

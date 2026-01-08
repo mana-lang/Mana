@@ -190,6 +190,10 @@ void MainVisitor::Visit(const If& node) {
     slice.Patch(jmp_index, ComputeJumpDist(jmp_index));
 }
 
+void MainVisitor::Visit(const Datum& node) {
+
+}
+
 void MainVisitor::Visit(const UnaryExpr& node) {
     node.GetVal().Accept(*this);
 

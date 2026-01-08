@@ -81,6 +81,7 @@ void Artifact::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
+/// Scope
 Scope::Scope(const ParseNode& node) {
     PropagateStatements(node, this);
 }
@@ -95,15 +96,14 @@ const std::vector<NodePtr>& Scope::GetStatements() const {
     return statements;
 }
 
+/// If
 If::If(const ParseNode& node) {
     switch (node.branches[0]->rule) {
     case Rule::Literal:
         condition = MakeLiteral(node.branches[0]->tokens[0]).value;
-        condition_type = Rule::Literal;
         break;
     case Rule::Unary:
         condition = std::make_shared<UnaryExpr>(*node.branches[0]);
-        condition_type = Rule::Unary;
         break;
     case Rule::Factor:
     case Rule::Comparison:
@@ -111,11 +111,9 @@ If::If(const ParseNode& node) {
     case Rule::Term:
     case Rule::Logical:
         condition = std::make_shared<BinaryExpr>(*node.branches[0]);
-        condition_type = Rule::Expression;
         break;
     default:
         Log->error("Unexpected rule in if-block");
-        condition_type = Rule::Undefined;
         return;
     }
 
@@ -147,11 +145,22 @@ const NodePtr& If::GetElseBranch() const {
     return else_branch;
 }
 
-Rule If::ConditionType() const {
-    return condition_type;
+void If::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
 }
 
-void If::Accept(Visitor& visitor) const {
+/// Datum
+Datum::Datum(const ParseNode& node) {}
+
+std::string_view Datum::GetName() const {
+    return name;
+}
+
+const NodePtr& Datum::GetInitializer() const {
+    return initializer;
+}
+
+void Datum::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 

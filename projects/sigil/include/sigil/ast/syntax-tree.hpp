@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <charconv>
+#include <unordered_map>
 
 namespace sigil::ast {
 namespace ml = mana::literals;
@@ -67,7 +68,21 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
+class Datum final : public Node {
+    std::string name;
+    NodePtr initializer;
+
+public:
+    explicit Datum(const ParseNode& node);
+
+    SIGIL_NODISCARD std::string_view GetName() const;
+    SIGIL_NODISCARD const NodePtr& GetInitializer() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
 class Scope final : public Node, public StatementContainer {
+    std::unordered_map<std::string, Datum*> datums;
 public:
     explicit Scope(const ParseNode& node);
 
@@ -77,8 +92,6 @@ public:
 };
 
 class If final : public Node {
-    Rule condition_type;
-
     NodePtr condition;
     NodePtr then_block;
     NodePtr else_branch;
@@ -89,8 +102,6 @@ public:
     SIGIL_NODISCARD const NodePtr& GetCondition() const;
     SIGIL_NODISCARD const NodePtr& GetThenBlock() const;
     SIGIL_NODISCARD const NodePtr& GetElseBranch() const;
-
-    SIGIL_NODISCARD Rule ConditionType() const;
 
     void Accept(Visitor& visitor) const override;
 };
