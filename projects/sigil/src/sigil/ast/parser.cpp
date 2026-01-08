@@ -282,7 +282,9 @@ bool Parser::MatchedScope(ParseNode& node) {
 
     // exhaust all statements within the scope
     // no Expect() because empty scopes are valid
-    while (MatchedStatement(scope)) {}
+    while (MatchedStatement(scope)) {
+        SkipNewlines();
+    }
 
     SkipNewlines();
 
@@ -299,19 +301,19 @@ bool Parser::MatchedIfBlock(ParseNode& node) {
         return false;
     }
 
-    auto& if_stmt = node.NewBranch(Rule::IfBlock);
-    AddCycledTokenTo(if_stmt);
+    auto& if_block = node.NewBranch(Rule::IfBlock);
+    AddCycledTokenTo(if_block);
 
-    if (not Expect(MatchedExpression(if_stmt), if_stmt, "Expected expression")) {
+    if (not Expect(MatchedExpression(if_block), if_block, "Expected expression")) {
         return true;
     }
 
-    if (not Expect(MatchedScope(if_stmt), if_stmt, "Expected scope for if-block")) {
+    if (not Expect(MatchedScope(if_block), if_block, "Expected scope for if-block")) {
         return true;
     }
 
     // since if-tails are optional, we don't care whether they match successfully
-    MatchedIfTail(if_stmt);
+    MatchedIfTail(if_block);
 
     return true;
 }
@@ -524,8 +526,15 @@ bool Parser::MatchedPrimary(ParseNode& node) {
     }
 
     if (IsLiteral(CurrentToken().type)) {
-        auto& primary{node.NewBranch()};
+        auto& primary = node.NewBranch();
         primary.rule = Rule::Literal;
+        AddCycledTokenTo(primary);
+        return true;
+    }
+
+    if (CurrentToken().type == TokenType::Identifier) {
+        auto& primary = node.NewBranch();
+        primary.rule = Rule::Identifier;
         AddCycledTokenTo(primary);
         return true;
     }
