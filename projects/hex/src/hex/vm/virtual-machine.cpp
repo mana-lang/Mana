@@ -31,7 +31,7 @@ static constexpr std::size_t STACK_MAX = 512;
 #   define LOG_JMP(msg, dist) Log->debug(msg, dist)
 #   define LOG_TOP(msg) LogTop(msg)
 #   define LOG_TOP_TWO(msg) LogTopTwo(msg)
-#   define FETCH_CONSTANT() values[READ_PAYLOAD]
+#   define FETCH_CONSTANT() constants[READ_PAYLOAD]
 #   define CMP(op) Pop() op Pop()
 #   define LOGICAL_NOT() Push(!Pop())
 #else
@@ -43,7 +43,7 @@ static constexpr std::size_t STACK_MAX = 512;
 #   define LOG_JMP(msg, dist)
 #   define LOG_TOP(msg)
 #   define LOG_TOP_TWO(msg)
-#   define FETCH_CONSTANT() *(values + READ_PAYLOAD)
+#   define FETCH_CONSTANT() *(constants + READ_PAYLOAD)
 #   define CMP(op) *(stack_top - 2) op *(stack_top - 1)
 #   define LOGICAL_NOT() *(++stack_top) =! *(--stack_top)
 #endif
@@ -57,7 +57,7 @@ VirtualMachine::VirtualMachine() {
 InterpretResult VirtualMachine::Interpret(Slice* slice) {
     ip = slice->Instructions().data();
 
-    const auto* values = slice->Constants().data();
+    const auto* constants = slice->Constants().data();
 
     constexpr std::array dispatch_table{
         &&halt,
