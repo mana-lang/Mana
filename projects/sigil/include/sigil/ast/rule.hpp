@@ -15,6 +15,8 @@ enum class Rule : ml::u8 {
 
     Scope,
 
+    Identifier,
+
     IfBlock,
     IfTail,
 
