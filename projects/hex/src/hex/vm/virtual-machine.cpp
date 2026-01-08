@@ -216,6 +216,10 @@ compile_error:
     return InterpretResult::CompileError;
 }
 
+u64 VirtualMachine::StackSize() const {
+    return stack_top - stack.data();
+}
+
 void VirtualMachine::Reset() {
     stack_top = stack.data();
 }

@@ -526,15 +526,13 @@ bool Parser::MatchedPrimary(ParseNode& node) {
     }
 
     if (IsLiteral(CurrentToken().type)) {
-        auto& primary = node.NewBranch();
-        primary.rule = Rule::Literal;
+        auto& primary = node.NewBranch(Rule::Literal);
         AddCycledTokenTo(primary);
         return true;
     }
 
     if (CurrentToken().type == TokenType::Identifier) {
-        auto& primary = node.NewBranch();
-        primary.rule = Rule::Identifier;
+        auto& primary = node.NewBranch(Rule::Identifier);
         AddCycledTokenTo(primary);
         return true;
     }

@@ -202,3 +202,5 @@ data w: [i32, 8] = none
 > Data `y` was declared as an array of `f64`, but was not assigned, and has no size specifier
 > 
 > Data `w` was assigned `none`, but it is immutable. There is no situation where it could be used
+
+An empty-list declaration `[]` is valid, but the type and size *must* be specified.

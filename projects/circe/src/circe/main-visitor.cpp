@@ -168,30 +168,41 @@ void MainVisitor::Visit(const Scope& node) {
 }
 
 void MainVisitor::Visit(const If& node) {
-    // 'if' only writes an early jwf
     node.GetCondition()->Accept(*this);
-    const u64 jwf_index = slice.Write(Op::JumpWhenFalse, 0xDEAD);
-    slice.Write(Op::Pop);
+    const u64 jmp_false = slice.Write(Op::JumpWhenFalse, 0xDEAD);
 
+    // 'true' path
+    // pop condition before executing then-block
+    slice.Write(Op::Pop);
     node.GetThenBlock()->Accept(*this);
 
-    const auto& else_branch = node.GetElseBranch();
-    const u16   else_offset = else_branch == nullptr ? 0 : 3;
-    slice.Patch(jwf_index, ComputeJumpDist(jwf_index) + else_offset);
+    // need to jump over 'false' path to reach end of block
+    const u64 jmp_end = slice.Write(Op::Jump, 0xDEAD);
 
-    // else
-    if (else_branch == nullptr) {
-        return;
+    // 'false' path
+    // jwf lands here, skipping regular jmp
+    slice.Patch(jmp_false, ComputeJumpDist(jmp_false));
+
+    // if we don't pop here, the if-condition never gets cleaned up
+    slice.Write(Op::Pop);
+
+    if (const auto& else_branch = node.GetElseBranch()) {
+        else_branch->Accept(*this);
     }
 
-    const u64 jmp_index = slice.Write(Op::Jump, 0xDEAD);
-    slice.Write(Op::Pop);
-    else_branch->Accept(*this);
-    slice.Patch(jmp_index, ComputeJumpDist(jmp_index));
+    slice.Patch(jmp_end, ComputeJumpDist(jmp_end));
 }
 
 void MainVisitor::Visit(const Datum& node) {
+    if (node.GetInitializer() != nullptr) {
+        node.GetInitializer()->Accept(*this);
+    }
+    // TODO: Store the value in a symbol table or local variable slot
+    // For now, just evaluate the initializer and leave the value on the stack
+}
 
+void MainVisitor::Visit(const Identifier& node) {
+    Log->warn("Identifier reference '{}'", node.GetName());
 }
 
 void MainVisitor::Visit(const UnaryExpr& node) {

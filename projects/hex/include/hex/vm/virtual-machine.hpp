@@ -24,6 +24,8 @@ public:
 
     InterpretResult Interpret(mvm::Slice* next_slice);
 
+    HEX_NODISCARD ml::u64 StackSize() const;
+
 private:
     void Reset();
 

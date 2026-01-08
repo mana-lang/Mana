@@ -67,6 +67,7 @@ void ExecuteVM(const std::string_view exe_name) {
         elapsed_deser.str(),
         elapsed_exec.str()
     );
+    Log->debug("Stack size: {}", vm.StackSize());
 }
 
 int main(const int argc, char** argv) {

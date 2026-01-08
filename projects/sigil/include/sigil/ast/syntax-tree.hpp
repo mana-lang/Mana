@@ -37,6 +37,8 @@ class Statement final : public Node {
 public:
     explicit Statement(const NodePtr&& node);
 
+    SIGIL_NODISCARD const NodePtr& GetChild() const;
+
     void Accept(Visitor& visitor) const override;
 };
 
@@ -65,6 +67,16 @@ public:
     SIGIL_NODISCARD auto GetName() const -> std::string_view;
     SIGIL_NODISCARD auto GetChildren() const -> const std::vector<NodePtr>&;
 
+    void Accept(Visitor& visitor) const override;
+};
+
+class Identifier final : public Node {
+    std::string name;
+
+public:
+    explicit Identifier(const ParseNode& node);
+
+    SIGIL_NODISCARD std::string_view GetName() const;
     void Accept(Visitor& visitor) const override;
 };
 
@@ -168,7 +180,6 @@ public:
     void Accept(Visitor& visitor) const override;
 
 private:
-    static NodePtr ConstructChild(const ParseNode& operand_node);
     explicit BinaryExpr(const ParseNode& binary_node, ml::i64 depth);
 };
 
@@ -177,7 +188,7 @@ class UnaryExpr final : public Node {
     NodePtr val;
 
 public:
-    explicit UnaryExpr(const ParseNode& unary_node);
+    explicit UnaryExpr(const ParseNode& node);
 
     void Accept(Visitor& visitor) const override;
 
@@ -207,6 +218,9 @@ void PropagateStatements(const ParseNode& node, SC* root) {
             case ArrayLiteral:
                 root->Add<ast::ArrayLiteral>(*n);
                 break;
+            case Declaration:
+                root->Add<Datum>(*n);
+                break;
             case IfBlock:
                 root->Add<If>(*n);
                 break;
@@ -219,6 +233,6 @@ void PropagateStatements(const ParseNode& node, SC* root) {
 #undef Add
 }
 
-
+NodePtr CreateExpression(const ParseNode& node);
 
 } // namespace sigil::ast
