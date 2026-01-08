@@ -29,9 +29,12 @@ u64 MainVisitor::ComputeJumpDist(const u64 index) const {
 }
 
 void MainVisitor::Visit(const Artifact& artifact) {
-    for (const auto& child : artifact.GetChildren()) {
-        child->Accept(*this);
+    for (const auto& statement : artifact.GetChildren()) {
+        statement->Accept(*this);
+        slice.Write(Op::Return);
     }
+
+    slice.Write(Op::Halt);
 }
 
 void MainVisitor::Visit(const BinaryExpr& node) {
@@ -161,6 +164,8 @@ void MainVisitor::Visit(const ArrayLiteral& array) {
 void MainVisitor::Visit(const Statement& node) {
     node.Accept(*this);
     slice.Write(Op::Return);
+
+    Log->error("Statement nodes should probably not be in the AST");
 }
 
 void MainVisitor::Visit(const Scope& node) {

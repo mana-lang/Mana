@@ -41,7 +41,6 @@ int CompileFrom(const std::string& filename) {
 
     mana::vm::Slice slice;
     slice = visitor.GetSlice();
-    slice.Write(mana::vm::Op::Halt);
 
     std::filesystem::path out = OUT_PATH + in.filename().replace_extension("hexe").string();
     std::ofstream         out_file(out, std::ios::binary);
