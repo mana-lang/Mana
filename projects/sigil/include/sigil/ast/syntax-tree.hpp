@@ -17,7 +17,6 @@ namespace sigil::ast {
 namespace ml = mana::literals;
 
 
-
 class Visitor;
 
 using NodePtr = std::shared_ptr<class Node>;
@@ -35,7 +34,7 @@ class Statement final : public Node {
     NodePtr child;
 
 public:
-    explicit Statement(const NodePtr&& node);
+    explicit Statement(NodePtr&& node);
 
     SIGIL_NODISCARD const NodePtr& GetChild() const;
 
@@ -53,7 +52,12 @@ public:
     template <NodeType NodeT, typename... Args>
     void AddStatement(Args&&... args) {
         statements.emplace_back(std::make_shared<Statement>(
-            std::make_shared<NodeT>(std::forward<Args>(args)...)));
+                std::make_shared<NodeT>(std::forward<Args>(args)...))
+        );
+    }
+
+    void AddStatement(NodePtr&& node) {
+        statements.emplace_back(std::make_shared<Statement>(std::move(node)));
     }
 };
 
@@ -77,24 +81,25 @@ public:
     explicit Identifier(const ParseNode& node);
 
     SIGIL_NODISCARD std::string_view GetName() const;
-    void Accept(Visitor& visitor) const override;
+    void                             Accept(Visitor& visitor) const override;
 };
 
 class Datum final : public Node {
     std::string name;
-    NodePtr initializer;
+    NodePtr     initializer;
 
 public:
     explicit Datum(const ParseNode& node);
 
     SIGIL_NODISCARD std::string_view GetName() const;
-    SIGIL_NODISCARD const NodePtr& GetInitializer() const;
+    SIGIL_NODISCARD const NodePtr&   GetInitializer() const;
 
     void Accept(Visitor& visitor) const override;
 };
 
 class Scope final : public Node, public StatementContainer {
     std::unordered_map<std::string, Datum*> datums;
+
 public:
     explicit Scope(const ParseNode& node);
 
@@ -149,13 +154,13 @@ public:
 
 class ArrayLiteral final : public Node {
     std::vector<NodePtr> values;
-    mana::PrimitiveType type;
+    mana::PrimitiveType  type;
 
 public:
     explicit ArrayLiteral(const ParseNode& node);
 
     SIGIL_NODISCARD const std::vector<NodePtr>& GetValues() const;
-    SIGIL_NODISCARD mana::PrimitiveType GetType() const;
+    SIGIL_NODISCARD mana::PrimitiveType         GetType() const;
 
     void Accept(Visitor& visitor) const override;
 
@@ -165,7 +170,7 @@ private:
 
 class BinaryExpr final : public Node {
     std::string op;
-    NodePtr left, right;
+    NodePtr     left, right;
 
 public:
     explicit BinaryExpr(const ParseNode& node);
@@ -185,7 +190,7 @@ private:
 
 class UnaryExpr final : public Node {
     std::string op;
-    NodePtr val;
+    NodePtr     val;
 
 public:
     explicit UnaryExpr(const ParseNode& node);
@@ -193,8 +198,10 @@ public:
     void Accept(Visitor& visitor) const override;
 
     SIGIL_NODISCARD std::string_view GetOp() const;
-    SIGIL_NODISCARD const Node& GetVal() const;
+    SIGIL_NODISCARD const Node&      GetVal() const;
 };
+
+NodePtr CreateExpression(const ParseNode& node);
 
 template <typename SC>
     requires std::is_base_of_v<StatementContainer, SC>
@@ -206,18 +213,6 @@ void PropagateStatements(const ParseNode& node, SC* root) {
             using enum Rule;
 
             switch (n->rule) {
-            case Equality:
-            case Comparison:
-            case Term:
-            case Factor:
-                root->Add<BinaryExpr>(*n);
-                break;
-            case Unary:
-                root->Add<UnaryExpr>(*n);
-                break;
-            case ArrayLiteral:
-                root->Add<ast::ArrayLiteral>(*n);
-                break;
             case Declaration:
                 root->Add<Datum>(*n);
                 break;
@@ -225,6 +220,9 @@ void PropagateStatements(const ParseNode& node, SC* root) {
                 root->Add<If>(*n);
                 break;
             default:
+                if (auto expr = CreateExpression(*n)) {
+                    root->AddStatement(std::move(expr));
+                }
                 break;
             }
         }
@@ -232,7 +230,4 @@ void PropagateStatements(const ParseNode& node, SC* root) {
 
 #undef Add
 }
-
-NodePtr CreateExpression(const ParseNode& node);
-
 } // namespace sigil::ast

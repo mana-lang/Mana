@@ -99,9 +99,9 @@ ret:
     Log->debug("");
 
     if (StackTop()->GetType() == mana::PrimitiveType::Bool) {
-        Log->debug("ret {}\n\n", Pop().AsBool());
+        Log->debug("[ret: {}]\n\n", Pop().AsBool());
     } else {
-        Log->debug("ret {}\n\n", Pop().AsFloat());
+        Log->debug("[ret: {}]\n\n", Pop().AsFloat());
     }
 #else
     POP();

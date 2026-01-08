@@ -82,7 +82,7 @@ NodePtr CreateExpression(const ParseNode& node) {
     case Identifier:
         return std::make_shared<class Identifier>(node);
     case ArrayLiteral:
-        return std::make_shared<ast::ArrayLiteral>(node);
+        return std::make_shared<class ArrayLiteral>(node);
     case Unary:
         return std::make_shared<UnaryExpr>(node);
     case Factor:
@@ -199,8 +199,8 @@ void Datum::Accept(Visitor& visitor) const {
 }
 
 /// Statement
-Statement::Statement(const NodePtr&& node)
-    : child(node) {}
+Statement::Statement(NodePtr&& node)
+    : child(std::move(node)) {}
 
 const NodePtr& Statement::GetChild() const {
     return child;
@@ -247,7 +247,7 @@ NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
         // in this case we still need to ensure the array is of "array-of-arrays" type
         // and adequately handle higher-dimensional arrays.
         // this is extremely important for linalg
-        return std::make_shared<ast::ArrayLiteral>(elem);
+        return std::make_shared<class ArrayLiteral>(elem);
 
     case Literal:
         // [12.4, 95.3]

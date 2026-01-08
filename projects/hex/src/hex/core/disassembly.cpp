@@ -12,7 +12,10 @@ void EmitConstant(i64 offset, f64 constant) {
 
 void EmitConstant(i64 offset, const Value& constant) {
     const auto print = [offset]<typename T>(const mana::PrimitiveType type, T val) {
-        Log->debug("{:04} | {} | {} | {}", offset, magic_enum::enum_name(Op::Push), magic_enum::enum_name(type), val);
+        Log->debug("{:04} | {} | {} | {}",
+                   offset,
+                   magic_enum::enum_name(Op::Push),
+                   magic_enum::enum_name(type), val);
     };
 
     switch (constant.GetType()) {
@@ -48,6 +51,7 @@ void PrintBytecode(const Slice& c) {
             i += 2;
             break;
         case JumpWhenFalse:
+        case JumpWhenTrue:
         case Jump:
             i += 2;
         case Pop:
@@ -73,4 +77,4 @@ void PrintBytecode(const Slice& c) {
         }
     }
 }
-}  // namespace hex
+} // namespace hex
