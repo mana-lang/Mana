@@ -16,7 +16,7 @@ using namespace circe;
 constexpr std::string IN_PATH  = "assets/samples/";
 constexpr std::string OUT_PATH = "../hex/";
 
-int CreateFile(const std::string& filename) {
+int CompileFrom(const std::string& filename) {
     Log->info("");
 
     sigil::Lexer lexer;
@@ -64,5 +64,5 @@ int main() {
     using namespace circe;
     Log->info("Hello from Circe!");
 
-    CreateFile("5-conditionals.mn");
+    CompileFrom("6-data.mn");
 }
