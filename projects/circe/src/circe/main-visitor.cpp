@@ -15,8 +15,8 @@ Slice MainVisitor::GetSlice() const {
 
 u64 MainVisitor::ComputeJumpDist(const u64 index) const {
     constexpr u64 payload_bytes = 2;
-    u64 dist = slice.BackIndex() - index - payload_bytes;
 
+    u64 dist = slice.BackIndex() - index - payload_bytes;
     if (dist > std::numeric_limits<u16>::max()) {
         Log->error("Jump distance '{}' exceeded maximum jump size of {}",
                    dist,
@@ -41,7 +41,7 @@ void MainVisitor::Visit(const BinaryExpr& node) {
     const auto op = node.GetOp();
 
     // logical ops need special treatment as they are control flow due to short-circuiting
-    const auto jump = [this, &node] (const Op jump_op) {
+    const auto jump = [this, &node](const Op jump_op) {
         node.GetLeft().Accept(*this);
 
         const u64 idx = slice.Write(jump_op, 0xDEAD);
@@ -126,39 +126,15 @@ void MainVisitor::Visit(const Literal<bool>& literal) {
 
 void MainVisitor::Visit(const ArrayLiteral& array) {
     const auto& array_elems = array.GetValues();
+    if (array_elems.empty()) return;
 
-    if (array_elems.empty()) {
-        return;
+    // for now we just index arrays as separate values
+    // eventually we'll need a way to tell the VM to construct an array from all these sequential constants
+    for (const auto& val : array_elems) {
+        val->Accept(*this);
     }
 
-    const auto ConstructValues = [&array_elems, this] <typename T>() {
-        std::vector<T> values;
-        for (const auto& val : array_elems) {
-            values.push_back(dynamic_cast<Literal<T>&>(*val).Get());
-        }
-        slice.Write(Op::Push, slice.AddConstants(values));
-    };
-
-    switch (array.GetType()) {
-        using enum mana::PrimitiveType;
-
-    case Float64:
-        ConstructValues.operator()<f64>();
-        return;
-    case Uint64:
-        ConstructValues.operator()<u64>();
-        return;
-    case Int64:
-        ConstructValues.operator()<i64>();
-        return;
-    case Bool:
-        ConstructValues.operator()<bool>();
-        return;
-    default:
-        break;
-    }
-
-    Log->error("Unhandled array literal type '{}'", magic_enum::enum_name(array.GetType()));
+    // TODO: add 'MakeArray' opcode to VM
 }
 
 void MainVisitor::Visit(const Statement& node) {
@@ -229,5 +205,5 @@ void MainVisitor::Visit(const UnaryExpr& node) {
         Log->error("Invalid unary expression");
         break;
     }
-}//
+}
 } // namespace circe
