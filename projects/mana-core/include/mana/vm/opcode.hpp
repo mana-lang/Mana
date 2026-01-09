@@ -8,33 +8,28 @@ using namespace literals;
 enum class Op : u8 {
     Halt,
 
-    Return,
+    Return,        // Op Reg       -> Place value in Reg
+    LoadConstant,  // Op Reg Const -> Reg = Constants[Const]
+    Move,          // Op Dst Src   -> Dst = Src
 
-    Push,
-    Pop,
-    Load,
-    Store,
-
-    Negate,
-
-    Add,
-    Sub,
+    Add,           // Op Dst L R   -> Dst = L + R
+    Sub,           // etc.
     Div,
     Mul,
 
-    Cmp_Greater,
-    Cmp_GreaterEq,
+    Negate,        // Op Dst Src   -> Dst = -Src
+    Not,           // Op Dst Src   -> Dst = !Src
+
+    Cmp_Greater,   // Op Dst L R   -> Dst = L > R
+    Cmp_GreaterEq, // etc.
     Cmp_Lesser,
     Cmp_LesserEq,
 
     Equals,
     NotEquals,
 
-    Not,
-
-    Jump,
-    JumpWhenFalse,
-    JumpWhenTrue,
+    Jump,          // Op Offset       -> Jump by Offset
+    JumpWhenTrue,  // Op Reg Offset   -> if Reg { ip += Offset }
+    JumpWhenFalse, // etc.
 };
-
-}  // namespace mana::vm
+} // namespace mana::vm
