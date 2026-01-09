@@ -302,8 +302,8 @@ Value::~Value() {
     }
 }
 
-#define CGOTO_OPERATOR_CMP(ret, op)                   \
-    ret Value::operator op(const Value & rhs) const { \
+#define CGOTO_OPERATOR_BIN(ret, op)                   \
+    ret Value::operator op(const Value& rhs) const {  \
         COMPUTED_GOTO();                              \
     CASE_INT:                                         \
         return data->as_i64 op rhs.AsInt();           \
@@ -315,8 +315,8 @@ Value::~Value() {
         UNREACHABLE();                                \
     }
 
-#define CGOTO_OPERATOR_ARITH_ASSIGN(op)          \
-    void Value::operator op(const Value & rhs) { \
+#define CGOTO_OPERATOR_BIN_ASSIGN(op)            \
+    void Value::operator op(const Value& rhs) {  \
         COMPUTED_GOTO();                         \
     CASE_INT:                                    \
         data->as_i64 op rhs.AsInt();             \
@@ -331,15 +331,33 @@ Value::~Value() {
         UNREACHABLE();                           \
     }
 
-CGOTO_OPERATOR_ARITH_ASSIGN(+=);
-CGOTO_OPERATOR_ARITH_ASSIGN(-=);
-CGOTO_OPERATOR_ARITH_ASSIGN(*=);
-CGOTO_OPERATOR_ARITH_ASSIGN(/=);
+CGOTO_OPERATOR_BIN(Value, +);
+CGOTO_OPERATOR_BIN(Value, -);
+CGOTO_OPERATOR_BIN(Value, *);
+CGOTO_OPERATOR_BIN(Value, /)
 
-CGOTO_OPERATOR_CMP(bool, >);
-CGOTO_OPERATOR_CMP(bool, >=);
-CGOTO_OPERATOR_CMP(bool, <);
-CGOTO_OPERATOR_CMP(bool, <=);
+CGOTO_OPERATOR_BIN_ASSIGN(+=);
+CGOTO_OPERATOR_BIN_ASSIGN(-=);
+CGOTO_OPERATOR_BIN_ASSIGN(*=);
+CGOTO_OPERATOR_BIN_ASSIGN(/=);
+
+CGOTO_OPERATOR_BIN(bool, >);
+CGOTO_OPERATOR_BIN(bool, >=);
+CGOTO_OPERATOR_BIN(bool, <);
+CGOTO_OPERATOR_BIN(bool, <=);
+
+Value Value::operator-() const {
+    COMPUTED_GOTO();
+
+    CASE_INT:
+        return Value{-data->as_i64};
+    CASE_UNSIGNED:
+        UNREACHABLE();
+    CASE_FLOAT:
+        return Value{-data->as_f64};
+    CASE_BOOL:
+        UNREACHABLE();
+}
 
 bool Value::operator!() const {
     return not data->as_bool;
