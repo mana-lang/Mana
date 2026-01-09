@@ -11,7 +11,11 @@ void EmitConstant(i64 offset, Op op, f64 constant) {
 }
 
 void EmitJump(i64 offset, Op op, u16 distance) {
-    Log->debug("{:04} | {} => {}", offset, magic_enum::enum_name(op), distance);
+    constexpr u16 num_jmp_instructions = 3;
+    Log->debug("{:04} | {} => {:04}",
+               offset,
+               magic_enum::enum_name(op),
+               offset + num_jmp_instructions + distance);
 }
 
 void EmitConstant(const i64 offset, const Op op, const Value& constant) {
