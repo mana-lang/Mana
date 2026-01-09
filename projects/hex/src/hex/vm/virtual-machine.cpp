@@ -31,6 +31,7 @@ static constexpr std::size_t STACK_MAX = 512;
 #   define LOG_JMP(msg, dist) Log->debug(msg, dist)
 #   define LOG_TOP(msg) LogTop(msg)
 #   define LOG_TOP_TWO(msg) LogTopTwo(msg)
+#   define LOG_DATUM(msg) LogLocalDatum(msg)
 #   define FETCH_CONSTANT() constants[READ_PAYLOAD]
             // use a lambda to guarantee evaluation order
 #   define CMP(op) [&]{auto r = Pop(); auto l = Pop(); return l op r;}()
@@ -44,6 +45,7 @@ static constexpr std::size_t STACK_MAX = 512;
 #   define LOG_JMP(msg, dist)
 #   define LOG_TOP(msg)
 #   define LOG_TOP_TWO(msg)
+#   define LOG_DATUM(msg)
 #   define FETCH_CONSTANT() *(constants + READ_PAYLOAD)
 #   define CMP(op) (stack_top -= 2, *(stack_top) op *(stack_top + 1))
 #   define LOGICAL_NOT() TOP_VAL() = !TOP_VAL();
@@ -53,6 +55,8 @@ static constexpr std::size_t STACK_MAX = 512;
 VirtualMachine::VirtualMachine() {
     stack.resize(STACK_MAX);
     stack_top = stack.data();
+
+    locals.resize(32);
 }
 
 InterpretResult VirtualMachine::Interpret(Slice* slice) {
@@ -65,6 +69,8 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
         &&ret,
         &&push,
         &&pop,
+        &&load,
+        &&store,
         &&negate,
         &&add,
         &&sub,
@@ -99,10 +105,14 @@ ret:
 #ifdef HEX_DEBUG
     Log->debug("");
 
-    if (StackTop()->GetType() == mana::PrimitiveType::Bool) {
-        Log->debug("[ret: {}]\n\n", Pop().AsBool());
+    if (auto* top = StackTop(); StackSize() > 0) {
+        if (top->GetType() == mana::PrimitiveType::Bool) {
+            Log->debug("[ret: {}]\n\n", Pop().AsBool());
+        } else {
+            Log->debug("[ret: {}]\n\n", Pop().AsFloat());
+        }
     } else {
-        Log->debug("[ret: {}]\n\n", Pop().AsFloat());
+        Log->warn("Attempted to return from empty stack");
     }
 #else
     POP();
@@ -120,6 +130,22 @@ push:
 pop:
     LOG_TOP("[pop:  {}]");
     POP();
+
+    DISPATCH();
+
+load:
+    PUSH(locals[READ_PAYLOAD]);
+    LOG_DATUM("[load {} => slot {}]");
+
+    ip += payload_size;
+
+    DISPATCH();
+
+store:
+    locals[READ_PAYLOAD] = POP();
+    LOG_DATUM("[store {} => slot {}]");
+
+    ip += payload_size;
 
     DISPATCH();
 
@@ -259,7 +285,7 @@ Value VirtualMachine::ViewTop() const {
 
 Value* VirtualMachine::StackTop() const {
     if (stack_top == &stack.front()) {
-        Log->error("Attempted to read from empty stack");
+        Log->warn("Attempted to read from empty stack");
         return nullptr;
     }
 
@@ -280,5 +306,13 @@ void VirtualMachine::LogTopTwo(const std::string_view msg) const {
     } else {
         Log->debug(fmt::runtime(msg), (StackTop() - 1)->AsFloat(), ViewTop().AsFloat());
     }
+}
+
+void VirtualMachine::LogLocalDatum(std::string_view msg) const {
+    Log->debug(fmt::runtime(msg)
+         , locals[READ_PAYLOAD].GetType() == mana::PrimitiveType::Bool
+               ? locals[READ_PAYLOAD].AsBool()
+               : locals[READ_PAYLOAD].AsFloat()
+         , READ_PAYLOAD);
 }
 } // namespace hex

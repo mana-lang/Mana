@@ -15,7 +15,16 @@ void EmitJump(i64 offset, Op op, u16 distance) {
     Log->debug("{:04} | {} => {:04}",
                offset,
                magic_enum::enum_name(op),
-               offset + num_jmp_instructions + distance);
+               offset + num_jmp_instructions + distance
+    );
+}
+
+void EmitPayload(i64 offset, Op op, u16 payload) {
+    Log->debug("{:04} | {}: {}",
+               offset,
+               magic_enum::enum_name(op),
+               payload
+    );
 }
 
 void EmitConstant(const i64 offset, const Op op, const Value& constant) {
@@ -73,6 +82,11 @@ void PrintBytecode(const Slice& c) {
         case JumpWhenTrue:
         case Jump:
             EmitJump(i, op, ReadPayload(code[i + 1], code[i + 2]));
+            i += 2;
+            break;
+        case Load:
+        case Store:
+            EmitPayload(i, op, ReadPayload(code[i + 1], code[i + 2]));
             i += 2;
             break;
         case Pop:

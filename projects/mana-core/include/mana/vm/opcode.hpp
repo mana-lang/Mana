@@ -12,6 +12,8 @@ enum class Op : u8 {
 
     Push,
     Pop,
+    Load,
+    Store,
 
     Negate,
 

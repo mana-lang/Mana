@@ -175,15 +175,32 @@ void MainVisitor::Visit(const If& node) {
 }
 
 void MainVisitor::Visit(const Datum& node) {
-    if (node.GetInitializer() != nullptr) {
+    if (node.GetInitializer()) {
         node.GetInitializer()->Accept(*this);
+    } else {
+        // uninitialized data is zeroed by default
+        slice.Write(Op::Push, slice.AddConstant(0.0));
     }
-    // TODO: Store the value in a symbol table or local variable slot
-    // For now, just evaluate the initializer and leave the value on the stack
+
+    const std::string name(node.GetName());
+    if (symbols.contains(name)) {
+        Log->error("Redefinition of '{}'", name);
+    }
+
+    const u16 slot = next_slot++;
+    symbols[name] = slot;
+
+    slice.Write(Op::Store, slot);
 }
 
 void MainVisitor::Visit(const Identifier& node) {
-    Log->warn("Identifier reference '{}'", node.GetName());
+    const std::string name(node.GetName());
+    if (const auto it = symbols.find(name); it != symbols.end()) {
+        slice.Write(Op::Load, it->second);
+        return;
+    }
+
+    Log->warn("Undefined identifier '{}'", name);
 }
 
 void MainVisitor::Visit(const UnaryExpr& node) {

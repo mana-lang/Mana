@@ -13,6 +13,9 @@ namespace ast = sigil::ast;
 class MainVisitor final : public ast::Visitor {
     mana::vm::Slice slice;
 
+    std::unordered_map<std::string, ml::u16> symbols;
+    ml::u16 next_slot = {};
+
 public:
     CIRCE_NODISCARD mana::vm::Slice GetSlice() const;
     CIRCE_NODISCARD ml::u64 ComputeJumpDist(mana::literals::u64 index) const;

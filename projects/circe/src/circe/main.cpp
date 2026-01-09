@@ -63,5 +63,5 @@ int main() {
     using namespace circe;
     Log->info("Hello from Circe!");
 
-    CompileFrom("5-conditionals.mn");
+    CompileFrom("6-data.mn");
 }

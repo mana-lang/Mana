@@ -16,6 +16,7 @@ enum class InterpretResult {
 class VirtualMachine {
     ml::u8* ip {nullptr};
 
+    std::vector<mvm::Value> locals;
     std::vector<mvm::Value> stack;
     mvm::Value*             stack_top;
 
@@ -37,6 +38,7 @@ private:
 
     void LogTop(std::string_view msg) const;
     void LogTopTwo(std::string_view msg) const;
+    void LogLocalDatum(std::string_view msg) const;
 };
 
 }  // namespace hex
