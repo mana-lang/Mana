@@ -74,7 +74,7 @@ struct Value {
     void operator*=(const i64& rhs);
 
     Value()
-        : data {nullptr}
+        : data{nullptr}
         , length(0)
         , type(Invalid) {}
 
@@ -87,34 +87,85 @@ struct Value {
 
     ~Value();
 
+    // template <typename T>
+    //     requires std::is_integral_v<T> || std::is_floating_point_v<T>
+    //              || std::is_same_v<T, bool>
+    // explicit Value(const std::vector<T>& values)
+    //     : length(values.size())
+    //     , type(GetManaTypeFrom(T{})) {
+    //     if (length == 0) {
+    //         data = nullptr;
+    //         return;
+    //     }
+    //
+    //     if (length == 1) {
+    //         switch (type) {
+    //         case Int64:
+    //             data = new Data{.as_i64 = values[0]};
+    //             return;
+    //         case Uint64:
+    //             data = new Data{.as_u64 = values[0]};
+    //             return;
+    //         case Float64:
+    //             data = new Data{.as_f64 = values[0]};
+    //             return;
+    //         case Bool:
+    //             data = new Data{.as_bool = values[0]};
+    //             return;
+    //         default:
+    //             break;
+    //         }
+    //     }
+    //
+    //     data = new Data[length];
+    //     for (u64 i = 0; i < length; ++i) {
+    //         switch (type) {
+    //         case Int64:
+    //             data[i].as_i64 = values[i];
+    //             break;
+    //         case Uint64:
+    //             data[i].as_u64 = values[i];
+    //             break;
+    //         case Float64:
+    //             data[i].as_f64 = values[i];
+    //             break;
+    //         case Bool:
+    //             data[i].as_bool = values[i];
+    //             break;
+    //         default:
+    //             return;
+    //         }
+    //     }
+    // }
+
     template <typename T>
-        requires std::is_integral_v<T> || std::is_floating_point_v<T>
-                     || std::is_same_v<T, bool>
+        requires std::is_integral_v<T>
+                 || std::is_floating_point_v<T>
+                 || std::is_same_v<T, bool>
     explicit Value(const std::vector<T>& values)
         : length(values.size())
-        , type(GetManaTypeFrom(T {})) {
+        , type(GetManaTypeFrom(T{})) {
         if (length == 0) {
             data = nullptr;
             return;
         }
 
-        data = new Data[length];
+        if (length == 1) {
+            data = new Data;
+        } else {
+            data = new Data[length];
+        }
+
+        // init using if constexpr to avoid narrowing warnings
         for (u64 i = 0; i < length; ++i) {
-            switch (type) {
-            case Int64:
-                data[i].as_i64 = values[i];
-                break;
-            case Uint64:
-                data[i].as_u64 = values[i];
-                break;
-            case Float64:
-                data[i].as_f64 = values[i];
-                break;
-            case Bool:
+            if constexpr (std::is_same_v<T, bool>) {
                 data[i].as_bool = values[i];
-                break;
-            default:
-                return;
+            } else if constexpr (std::is_floating_point_v<T>) {
+                data[i].as_f64 = static_cast<f64>(values[i]);
+            } else if constexpr (std::is_unsigned_v<T>) {
+                data[i].as_u64 = static_cast<u64>(values[i]);
+            } else {
+                data[i].as_i64 = static_cast<i64>(values[i]);
             }
         }
     }
@@ -126,14 +177,14 @@ private:
 
     Value(PrimitiveType t, LengthType l);
 
-    void WriteValueBytes(const std::array<unsigned char, 8>& bytes, u32 index);
+    void WriteValueBytes(const std::array<unsigned char, 8>& bytes, u32 index) const;
 
     static i64 IDispatchI(const Data* val);
     static i64 IDispatchU(const Data* val);
     static i64 IDispatchF(const Data* val);
     static i64 IDispatchB(const Data* val);
 
-    static constexpr std::array dispatch_int {
+    static constexpr std::array dispatch_int{
         IDispatchI,
         IDispatchU,
         IDispatchF,
@@ -145,7 +196,7 @@ private:
     static u64 UDispatchF(const Data* val);
     static u64 UDispatchB(const Data* val);
 
-    static constexpr std::array dispatch_unsigned {
+    static constexpr std::array dispatch_unsigned{
         UDispatchI,
         UDispatchU,
         UDispatchF,
@@ -157,7 +208,7 @@ private:
     static f64 FDispatchF(const Data* val);
     static f64 FDispatchB(const Data* val);
 
-    static constexpr std::array dispatch_float {
+    static constexpr std::array dispatch_float{
         FDispatchI,
         FDispatchU,
         FDispatchF,
@@ -169,12 +220,11 @@ private:
     static bool BDispatchF(const Data* val);
     static bool BDispatchB(const Data* val);
 
-    static constexpr std::array dispatch_bool {
+    static constexpr std::array dispatch_bool{
         BDispatchI,
         BDispatchU,
         BDispatchF,
         BDispatchB,
     };
 };
-
-}  // namespace mana::vm
+} // namespace mana::vm

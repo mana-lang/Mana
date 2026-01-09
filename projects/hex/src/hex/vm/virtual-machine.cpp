@@ -11,7 +11,7 @@ static constexpr std::size_t STACK_MAX = 512;
 // @formatter:off
 
 // payloads are little endian
-#define READ_PAYLOAD u16((0xFF00 & *ip) | (0x00FF & *(ip+1)))
+#define READ_PAYLOAD (static_cast<u16>(*ip | *(ip + 1) << 8))
 
 // jwf inverts the bool output to avoid needing a branch in the vm
 // this way falsey multiplies by 1, and truthy multiplies by 0
@@ -32,7 +32,8 @@ static constexpr std::size_t STACK_MAX = 512;
 #   define LOG_TOP(msg) LogTop(msg)
 #   define LOG_TOP_TWO(msg) LogTopTwo(msg)
 #   define FETCH_CONSTANT() constants[READ_PAYLOAD]
-#   define CMP(op) Pop() op Pop()
+            // use a lambda to guarantee evaluation order
+#   define CMP(op) [&]{auto r = Pop(); auto l = Pop(); return l op r;}()
 #   define LOGICAL_NOT() Push(!Pop())
 #else
 #   define DISPATCH() goto* dispatch_table[*ip++]
@@ -44,8 +45,8 @@ static constexpr std::size_t STACK_MAX = 512;
 #   define LOG_TOP(msg)
 #   define LOG_TOP_TWO(msg)
 #   define FETCH_CONSTANT() *(constants + READ_PAYLOAD)
-#   define CMP(op) *(stack_top - 2) op *(stack_top - 1)
-#   define LOGICAL_NOT() *(++stack_top) =! *(--stack_top)
+#   define CMP(op) (stack_top -= 2, *(stack_top) op *(stack_top + 1))
+#   define LOGICAL_NOT() TOP_VAL() = !TOP_VAL();
 #endif
 // @formatter:on
 

@@ -22,15 +22,15 @@ u64 Slice::Write(const Op opcode, const u16 payload) {
     const auto ret = instructions.size() - 1;
 
     // payloads are 16-bit unsigned little endian
-    instructions.push_back((payload >> 8) & 0xFF);
     instructions.push_back(payload & 0xFF);
+    instructions.push_back((payload >> 8) & 0xFF);
 
     return ret;
 }
 
 void Slice::Patch(const u64 instruction_index, const u16 new_value) {
-    instructions[instruction_index + 1] = (new_value >> 8) & 0xFF;
-    instructions[instruction_index + 2] = new_value & 0xFF;
+    instructions[instruction_index + 1] = new_value & 0xFF;
+    instructions[instruction_index + 2] = (new_value >> 8) & 0xFF;
 }
 
 u64 Slice::BackIndex() const {

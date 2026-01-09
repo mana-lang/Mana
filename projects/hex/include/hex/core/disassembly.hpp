@@ -8,9 +8,9 @@
 namespace hex {
 namespace ml = mana::literals;
 
-void EmitConstant(ml::i64 offset, ml::f64 constant);
-void EmitConstant(ml::i64 offset, ml::i64 constant);
-void EmitConstant(ml::i64 offset, ml::u64 constant);
+void EmitConstant(ml::i64 offset, mana::vm::Op op, ml::f64 constant);
+void EmitJump(ml::i64 offset, mana::vm::Op op, ml::i64 constant);
+void EmitConstant(ml::i64 offset, mana::vm::Op op, ml::u64 constant);
 void EmitConstant(ml::i64 offset, bool constant);
 
 void EmitSimple(ml::i64 offset, mana::vm::Op op);

@@ -6,16 +6,26 @@
 namespace hex {
 using namespace mana::vm;
 
-void EmitConstant(i64 offset, f64 constant) {
-    Log->debug("{:04} | {} | {}", offset, magic_enum::enum_name(Op::Push), constant);
+void EmitConstant(i64 offset, Op op, f64 constant) {
+    Log->debug("{:04} | {} => {}", offset, magic_enum::enum_name(op), constant);
 }
 
-void EmitConstant(i64 offset, const Value& constant) {
-    const auto print = [offset]<typename T>(const mana::PrimitiveType type, T val) {
-        Log->debug("{:04} | {} | {} | {}",
-                   offset,
-                   magic_enum::enum_name(Op::Push),
-                   magic_enum::enum_name(type), val);
+void EmitJump(i64 offset, Op op, u16 distance) {
+    Log->debug("{:04} | {} => {}", offset, magic_enum::enum_name(op), distance);
+}
+
+void EmitConstant(const i64 offset, const Op op, const Value& constant) {
+    const auto print = [offset, op]<typename T>(const mana::PrimitiveType type, T val) {
+        if (Op::Push == op) {
+            Log->debug("{:04} | {} | {} | {}",
+                       offset,
+                       magic_enum::enum_name(op),
+                       magic_enum::enum_name(type), val);
+
+            return;
+        }
+
+        Log->debug("{:04} | {} => {}", offset, magic_enum::enum_name(op), val);
     };
 
     switch (constant.GetType()) {
@@ -36,6 +46,11 @@ void EmitConstant(i64 offset, const Value& constant) {
     }
 }
 
+u16 ReadPayload(const u8 first_byte, const u8 second_byte) {
+    const auto ret = static_cast<u16>(first_byte | second_byte << 8);
+    return ret;
+}
+
 void EmitSimple(i64 offset, const Op op) {
     Log->debug("{:04} | {}", offset, magic_enum::enum_name(op));
 }
@@ -44,17 +59,18 @@ void PrintBytecode(const Slice& c) {
     const auto& code = c.Instructions();
 
     for (i64 i = 0; i < code.size(); ++i) {
-        i64 increment_offset = 0;
         switch (const auto op = static_cast<Op>(code[i])) {
             using enum Op;
         case Push:
-            EmitConstant(i, c.Constants()[code[i + 2]]);
-            increment_offset += 2;
+            EmitConstant(i, op, c.Constants()[ReadPayload(code[i + 1], code[i + 2])]);
+            i += 2;
             break;
         case JumpWhenFalse:
         case JumpWhenTrue:
         case Jump:
-            increment_offset += 2;
+            EmitJump(i, op, ReadPayload(code[i + 1], code[i + 2]));
+            i += 2;
+            break;
         case Pop:
         case Negate:
         case Add:
@@ -76,8 +92,6 @@ void PrintBytecode(const Slice& c) {
             Log->debug("???");
             break;
         }
-
-        i += increment_offset;
     }
 }
 } // namespace hex
