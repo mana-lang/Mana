@@ -17,20 +17,25 @@ u64 Slice::Write(Op opcode) {
     return instructions.size() - 1;
 }
 
-u64 Slice::Write(const Op opcode, const u16 payload) {
+u64 Slice::Write(const Op opcode, std::initializer_list<u16> payloads) {
     instructions.push_back(static_cast<u8>(opcode));
-    const auto ret = instructions.size() - 1;
+    const auto index = instructions.size() - 1;
 
     // payloads are 16-bit unsigned little endian
-    instructions.push_back(payload & 0xFF);
-    instructions.push_back((payload >> 8) & 0xFF);
 
-    return ret;
+    for (const auto payload : payloads) {
+        instructions.push_back(payload & 0xFF);
+        instructions.push_back((payload >> 8) & 0xFF);
+    }
+
+    return index;
 }
 
-void Slice::Patch(const u64 instruction_index, const u16 new_value) {
-    instructions[instruction_index + 1] = new_value & 0xFF;
-    instructions[instruction_index + 2] = (new_value >> 8) & 0xFF;
+void Slice::Patch(const u64 instruction_index, const u16 new_value, const u8 payload_index) {
+    // add 1 to skip past instruction
+    const u64 payload = 1 + instruction_index + payload_index * 2;
+    instructions[payload] = new_value & 0xFF;
+    instructions[payload + 1] = (new_value >> 8) & 0xFF;
 }
 
 u64 Slice::BackIndex() const {
