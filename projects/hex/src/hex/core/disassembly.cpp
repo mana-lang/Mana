@@ -48,7 +48,7 @@ void PrintBytecode(const Slice& s) {
             const auto& val = s.Constants()[idx];
 
             const auto log_val = [&](auto v) {
-                Log->debug("{:04} | {} R{} <= {} (idx: {})", offset, name, reg, v, idx);
+                Log->debug("{:04} | {} R{} <- {} [constant index: {}]", offset, name, reg, v, idx);
             };
 
             switch (val.GetType()) {
@@ -71,6 +71,15 @@ void PrintBytecode(const Slice& s) {
                 log_val("???");
                 break;
             }
+            break;
+        }
+
+        case Move:
+        case Negate:
+        case Not: {
+            const u16 dst = read();
+            const u16 src = read();
+            Log->debug("{:04} | {} R{}, R{}", offset, name, dst, src);
             break;
         }
 

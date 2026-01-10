@@ -8,17 +8,21 @@
 
 namespace circe {
 namespace ml = mana::literals;
+namespace mv = mana::vm;
 namespace ast = sigil::ast;
 
 class MainVisitor final : public ast::Visitor {
-    mana::vm::Slice slice;
+    using SymbolTable = std::unordered_map<std::string, ml::u16>;
 
-    std::unordered_map<std::string, ml::u16> symbols;
-    ml::u16 next_slot = {};
+    mv::Slice   slice;
+    SymbolTable symbols;
+    ml::u16     next_slot = {};
+
+    std::vector<ml::u16> reg_stack;
 
 public:
-    CIRCE_NODISCARD mana::vm::Slice GetSlice() const;
-    CIRCE_NODISCARD ml::u64 ComputeJumpDist(mana::literals::u64 index) const;
+    CIRCE_NODISCARD mv::Slice GetSlice() const;
+    CIRCE_NODISCARD ml::u64   ComputeJumpDist(ml::u64 index) const;
 
     void Visit(const ast::UnaryExpr& node) override;
     void Visit(const ast::Artifact& artifact) override;
@@ -31,8 +35,20 @@ public:
     void Visit(const ast::Statement& node) override;
     void Visit(const ast::Scope& node) override;
     void Visit(const ast::If& node) override;
-    void Visit(const ast::Datum& node) override;
+    void Visit(const ast::DataDeclaration& node) override;
     void Visit(const ast::Identifier& node) override;
-};
 
-}  // namespace circe
+private:
+    ml::u16 AllocateRegister();
+    ml::u16 PopRegStack();
+
+    template <typename T>
+    void CreateLiteral(const ast::Literal<T>& literal) {
+        ml::u16 dst = AllocateRegister();
+        ml::u16 idx = slice.AddConstant(literal.Get());
+        slice.Write(mv::Op::LoadConstant, {dst, idx});
+
+        reg_stack.push_back(dst);
+    }
+};
+} // namespace circe

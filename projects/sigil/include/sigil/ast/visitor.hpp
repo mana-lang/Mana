@@ -14,7 +14,7 @@ public:
     virtual void Visit(const class Artifact& node)     = 0;
     virtual void Visit(const class Scope& node)        = 0;
 
-    virtual void Visit(const class Datum& node)        = 0;
+    virtual void Visit(const class DataDeclaration& node)        = 0;
     virtual void Visit(const class Identifier& node)   = 0;
 
     virtual void Visit(const class Statement& node)    = 0;

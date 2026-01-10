@@ -6,7 +6,7 @@
 namespace hex {
 using namespace mana::vm;
 
-static constexpr std::size_t BASE_REG_SIZE = 32;
+static constexpr std::size_t BASE_REG_SIZE = 256;
 
 // payloads are little endian
 #define READ_PAYLOAD (static_cast<u16>(*ip | *(ip + 1) << 8))

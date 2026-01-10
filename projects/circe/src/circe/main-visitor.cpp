@@ -31,98 +31,117 @@ u64 MainVisitor::ComputeJumpDist(const u64 index) const {
 void MainVisitor::Visit(const Artifact& artifact) {
     for (const auto& statement : artifact.GetChildren()) {
         statement->Accept(*this);
-        slice.Write(Op::Return);
-    }
 
+        // prevent dangling register references
+        reg_stack.clear();
+    }
     slice.Write(Op::Halt);
 }
 
+constexpr u8 CJMP_OP_BYTES = 5;
+constexpr u8 JMP_OP_BYTES = 3;
+
 void MainVisitor::Visit(const BinaryExpr& node) {
-    const auto op = node.GetOp();
+    const auto op_str = node.GetOp();
 
     // logical ops need special treatment as they are control flow due to short-circuiting
     const auto jump = [this, &node](const Op jump_op) {
         node.GetLeft().Accept(*this);
 
-        const u64 idx = slice.Write(jump_op, 0xDEAD);
-        slice.Write(Op::Pop);
+        const u16 lhs = PopRegStack();
+        const u16 dst = AllocateRegister();
+        slice.Write(Op::Move, {dst, lhs});
+
+        const u64 jwf = slice.Write(jump_op, {lhs, 0xDEAD});
 
         node.GetRight().Accept(*this);
-        slice.Patch(idx, ComputeJumpDist(idx));
+        const u16 rhs = PopRegStack();
+        slice.Write(Op::Move, {dst, rhs});
+
+        slice.Patch(jwf, slice.Instructions().size() - (jwf + CJMP_OP_BYTES), 1);
+        reg_stack.push_back(dst);
     };
 
-    if (op.size() == 2) {
-        if (op == "&&") {
-            jump(Op::JumpWhenFalse);
-            return;;
-        }
 
-        if (op == "||") {
-            jump(Op::JumpWhenTrue);
-            return;
-        }
+    if (op_str == "&&") {
+        jump(Op::JumpWhenFalse);
+        return;
     }
 
+    if (op_str == "||") {
+        jump(Op::JumpWhenTrue);
+        return;
+    }
 
     node.GetLeft().Accept(*this);
     node.GetRight().Accept(*this);
 
-    switch (op[0]) {
+    u16 rhs = PopRegStack();
+    u16 lhs = PopRegStack();
+    u16 dst = AllocateRegister();
+
+    Op op;
+    switch (op_str[0]) {
     case '+':
-        slice.Write(Op::Add);
+        op = Op::Add;
         break;
     case '-':
-        slice.Write(Op::Sub);
+        op = Op::Sub;
         break;
     case '*':
-        slice.Write(Op::Mul);
+        op = Op::Mul;
         break;
     case '/':
-        slice.Write(Op::Div);
+        op = Op::Div;
         break;
     case '>':
-        if (op.size() == 2 && op[1] == '=') {
-            slice.Write(Op::Cmp_GreaterEq);
+        if (op_str.size() == 2 && op_str[1] == '=') {
+            op = Op::Cmp_GreaterEq;
             break;
         }
-        slice.Write(Op::Cmp_Greater);
+        op = Op::Cmp_Greater;
         break;
     case '<':
-        if (op.size() == 2 && op[1] == '=') {
-            slice.Write(Op::Cmp_LesserEq);
+        if (op_str.size() == 2 && op_str[1] == '=') {
+            op = Op::Cmp_LesserEq;
             break;
         }
-        slice.Write(Op::Cmp_Lesser);
+        op = Op::Cmp_Lesser;
         break;
     case '=':
-        if (op.size() == 2 && op[1] == '=') {
-            slice.Write(Op::Equals);
+        if (op_str.size() == 2 && op_str[1] == '=') {
+            op = Op::Equals;
             break;
         }
+        return; // prevent accidental fallthrough
     case '!':
-        if (op.size() == 2 && op[1] == '=') {
-            slice.Write(Op::NotEquals);
+        if (op_str.size() == 2 && op_str[1] == '=') {
+            op = Op::NotEquals;
             break;
         }
+        return;
     default:
-        Log->error("Unknown Binary-Operator '{}'", node.GetOp());
-        break;
+        Log->error("Unknown Binary Operator '{}'", node.GetOp());
+        return;
     }
+
+    slice.Write(op, {dst, lhs, rhs});
+    reg_stack.push_back(dst);
 }
 
 void MainVisitor::Visit(const Literal<f64>& literal) {
-    slice.Write(Op::Push, slice.AddConstant(literal.Get()));
+    CreateLiteral(literal);
 }
 
 void MainVisitor::Visit(const Literal<i64>& literal) {
-    slice.Write(Op::Push, slice.AddConstant(literal.Get()));
+    CreateLiteral(literal);
+}
+
+void MainVisitor::Visit(const Literal<bool>& literal) {
+    CreateLiteral(literal);
 }
 
 void MainVisitor::Visit(const Literal<void>& node) {}
-
-void MainVisitor::Visit(const Literal<bool>& literal) {
-    slice.Write(Op::Push, slice.AddConstant(literal.Get()));
-}
 
 void MainVisitor::Visit(const ArrayLiteral& array) {
     const auto& array_elems = array.GetValues();
@@ -139,9 +158,7 @@ void MainVisitor::Visit(const ArrayLiteral& array) {
 
 void MainVisitor::Visit(const Statement& node) {
     node.Accept(*this);
-    slice.Write(Op::Return);
-
-    Log->error("Statement nodes should probably not be in the AST");
+    //Log->error("Statement nodes should probably not be in the AST");
 }
 
 void MainVisitor::Visit(const Scope& node) {
@@ -150,57 +167,70 @@ void MainVisitor::Visit(const Scope& node) {
 
 void MainVisitor::Visit(const If& node) {
     node.GetCondition()->Accept(*this);
-    const u64 jmp_false = slice.Write(Op::JumpWhenFalse, 0xDEAD);
+    const u16 cond_reg = PopRegStack();
 
-    // 'true' path
-    // pop condition before executing then-block
-    slice.Write(Op::Pop);
+    const u64 jmp_false = slice.Write(Op::JumpWhenFalse, {cond_reg, 0xDEAD});
+
     node.GetThenBlock()->Accept(*this);
 
-    // need to jump over 'false' path to reach end of block
-    const u64 jmp_end = slice.Write(Op::Jump, 0xDEAD);
-
-    // 'false' path
-    // jwf lands here, skipping regular jmp
-    slice.Patch(jmp_false, ComputeJumpDist(jmp_false));
-
-    // if we don't pop here, the if-condition never gets cleaned up
-    slice.Write(Op::Pop);
-
     if (const auto& else_branch = node.GetElseBranch()) {
-        else_branch->Accept(*this);
-    }
+        const u64 jmp_end = slice.Write(Op::Jump, {0xDEAD});
 
-    slice.Patch(jmp_end, ComputeJumpDist(jmp_end));
+        slice.Patch(jmp_false, slice.Instructions().size() - (jmp_false + CJMP_OP_BYTES), 1);
+
+        else_branch->Accept(*this);
+
+        slice.Patch(jmp_end, slice.Instructions().size() - (jmp_end + JMP_OP_BYTES), 0);
+    } else {
+        slice.Patch(jmp_false, slice.Instructions().size() - (jmp_false + CJMP_OP_BYTES), 1);
+    }
 }
 
-void MainVisitor::Visit(const Datum& node) {
-    if (node.GetInitializer()) {
-        node.GetInitializer()->Accept(*this);
-    } else {
-        // uninitialized data is zeroed by default
-        slice.Write(Op::Push, slice.AddConstant(0.0));
-    }
-
+void MainVisitor::Visit(const DataDeclaration& node) {
     const std::string name(node.GetName());
     if (symbols.contains(name)) {
         Log->error("Redefinition of '{}'", name);
+        return;
     }
 
-    const u16 slot = next_slot++;
-    symbols[name] = slot;
+    u16 datum;
 
-    slice.Write(Op::Store, slot);
+    if (const auto& init = node.GetInitializer()) {
+        init->Accept(*this);
+        datum = PopRegStack();
+    } else {
+        datum = AllocateRegister();
+        slice.Write(Op::LoadConstant, {datum, slice.AddConstant(0.0)});
+    }
+
+    symbols[name] = datum;
 }
 
 void MainVisitor::Visit(const Identifier& node) {
     const std::string name(node.GetName());
     if (const auto it = symbols.find(name); it != symbols.end()) {
-        slice.Write(Op::Load, it->second);
+        reg_stack.push_back(it->second);
         return;
     }
 
     Log->warn("Undefined identifier '{}'", name);
+    reg_stack.push_back(0);
+}
+
+u16 MainVisitor::AllocateRegister() {
+    return next_slot++;
+}
+
+u16 MainVisitor::PopRegStack() {
+    if (reg_stack.empty()) {
+        Log->error("Internal Compiler Error: Register stack underflow");
+        return 0;
+    }
+
+    const u16 slot = reg_stack.back();
+    reg_stack.pop_back();
+
+    return slot;
 }
 
 void MainVisitor::Visit(const UnaryExpr& node) {
@@ -211,16 +241,24 @@ void MainVisitor::Visit(const UnaryExpr& node) {
         return;
     }
 
+    u16 src = PopRegStack();
+    u16 dst = AllocateRegister();
+
+    Op op;
     switch (node.GetOp()[0]) {
     case '-':
-        slice.Write(Op::Negate);
+        op = Op::Negate;
         break;
     case '!':
-        slice.Write(Op::Not);
+        op = Op::Not;
         break;
     default:
         Log->error("Invalid unary expression");
-        break;
+        PopRegStack();
+        return;
     }
+
+    slice.Write(op, {dst, src});
+    reg_stack.push_back(dst);
 }
 } // namespace circe
