@@ -127,9 +127,7 @@ Scope::Scope(const ParseNode& node) {
 }
 
 void Scope::Accept(Visitor& visitor) const {
-    for (const auto& stmt : statements) {
-        stmt->Accept(visitor);
-    }
+    visitor.Visit(*this);
 }
 
 const std::vector<NodePtr>& Scope::GetStatements() const {

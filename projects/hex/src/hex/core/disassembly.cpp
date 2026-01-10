@@ -111,7 +111,7 @@ void PrintBytecode(const Slice& s) {
         case JumpWhenFalse: {
             const u16 reg  = read();
             const u16 dist = read();
-            // Offset + Opcode (1) + Reg (2) + Dist (2) + Distance
+            // Offset + Opcode (1) + Reg (2) + Destination (2)
             Log->debug("{:04} | {} R{} => {:04}", offset, name, reg, offset + 5 + dist);
             break;
         }
