@@ -84,12 +84,12 @@ public:
     void                             Accept(Visitor& visitor) const override;
 };
 
-class Datum final : public Node {
+class DataDeclaration final : public Node {
     std::string name;
     NodePtr     initializer;
 
 public:
-    explicit Datum(const ParseNode& node);
+    explicit DataDeclaration(const ParseNode& node);
 
     SIGIL_NODISCARD std::string_view GetName() const;
     SIGIL_NODISCARD const NodePtr&   GetInitializer() const;
@@ -98,7 +98,7 @@ public:
 };
 
 class Scope final : public Node, public StatementContainer {
-    std::unordered_map<std::string, Datum*> datums;
+    std::unordered_map<std::string, DataDeclaration*> datums;
 
 public:
     explicit Scope(const ParseNode& node);
@@ -214,7 +214,7 @@ void PropagateStatements(const ParseNode& node, SC* root) {
 
             switch (n->rule) {
             case Declaration:
-                root->Add<Datum>(*n);
+                root->Add<DataDeclaration>(*n);
                 break;
             case IfBlock:
                 root->Add<If>(*n);

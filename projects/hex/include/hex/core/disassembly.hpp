@@ -8,16 +8,10 @@
 namespace hex {
 namespace ml = mana::literals;
 
-void EmitConstant(ml::i64 offset, mana::vm::Op op, ml::f64 constant);
-void EmitConstant(ml::i64 offset, mana::vm::Op op, ml::u64 constant);
-void EmitConstant(ml::i64 offset, bool constant);
-
-void EmitSimple(ml::i64 offset, mana::vm::Op op);
-
-void EmitJump(ml::i64 offset, mana::vm::Op op, ml::u16 distance);
-
-void EmitPayload(ml::i64 offset, mana::vm::Op op, ml::u16 payload);
-
-void PrintBytecode(const mana::vm::Slice& c);
+/**
+ * @brief Prints the register-based bytecode in a human-readable format.
+ * Matches the new 3-address instruction set (Dst, L, R).
+ */
+void PrintBytecode(const mana::vm::Slice& s);
 
 }  // namespace hex

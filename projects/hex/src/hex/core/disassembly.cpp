@@ -6,108 +6,118 @@
 namespace hex {
 using namespace mana::vm;
 
-void EmitConstant(i64 offset, Op op, f64 constant) {
-    Log->debug("{:04} | {} => {}", offset, magic_enum::enum_name(op), constant);
+/**
+ * @brief Reads a 16-bit little-endian payload from the bytecode.
+ */
+static u16 ReadPayload(const u8 first_byte, const u8 second_byte) {
+    return static_cast<u16>(first_byte | (second_byte << 8));
 }
 
-void EmitJump(i64 offset, Op op, u16 distance) {
-    constexpr u16 num_jmp_instructions = 3;
-    Log->debug("{:04} | {} => {:04}",
-               offset,
-               magic_enum::enum_name(op),
-               offset + num_jmp_instructions + distance
-    );
-}
-
-void EmitPayload(i64 offset, Op op, u16 payload) {
-    Log->debug("{:04} | {}: {}",
-               offset,
-               magic_enum::enum_name(op),
-               payload
-    );
-}
-
-void EmitConstant(const i64 offset, const Op op, const Value& constant) {
-    const auto print = [offset, op]<typename T>(const mana::PrimitiveType type, T val) {
-        if (Op::Push == op) {
-            Log->debug("{:04} | {} | {} | {}",
-                       offset,
-                       magic_enum::enum_name(op),
-                       magic_enum::enum_name(type), val);
-
-            return;
-        }
-
-        Log->debug("{:04} | {} => {}", offset, magic_enum::enum_name(op), val);
-    };
-
-    switch (constant.GetType()) {
-    case mana::PrimitiveType::Float64:
-        print(constant.GetType(), constant.AsFloat());
-        break;
-    case mana::PrimitiveType::Int64:
-        print(constant.GetType(), constant.AsInt());
-        break;
-    case mana::PrimitiveType::Uint64:
-        print(constant.GetType(), constant.AsUint());
-        break;
-    case mana::PrimitiveType::Bool:
-        print(constant.GetType(), constant.AsBool());
-        break;
-    default:
-        break;
-    }
-}
-
-u16 ReadPayload(const u8 first_byte, const u8 second_byte) {
-    const auto ret = static_cast<u16>(first_byte | second_byte << 8);
-    return ret;
-}
-
-void EmitSimple(i64 offset, const Op op) {
-    Log->debug("{:04} | {}", offset, magic_enum::enum_name(op));
-}
-
-void PrintBytecode(const Slice& c) {
-    const auto& code = c.Instructions();
+void PrintBytecode(const Slice& s) {
+    const auto& code = s.Instructions();
 
     for (i64 i = 0; i < code.size(); ++i) {
-        switch (const auto op = static_cast<Op>(code[i])) {
+        const i64  offset = i;
+        const auto op     = static_cast<Op>(code[i]);
+        const auto name   = magic_enum::enum_name(op);
+
+        // Helper to read 2-byte payloads and advance the loop counter
+        auto read = [&] {
+            u16 val = ReadPayload(code[i + 1], code[i + 2]);
+
+            i += 2;
+            return val;
+        };
+
+        switch (op) {
             using enum Op;
-        case Push:
-            EmitConstant(i, op, c.Constants()[ReadPayload(code[i + 1], code[i + 2])]);
-            i += 2;
+        case Halt:
+            Log->debug("{:04} | {}", offset, name);
             break;
-        case JumpWhenFalse:
-        case JumpWhenTrue:
-        case Jump:
-            EmitJump(i, op, ReadPayload(code[i + 1], code[i + 2]));
-            i += 2;
+
+        case Return: {
+            const u16 reg = read();
+            Log->debug("{:04} | {} R{}", offset, name, reg);
             break;
-        case Load:
-        case Store:
-            EmitPayload(i, op, ReadPayload(code[i + 1], code[i + 2]));
-            i += 2;
+        }
+
+
+        case LoadConstant: {
+            const u16   reg = read();
+            const u16   idx = read();
+            const auto& val = s.Constants()[idx];
+
+            const auto log_val = [&](auto v) {
+                Log->debug("{:04} | {} R{} <- {} [constant index: {}]", offset, name, reg, v, idx);
+            };
+
+            switch (val.GetType()) {
+            case mana::PrimitiveType::Float64:
+                log_val(val.AsFloat());
+                break;
+            case mana::PrimitiveType::Int64:
+                log_val(val.AsInt());
+                break;
+            case mana::PrimitiveType::Uint64:
+                log_val(val.AsUint());
+                break;
+            case mana::PrimitiveType::Bool:
+                log_val(val.AsBool());
+                break;
+            case mana::PrimitiveType::None:
+                log_val("none");
+                break;
+            default:
+                log_val("???");
+                break;
+            }
             break;
-        case Pop:
+        }
+
+        case Move:
         case Negate:
+        case Not: {
+            const u16 dst = read();
+            const u16 src = read();
+            Log->debug("{:04} | {} R{}, R{}", offset, name, dst, src);
+            break;
+        }
+
         case Add:
         case Sub:
         case Div:
         case Mul:
-        case Halt:
-        case Return:
         case Cmp_Greater:
-        case Cmp_Lesser:
         case Cmp_GreaterEq:
+        case Cmp_Lesser:
         case Cmp_LesserEq:
         case Equals:
-        case NotEquals:
-        case Not:
-            EmitSimple(i, op);
+        case NotEquals: {
+            const u16 dst = read();
+            const u16 lhs = read();
+            const u16 rhs = read();
+            Log->debug("{:04} | {} R{}, R{}, R{}", offset, name, dst, lhs, rhs);
             break;
+        }
+
+        case Jump: {
+            const u16 dist = read();
+            // Offset + Opcode (1) + Payload (2) + Distance
+            Log->debug("{:04} | {} => {:04}", offset, name, offset + 3 + dist);
+            break;
+        }
+
+        case JumpWhenTrue:
+        case JumpWhenFalse: {
+            const u16 reg  = read();
+            const u16 dist = read();
+            // Offset + Opcode (1) + Reg (2) + Destination (2)
+            Log->debug("{:04} | {} R{} => {:04}", offset, name, reg, offset + 5 + dist);
+            break;
+        }
+
         default:
-            Log->debug("???");
+            Log->debug("{:04} | ??? ({})", offset, static_cast<u8>(op));
             break;
         }
     }

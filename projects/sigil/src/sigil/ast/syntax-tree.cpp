@@ -127,9 +127,7 @@ Scope::Scope(const ParseNode& node) {
 }
 
 void Scope::Accept(Visitor& visitor) const {
-    for (const auto& stmt : statements) {
-        stmt->Accept(visitor);
-    }
+    visitor.Visit(*this);
 }
 
 const std::vector<NodePtr>& Scope::GetStatements() const {
@@ -173,7 +171,7 @@ void If::Accept(Visitor& visitor) const {
 }
 
 /// Datum
-Datum::Datum(const ParseNode& node) : initializer(nullptr) {
+DataDeclaration::DataDeclaration(const ParseNode& node) : initializer(nullptr) {
     // Correctly find the identifier name among tokens (skip 'mut' or 'data')
     for (const auto& token : node.tokens) {
         if (token.type == TokenType::Identifier) {
@@ -186,15 +184,15 @@ Datum::Datum(const ParseNode& node) : initializer(nullptr) {
     }
 }
 
-std::string_view Datum::GetName() const {
+std::string_view DataDeclaration::GetName() const {
     return name;
 }
 
-const NodePtr& Datum::GetInitializer() const {
+const NodePtr& DataDeclaration::GetInitializer() const {
     return initializer;
 }
 
-void Datum::Accept(Visitor& visitor) const {
+void DataDeclaration::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 

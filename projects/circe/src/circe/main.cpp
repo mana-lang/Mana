@@ -36,7 +36,7 @@ int CompileFrom(const std::string& filename) {
     Log->info("Compiling...");
     parser.PrintParseTree();
 
-    MainVisitor visitor;
+    CirceVisitor visitor;
     ast->Accept(visitor);
 
     mana::vm::Slice slice;

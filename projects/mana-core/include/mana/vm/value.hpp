@@ -57,6 +57,13 @@ struct Value {
     MANA_NODISCARD u64  AsUint() const;
     MANA_NODISCARD bool AsBool() const;
 
+    Value operator+(const Value& rhs) const;
+    Value operator-(const Value& rhs) const;
+    Value operator*(const Value& rhs) const;
+    Value operator/(const Value& rhs) const;
+
+    Value operator-() const;
+
     void operator+=(const Value& rhs);
     void operator-=(const Value& rhs);
     void operator*=(const Value& rhs);
@@ -86,57 +93,6 @@ struct Value {
     Value& operator=(Value&& other) noexcept;
 
     ~Value();
-
-    // template <typename T>
-    //     requires std::is_integral_v<T> || std::is_floating_point_v<T>
-    //              || std::is_same_v<T, bool>
-    // explicit Value(const std::vector<T>& values)
-    //     : length(values.size())
-    //     , type(GetManaTypeFrom(T{})) {
-    //     if (length == 0) {
-    //         data = nullptr;
-    //         return;
-    //     }
-    //
-    //     if (length == 1) {
-    //         switch (type) {
-    //         case Int64:
-    //             data = new Data{.as_i64 = values[0]};
-    //             return;
-    //         case Uint64:
-    //             data = new Data{.as_u64 = values[0]};
-    //             return;
-    //         case Float64:
-    //             data = new Data{.as_f64 = values[0]};
-    //             return;
-    //         case Bool:
-    //             data = new Data{.as_bool = values[0]};
-    //             return;
-    //         default:
-    //             break;
-    //         }
-    //     }
-    //
-    //     data = new Data[length];
-    //     for (u64 i = 0; i < length; ++i) {
-    //         switch (type) {
-    //         case Int64:
-    //             data[i].as_i64 = values[i];
-    //             break;
-    //         case Uint64:
-    //             data[i].as_u64 = values[i];
-    //             break;
-    //         case Float64:
-    //             data[i].as_f64 = values[i];
-    //             break;
-    //         case Bool:
-    //             data[i].as_bool = values[i];
-    //             break;
-    //         default:
-    //             return;
-    //         }
-    //     }
-    // }
 
     template <typename T>
         requires std::is_integral_v<T>

@@ -6,57 +6,16 @@
 namespace hex {
 using namespace mana::vm;
 
-static constexpr std::size_t STACK_MAX = 512;
-
-// @formatter:off
+static constexpr std::size_t BASE_REG_SIZE = 256;
 
 // payloads are little endian
 #define READ_PAYLOAD (static_cast<u16>(*ip | *(ip + 1) << 8))
 
-// jwf inverts the bool output to avoid needing a branch in the vm
-// this way falsey multiplies by 1, and truthy multiplies by 0
-#define JWF_DIST (READ_PAYLOAD * (((stack_top - 1)->AsBool() - 1) * -1))
-#define JWT_DIST (READ_PAYLOAD * (stack_top - 1)->AsBool())
-
-#ifdef HEX_DEBUG
-#   define DISPATCH()                                                               \
-    {                                                                               \
-        auto  label = *ip >= 0 && *ip < dispatch_max ? dispatch_table[*ip++] : err; \
-        goto *label;                                                                \
-    }
-#   define PUSH(val) Push(val)
-#   define POP() Pop()
-#   define TOP_VAL() *StackTop()
-#   define LOG(msg) Log->debug(msg)
-#   define LOG_JMP(msg, dist) Log->debug(msg, dist)
-#   define LOG_TOP(msg) LogTop(msg)
-#   define LOG_TOP_TWO(msg) LogTopTwo(msg)
-#   define LOG_DATUM(msg) LogLocalDatum(msg)
-#   define FETCH_CONSTANT() constants[READ_PAYLOAD]
-            // use a lambda to guarantee evaluation order
-#   define CMP(op) [&]{auto r = Pop(); auto l = Pop(); return l op r;}()
-#   define LOGICAL_NOT() Push(!Pop())
-#else
-#   define DISPATCH() goto* dispatch_table[*ip++]
-#   define PUSH(val) *(stack_top++) = val
-#   define POP() *(--stack_top)
-#   define TOP_VAL() *(stack_top - 1)
-#   define LOG(msg)
-#   define LOG_JMP(msg, dist)
-#   define LOG_TOP(msg)
-#   define LOG_TOP_TWO(msg)
-#   define LOG_DATUM(msg)
-#   define FETCH_CONSTANT() *(constants + READ_PAYLOAD)
-#   define CMP(op) (stack_top -= 2, *(stack_top) op *(stack_top + 1))
-#   define LOGICAL_NOT() TOP_VAL() = !TOP_VAL();
-#endif
-// @formatter:on
+#define NEXT_PAYLOAD (ip += 2, (static_cast<u16>(*(ip - 2) | *(ip - 1) << 8)))
+#define REG(idx) registers[idx]
 
 VirtualMachine::VirtualMachine() {
-    stack.resize(STACK_MAX);
-    stack_top = stack.data();
-
-    locals.resize(32);
+    registers.resize(BASE_REG_SIZE);
 }
 
 InterpretResult VirtualMachine::Interpret(Slice* slice) {
@@ -64,36 +23,45 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
 
     const auto* constants = slice->Constants().data();
 
-    constexpr std::array dispatch_table{
+    // this is for computed goto
+    // it's important to note this list's order is rigid
+    // it must /exactly/ match the opcode enum order
+    constexpr std::array dispatch_table {
         &&halt,
         &&ret,
-        &&push,
-        &&pop,
-        &&load,
-        &&store,
-        &&negate,
+        &&load_constant,
+        &&move,
         &&add,
         &&sub,
         &&div,
         &&mul,
+        &&negate,
+        &&bool_not,
         &&cmp_greater,
         &&cmp_greater_eq,
         &&cmp_lesser,
         &&cmp_lesser_eq,
         &&equals,
         &&not_equals,
-        &&bool_not,
         &&jmp,
-        &&jwf,
-        &&jwt,
+        &&jmp_true,
+        &&jmp_false,
     };
 
 #ifdef HEX_DEBUG
+#   define DISPATCH()                                                   \
+    {                                                                   \
+        auto  label = *ip < dispatch_max ? dispatch_table[*ip++] : err; \
+        goto *label;                                                    \
+    }
+
     constexpr auto err          = &&compile_error;
     constexpr auto dispatch_max = dispatch_table.size();
+#else
+    // we do no bounds checking whatsoever in release
+#   define DISPATCH() goto *dispatch_table[*ip++]
 #endif
 
-    constexpr auto payload_size = 2;
 
     // Start VM
     DISPATCH();
@@ -101,218 +69,129 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
 halt:
     return InterpretResult::OK;
 
-ret:
+ret: {
+        u16 reg = NEXT_PAYLOAD;
 #ifdef HEX_DEBUG
-    Log->debug("");
-
-    if (auto* top = StackTop(); StackSize() > 0) {
-        if (top->GetType() == mana::PrimitiveType::Bool) {
-            Log->debug("[ret: {}]\n\n", Pop().AsBool());
-        } else {
-            Log->debug("[ret: {}]\n\n", Pop().AsFloat());
-        }
-    } else {
-        Log->warn("Attempted to return from empty stack");
-    }
-#else
-    POP();
+        Log->debug("");
+        Log->debug("[ret: {} <- R{}]", REG(reg).AsFloat(), reg);
 #endif
 
-    DISPATCH();
-
-push:
-    PUSH(FETCH_CONSTANT());
-    ip += payload_size;
-    LOG_TOP("[push:  {}]");
-
-    DISPATCH();
-
-pop:
-    LOG_TOP("[pop:  {}]");
-    POP();
-
-    DISPATCH();
-
-load:
-    PUSH(locals[READ_PAYLOAD]);
-    LOG_DATUM("[load {} => slot {}]");
-
-    ip += payload_size;
-
-    DISPATCH();
-
-store:
-    locals[READ_PAYLOAD] = POP();
-    LOG_DATUM("[store {} => slot {}]");
-
-    ip += payload_size;
-
-    DISPATCH();
-
-negate:
-    TOP_VAL() *= -1;
-    LOG_TOP("neg:   {}");
-
-    DISPATCH();
-
-add:
-    LOG_TOP_TWO("add: ({}, {})");
-    TOP_VAL() += POP();
-
-    DISPATCH();
-
-sub:
-    LOG_TOP_TWO("sub: ({}, {})");
-    TOP_VAL() -= POP();
-
-    DISPATCH();
-
-div:
-    LOG_TOP_TWO("div: ({}, {})");
-    TOP_VAL() /= POP();
-
-    DISPATCH();
-
-mul:
-    LOG_TOP_TWO("mul: ({}, {})");
-    TOP_VAL() *= POP();
-
-    DISPATCH();
-
-cmp_greater:
-    LOG_TOP_TWO("cmp_greater: ({}, {})");
-    PUSH(CMP(>));
-
-    DISPATCH();
-
-cmp_greater_eq:
-    LOG_TOP_TWO("cmp_greater_eq: ({}, {})");
-    PUSH(CMP(>=));
-
-    DISPATCH();
-
-cmp_lesser:
-    LOG_TOP_TWO("cmp_lesser: ({}, {})");
-    PUSH(CMP(<));
-
-    DISPATCH();
-
-cmp_lesser_eq:
-    LOG_TOP_TWO("cmp_lesser_eq: ({}, {})");
-    PUSH(CMP(<=));
-
-    DISPATCH();
-
-equals:
-    LOG_TOP_TWO("equals ({}, {})");
-    PUSH(CMP(==));
-
-    DISPATCH();
-
-not_equals:
-    LOG_TOP_TWO("not_equals ({}, {})");
-    PUSH(CMP(!=));
-
-    DISPATCH();
-
-bool_not:
-    LOG_TOP("not ({})");
-    LOGICAL_NOT();
-
-    DISPATCH();
-
-jmp:
-    LOG_JMP("jmp: {}", READ_PAYLOAD);
-    ip += READ_PAYLOAD + payload_size;
-
-    DISPATCH();
-
-jwf:
-    LOG_JMP("jmp-false: {}", JWF_DIST);
-    ip += JWF_DIST + payload_size;
-
-    DISPATCH();
-
-jwt:
-    LOG_JMP("jmp-true: {}", JWT_DIST);
-    ip += JWT_DIST + payload_size;
-
-    DISPATCH();
-
-compile_error:
-    return InterpretResult::CompileError;
-}
-
-u64 VirtualMachine::StackSize() const {
-    return stack_top - stack.data();
-}
-
-void VirtualMachine::Reset() {
-    stack_top = stack.data();
-}
-
-void VirtualMachine::Push(const Value& value) {
-    if (stack_top == &stack.back()) {
-        const auto offset = stack.size();
-        stack.resize(stack.capacity() * 2);
-
-        stack_top = stack.data() + offset;
+        DISPATCH();
     }
 
-    *stack_top = value;
-    ++stack_top;
-}
+load_constant: {
+        u16 dst  = NEXT_PAYLOAD;
+        u16 idx  = NEXT_PAYLOAD;
+        REG(dst) = constants[idx];
 
-Value VirtualMachine::Pop() {
-    if (stack_top != &stack.front()) {
-        --stack_top;
-    } else {
-        Log->error("Attempted to pop from empty stack.");
-        return 0.0;
+        DISPATCH();
+    }
+move: {
+        u16 dst  = NEXT_PAYLOAD;
+        u16 src  = NEXT_PAYLOAD;
+        REG(dst) = REG(src);
+
+        DISPATCH();
     }
 
-    return *stack_top;
-}
+#define BINARY_OP(op)       \
+    u16 dst = NEXT_PAYLOAD; \
+    u16 lhs = NEXT_PAYLOAD; \
+    u16 rhs = NEXT_PAYLOAD; \
+    REG(dst) = REG(lhs) op REG(rhs)
 
-Value VirtualMachine::ViewTop() const {
-    if (stack_top == &stack.front()) {
-        Log->error("Attempted to read from empty stack");
-        return 0.0;
+add: {
+        BINARY_OP(+);
+        DISPATCH();
     }
 
-    return *(stack_top - 1);
-}
-
-Value* VirtualMachine::StackTop() const {
-    if (stack_top == &stack.front()) {
-        Log->warn("Attempted to read from empty stack");
-        return nullptr;
+sub: {
+        BINARY_OP(-);
+        DISPATCH();
     }
 
-    return stack_top - 1;
-}
-
-void VirtualMachine::LogTop(const std::string_view msg) const {
-    if (StackTop()->GetType() == mana::PrimitiveType::Bool) {
-        Log->debug(fmt::runtime(msg), ViewTop().AsBool());
-    } else {
-        Log->debug(fmt::runtime(msg), ViewTop().AsFloat());
+div: {
+        BINARY_OP(/);
+        DISPATCH();
     }
-}
 
-void VirtualMachine::LogTopTwo(const std::string_view msg) const {
-    if (StackTop()->GetType() == mana::PrimitiveType::Bool) {
-        Log->debug(fmt::runtime(msg), (StackTop() - 1)->AsBool(), ViewTop().AsBool());
-    } else {
-        Log->debug(fmt::runtime(msg), (StackTop() - 1)->AsFloat(), ViewTop().AsFloat());
+mul: {
+        BINARY_OP(*);
+        DISPATCH();
     }
-}
 
-void VirtualMachine::LogLocalDatum(std::string_view msg) const {
-    Log->debug(fmt::runtime(msg)
-         , locals[READ_PAYLOAD].GetType() == mana::PrimitiveType::Bool
-               ? locals[READ_PAYLOAD].AsBool()
-               : locals[READ_PAYLOAD].AsFloat()
-         , READ_PAYLOAD);
+negate: {
+        u16 dst  = NEXT_PAYLOAD;
+        u16 src  = NEXT_PAYLOAD;
+        REG(dst) = -REG(src);
+
+        DISPATCH();
+    }
+
+bool_not: {
+        u16 dst  = NEXT_PAYLOAD;
+        u16 src  = NEXT_PAYLOAD;
+        REG(dst) = !REG(src);
+
+        DISPATCH();
+    }
+
+cmp_greater: {
+        BINARY_OP(>);
+        DISPATCH();
+    }
+
+cmp_greater_eq: {
+        BINARY_OP(>=);
+        DISPATCH();
+    }
+
+cmp_lesser: {
+        BINARY_OP(<);
+        DISPATCH();
+    }
+
+cmp_lesser_eq: {
+        BINARY_OP(<=);
+        DISPATCH();
+    }
+
+equals: {
+        BINARY_OP(==);
+        DISPATCH();
+    }
+
+not_equals: {
+        BINARY_OP(!=);
+        DISPATCH();
+    }
+
+jmp: {
+        ip += NEXT_PAYLOAD;
+        DISPATCH();
+    }
+
+jmp_true: {
+        u16 reg  = NEXT_PAYLOAD;
+        u16 dist = NEXT_PAYLOAD;
+
+        // sidestep branch predictions altogether
+        ip += dist * REG(reg).AsBool();
+
+        DISPATCH();
+    }
+jmp_false: {
+        u16 reg  = NEXT_PAYLOAD;
+        u16 dist = NEXT_PAYLOAD;
+
+        // this just inverts the output
+        ip += dist * ((REG(reg).AsBool() - 1) * -1);
+
+        DISPATCH();
+    }
+
+compile_error: {
+        return InterpretResult::CompileError;
+    }
 }
 } // namespace hex
