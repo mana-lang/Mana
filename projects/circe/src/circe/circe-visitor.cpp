@@ -2,7 +2,7 @@
 #include <ranges>
 
 #include <circe/core/logger.hpp>
-#include <circe/main-visitor.hpp>
+#include <circe/circe-visitor.hpp>
 
 #include <mana/vm/opcode.hpp>
 
@@ -28,6 +28,93 @@ void CirceVisitor::Visit(const Artifact& artifact) {
         ClearRegBuffer();
     }
     slice.Write(Op::Halt);
+}
+
+void CirceVisitor::Visit(const Scope& node) {
+    ++scope_depth;
+    for (const auto& statement : node.GetStatements()) {
+        statement->Accept(*this);
+        ClearRegBuffer();
+    }
+
+    CleanupCurrentScope();
+    --scope_depth;
+}
+
+void CirceVisitor::Visit(const DataDeclaration& node) {
+    const std::string name(node.GetName());
+    if (symbols.contains(name)) {
+        Log->error("Redefinition of '{}'", name);
+        return;
+    }
+
+    u16 datum;
+
+    if (const auto& init = node.GetInitializer()) {
+        init->Accept(*this);
+        datum = PopRegBuffer();
+    } else {
+        datum = AllocateRegister();
+        slice.Write(Op::LoadConstant, {datum, slice.AddConstant(0.0)});
+    }
+
+    AddSymbol(name, datum, node.IsMutable());
+}
+
+void CirceVisitor::Visit(const Identifier& node) {
+    const std::string name(node.GetName());
+    if (const auto it = symbols.find(name);
+        it != symbols.end()) {
+        reg_buffer.push_back(it->second.register_index);
+        return;
+    }
+
+    Log->warn("Undefined identifier '{}'", name);
+    slice.Write(Op::Halt);
+}
+
+void CirceVisitor::Visit(const Assignment& node) {
+    const std::string name(node.GetIdentifier());
+    const auto it = symbols.find(name);
+    if (it == symbols.end()) {
+        Log->warn("Undefined identifier '{}'", name);
+        return;
+    }
+
+    if (not it->second.is_mutable) {
+        Log->error("Cannot assign to immutable data '{}'", name);
+        slice.Write(Op::Halt);
+        return;
+    }
+
+    node.GetValue()->Accept(*this);
+    u16 src = PopRegBuffer();
+
+    slice.Write(Op::Move, {it->second.register_index, src});
+
+    FreeRegister(src);
+}
+
+void CirceVisitor::Visit(const If& node) {
+    node.GetCondition()->Accept(*this);
+    const u16 cond_reg = PopRegBuffer();
+
+    const u64 jmp_false = slice.Write(Op::JumpWhenFalse, {cond_reg, 0xDEAD});
+    FreeRegister(cond_reg);
+
+    node.GetThenBlock()->Accept(*this);
+
+    if (const auto& else_branch = node.GetElseBranch()) {
+        const u64 jmp_end = slice.Write(Op::Jump, {0xDEAD});
+
+        slice.Patch(jmp_false, slice.Instructions().size() - (jmp_false + CJMP_OP_BYTES), 1);
+
+        else_branch->Accept(*this);
+
+        slice.Patch(jmp_end, slice.Instructions().size() - (jmp_end + JMP_OP_BYTES), 0);
+    } else {
+        slice.Patch(jmp_false, slice.Instructions().size() - (jmp_false + CJMP_OP_BYTES), 1);
+    }
 }
 
 void CirceVisitor::Visit(const UnaryExpr& node) {
@@ -155,73 +242,19 @@ void CirceVisitor::Visit(const BinaryExpr& node) {
     FreeRegisters({lhs, rhs});
 }
 
-void CirceVisitor::Visit(const Statement& node) {
-    Log->error("Statement nodes should forward their visit to their child node(s).");
-}
-
-void CirceVisitor::Visit(const Scope& node) {
-    ++scope_depth;
-    for (const auto& statement : node.GetStatements()) {
-        statement->Accept(*this);
-        ClearRegBuffer();
-    }
-
-    CleanupCurrentScope();
-    --scope_depth;
-}
-
-void CirceVisitor::Visit(const DataDeclaration& node) {
-    const std::string name(node.GetName());
-    if (symbols.contains(name)) {
-        Log->error("Redefinition of '{}'", name);
+void CirceVisitor::Visit(const ArrayLiteral& array) {
+    const auto& array_elems = array.GetValues();
+    if (array_elems.empty()) {
         return;
     }
 
-    u16 datum;
-
-    if (const auto& init = node.GetInitializer()) {
-        init->Accept(*this);
-        datum = PopRegBuffer();
-    } else {
-        datum = AllocateRegister();
-        slice.Write(Op::LoadConstant, {datum, slice.AddConstant(0.0)});
+    // for now we just index arrays as separate values
+    // eventually we'll need a way to tell the VM to construct an array from all these sequential constants
+    for (const auto& val : array_elems) {
+        val->Accept(*this);
     }
 
-    AddSymbol(name, datum);
-}
-
-void CirceVisitor::Visit(const Identifier& node) {
-    const std::string name(node.GetName());
-    if (const auto it = symbols.find(name);
-        it != symbols.end()) {
-        reg_buffer.push_back(it->second.register_index);
-        return;
-    }
-
-    Log->warn("Undefined identifier '{}'", name);
-    slice.Write(Op::Halt);
-}
-
-void CirceVisitor::Visit(const If& node) {
-    node.GetCondition()->Accept(*this);
-    const u16 cond_reg = PopRegBuffer();
-
-    const u64 jmp_false = slice.Write(Op::JumpWhenFalse, {cond_reg, 0xDEAD});
-    FreeRegister(cond_reg);
-
-    node.GetThenBlock()->Accept(*this);
-
-    if (const auto& else_branch = node.GetElseBranch()) {
-        const u64 jmp_end = slice.Write(Op::Jump, {0xDEAD});
-
-        slice.Patch(jmp_false, slice.Instructions().size() - (jmp_false + CJMP_OP_BYTES), 1);
-
-        else_branch->Accept(*this);
-
-        slice.Patch(jmp_end, slice.Instructions().size() - (jmp_end + JMP_OP_BYTES), 0);
-    } else {
-        slice.Patch(jmp_false, slice.Instructions().size() - (jmp_false + CJMP_OP_BYTES), 1);
-    }
+    // TODO: add 'MakeArray' opcode to VM
 }
 
 void CirceVisitor::Visit(const Literal<f64>& literal) {
@@ -236,21 +269,6 @@ void CirceVisitor::Visit(const Literal<void>& node) {}
 
 void CirceVisitor::Visit(const Literal<bool>& literal) {
     CreateLiteral(literal);
-}
-
-void CirceVisitor::Visit(const ArrayLiteral& array) {
-    const auto& array_elems = array.GetValues();
-    if (array_elems.empty()) {
-        return;
-    }
-
-    // for now we just index arrays as separate values
-    // eventually we'll need a way to tell the VM to construct an array from all these sequential constants
-    for (const auto& val : array_elems) {
-        val->Accept(*this);
-    }
-
-    // TODO: add 'MakeArray' opcode to VM
 }
 
 u16 CirceVisitor::AllocateRegister() {
@@ -322,8 +340,8 @@ void CirceVisitor::CleanupCurrentScope() {
     }
 }
 
-void CirceVisitor::AddSymbol(const std::string& name, u16 register_index) {
-    symbols[name] = {register_index, scope_depth};
+void CirceVisitor::AddSymbol(const std::string& name, u16 register_index, bool is_mutable) {
+    symbols[name] = {register_index, scope_depth, is_mutable};
 }
 
 void CirceVisitor::RemoveSymbol(const std::string& name) {

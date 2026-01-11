@@ -6,6 +6,7 @@ enum class ExitCode {
     UnknownCriticalError,
 
     NoFileProvided,
+    FileNotFound,
 
     LexerError,
     ParserError,
@@ -17,5 +18,4 @@ enum class ExitCode {
 consteval int Exit(ExitCode exit_code) {
     return static_cast<int>(exit_code);
 }
-
-}  // namespace mana
+} // namespace mana

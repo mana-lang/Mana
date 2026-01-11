@@ -76,6 +76,8 @@ NodePtr CreateExpression(const ParseNode& node) {
     const auto& token = node.tokens.empty() ? Token {} : node.tokens[0];
 
     switch (node.rule) {
+    case Assignment:
+        return std::make_shared<class Assignment>(node);
     case Grouping:
         return CreateExpression(*node.branches[0]);
     case Literal:
@@ -182,9 +184,12 @@ DataDeclaration::DataDeclaration(const ParseNode& node)
             break;
         }
     }
+
     if (not node.branches.empty()) {
         initializer = CreateExpression(*node.branches[0]);
     }
+
+    is_mutable = node.tokens.front().type == TokenType::KW_mut;
 }
 
 std::string_view DataDeclaration::GetName() const {
@@ -195,7 +200,29 @@ const NodePtr& DataDeclaration::GetInitializer() const {
     return initializer;
 }
 
+bool DataDeclaration::IsMutable() const {
+    return is_mutable;
+}
+
 void DataDeclaration::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+/// Assignment
+Assignment::Assignment(const ParseNode& node) {
+    identifier = FetchTokenText(node.tokens[0]);
+    value      = CreateExpression(*node.branches[0]);
+}
+
+std::string_view Assignment::GetIdentifier() const {
+    return identifier;
+}
+
+const NodePtr& Assignment::GetValue() const {
+    return value;
+}
+
+void Assignment::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 

@@ -88,12 +88,27 @@ public:
 class DataDeclaration final : public Node {
     std::string name;
     NodePtr initializer;
+    bool is_mutable;
 
 public:
     explicit DataDeclaration(const ParseNode& node);
 
     SIGIL_NODISCARD std::string_view GetName() const;
     SIGIL_NODISCARD const NodePtr& GetInitializer() const;
+    SIGIL_NODISCARD bool IsMutable() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
+class Assignment final : public Node {
+    std::string identifier;
+    NodePtr value;
+
+public:
+    explicit Assignment(const ParseNode& node);
+
+    SIGIL_NODISCARD std::string_view GetIdentifier() const;
+    SIGIL_NODISCARD const NodePtr& GetValue() const;
 
     void Accept(Visitor& visitor) const override;
 };

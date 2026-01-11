@@ -1,6 +1,8 @@
 #include <hex/core/logger.hpp>
 #include <hex/vm/virtual-machine.hpp>
 
+#include <magic_enum/magic_enum.hpp>
+
 #include <array>
 
 namespace hex {
@@ -49,8 +51,29 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
     };
 
 #ifdef HEX_DEBUG
+    const auto ValueToString = [](const Value& v) -> std::string {
+        using namespace mana;
+        switch (v.GetType()) {
+        case Int64:
+            return std::to_string(v.AsInt());
+        case Uint64:
+            return std::to_string(v.AsUint());
+        case Float64:
+            return fmt::format("{:.2f}", v.AsFloat());
+        case Bool:
+            return v.AsBool() ? "true" : "false";
+        case None:
+            return "none";
+        default:
+            return "???";
+        }
+    };
 #   define DISPATCH()                                                   \
     {                                                                   \
+        const auto offset = ip - slice->Instructions().data();                                 \
+        if (offset < slice->Instructions().size()) {                                           \
+            Log->debug("{:04} | {:<16}", offset, magic_enum::enum_name(static_cast<Op>(*ip))); \
+        }                                                                                      \
         auto  label = *ip < dispatch_max ? dispatch_table[*ip++] : err; \
         goto *label;                                                    \
     }
@@ -84,6 +107,9 @@ load_constant: {
         u16 idx  = NEXT_PAYLOAD;
         REG(dst) = constants[idx];
 
+#ifdef HEX_DEBUG
+        Log->debug("  R{} <- {} (const #{})", dst, ValueToString(REG(dst)), idx);
+#endif
         DISPATCH();
     }
 move: {
@@ -91,14 +117,31 @@ move: {
         u16 src  = NEXT_PAYLOAD;
         REG(dst) = REG(src);
 
+#ifdef HEX_DEBUG
+        Log->debug("  R{} <- R{} ({})", dst, src, ValueToString(REG(dst)));
+#endif
+
         DISPATCH();
     }
 
+#ifdef HEX_DEBUG
+#define BINARY_OP(op)                                 \
+    u16 dst = NEXT_PAYLOAD;                           \
+    u16 lhs = NEXT_PAYLOAD;                           \
+    u16 rhs = NEXT_PAYLOAD;                           \
+    REG(dst) = REG(lhs) op REG(rhs);                  \
+    Log->debug("  R{} ({}) = R{} ({}) {} R{} ({})",   \
+               dst, ValueToString(REG(dst)),          \
+               lhs, ValueToString(REG(lhs)),          \
+               #op,                                   \
+               rhs, ValueToString(REG(rhs)))
+#else
 #define BINARY_OP(op)       \
     u16 dst = NEXT_PAYLOAD; \
     u16 lhs = NEXT_PAYLOAD; \
     u16 rhs = NEXT_PAYLOAD; \
     REG(dst) = REG(lhs) op REG(rhs)
+#endif
 
 add: {
         BINARY_OP(+);
@@ -125,6 +168,10 @@ negate: {
         u16 src  = NEXT_PAYLOAD;
         REG(dst) = -REG(src);
 
+#ifdef HEX_DEBUG
+        Log->debug("  R{} ({}) = -R{} ({})", dst, ValueToString(REG(dst)), src, ValueToString(REG(src)));
+#endif
+
         DISPATCH();
     }
 
@@ -132,6 +179,10 @@ bool_not: {
         u16 dst  = NEXT_PAYLOAD;
         u16 src  = NEXT_PAYLOAD;
         REG(dst) = !REG(src);
+
+#ifdef HEX_DEBUG
+        Log->debug("  R{} ({}) = !R{} ({})", dst, ValueToString(REG(dst)), src, ValueToString(REG(src)));
+#endif
 
         DISPATCH();
     }
@@ -167,7 +218,16 @@ not_equals: {
     }
 
 jmp: {
+#ifdef HEX_DEBUG
+        u16 dist = NEXT_PAYLOAD;
+
+        const auto target = ip - slice->Instructions().data() + dist;
+        Log->debug("  Jump ==> [{:04}]", target);
+        ip += dist;
+#else
         ip += NEXT_PAYLOAD;
+#endif
+
         DISPATCH();
     }
 
@@ -175,14 +235,37 @@ jmp_true: {
         u16 reg  = NEXT_PAYLOAD;
         u16 dist = NEXT_PAYLOAD;
 
+#ifdef HEX_DEBUG
+        const bool taken  = REG(reg).AsBool();
+        const auto target = ip - slice->Instructions().data() + dist;
+        Log->debug("  Jump ==> [{:04}] R{} ({}) => {}",
+                   target,
+                   reg,
+                   ValueToString(REG(reg)),
+                   taken ? "TAKEN" : "SKIP"
+        );
+#endif
+
         // sidestep branch predictions altogether
         ip += dist * REG(reg).AsBool();
+
 
         DISPATCH();
     }
 jmp_false: {
         u16 reg  = NEXT_PAYLOAD;
         u16 dist = NEXT_PAYLOAD;
+
+#ifdef HEX_DEBUG
+        const bool taken  = !REG(reg).AsBool();
+        const auto target = ip - slice->Instructions().data() + dist;
+        Log->debug("  Jump ==> [{:04}] R{} ({}) => {}",
+                   target,
+                   reg,
+                   ValueToString(REG(reg)),
+                   taken ? "TAKEN" : "SKIP"
+        );
+#endif
 
         // this just inverts the output
         ip += dist * ((REG(reg).AsBool() - 1) * -1);

@@ -5,7 +5,7 @@ enable_testing()
 
 set(CIRCE_SOURCES
         src/circe/main.cpp
-        src/circe/main-visitor.cpp
+        src/circe/circe-visitor.cpp
 
         src/circe/core/logger.cpp
         src/circe/core/cli.cpp

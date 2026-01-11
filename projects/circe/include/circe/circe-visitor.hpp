@@ -14,7 +14,8 @@ namespace ast = sigil::ast;
 class CirceVisitor final : public ast::Visitor {
     struct Symbol {
         ml::u16 register_index;
-        ml::u16 scope_depth;
+        ml::u8 scope_depth;
+        bool is_mutable;
     };
 
     using SymbolTable = std::unordered_map<std::string, Symbol>;
@@ -22,7 +23,7 @@ class CirceVisitor final : public ast::Visitor {
     mv::Slice slice;
     SymbolTable symbols;
     ml::u16 total_registers;
-    ml::u16 scope_depth;
+    ml::u8 scope_depth;
 
     std::vector<ml::u16> reg_buffer;
     std::vector<ml::u16> free_regs;
@@ -33,22 +34,22 @@ public:
     CIRCE_NODISCARD mv::Slice GetSlice() const;
 
     void Visit(const ast::Artifact& artifact) override;
+    void Visit(const ast::Scope& node) override;
+
+    void Visit(const ast::DataDeclaration& node) override;
+    void Visit(const ast::Identifier& node) override;
+    void Visit(const ast::Assignment& node) override;
+
+    void Visit(const ast::If& node) override;
 
     void Visit(const ast::UnaryExpr& node) override;
     void Visit(const ast::BinaryExpr& node) override;
-
-    void Visit(const ast::Statement& node) override;
-    void Visit(const ast::Scope& node) override;
-    void Visit(const ast::DataDeclaration& node) override;
-    void Visit(const ast::Identifier& node) override;
-
-    void Visit(const ast::If& node) override;
+    void Visit(const ast::ArrayLiteral& array) override;
 
     void Visit(const ast::Literal<ml::f64>& literal) override;
     void Visit(const ast::Literal<ml::i64>& literal) override;
     void Visit(const ast::Literal<void>& node) override;
     void Visit(const ast::Literal<bool>& literal) override;
-    void Visit(const ast::ArrayLiteral& array) override;
 
 private:
     ml::u16 AllocateRegister();
@@ -63,7 +64,7 @@ private:
 
     void CleanupCurrentScope();
 
-    void AddSymbol(const std::string& name, ml::u16 register_index);
+    void AddSymbol(const std::string& name, ml::u16 register_index, bool is_mutable);
     void RemoveSymbol(const std::string& name);
 
     template <typename T>

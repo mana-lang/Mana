@@ -1,0 +1,7 @@
+data x = 5
+mut data y = 23
+
+y = 54
+y = y + x
+x = 43
+y = 88
