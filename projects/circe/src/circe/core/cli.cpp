@@ -17,7 +17,7 @@ int CommandLineSettings::Populate() {
 
     cli->add_flag("-v,--verbose", verbose, "Verbose output.");
     cli->add_flag("-p,--ptree", emit_ptree, "Emit AST after compilation.");
-    cli->add_flag("-t,--tokens", emit_tokens, "Emit tokens after lexing.");
+    cli->add_flag("-t,--tokens", emit_tokens, "Emit tokens after compilation.");
 
     try {
         cli->parse(argc, argv);
@@ -28,9 +28,23 @@ int CommandLineSettings::Populate() {
     return 0;
 }
 
-std::string CommandLineSettings::InputFile() const { return input; }
-std::string CommandLineSettings::OutputFile() const { return output; }
-bool CommandLineSettings::EmitVerbose() const { return verbose; }
-bool CommandLineSettings::EmitParseTree() const { return emit_ptree; }
-bool CommandLineSettings::EmitTokens() const { return emit_tokens;}
+std::string CommandLineSettings::InputFile() const {
+    return input;
+}
+
+std::string CommandLineSettings::OutputFile() const {
+    return output;
+}
+
+bool CommandLineSettings::EmitVerbose() const {
+    return verbose;
+}
+
+bool CommandLineSettings::EmitParseTree() const {
+    return emit_ptree;
+}
+
+bool CommandLineSettings::EmitTokens() const {
+    return emit_tokens;
+}
 }
