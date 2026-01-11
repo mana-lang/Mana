@@ -9,7 +9,6 @@ constexpr u8 BASE_REGISTERS = 128;
 constexpr u8 CJMP_OP_BYTES  = 5;
 constexpr u8 JMP_OP_BYTES   = 3;
 
-
 enum class Op : u8 {
     Halt,
 

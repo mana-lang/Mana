@@ -15,9 +15,9 @@ using namespace mana::literals;
 thread_local GlobalSourceFile Lexer::Source;
 
 Lexer::Lexer()
-    : cursor{0}
-    , line_start(0)
-    , line_number{0} {}
+    : cursor {0}
+  , line_start(0)
+  , line_number {0} {}
 
 bool Lexer::IsNewline() const {
     return Source[cursor] == '\n';
@@ -72,56 +72,6 @@ bool Lexer::Tokenize(const std::filesystem::path& file_path) {
 
     AddEOF();
     return true;
-}
-
-void Lexer::PrintTokens(const PrintingMode mode, const PrintingPolicy policy) const {
-    if (tokens.empty()) {
-        Log->error("Lexer token print requested, but token stream was empty.");
-        return;
-    }
-
-    if (mode == PrintingMode::Emit) {
-        Log->sinks().push_back(
-            std::make_shared<spdlog::sinks::basic_file_sink_mt>(
-                std::string(Source.Name()) + ".tks", true
-            )
-        );
-        Log->set_pattern("%v");
-    }
-
-    Log->debug("Token Stream for '{}'\n", Source.Name());
-
-    for (const auto& [line, offset, column, length, type] : tokens) {
-        if (type == TokenType::Eof) {
-            Log->info("[{}:{}] {}: EOF",
-                      line,
-                      column,
-                      magic_enum::enum_name(type));
-            continue;
-        }
-        if (type == TokenType::Terminator) {
-            if (policy != PrintingPolicy::SkipTerminators) {
-                Log->info("[{}:{}] {}: \\n",
-                          line,
-                          column,
-                          magic_enum::enum_name(type));
-            }
-            continue;
-        }
-        Log->info("[{}:{}] {}: {}",
-                  line,
-                  column,
-                  magic_enum::enum_name(type),
-                  Source.Slice(offset, length));
-    }
-
-    Log->debug("");
-    Log->debug("End of token stream.\n");
-
-    if (mode == PrintingMode::Emit) {
-        Log->sinks().pop_back();
-        Log->set_pattern(mana::GlobalLoggerSink().DefaultPattern);
-    }
 }
 
 void Lexer::Reset() {
@@ -187,7 +137,7 @@ bool Lexer::LexedString() {
             return false;
         }
 
-        current_char             = Source[cursor];
+        current_char = Source[cursor];
 
         // strings must close on the line they're started
         if (current_char == '\n' || (current_char == '\\' && Source[cursor + 1] == 'n')) {
@@ -467,24 +417,86 @@ u16 Lexer::GetTokenColumnIndex(const u16 token_length) const {
 }
 
 void Lexer::AddToken(const TokenType type, const u16 length) {
-    tokens.emplace_back(Token{
-        .line   = line_number,
-        .offset = cursor - length,
-        .column = GetTokenColumnIndex(length),
-        .length = length,
-        .type   = type,
-    });
+    tokens.emplace_back(Token {
+            .line   = line_number,
+            .offset = cursor - length,
+            .column = GetTokenColumnIndex(length),
+            .length = length,
+            .type   = type,
+        }
+    );
 }
 
 void Lexer::AddEOF() {
     // line number will be out of bounds once this gets called,
     // which is what we want for EOF
-    tokens.emplace_back(Token{
-        .line   = line_number,
-        .offset = cursor,
-        .column = 0,
-        .length = 0,
-        .type   = TokenType::Eof,
-    });
+    tokens.emplace_back(Token {
+            .line   = line_number,
+            .offset = cursor,
+            .column = 0,
+            .length = 0,
+            .type   = TokenType::Eof,
+        }
+    );
+}
+
+void PrintTokens(const std::vector<Token>& tokens, const PrintingMode mode, const PrintingPolicy policy) {
+    if (tokens.empty()) {
+        Log->error("Lexer token print requested, but token stream was empty.");
+        return;
+    }
+
+    if (mode == PrintingMode::Emit) {
+        Log->sinks().push_back(
+            std::make_shared<spdlog::sinks::basic_file_sink_mt>(
+                std::string(Source().Name()) + ".tks",
+                true
+            )
+        );
+        Log->set_pattern("%v");
+    }
+
+    Log->debug("Token Stream for '{}'\n", Source().Name());
+
+    constexpr auto align_pos   = 4;
+    constexpr auto align_token = 15;
+    for (const auto& [line, offset, column, length, type] : tokens) {
+        const auto token_type_name = magic_enum::enum_name(type);
+
+        // formats as "  line:column  " where the colon is always in the same spot.
+        const auto pos_base = fmt::format("{:>{}}:{:<{}}",
+                                          line,
+                                          align_pos,
+                                          column,
+                                          align_pos
+        );
+
+        // handle eof separately
+        if (type == TokenType::Eof) {
+            Log->debug("{} => EOF", pos_base);
+            continue;
+        }
+
+        if (type == TokenType::Terminator && policy == PrintingPolicy::SkipTerminators) {
+            continue;
+        }
+
+        const auto value = type == TokenType::Terminator ? "\\n" : Source().Slice(offset, length);
+
+        Log->debug("{} => {:<{}} -->  {}",
+                   pos_base,
+                   token_type_name,
+                   align_token,
+                   value
+        );
+    }
+
+    Log->debug("");
+    Log->debug("End of token stream.\n");
+
+    if (mode == PrintingMode::Emit) {
+        Log->sinks().pop_back();
+        Log->set_pattern(mana::GlobalLoggerSink().DefaultPattern);
+    }
 }
 } // namespace sigil
