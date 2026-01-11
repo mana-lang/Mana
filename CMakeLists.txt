@@ -31,3 +31,5 @@ add_subdirectory(projects/sigil)
 add_subdirectory(projects/hex)
 add_subdirectory(projects/circe)
 add_subdirectory(projects/mana-core)
+
+add_dependencies(hex circe)
