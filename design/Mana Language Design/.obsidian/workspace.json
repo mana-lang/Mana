@@ -203,6 +203,7 @@
   "active": "6a57afca6b64d7ce",
   "lastOpenFiles": [
     "Ecosystem/Syntax & Features/Control Flow.md",
+    "Ecosystem/Syntax & Features/Data.md",
     "Ecosystem/Syntax & Features/Procedures.md",
     "Ecosystem/Syntax & Features/Operators.md",
     "Ecosystem/Syntax & Features/Types.md",
@@ -211,7 +212,6 @@
     "_Assets/Info_Artifacts.png",
     "_Assets/Info_Troves.png",
     "Ecosystem/Syntax & Features/Hello World.md",
-    "Ecosystem/Syntax & Features/Data.md",
     "Ecosystem/Syntax & Features/Tags.md",
     "Ecosystem/Syntax & Features/Enumerations.md",
     "Ecosystem/Syntax & Features/Compile Time.md",

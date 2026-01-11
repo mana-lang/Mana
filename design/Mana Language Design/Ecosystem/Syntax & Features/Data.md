@@ -15,7 +15,7 @@ fn main() {
 > I have 3 oranges
 
 ##### Declarations
-Data in **Mana** is *immutable* by default
+Data in **Mana** is *immutable* by default. Therefore, we don't refer to them as variables, but instead as *data bindings*, or just *data* for short. A singular data binding is called a *datum*. 
 ```kotlin  
 fn main() {
     data two = 2
@@ -28,7 +28,7 @@ fn main() {
 > `mut data four: f32 = two + two`
 
 ##### Mutability
-To make data mutable, it must be annotated with the `mut` keyword
+To make data mutable, it must be annotated with the `mut` keyword. A mutable data binding is effectively a variable.
 ```kotlin
 import std.fmt
     
