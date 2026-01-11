@@ -33,6 +33,7 @@ int CompileFrom(const std::filesystem::path& in_path,
     const auto time_lex_start = chrono::high_resolution_clock::now();
     sigil::Lexer lexer;
     if (not lexer.Tokenize(in_path)) {
+        Log->error("Failed to tokenize file '{}'", in_path.string());
         return Exit(ExitCode::LexerError);
     }
     const auto time_lex_end = chrono::high_resolution_clock::now();
@@ -43,6 +44,7 @@ int CompileFrom(const std::filesystem::path& in_path,
     const auto time_parse_start = chrono::high_resolution_clock::now();
     sigil::Parser parser(std::move(tokens));
     if (not parser.Parse()) {
+        Log->error("Failed to parse file '{}'", in_path.string());
         return Exit(ExitCode::ParserError);
     }
     const auto time_parse_end = chrono::high_resolution_clock::now();
@@ -59,11 +61,18 @@ int CompileFrom(const std::filesystem::path& in_path,
     if (out_path.empty()) {
         out_path = in_path;
         out_path.replace_extension("hexe");
+    } else if (std::filesystem::is_directory(out_path) || not out_path.has_filename()) {
+        out_path /= in_path.filename().replace_extension(".hexe");
+    }
+
+    if (out_path.has_parent_path()) {
+        std::filesystem::create_directories(out_path.parent_path());
     }
 
     const auto time_write_start = chrono::high_resolution_clock::now();
     std::ofstream out_file(out_path, std::ios::binary);
     if (not out_file) {
+        Log->error("Failed to open output file '{}'", out_path.string());
         return Exit(ExitCode::OutputOpenError);
     }
 
@@ -71,6 +80,7 @@ int CompileFrom(const std::filesystem::path& in_path,
     out_file.write(reinterpret_cast<const char*>(output.data()), static_cast<std::streamsize>(output.size()));
 
     if (not out_file) {
+        Log->error("Failed to write to output file '{}'", out_path.string());
         return Exit(ExitCode::OutputWriteError);
     }
 
@@ -90,6 +100,7 @@ int CompileFrom(const std::filesystem::path& in_path,
 
     Log->info(compile_str);
     Log->info("Operation completed in {}us", time_total.count());
+    Log->info("Output written to '{}'", out_path.string());
 
     const auto divider = std::string(compile_str.size(), '-');
 
@@ -129,8 +140,9 @@ int main(int argc, char** argv) {
     }
 
     if (cli.InputFile().empty()) {
+        Log->error("No input file provided");
         return mana::Exit(mana::ExitCode::NoFileProvided);
     }
 
-    return CompileFrom(cli.InputFile(), cli.OutputFile(), cli.EmitVerbose(), cli.EmitParseTree(), cli.EmitTokens());
+    return CompileFrom(cli.InputFile(), cli.OutputPath(), cli.EmitVerbose(), cli.EmitParseTree(), cli.EmitTokens());
 }

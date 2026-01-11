@@ -2,18 +2,21 @@
 
 namespace circe {
 CommandLineSettings::CommandLineSettings(int argc, char** argv)
-    : argc{argc}
-    , argv{argv}
-    , verbose {false}
-    , emit_ptree {false}
-    , emit_tokens {false} {
+    : argc {argc}
+  , argv {argv}
+  , verbose {false}
+  , emit_ptree {false}
+  , emit_tokens {false} {
     cli = std::make_unique<CLI::App>("Circe, the Mana Compiler");
 }
 
 int CommandLineSettings::Populate() {
     cli->add_option("input", input, "The Mana file to compile.")->required();
 
-    cli->add_option("-o,--output", output, "The output executable name.");
+    cli->add_option("-o,--output,output",
+                    output,
+                    "Path to output to. If left unspecified, Circe will output to the input folder."
+    );
 
     cli->add_flag("-v,--verbose", verbose, "Verbose output.");
     cli->add_flag("-p,--ptree", emit_ptree, "Emit AST after compilation.");
@@ -32,7 +35,7 @@ std::string CommandLineSettings::InputFile() const {
     return input;
 }
 
-std::string CommandLineSettings::OutputFile() const {
+std::string CommandLineSettings::OutputPath() const {
     return output;
 }
 

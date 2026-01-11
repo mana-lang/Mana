@@ -14,7 +14,7 @@ CommandLineSettings::CommandLineSettings(const int argc, char** argv)
 i64 CommandLineSettings::Populate() {
     cli->add_flag("-g,--greet", say_hi, "A polite greeting.");
     cli->add_flag("-t", gen_testfile, "Generate a testfile.");
-    cli->add_option("-e, --executable", executable, "The executable to run.");
+    cli->add_option("-e, --executable,executable", executable, "The executable to run.");
 
     try {
         cli->parse(argc, argv);

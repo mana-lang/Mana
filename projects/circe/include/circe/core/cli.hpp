@@ -11,7 +11,7 @@ struct CommandLineSettings {
     int Populate();
 
     CIRCE_NODISCARD std::string InputFile() const;
-    CIRCE_NODISCARD std::string OutputFile() const;
+    CIRCE_NODISCARD std::string OutputPath() const;
     CIRCE_NODISCARD bool EmitVerbose() const;
     CIRCE_NODISCARD bool EmitParseTree() const;
     CIRCE_NODISCARD bool EmitTokens() const;
