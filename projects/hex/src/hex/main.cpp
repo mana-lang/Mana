@@ -20,7 +20,7 @@ void ExecuteVM(const std::string_view exe_name) {
 
     std::ifstream in_file(std::string(exe_name), std::ios::binary);
     if (not in_file) {
-        Log->error("Failed to read file.");
+        Log->error("Failed to read file '{}'", exe_name);
         return;
     }
     in_file.seekg(0, std::ios::end);

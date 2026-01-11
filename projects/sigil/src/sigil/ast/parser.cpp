@@ -68,7 +68,6 @@ void Parser::EmitParseTree(const std::string_view file_name) const {
         Log->error("Failed to write to file '{}'", file_name);
         return;
     }
-
     Log->info("Emitted parse tree to file '{}'", file_name);
 }
 

@@ -1,6 +1,9 @@
 # Prerequisites
 *.d
 
+# Mana code output folder
+mana-output/
+
 # Obsidian cache
 .makemd/
 *.mdb
