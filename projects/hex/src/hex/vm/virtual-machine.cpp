@@ -30,6 +30,7 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
     // it must /exactly/ match the opcode enum order
     constexpr std::array dispatch_table {
         &&halt,
+        &&err,
         &&ret,
         &&load_constant,
         &&move,
@@ -37,6 +38,7 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
         &&sub,
         &&div,
         &&mul,
+        &&mod,
         &&negate,
         &&bool_not,
         &&cmp_greater,
@@ -92,6 +94,9 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
 halt:
     return InterpretResult::OK;
 
+err:
+    return InterpretResult::CompileError;
+
 ret: {
         u16 reg = NEXT_PAYLOAD;
 #ifdef HEX_DEBUG
@@ -126,15 +131,18 @@ move: {
 
 #ifdef HEX_DEBUG
 #define BINARY_OP(op)                                 \
+    {                                                 \
     u16 dst = NEXT_PAYLOAD;                           \
     u16 lhs = NEXT_PAYLOAD;                           \
     u16 rhs = NEXT_PAYLOAD;                           \
+    std::string lhs_orig = ValueToString(REG(lhs));   \
     REG(dst) = REG(lhs) op REG(rhs);                  \
     Log->debug("  R{} ({}) = R{} ({}) {} R{} ({})",   \
                dst, ValueToString(REG(dst)),          \
-               lhs, ValueToString(REG(lhs)),          \
+               lhs, lhs_orig,                         \
                #op,                                   \
-               rhs, ValueToString(REG(rhs)))
+               rhs, ValueToString(REG(rhs)));         \
+    }
 #else
 #define BINARY_OP(op)       \
     u16 dst = NEXT_PAYLOAD; \
@@ -160,6 +168,11 @@ div: {
 
 mul: {
         BINARY_OP(*);
+        DISPATCH();
+    }
+
+mod: {
+        BINARY_OP(%);
         DISPATCH();
     }
 

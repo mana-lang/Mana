@@ -32,6 +32,7 @@ void PrintBytecode(const Slice& s) {
         switch (op) {
             using enum Op;
         case Halt:
+        case Err:
             Log->debug("{:04} | {}", offset, name);
             break;
 
@@ -87,6 +88,7 @@ void PrintBytecode(const Slice& s) {
         case Sub:
         case Div:
         case Mul:
+        case Mod:
         case Cmp_Greater:
         case Cmp_GreaterEq:
         case Cmp_Lesser:

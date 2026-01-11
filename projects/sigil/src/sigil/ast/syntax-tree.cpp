@@ -211,6 +211,7 @@ void DataDeclaration::Accept(Visitor& visitor) const {
 /// Assignment
 Assignment::Assignment(const ParseNode& node) {
     identifier = FetchTokenText(node.tokens[0]);
+    op         = FetchTokenText(node.tokens[1]);
     value      = CreateExpression(*node.branches[0]);
 }
 
@@ -220,6 +221,10 @@ std::string_view Assignment::GetIdentifier() const {
 
 const NodePtr& Assignment::GetValue() const {
     return value;
+}
+
+std::string_view Assignment::GetOp() const {
+    return op;
 }
 
 void Assignment::Accept(Visitor& visitor) const {

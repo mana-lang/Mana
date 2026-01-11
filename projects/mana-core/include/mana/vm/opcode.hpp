@@ -11,6 +11,7 @@ constexpr u8 JMP_OP_BYTES   = 3;
 
 enum class Op : u8 {
     Halt,
+    Err,
 
     Return,       // Op Reg       -> Place value in Reg
     LoadConstant, // Op Reg Const -> Reg = Constants[Const]
@@ -19,6 +20,7 @@ enum class Op : u8 {
     Sub,          // etc.
     Div,
     Mul,
+    Mod,
 
     Negate,        // Op Dst Src   -> Dst = -Src
     Not,           // Op Dst Src   -> Dst = !Src

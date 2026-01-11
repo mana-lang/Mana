@@ -1,7 +1,13 @@
-data x = 5
+data x = 6
 mut data y = 23
 
-y = 54
-y = y + x
+y = 55
+y += x
+y *= x
+y /= x
+y -= x
+y %= x
+
+
 x = 43
 y = 88

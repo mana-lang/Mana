@@ -83,16 +83,43 @@ void CirceVisitor::Visit(const Assignment& node) {
 
     if (not it->second.is_mutable) {
         Log->error("Cannot assign to immutable data '{}'", name);
-        slice.Write(Op::Halt);
+        slice.Write(Op::Err);
         return;
     }
 
     node.GetValue()->Accept(*this);
-    u16 src = PopRegBuffer();
+    u16 rhs             = PopRegBuffer();
+    std::string_view op = node.GetOp();
+    if (op.size() == 1) {
+        slice.Write(Op::Move, {it->second.register_index, rhs});
+    } else {
+        u16 lhs = it->second.register_index;
 
-    slice.Write(Op::Move, {it->second.register_index, src});
+        auto operation = Op::Err;
+        switch (op[0]) {
+        case '+':
+            operation = Op::Add;
+            break;
+        case '-':
+            operation = Op::Sub;
+            break;
+        case '*':
+            operation = Op::Mul;
+            break;
+        case '/':
+            operation = Op::Div;
+            break;
+        case '%':
+            operation = Op::Mod;
+            break;
+        default:
+            break;
+        }
 
-    FreeRegister(src);
+        slice.Write(operation, {lhs, lhs, rhs});
+    }
+
+    FreeRegister(rhs);
 }
 
 void CirceVisitor::Visit(const If& node) {

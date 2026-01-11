@@ -102,6 +102,7 @@ public:
 
 class Assignment final : public Node {
     std::string identifier;
+    std::string op;
     NodePtr value;
 
 public:
@@ -109,6 +110,7 @@ public:
 
     SIGIL_NODISCARD std::string_view GetIdentifier() const;
     SIGIL_NODISCARD const NodePtr& GetValue() const;
+    SIGIL_NODISCARD std::string_view GetOp() const;
 
     void Accept(Visitor& visitor) const override;
 };
