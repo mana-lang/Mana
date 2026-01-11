@@ -13,11 +13,11 @@ class ParseNode {
     ParseNode* parent;
 
 public:
-    using Branch      = std::shared_ptr<ParseNode>;
+    using Branch = std::shared_ptr<ParseNode>;
 
     std::vector<Branch> branches;
-    std::vector<Token>  tokens;
-    ast::Rule           rule;
+    std::vector<Token> tokens;
+    ast::Rule rule;
 
     explicit ParseNode(ast::Rule rule = ast::Rule::Undefined);
     explicit ParseNode(ParseNode* parent, ast::Rule rule = ast::Rule::Undefined);

@@ -13,5 +13,4 @@ namespace ml = mana::literals;
  * Matches the new 3-address instruction set (Dst, L, R).
  */
 void PrintBytecode(const mana::vm::Slice& s);
-
-}  // namespace hex
+} // namespace hex

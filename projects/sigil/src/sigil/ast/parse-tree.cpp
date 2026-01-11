@@ -6,12 +6,12 @@ using namespace mana::literals;
 using namespace ast;
 
 ParseNode::ParseNode(const Rule r)
-    : parent{nullptr}
-    , rule{r} {}
+    : parent {nullptr}
+  , rule {r} {}
 
 ParseNode::ParseNode(ParseNode* p, const Rule r)
-    : parent{p}
-    , rule{r} {}
+    : parent {p}
+  , rule {r} {}
 
 ParseNode& ParseNode::NewBranch(const Rule new_rule) {
     // because the module node is the root, it's useless to list it as a parent

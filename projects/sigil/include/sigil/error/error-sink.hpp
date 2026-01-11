@@ -6,7 +6,6 @@
 #include <vector>
 
 namespace sigil {
-
 class ErrorSink {
     std::vector<Error> errors;
 
@@ -23,5 +22,4 @@ public:
     void Report(const Error& error);
     void Report(const ParseNode& problem, ml::i64 token_offset, ErrorCode error_code);
 };
-
-}  // namespace sigil
+} // namespace sigil

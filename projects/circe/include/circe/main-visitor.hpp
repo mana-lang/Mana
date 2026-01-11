@@ -16,12 +16,13 @@ class CirceVisitor final : public ast::Visitor {
         ml::u16 register_index;
         ml::u16 scope_depth;
     };
+
     using SymbolTable = std::unordered_map<std::string, Symbol>;
 
-    mv::Slice   slice;
+    mv::Slice slice;
     SymbolTable symbols;
-    ml::u16     total_registers;
-    ml::u16     scope_depth;
+    ml::u16 total_registers;
+    ml::u16 scope_depth;
 
     std::vector<ml::u16> reg_buffer;
     std::vector<ml::u16> free_regs;
@@ -48,7 +49,6 @@ public:
     void Visit(const ast::Literal<void>& node) override;
     void Visit(const ast::Literal<bool>& literal) override;
     void Visit(const ast::ArrayLiteral& array) override;
-
 
 private:
     ml::u16 AllocateRegister();

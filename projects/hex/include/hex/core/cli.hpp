@@ -24,12 +24,11 @@ struct CommandLineSettings {
 private:
     std::unique_ptr<CLI::App> cli;
 
-    int    argc;
+    int argc;
     char** argv;
 
-    bool        say_hi;
-    bool        gen_testfile;
+    bool say_hi;
+    bool gen_testfile;
     std::string executable;
 };
-
-}  // namespace hex
+} // namespace hex

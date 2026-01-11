@@ -14,8 +14,8 @@ class Parser {
     using TokenStream = std::vector<Token>;
 
     TokenStream tokens;
-    ml::i64     cursor;
-    ParseNode   parse_tree;
+    ml::i64 cursor;
+    ParseNode parse_tree;
 
     std::unique_ptr<ast::Artifact> syntax_tree;
 
@@ -25,9 +25,9 @@ public:
 
     SIGIL_NODISCARD bool Parse();
 
-    SIGIL_NODISCARD const ParseNode&   ViewParseTree() const;
+    SIGIL_NODISCARD const ParseNode& ViewParseTree() const;
     SIGIL_NODISCARD const TokenStream& ViewTokenStream() const;
-    SIGIL_NODISCARD ast::Node*         ViewAST() const;
+    SIGIL_NODISCARD ast::Node* ViewAST() const;
 
     void PrintParseTree() const;
     void EmitParseTree(std::string_view file_name) const;
@@ -95,10 +95,10 @@ private:
     using OpCheckerFnPtr = bool (*)(TokenType);
 
     SIGIL_NODISCARD bool MatchedBinaryExpr(
-        ParseNode&     node,
+        ParseNode& node,
         OpCheckerFnPtr is_valid_operator,
-        MatcherFnPtr   matched_operand,
-        ast::Rule      rule
+        MatcherFnPtr matched_operand,
+        ast::Rule rule
     );
 };
 } // namespace sigil

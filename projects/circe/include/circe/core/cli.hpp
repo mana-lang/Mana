@@ -19,7 +19,7 @@ struct CommandLineSettings {
 private:
     std::unique_ptr<CLI::App> cli;
 
-    int    argc;
+    int argc;
     char** argv;
 
     std::string input;

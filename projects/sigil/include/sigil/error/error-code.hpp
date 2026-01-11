@@ -13,5 +13,4 @@ enum class ErrorSeverity {
     Warning,
     Error,
 };
-
-}  // namespace sigil
+} // namespace sigil

@@ -14,7 +14,7 @@ using namespace sigil::ast;
 
 CirceVisitor::CirceVisitor()
     : total_registers {}
-    , scope_depth {} {}
+  , scope_depth {} {}
 
 Slice CirceVisitor::GetSlice() const {
     return slice;
@@ -192,7 +192,8 @@ void CirceVisitor::Visit(const DataDeclaration& node) {
 
 void CirceVisitor::Visit(const Identifier& node) {
     const std::string name(node.GetName());
-    if (const auto it = symbols.find(name); it != symbols.end()) {
+    if (const auto it = symbols.find(name);
+        it != symbols.end()) {
         reg_buffer.push_back(it->second.register_index);
         return;
     }
@@ -239,7 +240,9 @@ void CirceVisitor::Visit(const Literal<bool>& literal) {
 
 void CirceVisitor::Visit(const ArrayLiteral& array) {
     const auto& array_elems = array.GetValues();
-    if (array_elems.empty()) return;
+    if (array_elems.empty()) {
+        return;
+    }
 
     // for now we just index arrays as separate values
     // eventually we'll need a way to tell the VM to construct an array from all these sequential constants

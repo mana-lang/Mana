@@ -17,9 +17,9 @@ void PrintBytecode(const Slice& s) {
     const auto& code = s.Instructions();
 
     for (i64 i = 0; i < code.size(); ++i) {
-        const i64  offset = i;
-        const auto op     = static_cast<Op>(code[i]);
-        const auto name   = magic_enum::enum_name(op);
+        const i64 offset = i;
+        const auto op    = static_cast<Op>(code[i]);
+        const auto name  = magic_enum::enum_name(op);
 
         // Helper to read 2-byte payloads and advance the loop counter
         auto read = [&] {
@@ -43,8 +43,8 @@ void PrintBytecode(const Slice& s) {
 
 
         case LoadConstant: {
-            const u16   reg = read();
-            const u16   idx = read();
+            const u16 reg   = read();
+            const u16 idx   = read();
             const auto& val = s.Constants()[idx];
 
             const auto log_val = [&](auto v) {

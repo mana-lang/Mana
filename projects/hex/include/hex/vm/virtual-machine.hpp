@@ -4,7 +4,7 @@
 #include <mana/vm/slice.hpp>
 
 namespace hex {
-namespace ml  = mana::literals;
+namespace ml = mana::literals;
 namespace mvm = mana::vm;
 
 enum class InterpretResult {
@@ -23,5 +23,4 @@ public:
 
     InterpretResult Interpret(mvm::Slice* next_slice);
 };
-
-}  // namespace hex
+} // namespace hex

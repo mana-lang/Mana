@@ -52,7 +52,8 @@ public:
     template <NodeType NodeT, typename... Args>
     void AddStatement(Args&&... args) {
         statements.emplace_back(std::make_shared<Statement>(
-                std::make_shared<NodeT>(std::forward<Args>(args)...))
+                std::make_shared<NodeT>(std::forward<Args>(args)...)
+            )
         );
     }
 
@@ -81,18 +82,18 @@ public:
     explicit Identifier(const ParseNode& node);
 
     SIGIL_NODISCARD std::string_view GetName() const;
-    void                             Accept(Visitor& visitor) const override;
+    void Accept(Visitor& visitor) const override;
 };
 
 class DataDeclaration final : public Node {
     std::string name;
-    NodePtr     initializer;
+    NodePtr initializer;
 
 public:
     explicit DataDeclaration(const ParseNode& node);
 
     SIGIL_NODISCARD std::string_view GetName() const;
-    SIGIL_NODISCARD const NodePtr&   GetInitializer() const;
+    SIGIL_NODISCARD const NodePtr& GetInitializer() const;
 
     void Accept(Visitor& visitor) const override;
 };
@@ -154,13 +155,13 @@ public:
 
 class ArrayLiteral final : public Node {
     std::vector<NodePtr> values;
-    mana::PrimitiveType  type;
+    mana::PrimitiveType type;
 
 public:
     explicit ArrayLiteral(const ParseNode& node);
 
     SIGIL_NODISCARD const std::vector<NodePtr>& GetValues() const;
-    SIGIL_NODISCARD mana::PrimitiveType         GetType() const;
+    SIGIL_NODISCARD mana::PrimitiveType GetType() const;
 
     void Accept(Visitor& visitor) const override;
 
@@ -170,7 +171,7 @@ private:
 
 class BinaryExpr final : public Node {
     std::string op;
-    NodePtr     left, right;
+    NodePtr left, right;
 
 public:
     explicit BinaryExpr(const ParseNode& node);
@@ -190,7 +191,7 @@ private:
 
 class UnaryExpr final : public Node {
     std::string op;
-    NodePtr     val;
+    NodePtr val;
 
 public:
     explicit UnaryExpr(const ParseNode& node);
@@ -198,7 +199,7 @@ public:
     void Accept(Visitor& visitor) const override;
 
     SIGIL_NODISCARD std::string_view GetOp() const;
-    SIGIL_NODISCARD const Node&      GetVal() const;
+    SIGIL_NODISCARD const Node& GetVal() const;
 };
 
 NodePtr CreateExpression(const ParseNode& node);

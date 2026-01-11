@@ -26,5 +26,4 @@ void ErrorSink::Report(const Error& error) {
 void ErrorSink::Report(const ParseNode& problem, const ml::i64 offset, const ErrorCode error_code) {
     errors.emplace_back(Error(&problem, error_code, offset));
 }
-
-}  // namespace sigil
+} // namespace sigil

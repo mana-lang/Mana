@@ -36,5 +36,4 @@ enum class Rule : ml::u8 {
     Equality,
     Logical,
 };
-
-}  // namespace sigil::ast
+} // namespace sigil::ast

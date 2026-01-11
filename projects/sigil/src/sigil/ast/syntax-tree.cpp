@@ -29,7 +29,8 @@ auto MakeLiteral<bool>(const Token& token) {
     default:
         Log->critical("Bool conversion requested for non-bool token '{}'. "
                       "Defaulting to 'false'.",
-                      magic_enum::enum_name(token.type));
+                      magic_enum::enum_name(token.type)
+        );
     }
 
     return std::make_shared<Literal<bool>>(val);
@@ -40,7 +41,7 @@ auto MakeNoneLiteral() {
 }
 
 struct LiteralData {
-    NodePtr             value;
+    NodePtr value;
     mana::PrimitiveType type;
 };
 
@@ -72,7 +73,7 @@ LiteralData MakeLiteral(const Token& token) {
 NodePtr CreateExpression(const ParseNode& node) {
     using enum Rule;
 
-    const auto& token = node.tokens.empty() ? Token{} : node.tokens[0];
+    const auto& token = node.tokens.empty() ? Token {} : node.tokens[0];
 
     switch (node.rule) {
     case Grouping:
@@ -111,7 +112,8 @@ void Artifact::Accept(Visitor& visitor) const {
 }
 
 /// Identifier
-Identifier::Identifier(const ParseNode& node) : name(FetchTokenText(node.tokens[0])) {}
+Identifier::Identifier(const ParseNode& node)
+    : name(FetchTokenText(node.tokens[0])) {}
 
 std::string_view Identifier::GetName() const {
     return name;
@@ -171,7 +173,8 @@ void If::Accept(Visitor& visitor) const {
 }
 
 /// Datum
-DataDeclaration::DataDeclaration(const ParseNode& node) : initializer(nullptr) {
+DataDeclaration::DataDeclaration(const ParseNode& node)
+    : initializer(nullptr) {
     // Correctly find the identifier name among tokens (skip 'mut' or 'data')
     for (const auto& token : node.tokens) {
         if (token.type == TokenType::Identifier) {
@@ -333,13 +336,13 @@ BinaryExpr::BinaryExpr(const ParseNode& node)
 
 BinaryExpr::BinaryExpr(const std::string& op, const ParseNode& left, const ParseNode& right)
     : op(op)
-    , left(CreateExpression(left))
-    , right(CreateExpression(right)) {}
+  , left(CreateExpression(left))
+  , right(CreateExpression(right)) {}
 
 BinaryExpr::BinaryExpr(const std::string_view op, const ParseNode& left, const ParseNode& right)
     : op(op)
-    , left(CreateExpression(left))
-    , right(CreateExpression(right)) {}
+  , left(CreateExpression(left))
+  , right(CreateExpression(right)) {}
 
 std::string_view BinaryExpr::GetOp() const {
     return op;
@@ -370,7 +373,7 @@ SIGIL_NODISCARD bool IsBooleanLiteral(const TokenType token) {
 /// UnaryExpr
 UnaryExpr::UnaryExpr(const ParseNode& node)
     : op(FetchTokenText(node.tokens[0]))
-    , val(CreateExpression(*node.branches[0])) {}
+  , val(CreateExpression(*node.branches[0])) {}
 
 void UnaryExpr::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
