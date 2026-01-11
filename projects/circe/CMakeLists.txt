@@ -8,6 +8,7 @@ set(CIRCE_SOURCES
         src/circe/main-visitor.cpp
 
         src/circe/core/logger.cpp
+        src/circe/core/cli.cpp
 )
 
 set(CIRCE_INCLUDES
