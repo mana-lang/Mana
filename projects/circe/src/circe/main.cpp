@@ -1,5 +1,5 @@
 #include <circe/core/logger.hpp>
-#include <circe/main-visitor.hpp>
+#include <circe/circe-visitor.hpp>
 #include <circe/core/cli.hpp>
 
 #include <sigil/ast/lexer.hpp>
@@ -27,6 +27,11 @@ int CompileFrom(const std::filesystem::path& in_path,
 ) {
     namespace chrono = std::chrono;
     using namespace mana;
+
+    if (not std::filesystem::exists(in_path)) {
+        Log->error("Input file '{}' does not exist", in_path.string());
+        return Exit(ExitCode::FileNotFound);
+    }
 
     const auto time_total_start = chrono::high_resolution_clock::now();
 
