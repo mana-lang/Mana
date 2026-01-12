@@ -18,9 +18,9 @@ struct Error {
         const ml::i64 token_offset,
         const ErrorSeverity severity = ErrorSeverity::Error
     )
-        : node(node)
-      , code(code)
-      , severity(severity)
-      , token_offset(token_offset) {}
+        : node(node),
+          code(code),
+          severity(severity),
+          token_offset(token_offset) {}
 };
 } // namespace sigil

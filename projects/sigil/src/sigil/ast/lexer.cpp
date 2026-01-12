@@ -15,9 +15,9 @@ using namespace mana::literals;
 thread_local GlobalSourceFile Lexer::Source;
 
 Lexer::Lexer()
-    : cursor {0}
-  , line_start(0)
-  , line_number {0} {}
+    : cursor {0},
+      line_start(0),
+      line_number {0} {}
 
 bool Lexer::IsNewline() const {
     return Source[cursor] == '\n';
