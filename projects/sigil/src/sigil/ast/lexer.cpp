@@ -213,7 +213,7 @@ bool Lexer::LexedOperator() {
             break;
         }
         if (next == '>') {
-            token_type = Op_MatchArm; // =>
+            token_type = Op_Target; // =>
             break;
         }
         token_type = Op_Assign;
@@ -331,7 +331,7 @@ bool Lexer::LexedOperator() {
         token_type = Op_Move;
         break;
     case '$':
-        token_type = Op_Copy;
+        token_type = Op_Tilde;
         break;
     case ';':
         token_type = Terminator;
@@ -360,7 +360,7 @@ bool Lexer::LexedOperator() {
     case Op_ReturnType:
     case Op_LogicalAnd:
     case Op_LogicalOr:
-    case Op_MatchArm:
+    case Op_Target:
     case Op_ExclusiveRange:
     case Op_AddAssign:
     case Op_SubAssign:

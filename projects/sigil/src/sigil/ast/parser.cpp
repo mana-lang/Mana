@@ -13,14 +13,14 @@ using namespace ast;
 using namespace mana::literals;
 
 Parser::Parser(const TokenStream&& tokens)
-    : tokens {std::move(tokens)}
-  , cursor {}
-  , parse_tree {Rule::Undefined} {}
+    : tokens {std::move(tokens)},
+      cursor {},
+      parse_tree {Rule::Undefined} {}
 
 Parser::Parser(const TokenStream& tokens)
-    : tokens {tokens}
-  , cursor {}
-  , parse_tree {Rule::Undefined} {}
+    : tokens {tokens},
+      cursor {},
+      parse_tree {Rule::Undefined} {}
 
 bool Parser::Parse() {
     parse_tree.rule = Rule::Artifact;
@@ -244,12 +244,17 @@ bool Parser::Expect(const bool condition,
     return true;
 }
 
-// stmt = if_stmt | (decl | assign | expr) TERMINATOR
+// stmt = if_stmt | loop | (decl | assign | expr) TERMINATOR
 bool Parser::MatchedStatement(ParseNode& node) {
-    auto& stmt {node.NewBranch(Rule::Statement)};
+    auto& stmt = node.NewBranch(Rule::Statement);
 
     // if-blocks aren't terminated since they have a scope, so we exit early on match
     if (MatchedIfBlock(stmt)) {
+        return true;
+    }
+
+    // same for match
+    if (MatchedLoop(stmt)) {
         return true;
     }
 
@@ -343,6 +348,114 @@ bool Parser::MatchedIfTail(ParseNode& node) {
 
     return true;
 }
+
+// loop = KW_LOOP loop_body ;
+bool Parser::MatchedLoop(ParseNode& node) {
+    if (CurrentToken().type != TokenType::KW_loop) {
+        return false;
+    }
+
+    auto& loop = node.NewBranch(Rule::Loop);
+    AddCycledTokenTo(loop);
+
+    Expect(MatchedLoopBody(loop), loop, "Expected loop body");
+
+    return true;
+}
+
+bool Parser::MatchedLoopBody(ParseNode& node) {
+    // loop_condition = KW_if expr
+    const auto loop_condition = [this](ParseNode& n) {
+        if (CurrentToken().type != TokenType::KW_if) {
+            return false;
+        }
+        AddCurrentTokenTo(n);
+
+        Expect(MatchedExpression(n), n, "Expected expression");
+        return true;
+    };
+
+    auto& loop_body = node.NewBranch(Rule::LoopBody);
+
+    // infinite/post-conditional
+    // loop_body = scope loop_condition?
+    if (MatchedScope(loop_body)) {
+        if (CurrentToken().type != TokenType::Op_Target) {
+            return true;
+        }
+        AddCycledTokenTo(loop_body);
+        loop_condition(loop_body);
+
+        return true;
+    }
+
+    // conditional
+    // loop_body = loop_condition scope
+    if (loop_condition(loop_body)) {
+        Expect(MatchedScope(loop_body), loop_body, "Expected scope for loop body");
+        return true;
+    }
+
+    switch (MatchedRangeExpr(node)) {
+    case RangeExprResult::MatchedRange: {
+        // ranged iteration
+        // loop_body = range_expr ID scope
+        const auto range_index = node.branches.size() - 2;
+        loop_body.AcquireBranchOf(node, range_index);
+
+        if (not Expect(CurrentToken().type == TokenType::Identifier, loop_body, "Expected identifier")) {
+            return true;
+        }
+        AddCycledTokenTo(loop_body);
+
+        Expect(MatchedScope(loop_body), loop_body, "Expected scope for loop body");
+        return true;
+    }
+    case RangeExprResult::MatchedExpr: {
+        // fixed iteration
+        // loop_body = expr ID? scope
+        const auto expr_index = node.branches.size() - 2;
+        loop_body.AcquireBranchOf(node, expr_index);
+        if (CurrentToken().type == TokenType::Identifier) {
+            AddCycledTokenTo(loop_body);
+        }
+        Expect(MatchedScope(loop_body), loop_body, "Expected scope for loop body");
+
+        return true;
+    }
+    case RangeExprResult::NoMatch:
+        break;
+    }
+
+    // if we get here, it means absolutely nothing matched, so popping is safe, albeit a bit slow
+    node.PopBranch();
+    return false;
+}
+
+// range_expr = expr? OP_RANGE_INC expr? | expr? OP_RANGE_EXC expr?
+Parser::RangeExprResult Parser::MatchedRangeExpr(ParseNode& node) {
+    using enum TokenType;
+
+    const bool starts_with_expr = MatchedExpression(node);
+
+    const auto op = CurrentToken().type;
+    if (op != Op_Tilde && op != Op_ExclusiveRange) {
+        return starts_with_expr ? RangeExprResult::MatchedExpr : RangeExprResult::NoMatch;
+    }
+
+    auto& range = node.NewBranch(Rule::LoopRangeExpr);
+    AddCycledTokenTo(range);
+
+    if (starts_with_expr) {
+        const auto lhs_index = node.branches.size() - 2;
+        range.AcquireBranchOf(node, lhs_index);
+    }
+
+    MatchedExpression(range);
+
+    return RangeExprResult::MatchedRange;
+}
+
 
 // decl = KW_MUT? KW_DATA ID ('=' expr)?
 bool Parser::MatchedDeclaration(ParseNode& node) {

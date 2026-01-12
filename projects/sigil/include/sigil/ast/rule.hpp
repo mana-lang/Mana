@@ -20,7 +20,9 @@ enum class Rule : ml::u8 {
     IfBlock,
     IfTail,
 
-    LoopBlock,
+    Loop,
+    LoopBody,
+    LoopRangeExpr,
 
     Declaration,
     Assignment,

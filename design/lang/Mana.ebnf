@@ -10,18 +10,41 @@ KW_IF     = "if"     ;
 KW_ELSE   = "else"   ;
 KW_RETURN = "return" ;
 
+KW_LOOP      = "loop"  ;
+KW_SKIP      = "skip"  ;
+KW_BREAK     = "break" ;
+OP_RANGE_INC = "~"     ;
+OP_RANGE_EXC = ".."    ;
+OP_TARGET    = "=>"    ;
+
 TERMINATOR = "\n" | ";";
 
   (* rules *)
 artifact = stmt* EOF ;
 
-stmt   = if_stmt | (decl | assign | expr) TERMINATOR ;
+stmt   = if_stmt | loop | (decl | assign | expr) TERMINATOR ;
 
 decl   = KW_MUT? KW_DATA ID ('=' expr)?    ;
 assign = ID '=' expr                       ;
 
 if_stmt = KW_IF expr scope if_tail? ;
 if_tail = KW_ELSE (if_stmt | scope) ;
+
+loop = KW_LOOP (ID ':')? loop_body ;
+
+loop_condition = KW_IF expr
+
+loop_body = scope loop_condition?            (* infinite / post-conditional *)
+          | loop_condition scope             (* conditional *)
+          | range_expr ID scope              (* ranged iteration *)
+          | expr ID? scope                   (* fixed iteration, expr must evaluate to integer *)
+          ;
+
+range_expr = expr? OP_RANGE_INC expr?
+           | expr? OP_RANGE_EXC expr?
+           ;
+
+loop_control = (KW_SKIP | KW_BREAK) (OP_TARGET ID)? ;
 
 scope  = "{" stmt* "}"
 

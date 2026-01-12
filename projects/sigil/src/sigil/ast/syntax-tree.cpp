@@ -176,8 +176,49 @@ void If::Accept(Visitor& visitor) const {
 
 /// Loop
 Loop::Loop(const ParseNode& node) {
-    condition = CreateExpression(*node.branches[0]);
-    body      = std::make_shared<Scope>(*node.branches[1]);
+    const auto& loop_body = *node.branches[0];
+
+    //TODO: THIS SHIT IS LITERALLY A NIGHTMARE JUST MAKE A BUNCH OF DIFFERENT NODES FOR DIFFERENT KINDS OF LOOPS OR IM PUNCHING A PINEAPPLE
+
+    using enum Type;
+
+    if (loop_body.branches.size() == 1) {
+        condition = nullptr;
+        counter   = nullptr;
+        body      = std::make_shared<Scope>(*loop_body.branches[0]);
+        type      = Infinite;
+        return;
+    }
+
+    // size must be greater than 1 here since input is sanitized
+    if (loop_body.branches[0]->rule == Rule::Scope) {
+        counter   = nullptr;
+        condition = CreateExpression(*loop_body.branches[0]);
+        body      = std::make_shared<Scope>(*loop_body.branches[1]);
+        type      = Conditional;
+        return;
+    }
+
+
+    if (loop_body.tokens[0].type == TokenType::Op_Target) {
+        counter   = nullptr;
+        body      = std::make_shared<Scope>(*loop_body.branches[0]);
+        condition = CreateExpression(*loop_body.branches[1]);
+        type      = PostConditional;
+        return;
+    }
+
+    if (loop_body.branches[0]->rule == Rule::LoopRangeExpr) {
+        condition = CreateExpression(*loop_body.branches[0]);
+        counter   = CreateExpression(*loop_body.branches[1]);
+        body      = std::make_shared<Scope>(*loop_body.branches[2]);
+        type      = RangedIteration;
+        return;
+    }
+
+    condition = CreateExpression(*loop_body.branches[0]);
+    body      = std::make_shared<Scope>(*loop_body.branches[1]);
+    type      = FixedIteration;
 }
 
 const NodePtr& Loop::GetBody() const {
@@ -186,6 +227,14 @@ const NodePtr& Loop::GetBody() const {
 
 const NodePtr& Loop::GetCondition() const {
     return condition;
+}
+
+bool Loop::HasCondition() const {
+    return condition != nullptr;
+}
+
+Loop::Type Loop::GetType() const {
+    return type;
 }
 
 void Loop::Accept(Visitor& visitor) const {
@@ -385,14 +434,14 @@ BinaryExpr::BinaryExpr(const ParseNode& node)
     : BinaryExpr(node, 1) {}
 
 BinaryExpr::BinaryExpr(const std::string& op, const ParseNode& left, const ParseNode& right)
-    : op(op)
-  , left(CreateExpression(left))
-  , right(CreateExpression(right)) {}
+    : op(op),
+      left(CreateExpression(left)),
+      right(CreateExpression(right)) {}
 
 BinaryExpr::BinaryExpr(const std::string_view op, const ParseNode& left, const ParseNode& right)
-    : op(op)
-  , left(CreateExpression(left))
-  , right(CreateExpression(right)) {}
+    : op(op),
+      left(CreateExpression(left)),
+      right(CreateExpression(right)) {}
 
 std::string_view BinaryExpr::GetOp() const {
     return op;
@@ -422,8 +471,8 @@ SIGIL_NODISCARD bool IsBooleanLiteral(const TokenType token) {
 
 /// UnaryExpr
 UnaryExpr::UnaryExpr(const ParseNode& node)
-    : op(FetchTokenText(node.tokens[0]))
-  , val(CreateExpression(*node.branches[0])) {}
+    : op(FetchTokenText(node.tokens[0])),
+      val(CreateExpression(*node.branches[0])) {}
 
 void UnaryExpr::Accept(Visitor& visitor) const {
     visitor.Visit(*this);

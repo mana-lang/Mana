@@ -19,6 +19,13 @@ class Parser {
 
     std::unique_ptr<ast::Artifact> syntax_tree;
 
+private:
+    enum class RangeExprResult : ml::u8 {
+        MatchedExpr,
+        MatchedRange,
+        NoMatch
+    };
+
 public:
     explicit Parser(const TokenStream&& tokens);
     explicit Parser(const TokenStream& tokens);
@@ -74,6 +81,10 @@ private:
 
     bool MatchedIfBlock(ParseNode& node);
     bool MatchedIfTail(ParseNode& node);
+
+    bool MatchedLoop(ParseNode& node);
+    bool MatchedLoopBody(ParseNode& node);
+    RangeExprResult MatchedRangeExpr(ParseNode& node);
 
     bool MatchedDeclaration(ParseNode& node);
     bool MatchedAssignment(ParseNode& node);

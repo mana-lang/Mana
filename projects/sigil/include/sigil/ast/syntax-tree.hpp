@@ -142,14 +142,28 @@ public:
 };
 
 class Loop final : public Node {
+public:
+    enum class Type {
+        Infinite,
+        Conditional,
+        PostConditional,
+        RangedIteration,
+        FixedIteration,
+    };
+
+private:
     NodePtr condition;
+    NodePtr counter;
     NodePtr body;
+    Type type;
 
 public:
     explicit Loop(const ParseNode& node);
 
     SIGIL_NODISCARD const NodePtr& GetBody() const;
     SIGIL_NODISCARD const NodePtr& GetCondition() const;
+    SIGIL_NODISCARD bool HasCondition() const;
+    SIGIL_NODISCARD Type GetType() const;
 
     void Accept(Visitor& visitor) const override;
 };
@@ -250,7 +264,7 @@ void PropagateStatements(const ParseNode& node, SC* root) {
             case IfBlock:
                 root->Add<If>(*n);
                 break;
-            case LoopBlock:
+            case Loop:
                 root->Add<Loop>(*n);
                 break;
             default:

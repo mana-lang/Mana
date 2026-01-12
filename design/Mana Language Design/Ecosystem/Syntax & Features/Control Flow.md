@@ -51,18 +51,20 @@ loop 3..5 i // exclusive variant
 // while x == 5
 loop if x == 5
 
-// do while x == 5
-loop { /* some code */ } if x == 5
-// keep in mind that the 'if' must be on the same line as '}'
-// or terminated with a semicolon
-// for it to be part of the loop
+// do {...} while x == 5
+loop { 
+	/* some code */ 
+} => if x == 5
 
 // within this loop, 'x' is temporarily mutable
 // and is initially zeroed
 data x => loop {
 	// do stuff
 	x = Something()
-} // after the loop block, 'x' is immutable
+} // after the 
+
+
+loop block, 'x' is immutable
 
 loop {
 	if SomeCondition() {

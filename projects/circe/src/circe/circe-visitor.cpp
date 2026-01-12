@@ -13,8 +13,8 @@ using namespace mana::vm;
 using namespace sigil::ast;
 
 CirceVisitor::CirceVisitor()
-    : total_registers {}
-  , scope_depth {} {}
+    : total_registers {},
+      scope_depth {} {}
 
 Slice CirceVisitor::GetSlice() const {
     return slice;
