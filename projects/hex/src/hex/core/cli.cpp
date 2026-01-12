@@ -4,10 +4,10 @@
 
 namespace hex {
 CommandLineSettings::CommandLineSettings(const int argc, char** argv)
-    : argc(argc)
-  , argv(argv)
-  , say_hi(false)
-  , gen_testfile(false) {
+    : argc(argc),
+      argv(argv),
+      say_hi(false),
+      gen_testfile(false) {
     cli = std::make_unique<CLI::App>("Hex, the Mana VM");
 }
 

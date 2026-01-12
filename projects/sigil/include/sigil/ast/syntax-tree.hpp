@@ -141,6 +141,19 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
+class Loop final : public Node {
+    NodePtr condition;
+    NodePtr body;
+
+public:
+    explicit Loop(const ParseNode& node);
+
+    SIGIL_NODISCARD const NodePtr& GetBody() const;
+    SIGIL_NODISCARD const NodePtr& GetCondition() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
 template <LiteralType T>
 class Literal final : public Node {
     T value;
@@ -236,6 +249,9 @@ void PropagateStatements(const ParseNode& node, SC* root) {
                 break;
             case IfBlock:
                 root->Add<If>(*n);
+                break;
+            case LoopBlock:
+                root->Add<Loop>(*n);
                 break;
             default:
                 if (auto expr = CreateExpression(*n)) {

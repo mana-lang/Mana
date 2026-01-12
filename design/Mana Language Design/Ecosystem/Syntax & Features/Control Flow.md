@@ -59,7 +59,7 @@ loop { /* some code */ } if x == 5
 
 // within this loop, 'x' is temporarily mutable
 // and is initially zeroed
-data x = loop {
+data x => loop {
 	// do stuff
 	x = Something()
 } // after the loop block, 'x' is immutable

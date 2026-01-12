@@ -2,11 +2,11 @@
 
 namespace circe {
 CommandLineSettings::CommandLineSettings(int argc, char** argv)
-    : argc {argc}
-  , argv {argv}
-  , verbose {false}
-  , emit_ptree {false}
-  , emit_tokens {false} {
+    : argc {argc},
+      argv {argv},
+      verbose {false},
+      emit_ptree {false},
+      emit_tokens {false} {
     cli = std::make_unique<CLI::App>("Circe, the Mana Compiler");
 }
 

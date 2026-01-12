@@ -20,6 +20,8 @@ enum class Rule : ml::u8 {
     IfBlock,
     IfTail,
 
+    LoopBlock,
+
     Declaration,
     Assignment,
     Expression,

@@ -41,7 +41,7 @@ public:
     MANA_NODISCARD u64 BackIndex() const;
 
     MANA_NODISCARD const ByteCode& Instructions() const;
-    MANA_NODISCARD ByteCode&       Instructions();
+    MANA_NODISCARD ByteCode& Instructions();
 
     MANA_NODISCARD const std::vector<Value>& Constants() const;
 
@@ -85,10 +85,9 @@ public:
 
         const auto first_elem_index = values.size();
 
-        values.push_back(Value{constants});
+        values.push_back(Value {constants});
 
         return first_elem_index;
     }
 };
-
-}  // namespace mana::vm
+} // namespace mana::vm

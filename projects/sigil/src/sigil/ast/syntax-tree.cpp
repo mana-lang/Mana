@@ -174,6 +174,24 @@ void If::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
+/// Loop
+Loop::Loop(const ParseNode& node) {
+    condition = CreateExpression(*node.branches[0]);
+    body      = std::make_shared<Scope>(*node.branches[1]);
+}
+
+const NodePtr& Loop::GetBody() const {
+    return body;
+}
+
+const NodePtr& Loop::GetCondition() const {
+    return condition;
+}
+
+void Loop::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
 /// Datum
 DataDeclaration::DataDeclaration(const ParseNode& node)
     : initializer(nullptr) {
