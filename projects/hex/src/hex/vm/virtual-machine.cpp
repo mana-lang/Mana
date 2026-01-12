@@ -231,14 +231,16 @@ not_equals: {
     }
 
 jmp: {
+        // jumps are stored as u16, but encoded as i16
+        // so we need to convert them back here
 #ifdef HEX_DEBUG
-        u16 dist = NEXT_PAYLOAD;
+        i16 dist = static_cast<i16>(NEXT_PAYLOAD);
 
         const auto target = ip - slice->Instructions().data() + dist;
         Log->debug("  Jump ==> [{:04}]", target);
         ip += dist;
 #else
-        ip += NEXT_PAYLOAD;
+        ip += static_cast<i16>(NEXT_PAYLOAD);
 #endif
 
         DISPATCH();
@@ -246,7 +248,7 @@ jmp: {
 
 jmp_true: {
         u16 reg  = NEXT_PAYLOAD;
-        u16 dist = NEXT_PAYLOAD;
+        i16 dist = static_cast<i16>(NEXT_PAYLOAD);
 
 #ifdef HEX_DEBUG
         const bool taken  = REG(reg).AsBool();
@@ -267,7 +269,7 @@ jmp_true: {
     }
 jmp_false: {
         u16 reg  = NEXT_PAYLOAD;
-        u16 dist = NEXT_PAYLOAD;
+        i16 dist = static_cast<i16>(NEXT_PAYLOAD);
 
 #ifdef HEX_DEBUG
         const bool taken  = !REG(reg).AsBool();
@@ -276,7 +278,7 @@ jmp_false: {
                    target,
                    reg,
                    ValueToString(REG(reg)),
-                   taken ? "TAKEN" : "SKIP"
+                   taken ? "TAKEN" : "SKIPPED"
         );
 #endif
 

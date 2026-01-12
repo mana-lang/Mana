@@ -11,33 +11,37 @@ IndexRange::IndexRange(const i64 init_offset, const i64 range)
     }
 }
 
-u64 Slice::Write(Op opcode) {
+i64 Slice::Write(Op opcode) {
     instructions.push_back(static_cast<u8>(opcode));
+
+    CheckSize();
     return instructions.size() - 1;
 }
 
-u64 Slice::Write(const Op opcode, std::initializer_list<u16> payloads) {
+i64 Slice::Write(const Op opcode, std::initializer_list<u16> payloads) {
     instructions.push_back(static_cast<u8>(opcode));
     const auto index = instructions.size() - 1;
 
     // payloads are 16-bit unsigned little endian
-
     for (const auto payload : payloads) {
         instructions.push_back(payload & 0xFF);
         instructions.push_back((payload >> 8) & 0xFF);
     }
 
+    CheckSize();
     return index;
 }
 
-void Slice::Patch(const u64 instruction_index, const u16 new_value, const u8 payload_index) {
+// does not perform bounds checking
+void Slice::Patch(const i64 instruction_index, const u16 new_value, const u8 payload_index) {
     // add 1 to skip past instruction
-    const u64 payload         = 1 + instruction_index + payload_index * 2;
+    const i64 payload = 1 + instruction_index + payload_index * 2;
+
     instructions[payload]     = new_value & 0xFF;
     instructions[payload + 1] = (new_value >> 8) & 0xFF;
 }
 
-u64 Slice::BackIndex() const {
+i64 Slice::BackIndex() const {
     return instructions.size() - 1;
 }
 
@@ -163,5 +167,13 @@ bool Slice::Deserialize(const ByteCode& bytes) {
     instructions.insert(instructions.begin(), bytes.begin() + pool_range.end, bytes.end());
 
     return true;
+}
+
+void Slice::CheckSize() const {
+    if (instructions.size() >= SLICE_INSTRUCTION_MAX) {
+        /// TODO: ideally we handle this in such a way that we don't need to crash
+        /// also i hate exceptions
+        throw std::runtime_error("Slice instruction limit reached");
+    }
 }
 } // namespace mana::vm

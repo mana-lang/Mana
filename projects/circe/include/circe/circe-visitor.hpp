@@ -42,6 +42,12 @@ public:
 
     void Visit(const ast::If& node) override;
 
+    void Visit(const ast::Loop& node) override;
+    void Visit(const ast::LoopIf& node) override;
+    void Visit(const ast::LoopIfPost& node) override;
+    void Visit(const ast::LoopRange& node) override;
+    void Visit(const ast::LoopFixed& node) override;
+
     void Visit(const ast::UnaryExpr& node) override;
     void Visit(const ast::BinaryExpr& node) override;
     void Visit(const ast::ArrayLiteral& array) override;
@@ -52,6 +58,13 @@ public:
     void Visit(const ast::Literal<bool>& literal) override;
 
 private:
+    enum class JumpType {
+        Jump,
+        ConditionalJump,
+    };
+
+    ml::u16 CalcJumpDistance(ml::i64 jump_index, bool is_conditional = false) const;
+
     ml::u16 AllocateRegister();
     void FreeRegister(ml::u16 reg);
     void FreeRegisters(std::initializer_list<ml::u16> regs);

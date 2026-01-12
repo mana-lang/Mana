@@ -103,7 +103,7 @@ void PrintBytecode(const Slice& s) {
         }
 
         case Jump: {
-            const u16 dist = read();
+            const i16 dist = static_cast<i16>(read());
             // Offset + Opcode (1) + Payload (2) + Distance
             Log->debug("{:04} | {} => {:04}", offset, name, offset + 3 + dist);
             break;
@@ -112,7 +112,7 @@ void PrintBytecode(const Slice& s) {
         case JumpWhenTrue:
         case JumpWhenFalse: {
             const u16 reg  = read();
-            const u16 dist = read();
+            const i16 dist = static_cast<i16>(read());
             // Offset + Opcode (1) + Reg (2) + Destination (2)
             Log->debug("{:04} | {} R{} => {:04}", offset, name, reg, offset + 5 + dist);
             break;

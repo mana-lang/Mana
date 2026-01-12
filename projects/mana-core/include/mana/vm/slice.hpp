@@ -20,6 +20,8 @@ struct IndexRange {
 
 using ByteCode = std::vector<u8>;
 
+static constexpr auto SLICE_INSTRUCTION_MAX = std::numeric_limits<i64>::max();
+
 class Slice {
     ByteCode instructions;
 
@@ -27,18 +29,18 @@ class Slice {
 
 public:
     // returns opcode's index
-    u64 Write(Op opcode);
+    i64 Write(Op opcode);
 
     // returns opcode's index
-    u64 Write(Op opcode, std::initializer_list<u16> payloads);
+    i64 Write(Op opcode, std::initializer_list<u16> payloads);
 
     // Modifies a payload for the given opcode
     // This function exists to amend instruction payloads,
     // and thus it assumes the index given is for the opcode whose payload you wish to patch,
     // not the payload itself
-    void Patch(u64 instruction_index, u16 new_value, u8 payload_index = 0);
+    void Patch(i64 instruction_index, u16 new_value, u8 payload_index = 0);
 
-    MANA_NODISCARD u64 BackIndex() const;
+    MANA_NODISCARD i64 BackIndex() const;
 
     MANA_NODISCARD const ByteCode& Instructions() const;
     MANA_NODISCARD ByteCode& Instructions();
@@ -89,5 +91,8 @@ public:
 
         return first_elem_index;
     }
+
+private:
+    void CheckSize() const;
 };
 } // namespace mana::vm

@@ -126,23 +126,29 @@ void CirceVisitor::Visit(const If& node) {
     node.GetCondition()->Accept(*this);
     const u16 cond_reg = PopRegBuffer();
 
-    const u64 jmp_false = slice.Write(Op::JumpWhenFalse, {cond_reg, 0xDEAD});
+    const i64 jmp_false = slice.Write(Op::JumpWhenFalse, {cond_reg, 0xDEAD});
     FreeRegister(cond_reg);
 
     node.GetThenBlock()->Accept(*this);
 
     if (const auto& else_branch = node.GetElseBranch()) {
-        const u64 jmp_end = slice.Write(Op::Jump, {0xDEAD});
+        const i64 jmp_end = slice.Write(Op::Jump, {0xDEAD});
 
-        slice.Patch(jmp_false, slice.Instructions().size() - (jmp_false + CJMP_OP_BYTES), 1);
+        slice.Patch(jmp_false, CalcJumpDistance(jmp_false, true), 1);
 
         else_branch->Accept(*this);
 
-        slice.Patch(jmp_end, slice.Instructions().size() - (jmp_end + JMP_OP_BYTES), 0);
+        slice.Patch(jmp_end, CalcJumpDistance(jmp_end), 0);
     } else {
-        slice.Patch(jmp_false, slice.Instructions().size() - (jmp_false + CJMP_OP_BYTES), 1);
+        slice.Patch(jmp_false, CalcJumpDistance(jmp_false, true), 1);
     }
 }
+
+void CirceVisitor::Visit(const Loop& node) {}
+void CirceVisitor::Visit(const LoopIf& node) {}
+void CirceVisitor::Visit(const LoopIfPost& node) {}
+void CirceVisitor::Visit(const LoopRange& node) {}
+void CirceVisitor::Visit(const LoopFixed& node) {}
 
 void CirceVisitor::Visit(const UnaryExpr& node) {
     node.GetVal().Accept(*this);
@@ -186,14 +192,14 @@ void CirceVisitor::Visit(const BinaryExpr& node) {
         const u16 dst = AllocateRegister();
         slice.Write(Op::Move, {dst, lhs});
 
-        const u64 jwf = slice.Write(jump_op, {lhs, 0xDEAD});
+        const i64 jwf = slice.Write(jump_op, {lhs, 0xDEAD});
         FreeRegister(lhs);
 
         node.GetRight().Accept(*this);
         const u16 rhs = PopRegBuffer();
         slice.Write(Op::Move, {dst, rhs});
 
-        slice.Patch(jwf, slice.Instructions().size() - (jwf + CJMP_OP_BYTES), 1);
+        slice.Patch(jwf, CalcJumpDistance(jwf, true), 1);
         reg_buffer.push_back(dst);
         FreeRegister(rhs);
     };
@@ -296,6 +302,19 @@ void CirceVisitor::Visit(const Literal<void>& node) {}
 
 void CirceVisitor::Visit(const Literal<bool>& literal) {
     CreateLiteral(literal);
+}
+
+u16 CirceVisitor::CalcJumpDistance(const i64 jump_index, bool is_conditional) const {
+    const auto jump_bytes = is_conditional ? CJMP_OP_BYTES : JMP_OP_BYTES;
+
+    const i64 jump_distance = slice.Instructions().size() - (jump_index + jump_bytes);
+    if (jump_distance > std::numeric_limits<i16>::max()
+        || jump_distance < std::numeric_limits<i16>::min()) {
+        Log->error("Jump distance out of bounds");
+        return 0xDEAD;
+    }
+
+    return static_cast<u16>(jump_distance);
 }
 
 u16 CirceVisitor::AllocateRegister() {
