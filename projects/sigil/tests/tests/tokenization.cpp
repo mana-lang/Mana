@@ -15,11 +15,11 @@ TEST_CASE("Lexer", "[lex][token][operator][keyword]") {
 
     std::ifstream control_file("assets/control/lex-control.tks");
     REQUIRE(control_file.good());
-    const std::string control(std::istreambuf_iterator{control_file}, {});
+    const std::string control(std::istreambuf_iterator {control_file}, {});
 
     std::ifstream output_file("lex-tests.tks");
     REQUIRE(output_file.good());
-    const std::string output(std::istreambuf_iterator{output_file}, {});
+    const std::string output(std::istreambuf_iterator {output_file}, {});
 
     REQUIRE(output == control);
 }

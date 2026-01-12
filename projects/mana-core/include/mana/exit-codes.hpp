@@ -1,18 +1,21 @@
 #pragma once
 
 namespace mana {
-enum class Exit {
+enum class ExitCode {
     Success,
-    CriticalError,
-    LOG_LogCounterExhausted,
-    LOG_LogCounterIllegalPath,
-    CLI_HelpArgUsed,
-    CLI_MissingSrcFile,
-    LEX_TokenizationFailed,
+    UnknownCriticalError,
+
+    NoFileProvided,
+    FileNotFound,
+
+    LexerError,
+    ParserError,
+
+    OutputOpenError,
+    OutputWriteError,
 };
 
-consteval int exit_code(Exit exit_code) {
+consteval int Exit(ExitCode exit_code) {
     return static_cast<int>(exit_code);
 }
-
-}  // namespace salem
+} // namespace mana

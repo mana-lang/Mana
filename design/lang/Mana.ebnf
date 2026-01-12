@@ -16,16 +16,19 @@ TERMINATOR = "\n" | ";";
 artifact = stmt* EOF ;
 
 stmt   = if_stmt | (decl | assign | expr) TERMINATOR ;
+
 decl   = KW_MUT? KW_DATA ID ('=' expr)?    ;
 assign = ID '=' expr                       ;
-scope  = "{" stmt* "}"
 
 if_stmt = KW_IF expr scope if_tail? ;
 if_tail = KW_ELSE (if_stmt | scope) ;
 
+scope  = "{" stmt* "}"
+
 return = KW_RETURN expr TERMINATOR ;
 
-expr       = equality                                 ;
+expr       = logical                                  ;  
+logical    = equality ( ('&&' | '||') equality )*     ;
 equality   = comparison (  ('!=' | '==') comparison)* ;
 comparison = term ( ('>' | '>=' | '<' | '<=') term)*  ;
 term       = factor ( ('-' | '+') factor)*            ;

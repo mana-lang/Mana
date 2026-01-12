@@ -15,8 +15,12 @@ enum class Rule : ml::u8 {
 
     Scope,
 
+    Identifier,
+
     IfBlock,
     IfTail,
+
+    LoopBlock,
 
     Declaration,
     Assignment,
@@ -34,5 +38,4 @@ enum class Rule : ml::u8 {
     Equality,
     Logical,
 };
-
-}  // namespace sigil::ast
+} // namespace sigil::ast

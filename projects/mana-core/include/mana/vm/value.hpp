@@ -29,9 +29,9 @@ struct Value {
     friend class Slice;
 
     union Data {
-        i64  as_i64;
-        u64  as_u64;
-        f64  as_f64;
+        i64 as_i64;
+        u64 as_u64;
+        f64 as_f64;
         bool as_bool;
     };
 
@@ -48,19 +48,28 @@ struct Value {
     Value(u32 u);
 
     MANA_NODISCARD LengthType Length() const;
-    MANA_NODISCARD u64        BitCasted(u32 at) const;
+    MANA_NODISCARD u64 BitCasted(u32 at) const;
 
     MANA_NODISCARD PrimitiveType GetType() const;
 
-    MANA_NODISCARD f64  AsFloat() const;
-    MANA_NODISCARD i64  AsInt() const;
-    MANA_NODISCARD u64  AsUint() const;
+    MANA_NODISCARD f64 AsFloat() const;
+    MANA_NODISCARD i64 AsInt() const;
+    MANA_NODISCARD u64 AsUint() const;
     MANA_NODISCARD bool AsBool() const;
+
+    Value operator+(const Value& rhs) const;
+    Value operator-(const Value& rhs) const;
+    Value operator*(const Value& rhs) const;
+    Value operator/(const Value& rhs) const;
+    Value operator%(const Value& rhs) const;
+
+    Value operator-() const;
 
     void operator+=(const Value& rhs);
     void operator-=(const Value& rhs);
     void operator*=(const Value& rhs);
     void operator/=(const Value& rhs);
+    void operator%=(const Value& rhs);
 
     bool operator>(const Value& rhs) const;
     bool operator>=(const Value& rhs) const;
@@ -75,8 +84,8 @@ struct Value {
 
     Value()
         : data {nullptr}
-        , length(0)
-        , type(Invalid) {}
+      , length(0)
+      , type(Invalid) {}
 
     Value(const Value& other);
     Value(Value&& other) noexcept;
@@ -88,42 +97,45 @@ struct Value {
     ~Value();
 
     template <typename T>
-        requires std::is_integral_v<T> || std::is_floating_point_v<T>
-                     || std::is_same_v<T, bool>
+        requires std::is_integral_v<T>
+                 || std::is_floating_point_v<T>
+                 || std::is_same_v<T, bool>
     explicit Value(const std::vector<T>& values)
         : length(values.size())
-        , type(GetManaTypeFrom(T {})) {
+      , type(GetManaTypeFrom(T {})) {
         if (length == 0) {
             data = nullptr;
             return;
         }
 
-        data = new Data[length];
+        if (length == 1) {
+            data = new Data;
+        } else {
+            data = new Data[length];
+        }
+
+        // init using if constexpr to avoid narrowing warnings
         for (u64 i = 0; i < length; ++i) {
-            switch (type) {
-            case Int64:
-                data[i].as_i64 = values[i];
-                break;
-            case Uint64:
-                data[i].as_u64 = values[i];
-            case Float64:
-                data[i].as_f64 = values[i];
-            case Bool:
+            if constexpr (std::is_same_v<T, bool>) {
                 data[i].as_bool = values[i];
-            default:
-                return;
+            } else if constexpr (std::is_floating_point_v<T>) {
+                data[i].as_f64 = static_cast<f64>(values[i]);
+            } else if constexpr (std::is_unsigned_v<T>) {
+                data[i].as_u64 = static_cast<u64>(values[i]);
+            } else {
+                data[i].as_i64 = static_cast<i64>(values[i]);
             }
         }
     }
 
 private:
-    Data*      data;
+    Data* data;
     LengthType length;
-    u8         type;
+    u8 type;
 
     Value(PrimitiveType t, LengthType l);
 
-    void WriteValueBytes(const std::array<unsigned char, 8>& bytes, u32 index);
+    void WriteValueBytes(const std::array<unsigned char, 8>& bytes, u32 index) const;
 
     static i64 IDispatchI(const Data* val);
     static i64 IDispatchU(const Data* val);
@@ -173,5 +185,4 @@ private:
         BDispatchB,
     };
 };
-
-}  // namespace mana::vm
+} // namespace mana::vm

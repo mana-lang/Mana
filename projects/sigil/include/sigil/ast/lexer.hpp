@@ -22,24 +22,11 @@ class Lexer {
     std::vector<Token> tokens;
 
 public:
-    enum class PrintingMode {
-        Print,
-        Emit,
-    };
-
-    enum class PrintingPolicy {
-        All,
-        SkipTerminators,
-    };
-
-public:
     static thread_local GlobalSourceFile Source;
 
     Lexer();
 
     bool Tokenize(const std::filesystem::path& file_path);
-    void PrintTokens(PrintingMode mode     = PrintingMode::Print,
-                     PrintingPolicy policy = PrintingPolicy::All) const;
     void Reset();
 
     SIGIL_NODISCARD std::vector<Token>&& RelinquishTokens();
@@ -66,4 +53,19 @@ private:
 
     void AddEOF();
 };
+
+enum class PrintingMode {
+    Print,
+    Emit,
+};
+
+enum class PrintingPolicy {
+    All,
+    SkipTerminators,
+};
+
+void PrintTokens(const std::vector<Token>& tokens,
+                 PrintingMode mode     = PrintingMode::Print,
+                 PrintingPolicy policy = PrintingPolicy::All
+);
 } // namespace sigil

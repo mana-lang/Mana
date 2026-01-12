@@ -20,7 +20,7 @@ void ExecuteVM(const std::string_view exe_name) {
 
     std::ifstream in_file(std::string(exe_name), std::ios::binary);
     if (not in_file) {
-        Log->error("Failed to read file.");
+        Log->error("Failed to read file '{}'", exe_name);
         return;
     }
     in_file.seekg(0, std::ios::end);
@@ -30,7 +30,7 @@ void ExecuteVM(const std::string_view exe_name) {
     std::vector<u8> raw(file_size);
     in_file.read(reinterpret_cast<char*>(raw.data()), file_size);
 
-    const auto      start_deser = chrono::high_resolution_clock::now();
+    const auto start_deser = chrono::high_resolution_clock::now();
     mana::vm::Slice in_slice;
     in_slice.Deserialize(raw);
     const auto end_deser = chrono::high_resolution_clock::now();

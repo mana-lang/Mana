@@ -9,8 +9,8 @@ using namespace mana::vm;
 constexpr f64 float_tolerance = 0.0001;
 
 TEST_CASE("Values") {
-    constexpr i64 INT = 42;
-    constexpr u64 UINT = 83;
+    constexpr i64 INT   = 42;
+    constexpr u64 UINT  = 83;
     constexpr f64 FLOAT = 3.5;
 
     Value i {INT};

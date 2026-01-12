@@ -11,10 +11,10 @@
 #include <string>
 #include <vector>
 #include <charconv>
+#include <unordered_map>
 
 namespace sigil::ast {
 namespace ml = mana::literals;
-
 
 
 class Visitor;
@@ -34,7 +34,9 @@ class Statement final : public Node {
     NodePtr child;
 
 public:
-    explicit Statement(const NodePtr&& node);
+    explicit Statement(NodePtr&& node);
+
+    SIGIL_NODISCARD const NodePtr& GetChild() const;
 
     void Accept(Visitor& visitor) const override;
 };
@@ -50,7 +52,13 @@ public:
     template <NodeType NodeT, typename... Args>
     void AddStatement(Args&&... args) {
         statements.emplace_back(std::make_shared<Statement>(
-            std::make_shared<NodeT>(std::forward<Args>(args)...)));
+                std::make_shared<NodeT>(std::forward<Args>(args)...)
+            )
+        );
+    }
+
+    void AddStatement(NodePtr&& node) {
+        statements.emplace_back(std::make_shared<Statement>(std::move(node)));
     }
 };
 
@@ -67,7 +75,49 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
+class Identifier final : public Node {
+    std::string name;
+
+public:
+    explicit Identifier(const ParseNode& node);
+
+    SIGIL_NODISCARD std::string_view GetName() const;
+    void Accept(Visitor& visitor) const override;
+};
+
+class DataDeclaration final : public Node {
+    std::string name;
+    NodePtr initializer;
+    bool is_mutable;
+
+public:
+    explicit DataDeclaration(const ParseNode& node);
+
+    SIGIL_NODISCARD std::string_view GetName() const;
+    SIGIL_NODISCARD const NodePtr& GetInitializer() const;
+    SIGIL_NODISCARD bool IsMutable() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
+class Assignment final : public Node {
+    std::string identifier;
+    std::string op;
+    NodePtr value;
+
+public:
+    explicit Assignment(const ParseNode& node);
+
+    SIGIL_NODISCARD std::string_view GetIdentifier() const;
+    SIGIL_NODISCARD const NodePtr& GetValue() const;
+    SIGIL_NODISCARD std::string_view GetOp() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
 class Scope final : public Node, public StatementContainer {
+    std::unordered_map<std::string, DataDeclaration*> datums;
+
 public:
     explicit Scope(const ParseNode& node);
 
@@ -77,8 +127,6 @@ public:
 };
 
 class If final : public Node {
-    Rule condition_type;
-
     NodePtr condition;
     NodePtr then_block;
     NodePtr else_branch;
@@ -90,7 +138,18 @@ public:
     SIGIL_NODISCARD const NodePtr& GetThenBlock() const;
     SIGIL_NODISCARD const NodePtr& GetElseBranch() const;
 
-    SIGIL_NODISCARD Rule ConditionType() const;
+    void Accept(Visitor& visitor) const override;
+};
+
+class Loop final : public Node {
+    NodePtr condition;
+    NodePtr body;
+
+public:
+    explicit Loop(const ParseNode& node);
+
+    SIGIL_NODISCARD const NodePtr& GetBody() const;
+    SIGIL_NODISCARD const NodePtr& GetCondition() const;
 
     void Accept(Visitor& visitor) const override;
 };
@@ -157,7 +216,6 @@ public:
     void Accept(Visitor& visitor) const override;
 
 private:
-    static NodePtr ConstructChild(const ParseNode& operand_node);
     explicit BinaryExpr(const ParseNode& binary_node, ml::i64 depth);
 };
 
@@ -166,13 +224,15 @@ class UnaryExpr final : public Node {
     NodePtr val;
 
 public:
-    explicit UnaryExpr(const ParseNode& unary_node);
+    explicit UnaryExpr(const ParseNode& node);
 
     void Accept(Visitor& visitor) const override;
 
     SIGIL_NODISCARD std::string_view GetOp() const;
     SIGIL_NODISCARD const Node& GetVal() const;
 };
+
+NodePtr CreateExpression(const ParseNode& node);
 
 template <typename SC>
     requires std::is_base_of_v<StatementContainer, SC>
@@ -184,22 +244,19 @@ void PropagateStatements(const ParseNode& node, SC* root) {
             using enum Rule;
 
             switch (n->rule) {
-            case Equality:
-            case Comparison:
-            case Term:
-            case Factor:
-                root->Add<BinaryExpr>(*n);
-                break;
-            case Unary:
-                root->Add<UnaryExpr>(*n);
-                break;
-            case ArrayLiteral:
-                root->Add<ast::ArrayLiteral>(*n);
+            case Declaration:
+                root->Add<DataDeclaration>(*n);
                 break;
             case IfBlock:
                 root->Add<If>(*n);
                 break;
+            case LoopBlock:
+                root->Add<Loop>(*n);
+                break;
             default:
+                if (auto expr = CreateExpression(*n)) {
+                    root->AddStatement(std::move(expr));
+                }
                 break;
             }
         }
@@ -207,7 +264,4 @@ void PropagateStatements(const ParseNode& node, SC* root) {
 
 #undef Add
 }
-
-
-
 } // namespace sigil::ast

@@ -8,20 +8,19 @@ namespace ml = mana::literals;
 struct Error {
     const class ParseNode* node;
 
-    ErrorCode     code;
+    ErrorCode code;
     ErrorSeverity severity;
-    ml::i64       token_offset;
+    ml::i64 token_offset;
 
     Error(
-        const ParseNode*    node,
-        const ErrorCode     code,
-        const ml::i64       token_offset,
+        const ParseNode* node,
+        const ErrorCode code,
+        const ml::i64 token_offset,
         const ErrorSeverity severity = ErrorSeverity::Error
     )
-        : node(node)
-        , code(code)
-        , severity(severity)
-        , token_offset(token_offset) {}
+        : node(node),
+          code(code),
+          severity(severity),
+          token_offset(token_offset) {}
 };
-
-}  // namespace sigil
+} // namespace sigil

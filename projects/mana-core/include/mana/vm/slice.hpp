@@ -26,22 +26,22 @@ class Slice {
     std::vector<Value> values;
 
 public:
-    // returns index where opcode was written
+    // returns opcode's index
     u64 Write(Op opcode);
 
-    // returns the index of the opcode, not the payload
-    u64 Write(Op opcode, u16 payload);
+    // returns opcode's index
+    u64 Write(Op opcode, std::initializer_list<u16> payloads);
 
     // Modifies a payload for the given opcode
     // This function exists to amend instruction payloads,
     // and thus it assumes the index given is for the opcode whose payload you wish to patch,
     // not the payload itself
-    void Patch(u64 instruction_index, u16 new_value);
+    void Patch(u64 instruction_index, u16 new_value, u8 payload_index = 0);
 
     MANA_NODISCARD u64 BackIndex() const;
 
     MANA_NODISCARD const ByteCode& Instructions() const;
-    MANA_NODISCARD ByteCode&       Instructions();
+    MANA_NODISCARD ByteCode& Instructions();
 
     MANA_NODISCARD const std::vector<Value>& Constants() const;
 
@@ -85,10 +85,9 @@ public:
 
         const auto first_elem_index = values.size();
 
-        values.push_back(Value{constants});
+        values.push_back(Value {constants});
 
         return first_elem_index;
     }
 };
-
-}  // namespace mana::vm
+} // namespace mana::vm

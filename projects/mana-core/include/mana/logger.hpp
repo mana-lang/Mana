@@ -37,5 +37,4 @@ inline LoggerSink& GlobalLoggerSink() {
     static LoggerSink logger_sink;
     return logger_sink;
 }
-
 } // namespace mana

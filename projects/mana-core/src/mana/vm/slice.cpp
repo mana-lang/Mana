@@ -3,10 +3,9 @@
 #include <stdexcept>
 
 namespace mana::vm {
-
 IndexRange::IndexRange(const i64 init_offset, const i64 range)
-    : start(init_offset)
-    , end(init_offset + range) {
+    : start(init_offset),
+      end(init_offset + range) {
     if (range < init_offset) {
         throw std::runtime_error("IndexRange was out of bounds");
     }
@@ -17,20 +16,25 @@ u64 Slice::Write(Op opcode) {
     return instructions.size() - 1;
 }
 
-u64 Slice::Write(const Op opcode, const u16 payload) {
+u64 Slice::Write(const Op opcode, std::initializer_list<u16> payloads) {
     instructions.push_back(static_cast<u8>(opcode));
-    const auto ret = instructions.size() - 1;
+    const auto index = instructions.size() - 1;
 
     // payloads are 16-bit unsigned little endian
-    instructions.push_back((payload >> 8) & 0xFF);
-    instructions.push_back(payload & 0xFF);
 
-    return ret;
+    for (const auto payload : payloads) {
+        instructions.push_back(payload & 0xFF);
+        instructions.push_back((payload >> 8) & 0xFF);
+    }
+
+    return index;
 }
 
-void Slice::Patch(const u64 instruction_index, const u16 new_value) {
-    instructions[instruction_index + 1] = (new_value >> 8) & 0xFF;
-    instructions[instruction_index + 2] = new_value & 0xFF;
+void Slice::Patch(const u64 instruction_index, const u16 new_value, const u8 payload_index) {
+    // add 1 to skip past instruction
+    const u64 payload         = 1 + instruction_index + payload_index * 2;
+    instructions[payload]     = new_value & 0xFF;
+    instructions[payload + 1] = (new_value >> 8) & 0xFF;
 }
 
 u64 Slice::BackIndex() const {
@@ -100,7 +104,7 @@ u64 Slice::ConstantPoolBytesCount() const {
     for (const auto& value : values) {
         out += value.length * sizeof(Value::Data); // num elements
         out += sizeof(value.type);
-        out += sizeof(value.length);               // array length still has to be included
+        out += sizeof(value.length); // array length still has to be included
     }
     return out;
 }
@@ -127,22 +131,23 @@ bool Slice::Deserialize(const ByteCode& bytes) {
     }
 
     const IndexRange pool_range {
-        sizeof(count_bytes), // start from end of pool count
+        sizeof(count_bytes),
+        // start from end of pool count
         std::bit_cast<i64>(count_bytes),
     };
 
-    std::array<u8, sizeof(Value::Data)>       value_bytes {};
+    std::array<u8, sizeof(Value::Data)> value_bytes {};
     std::array<u8, sizeof(Value::LengthType)> length_bytes {};
 
     for (i64 offset = pool_range.start; offset < pool_range.end;) {
         const auto type = static_cast<PrimitiveType>(bytes[offset]);
-        offset += sizeof(PrimitiveType);
+        offset          += sizeof(PrimitiveType);
 
         for (i64 i = 0; i < length_bytes.size(); ++i) {
             length_bytes[i] = bytes[i + offset];
         }
         const auto length = std::bit_cast<Value::LengthType>(length_bytes);
-        offset += sizeof(Value::LengthType);
+        offset            += sizeof(Value::LengthType);
 
         auto value = Value {type, length};
         for (u32 i = 0; i < length; ++i) {
@@ -159,5 +164,4 @@ bool Slice::Deserialize(const ByteCode& bytes) {
 
     return true;
 }
-
-}  // namespace mana::vm
+} // namespace mana::vm

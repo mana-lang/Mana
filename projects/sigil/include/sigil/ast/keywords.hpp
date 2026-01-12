@@ -6,7 +6,6 @@
 #include <unordered_map>
 
 namespace sigil {
-
 using KeywordMap = std::unordered_map<std::string_view, TokenType>;
 
 // @formatter:off
@@ -70,5 +69,4 @@ static const KeywordMap keyword_map = {
     {"not",       TokenType::Op_LogicalNot },
 };
 // @formatter:on
-
-}  // namespace sigil
+} // namespace sigil

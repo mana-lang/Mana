@@ -6,27 +6,28 @@ namespace sigil::ast {
 template <LiteralType T>
 class Literal;
 
-
 class Visitor {
 public:
     virtual ~Visitor() = default;
 
-    //@formatter:off
-    virtual void Visit(const class Artifact& node)     = 0;
-    virtual void Visit(const class Scope& node)        = 0;
+    virtual void Visit(const class Artifact& node) = 0;
+    virtual void Visit(const class Scope& node) = 0;
 
-    virtual void Visit(const class Statement& node)    = 0;
-    virtual void Visit(const class If& node)           = 0;
+    virtual void Visit(const class DataDeclaration& node) = 0;
+    virtual void Visit(const class Identifier& node) = 0;
+    virtual void Visit(const class Assignment& node) = 0;
 
-    virtual void Visit(const class UnaryExpr& node)    = 0;
-    virtual void Visit(const class BinaryExpr& node)   = 0;
+    virtual void Visit(const class If& node) = 0;
+    virtual void Visit(const class Loop& node) = 0;
 
-    virtual void Visit(const Literal<bool>& node)      = 0;
-    virtual void Visit(const Literal<ml::i64>& node)   = 0;
-    virtual void Visit(const Literal<ml::f64>& node)   = 0;
-    virtual void Visit(const Literal<void>& node)      = 0;
+    virtual void Visit(const class UnaryExpr& node) = 0;
+    virtual void Visit(const class BinaryExpr& node) = 0;
 
     virtual void Visit(const class ArrayLiteral& node) = 0;
-    //@formatter:on
+
+    virtual void Visit(const Literal<bool>& node) = 0;
+    virtual void Visit(const Literal<ml::i64>& node) = 0;
+    virtual void Visit(const Literal<ml::f64>& node) = 0;
+    virtual void Visit(const Literal<void>& node) = 0;
 };
 } // namespace sigil::ast

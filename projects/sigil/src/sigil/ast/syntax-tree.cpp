@@ -11,6 +11,7 @@
 namespace sigil::ast {
 using namespace mana::literals;
 
+
 /// Literal Helpers
 template <typename T>
 auto MakeLiteral(const Token& token) {
@@ -28,7 +29,8 @@ auto MakeLiteral<bool>(const Token& token) {
     default:
         Log->critical("Bool conversion requested for non-bool token '{}'. "
                       "Defaulting to 'false'.",
-                      magic_enum::enum_name(token.type));
+                      magic_enum::enum_name(token.type)
+        );
     }
 
     return std::make_shared<Literal<bool>>(val);
@@ -39,7 +41,7 @@ auto MakeNoneLiteral() {
 }
 
 struct LiteralData {
-    NodePtr             value;
+    NodePtr value;
     mana::PrimitiveType type;
 };
 
@@ -68,6 +70,36 @@ LiteralData MakeLiteral(const Token& token) {
     return {nullptr, mana::PrimitiveType::Invalid};
 }
 
+NodePtr CreateExpression(const ParseNode& node) {
+    using enum Rule;
+
+    const auto& token = node.tokens.empty() ? Token {} : node.tokens[0];
+
+    switch (node.rule) {
+    case Assignment:
+        return std::make_shared<class Assignment>(node);
+    case Grouping:
+        return CreateExpression(*node.branches[0]);
+    case Literal:
+        return MakeLiteral(token).value;
+    case Identifier:
+        return std::make_shared<class Identifier>(node);
+    case ArrayLiteral:
+        return std::make_shared<class ArrayLiteral>(node);
+    case Unary:
+        return std::make_shared<UnaryExpr>(node);
+    case Factor:
+    case Term:
+    case Comparison:
+    case Equality:
+    case Logical:
+        return std::make_shared<BinaryExpr>(node);
+    default:
+        Log->error("Rule '{}' is not a valid expression", magic_enum::enum_name(node.rule));
+        return nullptr;
+    }
+}
+
 /// Artifact
 auto Artifact::GetName() const -> std::string_view {
     return name;
@@ -81,43 +113,34 @@ void Artifact::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
+/// Identifier
+Identifier::Identifier(const ParseNode& node)
+    : name(FetchTokenText(node.tokens[0])) {}
+
+std::string_view Identifier::GetName() const {
+    return name;
+}
+
+void Identifier::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+/// Scope
 Scope::Scope(const ParseNode& node) {
     PropagateStatements(node, this);
 }
 
 void Scope::Accept(Visitor& visitor) const {
-    for (const auto& stmt : statements) {
-        stmt->Accept(visitor);
-    }
+    visitor.Visit(*this);
 }
 
 const std::vector<NodePtr>& Scope::GetStatements() const {
     return statements;
 }
 
+/// If
 If::If(const ParseNode& node) {
-    switch (node.branches[0]->rule) {
-    case Rule::Literal:
-        condition = MakeLiteral(node.branches[0]->tokens[0]).value;
-        condition_type = Rule::Literal;
-        break;
-    case Rule::Unary:
-        condition = std::make_shared<UnaryExpr>(*node.branches[0]);
-        condition_type = Rule::Unary;
-        break;
-    case Rule::Factor:
-    case Rule::Comparison:
-    case Rule::Equality:
-    case Rule::Term:
-    case Rule::Logical:
-        condition = std::make_shared<BinaryExpr>(*node.branches[0]);
-        condition_type = Rule::Expression;
-        break;
-    default:
-        Log->error("Unexpected rule in if-block");
-        condition_type = Rule::Undefined;
-        return;
-    }
+    condition = CreateExpression(*node.branches[0]);
 
     then_block = std::make_shared<Scope>(*node.branches[1]);
 
@@ -147,17 +170,92 @@ const NodePtr& If::GetElseBranch() const {
     return else_branch;
 }
 
-Rule If::ConditionType() const {
-    return condition_type;
-}
-
 void If::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
+/// Loop
+Loop::Loop(const ParseNode& node) {
+    condition = CreateExpression(*node.branches[0]);
+    body      = std::make_shared<Scope>(*node.branches[1]);
+}
+
+const NodePtr& Loop::GetBody() const {
+    return body;
+}
+
+const NodePtr& Loop::GetCondition() const {
+    return condition;
+}
+
+void Loop::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+/// Datum
+DataDeclaration::DataDeclaration(const ParseNode& node)
+    : initializer(nullptr) {
+    // Correctly find the identifier name among tokens (skip 'mut' or 'data')
+    for (const auto& token : node.tokens) {
+        if (token.type == TokenType::Identifier) {
+            name = FetchTokenText(token);
+            break;
+        }
+    }
+
+    if (not node.branches.empty()) {
+        initializer = CreateExpression(*node.branches[0]);
+    }
+
+    is_mutable = node.tokens.front().type == TokenType::KW_mut;
+}
+
+std::string_view DataDeclaration::GetName() const {
+    return name;
+}
+
+const NodePtr& DataDeclaration::GetInitializer() const {
+    return initializer;
+}
+
+bool DataDeclaration::IsMutable() const {
+    return is_mutable;
+}
+
+void DataDeclaration::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+/// Assignment
+Assignment::Assignment(const ParseNode& node) {
+    identifier = FetchTokenText(node.tokens[0]);
+    op         = FetchTokenText(node.tokens[1]);
+    value      = CreateExpression(*node.branches[0]);
+}
+
+std::string_view Assignment::GetIdentifier() const {
+    return identifier;
+}
+
+const NodePtr& Assignment::GetValue() const {
+    return value;
+}
+
+std::string_view Assignment::GetOp() const {
+    return op;
+}
+
+void Assignment::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
 /// Statement
-Statement::Statement(const NodePtr&& node)
-    : child(node) {}
+Statement::Statement(NodePtr&& node)
+    : child(std::move(node)) {}
+
+const NodePtr& Statement::GetChild() const {
+    return child;
+}
 
 void Statement::Accept(Visitor& visitor) const {
     child->Accept(visitor); // forward the visitor, statements don't do anything on their own
@@ -200,7 +298,7 @@ NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
         // in this case we still need to ensure the array is of "array-of-arrays" type
         // and adequately handle higher-dimensional arrays.
         // this is extremely important for linalg
-        return std::make_shared<ast::ArrayLiteral>(elem);
+        return std::make_shared<class ArrayLiteral>(elem);
 
     case Literal:
         // [12.4, 95.3]
@@ -270,8 +368,8 @@ BinaryExpr::BinaryExpr(const ParseNode& binary_node, const i64 depth) {
 
     if (tokens.size() <= depth) {
         // we're in the leaf node
-        left  = ConstructChild(*branches[0]);
-        right = ConstructChild(*branches[1]);
+        left  = CreateExpression(*branches[0]);
+        right = CreateExpression(*branches[1]);
         op    = FetchTokenText(tokens[0]);
         return;
     }
@@ -279,7 +377,7 @@ BinaryExpr::BinaryExpr(const ParseNode& binary_node, const i64 depth) {
 
     //                                  can't call make_shared cause private
     left  = std::shared_ptr<BinaryExpr>(new BinaryExpr(binary_node, depth + 1));
-    right = ConstructChild(*branches[branches.size() - depth]);
+    right = CreateExpression(*branches[branches.size() - depth]);
     op    = FetchTokenText(tokens[tokens.size() - depth]);
 }
 
@@ -288,13 +386,13 @@ BinaryExpr::BinaryExpr(const ParseNode& node)
 
 BinaryExpr::BinaryExpr(const std::string& op, const ParseNode& left, const ParseNode& right)
     : op(op)
-    , left(ConstructChild(left))
-    , right(ConstructChild(right)) {}
+  , left(CreateExpression(left))
+  , right(CreateExpression(right)) {}
 
 BinaryExpr::BinaryExpr(const std::string_view op, const ParseNode& left, const ParseNode& right)
     : op(op)
-    , left(ConstructChild(left))
-    , right(ConstructChild(right)) {}
+  , left(CreateExpression(left))
+  , right(CreateExpression(right)) {}
 
 std::string_view BinaryExpr::GetOp() const {
     return op;
@@ -322,65 +420,10 @@ SIGIL_NODISCARD bool IsBooleanLiteral(const TokenType token) {
     return token == Lit_true || token == Lit_false;
 }
 
-NodePtr BinaryExpr::ConstructChild(const ParseNode& operand_node) {
-    const auto& token = operand_node.tokens[0];
-    switch (operand_node.rule) {
-        using enum Rule;
-
-    case Grouping:
-        return ConstructChild(*operand_node.branches[0]);
-
-    case Logical:
-    case Equality:
-    case Comparison:
-    case Term:
-    case Factor:
-        return std::make_shared<BinaryExpr>(
-            FetchTokenText(token), *operand_node.branches[0], *operand_node.branches[1]
-        );
-
-    case Unary: {
-        if (token.type == TokenType::Op_Minus) {
-            if (IsNumber(operand_node.branches[0]->tokens[0].type)) {
-                return std::make_shared<UnaryExpr>(operand_node);
-            }
-            // report error
-            break;
-        }
-        if (token.type == TokenType::Op_LogicalNot) {
-            if (IsBooleanLiteral(operand_node.branches[0]->tokens[0].type)) {
-                return std::make_shared<UnaryExpr>(operand_node);
-            }
-            // report error
-            break;
-        }
-    }
-    break;
-    case Literal:
-        return MakeLiteral(token).value;
-
-    default:
-        Log->error("Not a binary op");
-        break;
-    }
-
-    Log->error("Erroneous input to BinaryOp");
-
-    return nullptr;
-}
-
 /// UnaryExpr
-UnaryExpr::UnaryExpr(const ParseNode& unary_node)
-    : op(FetchTokenText(unary_node.tokens[0])) {
-    const auto& operand_node = *unary_node.branches[0];
-
-    if (operand_node.rule == Rule::Literal) {
-        val = MakeLiteral(operand_node.tokens[0]).value;
-        return;
-    }
-
-    val = std::make_shared<UnaryExpr>(operand_node);
-}
+UnaryExpr::UnaryExpr(const ParseNode& node)
+    : op(FetchTokenText(node.tokens[0]))
+  , val(CreateExpression(*node.branches[0])) {}
 
 void UnaryExpr::Accept(Visitor& visitor) const {
     visitor.Visit(*this);

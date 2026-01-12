@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include <mana/vm/value.hpp>
 
 #include <stdexcept>
@@ -19,28 +21,30 @@ namespace mana::vm {
 #endif
 
 Value::Value(const i64 i)
-    : data(new Data{.as_i64 = i})
-      , length(1)
-      , type(static_cast<u8>(Int64)) {}
+    : data(new Data {.as_i64 = i})
+  , length(1)
+  , type(static_cast<u8>(Int64)) {}
 
 Value::Value(const u64 u)
-    : data(new Data{.as_u64 = u})
-      , length(1)
-      , type(static_cast<u8>(Uint64)) {}
+    : data(new Data {.as_u64 = u})
+  , length(1)
+  , type(static_cast<u8>(Uint64)) {}
 
 Value::Value(const f64 f)
-    : data(new Data{.as_f64 = f})
-      , length(1)
-      , type(static_cast<u8>(Float64)) {}
+    : data(new Data {.as_f64 = f})
+  , length(1)
+  , type(static_cast<u8>(Float64)) {}
 
 Value::Value(const bool b)
-    : data(new Data{.as_bool = b})
-      , length(1)
-      , type(static_cast<u8>(Bool)) {}
+    : data(new Data {.as_bool = b})
+  , length(1)
+  , type(static_cast<u8>(Bool)) {}
 
-Value::Value(const i32 i) : Value(i64{i}) {}
+Value::Value(const i32 i)
+    : Value(i64 {i}) {}
 
-Value::Value(const u32 u) : Value(u64{u}) {}
+Value::Value(const u32 u)
+    : Value(u64 {u}) {}
 
 Value::LengthType Value::Length() const {
     return length;
@@ -48,31 +52,31 @@ Value::LengthType Value::Length() const {
 
 Value::Value(const PrimitiveType t, const LengthType l)
     : length(l)
-      , type(static_cast<u8>(t)) {
+  , type(static_cast<u8>(t)) {
     if (length == 0 || type == Invalid) {
-        data = nullptr;
-        type = Invalid;
+        data   = nullptr;
+        type   = Invalid;
         length = 0;
         return;
     }
 
-    if (length == 1) {
+    if (length > 1) {
         data = new Data[length];
         return;
     }
 
     switch (type) {
     case Int64:
-        data = new Data{.as_i64 = 0};
+        data = new Data {.as_i64 = 0};
         break;
     case Uint64:
-        data = new Data{.as_u64 = 0u};
+        data = new Data {.as_u64 = 0u};
         break;
     case Float64:
-        data = new Data{.as_f64 = 0.0};
+        data = new Data {.as_f64 = 0.0};
         break;
     case Bool:
-        data = new Data{.as_bool = false};
+        data = new Data {.as_bool = false};
         break;
     case None:
         data = nullptr;
@@ -103,7 +107,8 @@ PrimitiveType Value::GetType() const {
 }
 
 void Value::WriteValueBytes(const std::array<u8, sizeof(Data)>& bytes,
-                            const u32 index) {
+                            const u32 index
+) const {
     if (index >= length) {
         throw std::runtime_error("Value::WriteValueBytes: Out of bounds write");
     }
@@ -180,8 +185,8 @@ CASE_BOOL:
 
 Value::Value(const Value& other)
     : data(nullptr)
-      , length(other.length)
-      , type(other.type) {
+  , length(other.length)
+  , type(other.type) {
     if (other.data == nullptr || length == 0) {
         return;
     }
@@ -197,20 +202,20 @@ Value::Value(const Value& other)
 
 Value::Value(Value&& other) noexcept
     : data(nullptr)
-      , length(other.length)
-      , type(other.type) {
+  , length(other.length)
+  , type(other.type) {
     if (other.data == nullptr || length == 0) {
         other.length = 0;
-        other.type = Invalid;
-        other.data = nullptr;
+        other.type   = Invalid;
+        other.data   = nullptr;
         return;
     }
 
     data = other.data;
 
-    other.data = nullptr;
+    other.data   = nullptr;
     other.length = 0;
-    other.type = Invalid;
+    other.type   = Invalid;
 }
 
 Value& Value::operator=(const Value& other) {
@@ -221,21 +226,20 @@ Value& Value::operator=(const Value& other) {
     if (data != nullptr) {
         if (length == 1) {
             delete data;
-        }
-        else {
+        } else {
             delete[] data;
         }
     }
 
     if (other.data == nullptr || other.length == 0) {
         length = 0;
-        type = Invalid;
-        data = nullptr;
+        type   = Invalid;
+        data   = nullptr;
         return *this;
     }
 
     length = other.length;
-    type = other.type;
+    type   = other.type;
 
     if (length == 1) {
         data = new Data(*other.data);
@@ -255,26 +259,25 @@ Value& Value::operator=(Value&& other) noexcept {
     if (data != nullptr) {
         if (length == 1) {
             delete data;
-        }
-        else {
+        } else {
             delete[] data;
         }
     }
 
-    if (other.data == nullptr || length == 0) {
+    if (other.data == nullptr || other.length == 0) {
         length = 0;
-        type = Invalid;
-        data = nullptr;
+        type   = Invalid;
+        data   = nullptr;
         return *this;
     }
 
     length = other.length;
-    type = other.type;
-    data = other.data;
+    type   = other.type;
+    data   = other.data;
 
-    other.data = nullptr;
+    other.data   = nullptr;
     other.length = 0;
-    other.type = Invalid;
+    other.type   = Invalid;
 
     return *this;
 }
@@ -304,8 +307,8 @@ Value::~Value() {
     }
 }
 
-#define CGOTO_OPERATOR_CMP(ret, op)                   \
-    ret Value::operator op(const Value & rhs) const { \
+#define CGOTO_OPERATOR_BIN(ret, op)                   \
+    ret Value::operator op(const Value& rhs) const {  \
         COMPUTED_GOTO();                              \
     CASE_INT:                                         \
         return data->as_i64 op rhs.AsInt();           \
@@ -317,8 +320,8 @@ Value::~Value() {
         UNREACHABLE();                                \
     }
 
-#define CGOTO_OPERATOR_ARITH_ASSIGN(op)          \
-    void Value::operator op(const Value & rhs) { \
+#define CGOTO_OPERATOR_BIN_ASSIGN(op)            \
+    void Value::operator op(const Value& rhs) {  \
         COMPUTED_GOTO();                         \
     CASE_INT:                                    \
         data->as_i64 op rhs.AsInt();             \
@@ -333,15 +336,61 @@ Value::~Value() {
         UNREACHABLE();                           \
     }
 
-CGOTO_OPERATOR_ARITH_ASSIGN(+=);
-CGOTO_OPERATOR_ARITH_ASSIGN(-=);
-CGOTO_OPERATOR_ARITH_ASSIGN(*=);
-CGOTO_OPERATOR_ARITH_ASSIGN(/=);
+CGOTO_OPERATOR_BIN(Value, +);
+CGOTO_OPERATOR_BIN(Value, -);
+CGOTO_OPERATOR_BIN(Value, *);
+CGOTO_OPERATOR_BIN(Value, /)
 
-CGOTO_OPERATOR_CMP(bool, >);
-CGOTO_OPERATOR_CMP(bool, >=);
-CGOTO_OPERATOR_CMP(bool, <);
-CGOTO_OPERATOR_CMP(bool, <=);
+CGOTO_OPERATOR_BIN_ASSIGN(+=);
+CGOTO_OPERATOR_BIN_ASSIGN(-=);
+CGOTO_OPERATOR_BIN_ASSIGN(*=);
+CGOTO_OPERATOR_BIN_ASSIGN(/=);
+
+CGOTO_OPERATOR_BIN(bool, >);
+CGOTO_OPERATOR_BIN(bool, >=);
+CGOTO_OPERATOR_BIN(bool, <);
+CGOTO_OPERATOR_BIN(bool, <=);
+
+Value Value::operator%(const Value& rhs) const {
+    COMPUTED_GOTO();
+CASE_INT:
+    return data->as_i64 % rhs.AsInt();
+CASE_UNSIGNED:
+    return data->as_u64 % rhs.AsUint();
+CASE_FLOAT:
+    return std::fmod(data->as_f64, rhs.AsFloat());
+CASE_BOOL:
+    UNREACHABLE();
+}
+
+void Value::operator%=(const Value& rhs) {
+    COMPUTED_GOTO();
+CASE_INT:
+    data->as_i64 %= rhs.AsInt();
+    return;
+CASE_UNSIGNED:
+    data->as_u64 %= rhs.AsUint();
+    return;
+CASE_FLOAT:
+    data->as_f64 = std::fmod(data->as_f64, rhs.AsFloat());
+    return;
+CASE_BOOL:
+    UNREACHABLE();
+}
+
+
+Value Value::operator-() const {
+    COMPUTED_GOTO();
+
+CASE_INT:
+    return Value {-data->as_i64};
+CASE_UNSIGNED:
+    UNREACHABLE();
+CASE_FLOAT:
+    return Value {-data->as_f64};
+CASE_BOOL:
+    UNREACHABLE();
+}
 
 bool Value::operator!() const {
     return not data->as_bool;
