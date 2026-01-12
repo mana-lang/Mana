@@ -79,6 +79,7 @@ private:
 
     bool MatchedScope(ParseNode& node);
 
+    bool MatchedIfCondition(ParseNode& node);
     bool MatchedIfBlock(ParseNode& node);
     bool MatchedIfTail(ParseNode& node);
 

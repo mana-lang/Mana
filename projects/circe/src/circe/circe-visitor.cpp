@@ -145,6 +145,7 @@ void CirceVisitor::Visit(const If& node) {
 }
 
 void CirceVisitor::Visit(const Loop& node) {}
+
 void CirceVisitor::Visit(const LoopIf& node) {}
 void CirceVisitor::Visit(const LoopIfPost& node) {}
 void CirceVisitor::Visit(const LoopRange& node) {}

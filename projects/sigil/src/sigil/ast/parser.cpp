@@ -144,19 +144,19 @@ bool IsPrimitive(const TokenType token_type) {
     }
 }
 
-auto Parser::CurrentToken() const -> Token {
+Token Parser::CurrentToken() const {
     return tokens[cursor];
 }
 
-auto Parser::PeekNextToken() const -> Token {
+Token Parser::PeekNextToken() const {
     return tokens[cursor + 1];
 }
 
-auto Parser::NextToken() -> Token {
+Token Parser::NextToken() {
     return tokens[++cursor];
 }
 
-auto Parser::GetAndCycleToken() -> Token {
+Token Parser::GetAndCycleToken() {
     return tokens[cursor++];
 }
 
@@ -301,22 +301,30 @@ bool Parser::MatchedScope(ParseNode& node) {
 
     if (Expect(CurrentToken().type == TokenType::Op_BraceRight, scope, "Expected closing brace '}' at end of scope")) {
         AddCycledTokenTo(scope);
-    };
+    }
 
     return true;
 }
 
-// if_stmt = KW_IF expr scope if_tail?
-bool Parser::MatchedIfBlock(ParseNode& node) {
+// if_condition = KW_IF expr
+bool Parser::MatchedIfCondition(ParseNode& node) {
     if (CurrentToken().type != TokenType::KW_if) {
         return false;
     }
 
-    auto& if_block = node.NewBranch(Rule::If);
-    AddCycledTokenTo(if_block);
+    AddCycledTokenTo(node);
 
-    if (not Expect(MatchedExpression(if_block), if_block, "Expected expression")) {
-        return true;
+    Expect(MatchedExpression(node), node, "Expected expression");
+    return true;
+}
+
+// if_block = KW_IF expr scope if_tail?
+bool Parser::MatchedIfBlock(ParseNode& node) {
+    auto& if_block = node.NewBranch(Rule::If);
+
+    if (not MatchedIfCondition(if_block)) {
+        node.PopBranch();
+        return false;
     }
 
     if (not Expect(MatchedScope(if_block), if_block, "Expected scope for if-block")) {
@@ -364,21 +372,8 @@ bool Parser::MatchedLoop(ParseNode& node) {
 }
 
 bool Parser::MatchedLoopBody(ParseNode& node) {
-    // loop_condition = KW_if expr
-    const auto loop_condition = [this](ParseNode& n) {
-        if (CurrentToken().type != TokenType::KW_if) {
-            return false;
-        }
-        AddCurrentTokenTo(n);
-
-        Expect(MatchedExpression(n), n, "Expected expression");
-        return true;
-    };
-
-    // auto& node = node.NewBranch(Rule::LoopBody);
-
     // infinite/post-conditional
-    // loop_body = scope loop_condition?
+    // loop_body = scope if_condition?
     if (MatchedScope(node)) {
         if (CurrentToken().type != TokenType::Op_Target) {
             // this is an infinite loop, so we don't need to do anything
@@ -386,15 +381,15 @@ bool Parser::MatchedLoopBody(ParseNode& node) {
             return true;
         }
         AddCycledTokenTo(node);
-        loop_condition(node);
+        MatchedIfCondition(node);
         node.rule = Rule::LoopIfPost;
 
         return true;
     }
 
     // conditional
-    // loop_body = loop_condition scope
-    if (loop_condition(node)) {
+    // loop_body = if_condition scope
+    if (MatchedIfCondition(node)) {
         Expect(MatchedScope(node), node, "Expected scope for loop body");
         node.rule = Rule::LoopIf;
         return true;
