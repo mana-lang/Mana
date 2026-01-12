@@ -148,7 +148,7 @@ If::If(const ParseNode& node) {
         auto& tail = *node.branches[2]->branches[0];
         if (tail.rule == Rule::Scope) {
             else_branch = std::make_shared<Scope>(tail);
-        } else if (tail.rule == Rule::IfBlock) {
+        } else if (tail.rule == Rule::If) {
             else_branch = std::make_shared<If>(tail);
         } else {
             Log->error("Unexpected rule in else-branch");
@@ -176,68 +176,93 @@ void If::Accept(Visitor& visitor) const {
 
 /// Loop
 Loop::Loop(const ParseNode& node) {
-    const auto& loop_body = *node.branches[0];
-
-    //TODO: THIS SHIT IS LITERALLY A NIGHTMARE JUST MAKE A BUNCH OF DIFFERENT NODES FOR DIFFERENT KINDS OF LOOPS OR IM PUNCHING A PINEAPPLE
-
-    using enum Type;
-
-    if (loop_body.branches.size() == 1) {
-        condition = nullptr;
-        counter   = nullptr;
-        body      = std::make_shared<Scope>(*loop_body.branches[0]);
-        type      = Infinite;
-        return;
-    }
-
-    // size must be greater than 1 here since input is sanitized
-    if (loop_body.branches[0]->rule == Rule::Scope) {
-        counter   = nullptr;
-        condition = CreateExpression(*loop_body.branches[0]);
-        body      = std::make_shared<Scope>(*loop_body.branches[1]);
-        type      = Conditional;
-        return;
-    }
-
-
-    if (loop_body.tokens[0].type == TokenType::Op_Target) {
-        counter   = nullptr;
-        body      = std::make_shared<Scope>(*loop_body.branches[0]);
-        condition = CreateExpression(*loop_body.branches[1]);
-        type      = PostConditional;
-        return;
-    }
-
-    if (loop_body.branches[0]->rule == Rule::LoopRangeExpr) {
-        condition = CreateExpression(*loop_body.branches[0]);
-        counter   = CreateExpression(*loop_body.branches[1]);
-        body      = std::make_shared<Scope>(*loop_body.branches[2]);
-        type      = RangedIteration;
-        return;
-    }
-
-    condition = CreateExpression(*loop_body.branches[0]);
-    body      = std::make_shared<Scope>(*loop_body.branches[1]);
-    type      = FixedIteration;
+    body = std::make_shared<Scope>(*node.branches[0]);
 }
 
 const NodePtr& Loop::GetBody() const {
     return body;
 }
 
-const NodePtr& Loop::GetCondition() const {
+void Loop::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+/// LoopIf
+LoopIf::LoopIf(const ParseNode& node) {
+    condition = CreateExpression(*node.branches[0]);
+    body      = std::make_shared<Scope>(*node.branches[1]);
+}
+
+const NodePtr& LoopIf::GetCondition() const {
     return condition;
 }
 
-bool Loop::HasCondition() const {
-    return condition != nullptr;
+const NodePtr& LoopIf::GetBody() const {
+    return body;
 }
 
-Loop::Type Loop::GetType() const {
-    return type;
+void LoopIf::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
 }
 
-void Loop::Accept(Visitor& visitor) const {
+/// LoopIfPost
+LoopIfPost::LoopIfPost(const ParseNode& node)
+    : LoopIf(node) {}
+
+void LoopIfPost::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+/// LoopRange
+LoopRange::LoopRange(const ParseNode& node) {
+    start   = CreateExpression(*node.branches[0]);
+    end     = CreateExpression(*node.branches[1]);
+    body    = std::make_shared<Scope>(*node.branches[2]);
+    counter = FetchTokenText(node.tokens[0]);
+}
+
+const NodePtr& LoopRange::GetStart() const {
+    return start;
+}
+
+const NodePtr& LoopRange::GetEnd() const {
+    return end;
+}
+
+std::string_view LoopRange::GetCounter() const {
+    return counter;
+}
+
+const NodePtr& LoopRange::GetBody() const {
+    return body;
+}
+
+void LoopRange::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+LoopFixed::LoopFixed(const ParseNode& node) {
+    count = CreateExpression(*node.branches[0]);
+    body  = std::make_shared<Scope>(*node.branches[1]);
+
+    if (not node.tokens.empty()) {
+        counter = FetchTokenText(node.tokens[0]);
+    }
+}
+
+const NodePtr& LoopFixed::GetCount() const {
+    return count;
+}
+
+const NodePtr& LoopFixed::GetBody() const {
+    return body;
+}
+
+std::string_view LoopFixed::GetCounter() const {
+    return counter;
+}
+
+void LoopFixed::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 

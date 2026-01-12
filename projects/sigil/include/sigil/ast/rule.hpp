@@ -17,14 +17,19 @@ enum class Rule : ml::u8 {
 
     Identifier,
 
-    IfBlock,
+    If,
     IfTail,
 
     Loop,
+    LoopIf,
+    LoopIfPost,
+    LoopFixed,
+    LoopRange,
+
     LoopBody,
     LoopRangeExpr,
 
-    Declaration,
+    DataDeclaration,
     Assignment,
     Expression,
 

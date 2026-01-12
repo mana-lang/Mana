@@ -18,7 +18,13 @@ public:
     virtual void Visit(const class Assignment& node) = 0;
 
     virtual void Visit(const class If& node) = 0;
+
     virtual void Visit(const class Loop& node) = 0;
+    virtual void Visit(const class LoopIf& node) = 0;
+    virtual void Visit(const class LoopIfPost& node) = 0;
+    virtual void Visit(const class LoopRange& node) = 0;
+    virtual void Visit(const class LoopFixed& node) = 0;
+
 
     virtual void Visit(const class UnaryExpr& node) = 0;
     virtual void Visit(const class BinaryExpr& node) = 0;

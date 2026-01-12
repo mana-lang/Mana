@@ -85,6 +85,7 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
+// TODO: make MutableDataDeclaration to encode meaning in the type rather than a bool
 class DataDeclaration final : public Node {
     std::string name;
     NodePtr initializer;
@@ -142,28 +143,66 @@ public:
 };
 
 class Loop final : public Node {
-public:
-    enum class Type {
-        Infinite,
-        Conditional,
-        PostConditional,
-        RangedIteration,
-        FixedIteration,
-    };
-
-private:
-    NodePtr condition;
-    NodePtr counter;
     NodePtr body;
-    Type type;
 
 public:
     explicit Loop(const ParseNode& node);
 
     SIGIL_NODISCARD const NodePtr& GetBody() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
+class LoopIf : public Node {
+    NodePtr condition;
+    NodePtr body;
+
+public:
+    explicit LoopIf(const ParseNode& node);
+
     SIGIL_NODISCARD const NodePtr& GetCondition() const;
-    SIGIL_NODISCARD bool HasCondition() const;
-    SIGIL_NODISCARD Type GetType() const;
+    SIGIL_NODISCARD const NodePtr& GetBody() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
+// semantically distinguishes from LoopIf without wasted padding
+class LoopIfPost final : public LoopIf {
+public:
+    explicit LoopIfPost(const ParseNode& node);
+    void Accept(Visitor& visitor) const override;
+};
+
+class LoopRange final : public Node {
+    NodePtr start;
+    NodePtr end;
+    NodePtr body;
+
+    std::string counter;
+
+public:
+    explicit LoopRange(const ParseNode& node);
+
+    SIGIL_NODISCARD const NodePtr& GetStart() const;
+    SIGIL_NODISCARD const NodePtr& GetEnd() const;
+    SIGIL_NODISCARD const NodePtr& GetBody() const;
+
+    SIGIL_NODISCARD std::string_view GetCounter() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
+class LoopFixed final : public Node {
+    NodePtr count;
+    NodePtr body;
+    std::string counter;
+
+public:
+    explicit LoopFixed(const ParseNode& node);
+
+    SIGIL_NODISCARD const NodePtr& GetCount() const;
+    SIGIL_NODISCARD const NodePtr& GetBody() const;
+    SIGIL_NODISCARD std::string_view GetCounter() const;
 
     void Accept(Visitor& visitor) const override;
 };
@@ -258,14 +297,26 @@ void PropagateStatements(const ParseNode& node, SC* root) {
             using enum Rule;
 
             switch (n->rule) {
-            case Declaration:
-                root->Add<DataDeclaration>(*n);
+            case DataDeclaration:
+                root->Add<class DataDeclaration>(*n);
                 break;
-            case IfBlock:
-                root->Add<If>(*n);
+            case If:
+                root->Add<class If>(*n);
                 break;
             case Loop:
-                root->Add<Loop>(*n);
+                root->Add<class Loop>(*n);
+                break;
+            case LoopIf:
+                root->Add<class LoopIf>(*n);
+                break;
+            case LoopIfPost:
+                root->Add<class LoopIfPost>(*n);
+                break;
+            case LoopRange:
+                root->Add<class LoopRange>(*n);
+                break;
+            case LoopFixed:
+                root->Add<class LoopFixed>(*n);
                 break;
             default:
                 if (auto expr = CreateExpression(*n)) {

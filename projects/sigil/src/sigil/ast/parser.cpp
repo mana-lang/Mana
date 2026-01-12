@@ -258,7 +258,7 @@ bool Parser::MatchedStatement(ParseNode& node) {
         return true;
     }
 
-    const bool is_statement = MatchedDeclaration(stmt)
+    const bool is_statement = MatchedDataDeclaration(stmt)
                               || MatchedAssignment(stmt)
                               || MatchedExpression(stmt);
 
@@ -312,7 +312,7 @@ bool Parser::MatchedIfBlock(ParseNode& node) {
         return false;
     }
 
-    auto& if_block = node.NewBranch(Rule::IfBlock);
+    auto& if_block = node.NewBranch(Rule::If);
     AddCycledTokenTo(if_block);
 
     if (not Expect(MatchedExpression(if_block), if_block, "Expected expression")) {
@@ -375,24 +375,28 @@ bool Parser::MatchedLoopBody(ParseNode& node) {
         return true;
     };
 
-    auto& loop_body = node.NewBranch(Rule::LoopBody);
+    // auto& node = node.NewBranch(Rule::LoopBody);
 
     // infinite/post-conditional
     // loop_body = scope loop_condition?
-    if (MatchedScope(loop_body)) {
+    if (MatchedScope(node)) {
         if (CurrentToken().type != TokenType::Op_Target) {
+            // this is an infinite loop, so we don't need to do anything
+            // as the loop rule already exists on this node
             return true;
         }
-        AddCycledTokenTo(loop_body);
-        loop_condition(loop_body);
+        AddCycledTokenTo(node);
+        loop_condition(node);
+        node.rule = Rule::LoopIfPost;
 
         return true;
     }
 
     // conditional
     // loop_body = loop_condition scope
-    if (loop_condition(loop_body)) {
-        Expect(MatchedScope(loop_body), loop_body, "Expected scope for loop body");
+    if (loop_condition(node)) {
+        Expect(MatchedScope(node), node, "Expected scope for loop body");
+        node.rule = Rule::LoopIf;
         return true;
     }
 
@@ -400,35 +404,31 @@ bool Parser::MatchedLoopBody(ParseNode& node) {
     case RangeExprResult::MatchedRange: {
         // ranged iteration
         // loop_body = range_expr ID scope
-        const auto range_index = node.branches.size() - 2;
-        loop_body.AcquireBranchOf(node, range_index);
+        node.rule = Rule::LoopRange;
 
-        if (not Expect(CurrentToken().type == TokenType::Identifier, loop_body, "Expected identifier")) {
+        if (not Expect(CurrentToken().type == TokenType::Identifier, node, "Expected identifier")) {
             return true;
         }
-        AddCycledTokenTo(loop_body);
+        AddCycledTokenTo(node);
 
-        Expect(MatchedScope(loop_body), loop_body, "Expected scope for loop body");
+        Expect(MatchedScope(node), node, "Expected scope for loop body");
         return true;
     }
     case RangeExprResult::MatchedExpr: {
         // fixed iteration
         // loop_body = expr ID? scope
-        const auto expr_index = node.branches.size() - 2;
-        loop_body.AcquireBranchOf(node, expr_index);
+        node.rule = Rule::LoopFixed;
+
         if (CurrentToken().type == TokenType::Identifier) {
-            AddCycledTokenTo(loop_body);
+            AddCycledTokenTo(node);
         }
-        Expect(MatchedScope(loop_body), loop_body, "Expected scope for loop body");
+        Expect(MatchedScope(node), node, "Expected scope for loop body");
 
         return true;
     }
     case RangeExprResult::NoMatch:
         break;
     }
-
-    // if we get here, it means absolutely nothing matched, so popping is safe, albeit a bit slow
-    node.PopBranch();
     return false;
 }
 
@@ -457,8 +457,8 @@ Parser::RangeExprResult Parser::MatchedRangeExpr(ParseNode& node) {
 }
 
 
-// decl = KW_MUT? KW_DATA ID ('=' expr)?
-bool Parser::MatchedDeclaration(ParseNode& node) {
+// data_decl = KW_MUT? KW_DATA ID ('=' expr)?
+bool Parser::MatchedDataDeclaration(ParseNode& node) {
     const bool matched_keywords = CurrentToken().type == TokenType::KW_data
                                   || (CurrentToken().type == TokenType::KW_mut
                                       && PeekNextToken().type == TokenType::KW_data);
@@ -466,7 +466,7 @@ bool Parser::MatchedDeclaration(ParseNode& node) {
         return false;
     }
 
-    auto& decl = node.NewBranch(Rule::Declaration);
+    auto& decl = node.NewBranch(Rule::DataDeclaration);
     AddTokensTo(decl, TokenType::KW_data);
 
     if (not Expect(CurrentToken().type == TokenType::Identifier,

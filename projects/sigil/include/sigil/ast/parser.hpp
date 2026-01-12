@@ -86,7 +86,7 @@ private:
     bool MatchedLoopBody(ParseNode& node);
     RangeExprResult MatchedRangeExpr(ParseNode& node);
 
-    bool MatchedDeclaration(ParseNode& node);
+    bool MatchedDataDeclaration(ParseNode& node);
     bool MatchedAssignment(ParseNode& node);
 
     bool MatchedExpression(ParseNode& node);

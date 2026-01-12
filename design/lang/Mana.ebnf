@@ -22,9 +22,9 @@ TERMINATOR = "\n" | ";";
   (* rules *)
 artifact = stmt* EOF ;
 
-stmt   = if_stmt | loop | (decl | assign | expr) TERMINATOR ;
+stmt   = if_stmt | loop | (data_decl | assign | expr) TERMINATOR ;
 
-decl   = KW_MUT? KW_DATA ID ('=' expr)?    ;
+data_decl   = KW_MUT? KW_DATA ID ('=' expr)?    ;
 assign = ID '=' expr                       ;
 
 if_stmt = KW_IF expr scope if_tail? ;
