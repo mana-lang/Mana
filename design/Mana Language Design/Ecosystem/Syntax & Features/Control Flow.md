@@ -61,17 +61,30 @@ loop {
 data x => loop {
 	// do stuff
 	x = Something()
-} // after the 
+} // after the loop block, 'x' is immutable
 
 
-loop block, 'x' is immutable
-
+// break and skip statements
 loop {
 	if SomeCondition() {
+		DoSomething()
 		skip // jumps to start of loop
 	} else if OtherCondition() {
+		DoSomethingElse()
 		break // exits current loop
 	}
+}
+
+// break-if and skip-if statements
+// allow you to concisely perform conditional skips
+loop {
+	DoSomething()
+	break if SomeCondition()
+	
+	DoSomethingElse()
+	skip if SomeOtherCondition()
+	
+	DoAnotherThing()
 }
 
 // loops may be labeled
@@ -82,6 +95,14 @@ loop A: 2..10 i {
 		}
 		break => A // exits from outer loop A
 	}
+}
+
+// you can still use break-if and skip-if
+loop A: 5~15 i {
+	loop B: if i % 3 == 0 {
+		skip if cond => A
+	}
+	break if other_cond => B
 }
 ```
 
