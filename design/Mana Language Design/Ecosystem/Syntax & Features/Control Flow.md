@@ -40,10 +40,6 @@ loop ~5 i {
 // assume that the missing scope blocks are for brevity only
 
 
-// for (int i = 0; i < 5; ++i)
-// same as '~5', but exclusive
-loop ..5 i 
-
 // for (int i = 3; i <= 5; ++i)
 loop 3~5 i  
 loop 3..5 i // exclusive variant

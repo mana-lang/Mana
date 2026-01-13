@@ -194,15 +194,63 @@ void CirceVisitor::Visit(const LoopIf& node) {
 void CirceVisitor::Visit(const LoopIfPost& node) {}
 void CirceVisitor::Visit(const LoopRange& node) {}
 
-void CirceVisitor::Visit(const LoopFixed& node) {}
+void CirceVisitor::Visit(const LoopFixed& node) {
+    // create counter before loop starts
+    const u16 counter = AllocateRegister();
+    slice.Write(Op::LoadConstant, {counter, slice.AddConstant(0)});
+
+    node.GetLimit()->Accept(*this);
+    const u16 limit = PopRegBuffer();
+
+    // loop start
+    const i64 start_addr = slice.InstructionCount();
+    skip_buffer.push_back(start_addr);
+
+    const u16 condition = AllocateRegister();
+    slice.Write(Op::Cmp_Lesser, {condition, counter, limit});
+    const i64 exit_jmp = slice.Write(Op::JumpWhenFalse, {condition, 0xDEAD});
+    FreeRegister(condition);
+
+    // loop 5 i
+    if (node.HasCounter()) {
+        AddSymbol(std::string(node.GetCounter()), counter, false);
+    }
+
+    node.GetBody()->Accept(*this);
+
+    // increment before loop ends
+    const u16 inc = AllocateRegister();
+    slice.Write(Op::LoadConstant, {inc, slice.AddConstant(1)});
+    slice.Write(Op::Add, {counter, counter, inc});
+    FreeRegister(inc);
+
+    // loop end
+    slice.Write(Op::Jump, {CalcJumpBackwards(start_addr)});
+    slice.Patch(exit_jmp, CalcJumpDistance(exit_jmp, true), 1);
+
+    for (const auto [break_jump, is_conditional] : break_buffer) {
+        slice.Patch(break_jump, CalcJumpDistance(break_jump, is_conditional), is_conditional);
+    }
+
+    if (node.HasCounter()) {
+        RemoveSymbol(std::string(node.GetCounter()));
+    }
+
+    // cleanup
+    FreeRegister(limit);
+    FreeRegister(counter);
+    skip_buffer.pop_back();
+    break_buffer.clear();
+}
 
 void CirceVisitor::Visit(const Break& node) {
-    // break-if, has to be handled by loop
+    // break
     if (not node.HasCondition()) {
         break_buffer.emplace_back(slice.Write(Op::Jump, {0xDEAD}), false);
         return;
     }
 
+    // break-if, has to be handled by loop
     node.GetCondition()->Accept(*this);
     const u16 condition = PopRegBuffer();
 

@@ -53,8 +53,8 @@ enum class TokenType : ml::u8 {
     Op_Attribute,
 
     Op_Ref,
-    Op_Move,
     Op_Tilde,
+    Op_Copy,
 
     Lit_String,
     Lit_Char,

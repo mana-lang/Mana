@@ -245,16 +245,16 @@ void LoopRange::Accept(Visitor& visitor) const {
 
 /// LoopFixed
 LoopFixed::LoopFixed(const ParseNode& node) {
-    count = CreateExpression(*node.branches[0]);
+    limit = CreateExpression(*node.branches[0]);
     body  = std::make_shared<Scope>(*node.branches[1]);
 
-    if (not node.tokens.empty()) {
-        counter = FetchTokenText(node.tokens[0]);
+    if (node.tokens.size() == 2) {
+        counter = FetchTokenText(node.tokens[1]);
     }
 }
 
-const NodePtr& LoopFixed::GetCount() const {
-    return count;
+const NodePtr& LoopFixed::GetLimit() const {
+    return limit;
 }
 
 const NodePtr& LoopFixed::GetBody() const {
@@ -263,6 +263,10 @@ const NodePtr& LoopFixed::GetBody() const {
 
 std::string_view LoopFixed::GetCounter() const {
     return counter;
+}
+
+bool LoopFixed::HasCounter() const {
+    return not counter.empty();
 }
 
 void LoopFixed::Accept(Visitor& visitor) const {

@@ -439,18 +439,42 @@ bool Parser::MatchedLoopBody(ParseNode& node) {
     }
     case RangeExprResult::MatchedExpr: {
         // fixed iteration
-        // loop_body = expr ID? scope
+        // loop_body = (expr OP_RANGE_INC | expr) ID? scope
         node.rule = Rule::LoopFixed;
+
+        if (CurrentToken().type == TokenType::Op_Tilde) {
+            AddCycledTokenTo(node);
+        }
 
         if (CurrentToken().type == TokenType::Identifier) {
             AddCycledTokenTo(node);
         }
+
         Expect(MatchedScope(node), node, "Expected scope for loop body");
 
         return true;
     }
     case RangeExprResult::NoMatch:
         break;
+    }
+
+    // at this point, no tokens should've been cycled, but we may still have a leading tilde for inclusive fixed-if
+    if (CurrentToken().type == TokenType::Op_Tilde) {
+        // loop_body = OP_RANGE_INC expr ID? scope
+
+        node.rule = Rule::LoopFixed;
+        AddCycledTokenTo(node);
+
+        if (not Expect(MatchedExpression(node), node, "Expected expression")) {
+            return true;
+        }
+
+        if (CurrentToken().type == TokenType::Identifier) {
+            AddCycledTokenTo(node);
+        }
+
+        Expect(MatchedScope(node), node, "Expected scope for loop body");
+        return true;
     }
     return false;
 }
@@ -462,7 +486,7 @@ Parser::RangeExprResult Parser::MatchedRangeExpr(ParseNode& node) {
     const bool starts_with_expr = MatchedExpression(node);
 
     const auto op = CurrentToken().type;
-    if (op != Op_Tilde && op != Op_ExclusiveRange) {
+    if (op != Op_Copy && op != Op_ExclusiveRange) {
         return starts_with_expr ? RangeExprResult::MatchedExpr : RangeExprResult::NoMatch;
     }
 

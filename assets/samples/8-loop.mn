@@ -1,12 +1,9 @@
 mut data x = 0
 mut data y = 3
 
-loop if y < 3000 {
-    x += 1
-
-    break if x >= 27
-
-    y += 2
+loop 5 i {
+    x += i
+    y += i * 2
 }
 
 data a = x

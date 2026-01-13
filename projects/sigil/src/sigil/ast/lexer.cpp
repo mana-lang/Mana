@@ -328,10 +328,10 @@ bool Lexer::LexedOperator() {
         token_type = Op_Ref;
         break;
     case '~':
-        token_type = Op_Move;
+        token_type = Op_Tilde;
         break;
     case '$':
-        token_type = Op_Tilde;
+        token_type = Op_Copy;
         break;
     case ';':
         token_type = Terminator;
