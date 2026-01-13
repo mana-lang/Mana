@@ -160,16 +160,40 @@ void CirceVisitor::Visit(const Loop& node) {
     slice.Write(Op::Jump, {CalcJumpBackwards(start_addr)});
 
     for (const auto [break_jump, is_conditional] : break_buffer) {
-        slice.Patch(break_jump, CalcJumpDistance(break_jump, is_conditional), is_conditional ? 1 : 0);
+        slice.Patch(break_jump, CalcJumpDistance(break_jump, is_conditional), is_conditional);
     }
 
     skip_buffer.pop_back();
-    break_buffer.pop_back();
+    break_buffer.clear();
 }
 
-void CirceVisitor::Visit(const LoopIf& node) {}
+void CirceVisitor::Visit(const LoopIf& node) {
+    const i64 start_addr = slice.InstructionCount();
+    skip_buffer.push_back(start_addr);
+
+    node.GetCondition()->Accept(*this);
+    const u16 condition = PopRegBuffer();
+
+    const i64 jmp_end = slice.Write(Op::JumpWhenFalse, {condition, 0xDEAD});
+    FreeRegister(condition);
+
+    node.GetBody()->Accept(*this);
+
+    // end of loop
+    slice.Write(Op::Jump, {CalcJumpBackwards(start_addr)});
+    slice.Patch(jmp_end, CalcJumpDistance(jmp_end, true), 1);
+
+    for (const auto [break_jump, is_conditional] : break_buffer) {
+        slice.Patch(break_jump, CalcJumpDistance(break_jump, is_conditional), is_conditional);
+    }
+
+    skip_buffer.pop_back();
+    break_buffer.clear();
+}
+
 void CirceVisitor::Visit(const LoopIfPost& node) {}
 void CirceVisitor::Visit(const LoopRange& node) {}
+
 void CirceVisitor::Visit(const LoopFixed& node) {}
 
 void CirceVisitor::Visit(const Break& node) {

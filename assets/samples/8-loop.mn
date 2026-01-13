@@ -1,7 +1,7 @@
 mut data x = 0
-mut data y = 0
+mut data y = 3
 
-loop {
+loop if y < 3000 {
     x += 1
 
     break if x >= 27
