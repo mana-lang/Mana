@@ -26,10 +26,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-add_subdirectory(projects/salem)
-add_subdirectory(projects/sigil)
-add_subdirectory(projects/hex)
-add_subdirectory(projects/circe)
-add_subdirectory(projects/mana-core)
+add_subdirectory(modules/salem)
+add_subdirectory(modules/sigil)
+add_subdirectory(modules/hex)
+add_subdirectory(modules/circe)
+add_subdirectory(modules/mana-core)
 
 add_dependencies(hex circe)
