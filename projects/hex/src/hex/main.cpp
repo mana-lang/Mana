@@ -12,15 +12,15 @@
 
 using namespace hex;
 
-void ExecuteVM(const std::string_view exe_name) {
+void ExecuteVM(const std::filesystem::path& exe_path) {
     namespace chrono = std::chrono;
     using namespace std::chrono_literals;
 
     const auto start_file = chrono::high_resolution_clock::now();
 
-    std::ifstream in_file(std::string(exe_name), std::ios::binary);
+    std::ifstream in_file(std::string(exe_path), std::ios::binary);
     if (not in_file) {
-        Log->error("Failed to read file '{}'", exe_name);
+        Log->error("Failed to read file '{}'", exe_path.c_str());
         return;
     }
     in_file.seekg(0, std::ios::end);
@@ -35,7 +35,7 @@ void ExecuteVM(const std::string_view exe_name) {
     in_slice.Deserialize(raw);
     const auto end_deser = chrono::high_resolution_clock::now();
 
-    Log->debug("--- Reading executable '{}' ---", exe_name);
+    Log->debug("--- Reading executable '{}' ---", exe_path.filename().c_str());
     Log->debug("");
     PrintBytecode(in_slice);
     Log->debug("");

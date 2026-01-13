@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
 
 namespace mana::literals {
@@ -18,4 +17,8 @@ using usize = std::size_t; // decltype(sizeof(0));
 
 using f32 = float;
 using f64 = double;
+
+
+static constexpr i64 SENTINEL_64 = -0xDEADED;
+static constexpr u16 SENTINEL    = 0xDEAD;
 }

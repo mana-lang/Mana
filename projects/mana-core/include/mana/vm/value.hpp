@@ -83,9 +83,9 @@ struct Value {
     void operator*=(const i64& rhs);
 
     Value()
-        : data {nullptr}
-      , length(0)
-      , type(Invalid) {}
+        : data {nullptr},
+          length(0),
+          type(Invalid) {}
 
     Value(const Value& other);
     Value(Value&& other) noexcept;
@@ -101,8 +101,8 @@ struct Value {
                  || std::is_floating_point_v<T>
                  || std::is_same_v<T, bool>
     explicit Value(const std::vector<T>& values)
-        : length(values.size())
-      , type(GetManaTypeFrom(T {})) {
+        : length(values.size()),
+          type(GetManaTypeFrom(T {})) {
         if (length == 0) {
             data = nullptr;
             return;

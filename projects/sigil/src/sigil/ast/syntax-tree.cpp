@@ -8,6 +8,8 @@
 
 #include <magic_enum/magic_enum.hpp>
 
+#include <spdlog/fmt/bundled/chrono.h>
+
 namespace sigil::ast {
 using namespace mana::literals;
 
@@ -148,7 +150,7 @@ If::If(const ParseNode& node) {
         auto& tail = *node.branches[2]->branches[0];
         if (tail.rule == Rule::Scope) {
             else_branch = std::make_shared<Scope>(tail);
-        } else if (tail.rule == Rule::IfBlock) {
+        } else if (tail.rule == Rule::If) {
             else_branch = std::make_shared<If>(tail);
         } else {
             Log->error("Unexpected rule in else-branch");
@@ -176,25 +178,185 @@ void If::Accept(Visitor& visitor) const {
 
 /// Loop
 Loop::Loop(const ParseNode& node) {
-    condition = CreateExpression(*node.branches[0]);
-    body      = std::make_shared<Scope>(*node.branches[1]);
+    body = std::make_shared<Scope>(*node.branches[0]);
 }
 
 const NodePtr& Loop::GetBody() const {
     return body;
 }
 
-const NodePtr& Loop::GetCondition() const {
+void Loop::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+/// LoopIf
+LoopIf::LoopIf(const ParseNode& node) {
+    condition = CreateExpression(*node.branches[0]);
+    body      = std::make_shared<Scope>(*node.branches[1]);
+}
+
+const NodePtr& LoopIf::GetCondition() const {
     return condition;
 }
 
-void Loop::Accept(Visitor& visitor) const {
+const NodePtr& LoopIf::GetBody() const {
+    return body;
+}
+
+void LoopIf::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+/// LoopIfPost
+LoopIfPost::LoopIfPost(const ParseNode& node)
+    : LoopIf(node) {}
+
+void LoopIfPost::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+/// LoopRange
+LoopRange::LoopRange(const ParseNode& node) {
+    start   = CreateExpression(*node.branches[0]);
+    end     = CreateExpression(*node.branches[1]);
+    body    = std::make_shared<Scope>(*node.branches[2]);
+    counter = FetchTokenText(node.tokens[0]);
+}
+
+const NodePtr& LoopRange::GetStart() const {
+    return start;
+}
+
+const NodePtr& LoopRange::GetEnd() const {
+    return end;
+}
+
+std::string_view LoopRange::GetCounter() const {
+    return counter;
+}
+
+const NodePtr& LoopRange::GetBody() const {
+    return body;
+}
+
+void LoopRange::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+/// LoopFixed
+LoopFixed::LoopFixed(const ParseNode& node)
+    : inclusive {false},
+      counts_down {false} {
+    body  = std::make_shared<Scope>(*node.branches[1]);
+    limit = CreateExpression(*node.branches[0]);
+
+    // loop 5
+    if (node.tokens.size() == 1) {
+        return;
+    }
+
+    // loop 5 i
+    if (node.tokens.size() == 2) {
+        counter = FetchTokenText(node.tokens[1]);
+        return;
+    }
+
+    // the parser is cheeky and swaps the token orders based on where the tilde is
+    if (node.tokens.size() == 3) {
+        // loop 5~ i
+        if (node.tokens[2].type == TokenType::Op_Tilde) {
+            counter     = FetchTokenText(node.tokens[1]);
+            inclusive   = true;
+            counts_down = true;
+            return;
+        }
+
+        // loop ~5 i
+        counter   = FetchTokenText(node.tokens[2]);
+        inclusive = true;
+
+        return;
+    }
+}
+
+const NodePtr& LoopFixed::GetLimit() const {
+    return limit;
+}
+
+const NodePtr& LoopFixed::GetBody() const {
+    return body;
+}
+
+std::string_view LoopFixed::GetCounter() const {
+    return counter;
+}
+
+bool LoopFixed::HasCounter() const {
+    return not counter.empty();
+}
+
+bool LoopFixed::IsInclusive() const {
+    return inclusive;
+}
+
+bool LoopFixed::CountsDown() const {
+    return counts_down;
+}
+
+void LoopFixed::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+/// LoopControl
+LoopControl::LoopControl(const ParseNode& node)
+    : condition {nullptr} {
+    if (node.tokens.size() > 2 && node.tokens[2].type == TokenType::Identifier) {
+        label = FetchTokenText(node.tokens[2]);
+    }
+
+    if (node.branches.empty()) {
+        return;
+    }
+
+    // LoopControl can only have up to 1 branch
+    condition = CreateExpression(*node.branches[0]);
+}
+
+const NodePtr& LoopControl::GetCondition() const {
+    return condition;
+}
+
+std::string_view LoopControl::GetLabel() const {
+    return label;
+}
+
+bool LoopControl::HasLabel() const {
+    return not label.empty();
+}
+
+void LoopControl::Accept(Visitor& visitor) const {
+    Log->warn("LoopControl should never be visited directly");
+}
+
+/// Break
+Break::Break(const ParseNode& node)
+    : LoopControl {node} {}
+
+void Break::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+/// Skip
+Skip::Skip(const ParseNode& node)
+    : LoopControl {node} {}
+
+void Skip::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
 /// Datum
 DataDeclaration::DataDeclaration(const ParseNode& node)
-    : initializer(nullptr) {
+    : initializer {nullptr} {
     // Correctly find the identifier name among tokens (skip 'mut' or 'data')
     for (const auto& token : node.tokens) {
         if (token.type == TokenType::Identifier) {
@@ -385,14 +547,14 @@ BinaryExpr::BinaryExpr(const ParseNode& node)
     : BinaryExpr(node, 1) {}
 
 BinaryExpr::BinaryExpr(const std::string& op, const ParseNode& left, const ParseNode& right)
-    : op(op)
-  , left(CreateExpression(left))
-  , right(CreateExpression(right)) {}
+    : op(op),
+      left(CreateExpression(left)),
+      right(CreateExpression(right)) {}
 
 BinaryExpr::BinaryExpr(const std::string_view op, const ParseNode& left, const ParseNode& right)
-    : op(op)
-  , left(CreateExpression(left))
-  , right(CreateExpression(right)) {}
+    : op(op),
+      left(CreateExpression(left)),
+      right(CreateExpression(right)) {}
 
 std::string_view BinaryExpr::GetOp() const {
     return op;
@@ -422,8 +584,8 @@ SIGIL_NODISCARD bool IsBooleanLiteral(const TokenType token) {
 
 /// UnaryExpr
 UnaryExpr::UnaryExpr(const ParseNode& node)
-    : op(FetchTokenText(node.tokens[0]))
-  , val(CreateExpression(*node.branches[0])) {}
+    : op(FetchTokenText(node.tokens[0])),
+      val(CreateExpression(*node.branches[0])) {}
 
 void UnaryExpr::Accept(Visitor& visitor) const {
     visitor.Visit(*this);

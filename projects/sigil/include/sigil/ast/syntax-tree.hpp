@@ -13,6 +13,10 @@
 #include <charconv>
 #include <unordered_map>
 
+#include <magic_enum/magic_enum.hpp>
+
+#include <sigil/core/logger.hpp>
+
 namespace sigil::ast {
 namespace ml = mana::literals;
 
@@ -85,6 +89,7 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
+// TODO: make MutableDataDeclaration to encode meaning in the type rather than a bool
 class DataDeclaration final : public Node {
     std::string name;
     NodePtr initializer;
@@ -142,15 +147,100 @@ public:
 };
 
 class Loop final : public Node {
-    NodePtr condition;
     NodePtr body;
 
 public:
     explicit Loop(const ParseNode& node);
 
     SIGIL_NODISCARD const NodePtr& GetBody() const;
-    SIGIL_NODISCARD const NodePtr& GetCondition() const;
 
+    void Accept(Visitor& visitor) const override;
+};
+
+class LoopIf : public Node {
+    NodePtr condition;
+    NodePtr body;
+
+public:
+    explicit LoopIf(const ParseNode& node);
+
+    SIGIL_NODISCARD const NodePtr& GetCondition() const;
+    SIGIL_NODISCARD const NodePtr& GetBody() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
+// semantically distinguishes from LoopIf without wasted padding
+class LoopIfPost final : public LoopIf {
+public:
+    explicit LoopIfPost(const ParseNode& node);
+    void Accept(Visitor& visitor) const override;
+};
+
+class LoopRange final : public Node {
+    NodePtr start;
+    NodePtr end;
+    NodePtr body;
+
+    std::string counter;
+
+public:
+    explicit LoopRange(const ParseNode& node);
+
+    SIGIL_NODISCARD const NodePtr& GetStart() const;
+    SIGIL_NODISCARD const NodePtr& GetEnd() const;
+    SIGIL_NODISCARD const NodePtr& GetBody() const;
+
+    SIGIL_NODISCARD std::string_view GetCounter() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
+class LoopFixed final : public Node {
+    std::string counter;
+    NodePtr limit;
+    NodePtr body;
+    bool inclusive;
+    bool counts_down;
+
+public:
+    explicit LoopFixed(const ParseNode& node);
+
+    SIGIL_NODISCARD const NodePtr& GetLimit() const;
+    SIGIL_NODISCARD const NodePtr& GetBody() const;
+    SIGIL_NODISCARD std::string_view GetCounter() const;
+
+    SIGIL_NODISCARD bool HasCounter() const;
+    SIGIL_NODISCARD bool IsInclusive() const;
+    SIGIL_NODISCARD bool CountsDown() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
+class LoopControl : public Node {
+    NodePtr condition;
+    std::string label;
+
+public:
+    explicit LoopControl(const ParseNode& node);
+
+    SIGIL_NODISCARD const NodePtr& GetCondition() const;
+    SIGIL_NODISCARD std::string_view GetLabel() const;
+
+    SIGIL_NODISCARD bool HasLabel() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
+class Break final : public LoopControl {
+public:
+    explicit Break(const ParseNode& node);
+    void Accept(Visitor& visitor) const override;
+};
+
+class Skip final : public LoopControl {
+public:
+    explicit Skip(const ParseNode& node);
     void Accept(Visitor& visitor) const override;
 };
 
@@ -244,14 +334,39 @@ void PropagateStatements(const ParseNode& node, SC* root) {
             using enum Rule;
 
             switch (n->rule) {
-            case Declaration:
-                root->Add<DataDeclaration>(*n);
+            case DataDeclaration:
+                root->Add<class DataDeclaration>(*n);
                 break;
-            case IfBlock:
-                root->Add<If>(*n);
+            case If:
+                root->Add<class If>(*n);
                 break;
-            case LoopBlock:
-                root->Add<Loop>(*n);
+            case Loop:
+                root->Add<class Loop>(*n);
+                break;
+            case LoopIf:
+                root->Add<class LoopIf>(*n);
+                break;
+            case LoopIfPost:
+                root->Add<class LoopIfPost>(*n);
+                break;
+            case LoopRange:
+                root->Add<class LoopRange>(*n);
+                break;
+            case LoopFixed:
+                root->Add<class LoopFixed>(*n);
+                break;
+            case LoopControl:
+                if (n->tokens[0].type == TokenType::KW_break) {
+                    root->Add<Break>(*n);
+                    break;
+                }
+                if (n->tokens[0].type == TokenType::KW_skip) {
+                    root->Add<Skip>(*n);
+                    break;
+                }
+                Log->error("Unexpected loop control statement. Token was '{}'",
+                           magic_enum::enum_name(n->tokens[0].type)
+                );
                 break;
             default:
                 if (auto expr = CreateExpression(*n)) {

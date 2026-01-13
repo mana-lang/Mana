@@ -30,6 +30,13 @@ loop 5 {
 	DoSomething()
 }
 
+// creates variable 'i' that starts zeroed
+// counts up at the end of each loop
+loop 5 i {
+	DoSomething(i) // 0, 1, 2, 3, 4
+}
+
+// inclusive version
 // for (int i = 0; i <= 5; ++i)
 loop ~5 i {
 // 'loop 5~ i' to count from 5 to 0
@@ -40,10 +47,6 @@ loop ~5 i {
 // assume that the missing scope blocks are for brevity only
 
 
-// for (int i = 0; i < 5; ++i)
-// same as '~5', but exclusive
-loop ..5 i 
-
 // for (int i = 3; i <= 5; ++i)
 loop 3~5 i  
 loop 3..5 i // exclusive variant
@@ -51,11 +54,10 @@ loop 3..5 i // exclusive variant
 // while x == 5
 loop if x == 5
 
-// do while x == 5
-loop { /* some code */ } if x == 5
-// keep in mind that the 'if' must be on the same line as '}'
-// or terminated with a semicolon
-// for it to be part of the loop
+// do {...} while x == 5
+loop { 
+	/* some code */ 
+} => if x == 5
 
 // within this loop, 'x' is temporarily mutable
 // and is initially zeroed
@@ -64,12 +66,28 @@ data x => loop {
 	x = Something()
 } // after the loop block, 'x' is immutable
 
+
+// break and skip statements
 loop {
 	if SomeCondition() {
+		DoSomething()
 		skip // jumps to start of loop
 	} else if OtherCondition() {
+		DoSomethingElse()
 		break // exits current loop
 	}
+}
+
+// break-if and skip-if statements
+// allow you to concisely perform conditional skips
+loop {
+	DoSomething()
+	break if SomeCondition()
+	
+	DoSomethingElse()
+	skip if SomeOtherCondition()
+	
+	DoAnotherThing()
 }
 
 // loops may be labeled
@@ -80,6 +98,14 @@ loop A: 2..10 i {
 		}
 		break => A // exits from outer loop A
 	}
+}
+
+// you can still use break-if and skip-if
+loop A: 5~15 i {
+	loop B: if i % 3 == 0 {
+		skip if cond => A
+	}
+	break if other_cond => B
 }
 ```
 

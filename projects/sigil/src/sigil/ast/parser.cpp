@@ -13,14 +13,14 @@ using namespace ast;
 using namespace mana::literals;
 
 Parser::Parser(const TokenStream&& tokens)
-    : tokens {std::move(tokens)}
-  , cursor {}
-  , parse_tree {Rule::Undefined} {}
+    : tokens {std::move(tokens)},
+      cursor {},
+      parse_tree {Rule::Undefined} {}
 
 Parser::Parser(const TokenStream& tokens)
-    : tokens {tokens}
-  , cursor {}
-  , parse_tree {Rule::Undefined} {}
+    : tokens {tokens},
+      cursor {},
+      parse_tree {Rule::Undefined} {}
 
 bool Parser::Parse() {
     parse_tree.rule = Rule::Artifact;
@@ -144,19 +144,19 @@ bool IsPrimitive(const TokenType token_type) {
     }
 }
 
-auto Parser::CurrentToken() const -> Token {
+Token Parser::CurrentToken() const {
     return tokens[cursor];
 }
 
-auto Parser::PeekNextToken() const -> Token {
+Token Parser::PeekNextToken() const {
     return tokens[cursor + 1];
 }
 
-auto Parser::NextToken() -> Token {
+Token Parser::NextToken() {
     return tokens[++cursor];
 }
 
-auto Parser::GetAndCycleToken() -> Token {
+Token Parser::GetAndCycleToken() {
     return tokens[cursor++];
 }
 
@@ -244,16 +244,22 @@ bool Parser::Expect(const bool condition,
     return true;
 }
 
-// stmt = if_stmt | (decl | assign | expr) TERMINATOR
+// stmt = if_stmt | loop | (decl | assign | expr) TERMINATOR
 bool Parser::MatchedStatement(ParseNode& node) {
-    auto& stmt {node.NewBranch(Rule::Statement)};
+    auto& stmt = node.NewBranch(Rule::Statement);
 
     // if-blocks aren't terminated since they have a scope, so we exit early on match
     if (MatchedIfBlock(stmt)) {
         return true;
     }
 
-    const bool is_statement = MatchedDeclaration(stmt)
+    // same for match
+    if (MatchedLoop(stmt)) {
+        return true;
+    }
+
+    const bool is_statement = MatchedLoopControl(stmt)
+                              || MatchedDataDeclaration(stmt)
                               || MatchedAssignment(stmt)
                               || MatchedExpression(stmt);
 
@@ -296,22 +302,30 @@ bool Parser::MatchedScope(ParseNode& node) {
 
     if (Expect(CurrentToken().type == TokenType::Op_BraceRight, scope, "Expected closing brace '}' at end of scope")) {
         AddCycledTokenTo(scope);
-    };
+    }
 
     return true;
 }
 
-// if_stmt = KW_IF expr scope if_tail?
-bool Parser::MatchedIfBlock(ParseNode& node) {
+// if_condition = KW_IF expr
+bool Parser::MatchedIfCondition(ParseNode& node) {
     if (CurrentToken().type != TokenType::KW_if) {
         return false;
     }
 
-    auto& if_block = node.NewBranch(Rule::IfBlock);
-    AddCycledTokenTo(if_block);
+    AddCycledTokenTo(node);
 
-    if (not Expect(MatchedExpression(if_block), if_block, "Expected expression")) {
-        return true;
+    Expect(MatchedExpression(node), node, "Expected expression");
+    return true;
+}
+
+// if_block = KW_IF expr scope if_tail?
+bool Parser::MatchedIfBlock(ParseNode& node) {
+    auto& if_block = node.NewBranch(Rule::If);
+
+    if (not MatchedIfCondition(if_block)) {
+        node.PopBranch();
+        return false;
     }
 
     if (not Expect(MatchedScope(if_block), if_block, "Expected scope for if-block")) {
@@ -344,8 +358,165 @@ bool Parser::MatchedIfTail(ParseNode& node) {
     return true;
 }
 
-// decl = KW_MUT? KW_DATA ID ('=' expr)?
-bool Parser::MatchedDeclaration(ParseNode& node) {
+// loop_control = (KW_SKIP | KW_BREAK) (OP_TARGET ID)? if_condition?
+bool Parser::MatchedLoopControl(ParseNode& node) {
+    if (CurrentToken().type != TokenType::KW_skip && CurrentToken().type != TokenType::KW_break) {
+        return false;
+    }
+
+    auto& loop_control = node.NewBranch(Rule::LoopControl);
+    AddCycledTokenTo(loop_control);
+
+    if (CurrentToken().type == TokenType::Op_Target) {
+        AddCycledTokenTo(loop_control);
+
+        if (not Expect(CurrentToken().type == TokenType::Identifier,
+                       loop_control,
+                       "Expected identifier after loop control keyword"
+            )
+        ) {
+            return false;
+        }
+        AddCycledTokenTo(loop_control);
+    }
+
+    MatchedIfCondition(loop_control);
+
+    return true;
+}
+
+// loop = KW_LOOP loop_body ;
+bool Parser::MatchedLoop(ParseNode& node) {
+    if (CurrentToken().type != TokenType::KW_loop) {
+        return false;
+    }
+
+    auto& loop = node.NewBranch(Rule::Loop);
+    AddCycledTokenTo(loop);
+
+    Expect(MatchedLoopBody(loop), loop, "Expected loop body");
+
+    return true;
+}
+
+bool Parser::MatchedLoopBody(ParseNode& node) {
+    // infinite/post-conditional
+    // loop_body = scope if_condition?
+    if (MatchedScope(node)) {
+        if (CurrentToken().type != TokenType::Op_Target) {
+            // this is an infinite loop, so we don't need to do anything
+            // as the loop rule already exists on this node
+            return true;
+        }
+        AddCycledTokenTo(node);
+        MatchedIfCondition(node);
+        node.rule = Rule::LoopIfPost;
+
+        return true;
+    }
+
+    // conditional
+    // loop_body = if_condition scope
+    if (MatchedIfCondition(node)) {
+        Expect(MatchedScope(node), node, "Expected scope for loop body");
+        node.rule = Rule::LoopIf;
+        return true;
+    }
+
+    switch (MatchedRangeExpr(node)) {
+    case RangeExprResult::MatchedRange: {
+        // ranged iteration
+        // loop_body = range_expr ID scope
+        node.rule = Rule::LoopRange;
+
+        if (not Expect(CurrentToken().type == TokenType::Identifier, node, "Expected identifier")) {
+            return true;
+        }
+        AddCycledTokenTo(node);
+
+        Expect(MatchedScope(node), node, "Expected scope for loop body");
+        return true;
+    }
+    case RangeExprResult::MatchedExpr: {
+        // fixed iteration
+        // loop_body = (expr OP_RANGE_INC | expr) ID? scope
+        node.rule = Rule::LoopFixed;
+
+        i64 tilde_pos = -1;
+        if (CurrentToken().type == TokenType::Op_Tilde) {
+            tilde_pos = cursor++; // fake cycle to encode positional information for ast
+        }
+
+        const bool has_tilde = tilde_pos != -1;
+
+        if (CurrentToken().type == TokenType::Identifier) {
+            AddCycledTokenTo(node);
+        } else if (not Expect(not has_tilde, node, "Down-count requires identifier")) {
+            // loop 5~ {...} is ill-formed
+            return true;
+        }
+
+        if (has_tilde) {
+            node.tokens.push_back(tokens[tilde_pos]);
+        }
+
+        Expect(MatchedScope(node), node, "Expected scope for loop body");
+
+        return true;
+    }
+    case RangeExprResult::NoMatch:
+        break;
+    }
+
+    // at this point, no tokens should've been cycled, but we may still have a leading tilde for inclusive fixed-if
+    if (CurrentToken().type == TokenType::Op_Tilde) {
+        // loop_body = OP_RANGE_INC expr ID? scope
+        node.rule = Rule::LoopFixed;
+        AddCycledTokenTo(node);
+
+        if (not Expect(MatchedExpression(node), node, "Expected expression")) {
+            return true;
+        }
+
+        if (not Expect(CurrentToken().type == TokenType::Identifier, node, "Up-count requires identifier")) {
+            // tilde without identifier is malformed
+            return true;
+        }
+        AddCycledTokenTo(node);
+
+        Expect(MatchedScope(node), node, "Expected scope for loop body");
+        return true;
+    }
+    return false;
+}
+
+// range_expr = expr? OP_RANGE_INC expr? | expr? OP_RANGE_EXC expr?
+Parser::RangeExprResult Parser::MatchedRangeExpr(ParseNode& node) {
+    using enum TokenType;
+
+    const bool starts_with_expr = MatchedExpression(node);
+
+    const auto op = CurrentToken().type;
+    if (op != Op_Copy && op != Op_ExclusiveRange) {
+        return starts_with_expr ? RangeExprResult::MatchedExpr : RangeExprResult::NoMatch;
+    }
+
+    auto& range = node.NewBranch(Rule::LoopRangeExpr);
+    AddCycledTokenTo(range);
+
+    if (starts_with_expr) {
+        const auto lhs_index = node.branches.size() - 2;
+        range.AcquireBranchOf(node, lhs_index);
+    }
+
+    MatchedExpression(range);
+
+    return RangeExprResult::MatchedRange;
+}
+
+
+// data_decl = KW_MUT? KW_DATA ID ('=' expr)?
+bool Parser::MatchedDataDeclaration(ParseNode& node) {
     const bool matched_keywords = CurrentToken().type == TokenType::KW_data
                                   || (CurrentToken().type == TokenType::KW_mut
                                       && PeekNextToken().type == TokenType::KW_data);
@@ -353,7 +524,7 @@ bool Parser::MatchedDeclaration(ParseNode& node) {
         return false;
     }
 
-    auto& decl = node.NewBranch(Rule::Declaration);
+    auto& decl = node.NewBranch(Rule::DataDeclaration);
     AddTokensTo(decl, TokenType::KW_data);
 
     if (not Expect(CurrentToken().type == TokenType::Identifier,

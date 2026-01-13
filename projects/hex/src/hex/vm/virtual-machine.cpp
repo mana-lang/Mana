@@ -76,11 +76,10 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
         if (offset < slice->Instructions().size()) {                                           \
             Log->debug("{:04} | {:<16}", offset, magic_enum::enum_name(static_cast<Op>(*ip))); \
         }                                                                                      \
-        auto  label = *ip < dispatch_max ? dispatch_table[*ip++] : err; \
-        goto *label;                                                    \
+        auto  label = *ip < dispatch_max ? dispatch_table[*ip++] : &&compile_error;  \
+        goto *label;                                                                 \
     }
 
-    constexpr auto err          = &&compile_error;
     constexpr auto dispatch_max = dispatch_table.size();
 #else
     // we do no bounds checking whatsoever in release
@@ -231,14 +230,16 @@ not_equals: {
     }
 
 jmp: {
+        // jumps are stored as u16, but encoded as i16
+        // so we need to convert them back here
 #ifdef HEX_DEBUG
-        u16 dist = NEXT_PAYLOAD;
+        i16 dist = static_cast<i16>(NEXT_PAYLOAD);
 
         const auto target = ip - slice->Instructions().data() + dist;
         Log->debug("  Jump ==> [{:04}]", target);
         ip += dist;
 #else
-        ip += NEXT_PAYLOAD;
+        ip += static_cast<i16>(NEXT_PAYLOAD);
 #endif
 
         DISPATCH();
@@ -246,7 +247,7 @@ jmp: {
 
 jmp_true: {
         u16 reg  = NEXT_PAYLOAD;
-        u16 dist = NEXT_PAYLOAD;
+        i16 dist = static_cast<i16>(NEXT_PAYLOAD);
 
 #ifdef HEX_DEBUG
         const bool taken  = REG(reg).AsBool();
@@ -267,7 +268,7 @@ jmp_true: {
     }
 jmp_false: {
         u16 reg  = NEXT_PAYLOAD;
-        u16 dist = NEXT_PAYLOAD;
+        i16 dist = static_cast<i16>(NEXT_PAYLOAD);
 
 #ifdef HEX_DEBUG
         const bool taken  = !REG(reg).AsBool();
@@ -276,7 +277,7 @@ jmp_false: {
                    target,
                    reg,
                    ValueToString(REG(reg)),
-                   taken ? "TAKEN" : "SKIP"
+                   taken ? "TAKEN" : "SKIPPED"
         );
 #endif
 

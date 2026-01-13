@@ -1,0 +1,41 @@
+mut data total_iterations = 0
+
+// infinite loop
+mut data i = 0
+loop {
+    break if i > 10
+    
+    i += 1
+
+    skip if i % 2 == 0
+    
+    total_iterations += 1
+}
+
+// loop if
+mut data j = 0
+loop if j < 5 {
+    j += 1
+    if j == 3 {
+        skip
+    }
+    skip_count += 1
+}
+
+// fixed loop (upcount)
+loop ~5 k {
+    if k == 2 {
+        skip // Should still increment k to 3
+    }
+    total_iterations += k
+}
+
+// fixed loop (downcount)
+loop 5~ m {
+    if m == 4 {
+        skip // Should still decrement m to 3
+    }
+    total_iterations += m
+}
+
+data final = total_iterations

@@ -23,6 +23,9 @@ Below is a list of valid Attributes:
 - *Flexible*
 	- Usage:  *Before* a type declaration
 	- Effect: Will aggressively optimise for cache locality at the cost of having unpredictable data layouts. 
+- *Discardable*
+	- Usage: *Before* a function with a return type
+	- Effect: Will provide a compiler warning if the return value of this function is not used
 
 
 ##### Attribute Groups

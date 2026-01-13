@@ -46,14 +46,14 @@ enum class TokenType : ml::u8 {
     Op_LogicalAnd,
     Op_LogicalOr,
 
-    Op_MatchArm,
+    Op_Target,
     Op_MultiMatch,
 
     Op_ReturnType,
     Op_Attribute,
 
     Op_Ref,
-    Op_Move,
+    Op_Tilde,
     Op_Copy,
 
     Lit_String,

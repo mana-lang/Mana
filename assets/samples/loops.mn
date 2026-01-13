@@ -1,0 +1,33 @@
+mut data x = 1
+mut data y = 0
+
+loop ~10 i {
+    y += i
+    x += 1
+
+    break if x > 6
+}
+
+x = 0
+y = 0
+
+loop 8~ i {
+    x *= i
+    y -= i
+}
+
+loop if x >= 0 {
+    x -= 1
+}
+
+loop 6 {
+    y *= x
+}
+
+loop {
+    y /= x
+    break if y <= 0
+}
+
+data a = x
+data b = y

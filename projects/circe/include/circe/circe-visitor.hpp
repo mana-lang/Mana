@@ -18,6 +18,18 @@ class CirceVisitor final : public ast::Visitor {
         bool is_mutable;
     };
 
+    struct JumpInstruction {
+        ml::i64 jump_index;
+        bool is_conditional;
+    };
+
+    struct LoopContext {
+        ml::i64 start_addr {ml::SENTINEL_64};
+
+        std::vector<JumpInstruction> pending_breaks;
+        std::vector<JumpInstruction> pending_skips;
+    };
+
     using SymbolTable = std::unordered_map<std::string, Symbol>;
 
     mv::Slice slice;
@@ -27,6 +39,8 @@ class CirceVisitor final : public ast::Visitor {
 
     std::vector<ml::u16> reg_buffer;
     std::vector<ml::u16> free_regs;
+
+    std::vector<LoopContext> loop_stack;
 
 public:
     CirceVisitor();
@@ -42,6 +56,15 @@ public:
 
     void Visit(const ast::If& node) override;
 
+    void Visit(const ast::Loop& node) override;
+    void Visit(const ast::LoopIf& node) override;
+    void Visit(const ast::LoopIfPost& node) override;
+    void Visit(const ast::LoopRange& node) override;
+    void Visit(const ast::LoopFixed& node) override;
+
+    void Visit(const ast::Break& node) override;
+    void Visit(const ast::Skip& node) override;
+
     void Visit(const ast::UnaryExpr& node) override;
     void Visit(const ast::BinaryExpr& node) override;
     void Visit(const ast::ArrayLiteral& array) override;
@@ -52,6 +75,12 @@ public:
     void Visit(const ast::Literal<bool>& literal) override;
 
 private:
+    ml::u16 CalcJumpDistance(ml::i64 jump_index, bool is_conditional = false) const;
+    ml::u16 CalcJumpBackwards(ml::i64 target_index,
+                              ml::i64 source_index,
+                              bool is_conditional = false
+    ) const;
+
     ml::u16 AllocateRegister();
     void FreeRegister(ml::u16 reg);
     void FreeRegisters(std::initializer_list<ml::u16> regs);
@@ -66,6 +95,9 @@ private:
 
     void AddSymbol(const std::string& name, ml::u16 register_index, bool is_mutable);
     void RemoveSymbol(const std::string& name);
+
+    LoopContext& CurrentLoop();
+    void HandleLoopControl(bool is_break, const ast::NodePtr& condition);
 
     template <typename T>
     void CreateLiteral(const ast::Literal<T>& literal) {

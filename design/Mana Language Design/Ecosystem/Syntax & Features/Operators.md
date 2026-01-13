@@ -38,7 +38,7 @@ Not all of these operators may be overloaded.
 	- Assignment
 		- `x = y`
 - `=>` 
-	- Match arm resolution
+	- Target
 		- `Thing => Stuff()`
 - `|`
 	- Multi-match
