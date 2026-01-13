@@ -334,10 +334,6 @@ bool LoopControl::HasLabel() const {
     return not label.empty();
 }
 
-bool LoopControl::HasCondition() const {
-    return condition != nullptr;
-}
-
 void LoopControl::Accept(Visitor& visitor) const {
     Log->warn("LoopControl should never be visited directly");
 }

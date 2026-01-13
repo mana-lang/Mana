@@ -30,6 +30,13 @@ loop 5 {
 	DoSomething()
 }
 
+// creates variable 'i' that starts zeroed
+// counts up at the end of each loop
+loop 5 i {
+	DoSomething(i) // 0, 1, 2, 3, 4
+}
+
+// inclusive version
 // for (int i = 0; i <= 5; ++i)
 loop ~5 i {
 // 'loop 5~ i' to count from 5 to 0

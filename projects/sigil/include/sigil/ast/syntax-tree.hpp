@@ -228,7 +228,6 @@ public:
     SIGIL_NODISCARD std::string_view GetLabel() const;
 
     SIGIL_NODISCARD bool HasLabel() const;
-    SIGIL_NODISCARD bool HasCondition() const;
 
     void Accept(Visitor& visitor) const override;
 };

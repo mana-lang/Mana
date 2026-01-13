@@ -18,13 +18,19 @@ class CirceVisitor final : public ast::Visitor {
         bool is_mutable;
     };
 
-    struct BreakInstruction {
+    struct JumpInstruction {
         ml::i64 jump_index;
         bool is_conditional;
     };
 
+    struct LoopContext {
+        ml::i64 start_addr {ml::SENTINEL_64};
+
+        std::vector<JumpInstruction> pending_breaks;
+        std::vector<JumpInstruction> pending_skips;
+    };
+
     using SymbolTable = std::unordered_map<std::string, Symbol>;
-    using BreakBuffer = std::vector<BreakInstruction>;
 
     mv::Slice slice;
     SymbolTable symbols;
@@ -34,8 +40,7 @@ class CirceVisitor final : public ast::Visitor {
     std::vector<ml::u16> reg_buffer;
     std::vector<ml::u16> free_regs;
 
-    BreakBuffer break_buffer;
-    std::vector<ml::i64> skip_buffer;
+    std::vector<LoopContext> loop_stack;
 
 public:
     CirceVisitor();
@@ -71,7 +76,10 @@ public:
 
 private:
     ml::u16 CalcJumpDistance(ml::i64 jump_index, bool is_conditional = false) const;
-    ml::u16 CalcJumpBackwards(ml::i64 jump_index, bool is_conditional = false) const;
+    ml::u16 CalcJumpBackwards(ml::i64 target_index,
+                              ml::i64 source_index,
+                              bool is_conditional = false
+    ) const;
 
     ml::u16 AllocateRegister();
     void FreeRegister(ml::u16 reg);
@@ -87,6 +95,9 @@ private:
 
     void AddSymbol(const std::string& name, ml::u16 register_index, bool is_mutable);
     void RemoveSymbol(const std::string& name);
+
+    LoopContext& CurrentLoop();
+    void HandleLoopControl(bool is_break, const ast::NodePtr& condition);
 
     template <typename T>
     void CreateLiteral(const ast::Literal<T>& literal) {
