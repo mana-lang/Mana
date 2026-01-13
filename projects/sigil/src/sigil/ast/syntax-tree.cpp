@@ -244,12 +244,38 @@ void LoopRange::Accept(Visitor& visitor) const {
 }
 
 /// LoopFixed
-LoopFixed::LoopFixed(const ParseNode& node) {
-    limit = CreateExpression(*node.branches[0]);
+LoopFixed::LoopFixed(const ParseNode& node)
+    : inclusive {false},
+      counts_down {false} {
     body  = std::make_shared<Scope>(*node.branches[1]);
+    limit = CreateExpression(*node.branches[0]);
 
+    // loop 5
+    if (node.tokens.size() == 1) {
+        return;
+    }
+
+    // loop 5 i
     if (node.tokens.size() == 2) {
         counter = FetchTokenText(node.tokens[1]);
+        return;
+    }
+
+    // the parser is cheeky and swaps the token orders based on where the tilde is
+    if (node.tokens.size() == 3) {
+        // loop 5~ i
+        if (node.tokens[2].type == TokenType::Op_Tilde) {
+            counter     = FetchTokenText(node.tokens[1]);
+            inclusive   = true;
+            counts_down = true;
+            return;
+        }
+
+        // loop ~5 i
+        counter   = FetchTokenText(node.tokens[2]);
+        inclusive = true;
+
+        return;
     }
 }
 
@@ -267,6 +293,14 @@ std::string_view LoopFixed::GetCounter() const {
 
 bool LoopFixed::HasCounter() const {
     return not counter.empty();
+}
+
+bool LoopFixed::IsInclusive() const {
+    return inclusive;
+}
+
+bool LoopFixed::CountsDown() const {
+    return counts_down;
 }
 
 void LoopFixed::Accept(Visitor& visitor) const {

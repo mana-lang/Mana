@@ -197,9 +197,11 @@ public:
 };
 
 class LoopFixed final : public Node {
+    std::string counter;
     NodePtr limit;
     NodePtr body;
-    std::string counter;
+    bool inclusive;
+    bool counts_down;
 
 public:
     explicit LoopFixed(const ParseNode& node);
@@ -209,6 +211,8 @@ public:
     SIGIL_NODISCARD std::string_view GetCounter() const;
 
     SIGIL_NODISCARD bool HasCounter() const;
+    SIGIL_NODISCARD bool IsInclusive() const;
+    SIGIL_NODISCARD bool CountsDown() const;
 
     void Accept(Visitor& visitor) const override;
 };

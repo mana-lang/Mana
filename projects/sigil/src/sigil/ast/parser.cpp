@@ -442,12 +442,22 @@ bool Parser::MatchedLoopBody(ParseNode& node) {
         // loop_body = (expr OP_RANGE_INC | expr) ID? scope
         node.rule = Rule::LoopFixed;
 
+        i64 tilde_pos = -1;
         if (CurrentToken().type == TokenType::Op_Tilde) {
-            AddCycledTokenTo(node);
+            tilde_pos = cursor++; // fake cycle to encode positional information for ast
         }
+
+        const bool has_tilde = tilde_pos != -1;
 
         if (CurrentToken().type == TokenType::Identifier) {
             AddCycledTokenTo(node);
+        } else if (not Expect(not has_tilde, node, "Down-count requires identifier")) {
+            // loop 5~ {...} is ill-formed
+            return true;
+        }
+
+        if (has_tilde) {
+            node.tokens.push_back(tokens[tilde_pos]);
         }
 
         Expect(MatchedScope(node), node, "Expected scope for loop body");
@@ -461,7 +471,6 @@ bool Parser::MatchedLoopBody(ParseNode& node) {
     // at this point, no tokens should've been cycled, but we may still have a leading tilde for inclusive fixed-if
     if (CurrentToken().type == TokenType::Op_Tilde) {
         // loop_body = OP_RANGE_INC expr ID? scope
-
         node.rule = Rule::LoopFixed;
         AddCycledTokenTo(node);
 
@@ -469,9 +478,11 @@ bool Parser::MatchedLoopBody(ParseNode& node) {
             return true;
         }
 
-        if (CurrentToken().type == TokenType::Identifier) {
-            AddCycledTokenTo(node);
+        if (not Expect(CurrentToken().type == TokenType::Identifier, node, "Up-count requires identifier")) {
+            // tilde without identifier is malformed
+            return true;
         }
+        AddCycledTokenTo(node);
 
         Expect(MatchedScope(node), node, "Expected scope for loop body");
         return true;

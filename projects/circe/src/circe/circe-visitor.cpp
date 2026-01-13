@@ -195,34 +195,60 @@ void CirceVisitor::Visit(const LoopIfPost& node) {}
 void CirceVisitor::Visit(const LoopRange& node) {}
 
 void CirceVisitor::Visit(const LoopFixed& node) {
-    // create counter before loop starts
     const u16 counter = AllocateRegister();
-    slice.Write(Op::LoadConstant, {counter, slice.AddConstant(0)});
+    const u16 limit   = AllocateRegister();
 
-    node.GetLimit()->Accept(*this);
-    const u16 limit = PopRegBuffer();
+    if (node.CountsDown()) {
+        node.GetLimit()->Accept(*this);
+        const u16 init_val = PopRegBuffer();
+        slice.Write(Op::Move, {counter, init_val});
+
+        FreeRegister(init_val);
+
+        // downcount always counts to 0
+        slice.Write(Op::LoadConstant, {limit, slice.AddConstant(0)});
+    } else {
+        slice.Write(Op::LoadConstant, {counter, slice.AddConstant(0)});
+
+        node.GetLimit()->Accept(*this);
+        const u16 limit_val = PopRegBuffer();
+        slice.Write(Op::Move, {limit, limit_val});
+
+        FreeRegister(limit_val);
+    }
 
     // loop start
     const i64 start_addr = slice.InstructionCount();
     skip_buffer.push_back(start_addr);
 
+    // untangle counter direction
+    Op cmp_op;
+    if (node.CountsDown()) {
+        cmp_op = node.IsInclusive() ? Op::Cmp_GreaterEq : Op::Cmp_Greater;
+    } else {
+        cmp_op = node.IsInclusive() ? Op::Cmp_LesserEq : Op::Cmp_Lesser;
+    }
+
     const u16 condition = AllocateRegister();
-    slice.Write(Op::Cmp_Lesser, {condition, counter, limit});
+    slice.Write(cmp_op, {condition, counter, limit});
     const i64 exit_jmp = slice.Write(Op::JumpWhenFalse, {condition, 0xDEAD});
+
     FreeRegister(condition);
 
-    // loop 5 i
+    // loop 5 i -> we need to promote i to a variable
+    // while it's incremented, it still counts as immutable
     if (node.HasCounter()) {
         AddSymbol(std::string(node.GetCounter()), counter, false);
     }
 
     node.GetBody()->Accept(*this);
 
-    // increment before loop ends
-    const u16 inc = AllocateRegister();
-    slice.Write(Op::LoadConstant, {inc, slice.AddConstant(1)});
-    slice.Write(Op::Add, {counter, counter, inc});
-    FreeRegister(inc);
+    // step counter before loop ends
+    const u16 step = AllocateRegister();
+    slice.Write(Op::LoadConstant, {step, slice.AddConstant(1)});
+    slice.Write(node.CountsDown() ? Op::Sub : Op::Add, {counter, counter, step});
+
+    FreeRegister(step);
 
     // loop end
     slice.Write(Op::Jump, {CalcJumpBackwards(start_addr)});
@@ -232,11 +258,11 @@ void CirceVisitor::Visit(const LoopFixed& node) {
         slice.Patch(break_jump, CalcJumpDistance(break_jump, is_conditional), is_conditional);
     }
 
+    // cleanup
     if (node.HasCounter()) {
         RemoveSymbol(std::string(node.GetCounter()));
     }
 
-    // cleanup
     FreeRegister(limit);
     FreeRegister(counter);
     skip_buffer.pop_back();
@@ -474,6 +500,12 @@ u16 CirceVisitor::AllocateRegister() {
 }
 
 void CirceVisitor::FreeRegister(u16 reg) {
+    for (const u16 r : free_regs) {
+        if (r == reg) {
+            return;
+        }
+    }
+
     if (not RegisterIsOwned(reg)) {
         free_regs.push_back(reg);
     }
