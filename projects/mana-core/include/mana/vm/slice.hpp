@@ -38,12 +38,14 @@ public:
     // This function exists to amend instruction payloads,
     // and thus it assumes the index given is for the opcode whose payload you wish to patch,
     // not the payload itself
-    void Patch(i64 instruction_index, u16 new_value, u8 payload_index = 0);
+    void Patch(i64 instruction_index, u16 new_value, u8 payload_offset = 0);
 
     MANA_NODISCARD i64 BackIndex() const;
 
     MANA_NODISCARD const ByteCode& Instructions() const;
     MANA_NODISCARD ByteCode& Instructions();
+
+    MANA_NODISCARD i64 InstructionCount() const;
 
     MANA_NODISCARD const std::vector<Value>& Constants() const;
 

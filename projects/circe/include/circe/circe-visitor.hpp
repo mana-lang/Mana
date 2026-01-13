@@ -18,7 +18,13 @@ class CirceVisitor final : public ast::Visitor {
         bool is_mutable;
     };
 
+    struct BreakInstruction {
+        ml::i64 jump_index;
+        bool is_conditional;
+    };
+
     using SymbolTable = std::unordered_map<std::string, Symbol>;
+    using BreakBuffer = std::vector<BreakInstruction>;
 
     mv::Slice slice;
     SymbolTable symbols;
@@ -27,6 +33,9 @@ class CirceVisitor final : public ast::Visitor {
 
     std::vector<ml::u16> reg_buffer;
     std::vector<ml::u16> free_regs;
+
+    BreakBuffer break_buffer;
+    std::vector<ml::i64> skip_buffer;
 
 public:
     CirceVisitor();
@@ -48,6 +57,9 @@ public:
     void Visit(const ast::LoopRange& node) override;
     void Visit(const ast::LoopFixed& node) override;
 
+    void Visit(const ast::Break& node) override;
+    void Visit(const ast::Skip& node) override;
+
     void Visit(const ast::UnaryExpr& node) override;
     void Visit(const ast::BinaryExpr& node) override;
     void Visit(const ast::ArrayLiteral& array) override;
@@ -58,12 +70,8 @@ public:
     void Visit(const ast::Literal<bool>& literal) override;
 
 private:
-    enum class JumpType {
-        Jump,
-        ConditionalJump,
-    };
-
     ml::u16 CalcJumpDistance(ml::i64 jump_index, bool is_conditional = false) const;
+    ml::u16 CalcJumpBackwards(ml::i64 jump_index, bool is_conditional = false) const;
 
     ml::u16 AllocateRegister();
     void FreeRegister(ml::u16 reg);

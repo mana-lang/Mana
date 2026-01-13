@@ -29,6 +29,8 @@ enum class Rule : ml::u8 {
     LoopBody,
     LoopRangeExpr,
 
+    LoopControl,
+
     DataDeclaration,
     Assignment,
     Expression,

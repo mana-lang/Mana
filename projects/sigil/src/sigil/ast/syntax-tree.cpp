@@ -8,6 +8,8 @@
 
 #include <magic_enum/magic_enum.hpp>
 
+#include <spdlog/fmt/bundled/chrono.h>
+
 namespace sigil::ast {
 using namespace mana::literals;
 
@@ -241,6 +243,7 @@ void LoopRange::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
+/// LoopFixed
 LoopFixed::LoopFixed(const ParseNode& node) {
     count = CreateExpression(*node.branches[0]);
     body  = std::make_shared<Scope>(*node.branches[1]);
@@ -266,9 +269,60 @@ void LoopFixed::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
+/// LoopControl
+LoopControl::LoopControl(const ParseNode& node)
+    : condition {nullptr} {
+    if (node.tokens.size() > 2 && node.tokens[2].type == TokenType::Identifier) {
+        label = FetchTokenText(node.tokens[2]);
+    }
+
+    if (node.branches.empty()) {
+        return;
+    }
+
+    // LoopControl can only have up to 1 branch
+    condition = CreateExpression(*node.branches[0]);
+}
+
+const NodePtr& LoopControl::GetCondition() const {
+    return condition;
+}
+
+std::string_view LoopControl::GetLabel() const {
+    return label;
+}
+
+bool LoopControl::HasLabel() const {
+    return not label.empty();
+}
+
+bool LoopControl::HasCondition() const {
+    return condition != nullptr;
+}
+
+void LoopControl::Accept(Visitor& visitor) const {
+    Log->warn("LoopControl should never be visited directly");
+}
+
+/// Break
+Break::Break(const ParseNode& node)
+    : LoopControl {node} {}
+
+void Break::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+/// Skip
+Skip::Skip(const ParseNode& node)
+    : LoopControl {node} {}
+
+void Skip::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
 /// Datum
 DataDeclaration::DataDeclaration(const ParseNode& node)
-    : initializer(nullptr) {
+    : initializer {nullptr} {
     // Correctly find the identifier name among tokens (skip 'mut' or 'data')
     for (const auto& token : node.tokens) {
         if (token.type == TokenType::Identifier) {

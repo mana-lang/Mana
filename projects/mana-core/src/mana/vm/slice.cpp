@@ -33,16 +33,16 @@ i64 Slice::Write(const Op opcode, std::initializer_list<u16> payloads) {
 }
 
 // does not perform bounds checking
-void Slice::Patch(const i64 instruction_index, const u16 new_value, const u8 payload_index) {
+void Slice::Patch(const i64 instruction_index, const u16 new_value, const u8 payload_offset) {
     // add 1 to skip past instruction
-    const i64 payload = 1 + instruction_index + payload_index * 2;
+    const i64 payload = 1 + instruction_index + payload_offset * 2;
 
     instructions[payload]     = new_value & 0xFF;
     instructions[payload + 1] = (new_value >> 8) & 0xFF;
 }
 
 i64 Slice::BackIndex() const {
-    return instructions.size() - 1;
+    return static_cast<i64>(instructions.size()) - 1;
 }
 
 const ByteCode& Slice::Instructions() const {
@@ -51,6 +51,10 @@ const ByteCode& Slice::Instructions() const {
 
 ByteCode& Slice::Instructions() {
     return instructions;
+}
+
+i64 Slice::InstructionCount() const {
+    return static_cast<i64>(instructions.size());
 }
 
 const std::vector<Value>& Slice::Constants() const {

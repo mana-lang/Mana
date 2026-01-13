@@ -1,7 +1,7 @@
 ID         = [a-zA-Z_][a-zA-Z0-9_]*  ; (*letter or underscore followed by any letters, numbers or underscores *)
 INT        = [0-9]+                  ;
 FLOAT      = INT.[0-9]+              ;
-STRING     = "\"(?:[^\"\\]|\\.)*\""  ; (*anything between double-quoted strings, minus escape sequences *)
+STRING     = "\"(?:[^\"\\]|\\.)*\""  ; (* anything between double-quoted strings, minus escape sequences *)
 STRING_CH  = "'(?:[^'\\]|\\.)*'"     ; (* same but single quotes *)
 
 KW_DATA   = "data"   ;
@@ -22,20 +22,20 @@ TERMINATOR = "\n" | ";";
   (* rules *)
 artifact = stmt* EOF ;
 
-stmt   = if_stmt | loop | (data_decl | assign | expr) TERMINATOR ;
+stmt   = if_block 
+       | loop 
+       | (loop_control | data_decl | assign | expr) TERMINATOR ;
 
-data_decl   = KW_MUT? KW_DATA ID ('=' expr)?    ;
-assign = ID '=' expr                       ;
 
-if_stmt = KW_IF expr scope if_tail? ;
-if_tail = KW_ELSE (if_stmt | scope) ;
+if_condition = KW_IF expr
+
+if_block = if_condition scope if_tail? ;
+if_tail = KW_ELSE (if_block | scope) ;
 
 loop = KW_LOOP (ID ':')? loop_body ;
 
-loop_condition = KW_IF expr
-
-loop_body = scope loop_condition?            (* infinite / post-conditional *)
-          | loop_condition scope             (* conditional *)
+loop_body = scope if_condition?            (* infinite / post-conditional *)
+          | if_condition scope             (* conditional *)
           | range_expr ID scope              (* ranged iteration *)
           | expr ID? scope                   (* fixed iteration, expr must evaluate to integer *)
           ;
@@ -44,7 +44,11 @@ range_expr = expr? OP_RANGE_INC expr?
            | expr? OP_RANGE_EXC expr?
            ;
 
-loop_control = (KW_SKIP | KW_BREAK) (OP_TARGET ID)? ;
+loop_control = (KW_SKIP | KW_BREAK) (OP_TARGET ID)? if_condition? ;
+
+data_decl   = KW_MUT? KW_DATA ID ('=' expr)?    ;
+
+assign = ID '=' expr       
 
 scope  = "{" stmt* "}"
 

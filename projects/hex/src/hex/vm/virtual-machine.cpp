@@ -76,11 +76,10 @@ InterpretResult VirtualMachine::Interpret(Slice* slice) {
         if (offset < slice->Instructions().size()) {                                           \
             Log->debug("{:04} | {:<16}", offset, magic_enum::enum_name(static_cast<Op>(*ip))); \
         }                                                                                      \
-        auto  label = *ip < dispatch_max ? dispatch_table[*ip++] : err; \
-        goto *label;                                                    \
+        auto  label = *ip < dispatch_max ? dispatch_table[*ip++] : &&compile_error;  \
+        goto *label;                                                                 \
     }
 
-    constexpr auto err          = &&compile_error;
     constexpr auto dispatch_max = dispatch_table.size();
 #else
     // we do no bounds checking whatsoever in release

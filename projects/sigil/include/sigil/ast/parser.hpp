@@ -83,6 +83,8 @@ private:
     bool MatchedIfBlock(ParseNode& node);
     bool MatchedIfTail(ParseNode& node);
 
+    bool MatchedLoopControl(ParseNode& node);
+
     bool MatchedLoop(ParseNode& node);
     bool MatchedLoopBody(ParseNode& node);
     RangeExprResult MatchedRangeExpr(ParseNode& node);

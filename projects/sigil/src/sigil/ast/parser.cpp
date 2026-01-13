@@ -258,7 +258,8 @@ bool Parser::MatchedStatement(ParseNode& node) {
         return true;
     }
 
-    const bool is_statement = MatchedDataDeclaration(stmt)
+    const bool is_statement = MatchedLoopControl(stmt)
+                              || MatchedDataDeclaration(stmt)
                               || MatchedAssignment(stmt)
                               || MatchedExpression(stmt);
 
@@ -353,6 +354,33 @@ bool Parser::MatchedIfTail(ParseNode& node) {
 
     // else
     Expect(MatchedScope(if_tail), if_tail, "Expected scope for else-block");
+
+    return true;
+}
+
+// loop_control = (KW_SKIP | KW_BREAK) (OP_TARGET ID)? if_condition?
+bool Parser::MatchedLoopControl(ParseNode& node) {
+    if (CurrentToken().type != TokenType::KW_skip && CurrentToken().type != TokenType::KW_break) {
+        return false;
+    }
+
+    auto& loop_control = node.NewBranch(Rule::LoopControl);
+    AddCycledTokenTo(loop_control);
+
+    if (CurrentToken().type == TokenType::Op_Target) {
+        AddCycledTokenTo(loop_control);
+
+        if (not Expect(CurrentToken().type == TokenType::Identifier,
+                       loop_control,
+                       "Expected identifier after loop control keyword"
+            )
+        ) {
+            return false;
+        }
+        AddCycledTokenTo(loop_control);
+    }
+
+    MatchedIfCondition(loop_control);
 
     return true;
 }

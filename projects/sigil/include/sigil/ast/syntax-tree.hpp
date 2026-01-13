@@ -13,6 +13,10 @@
 #include <charconv>
 #include <unordered_map>
 
+#include <magic_enum/magic_enum.hpp>
+
+#include <sigil/core/logger.hpp>
+
 namespace sigil::ast {
 namespace ml = mana::literals;
 
@@ -207,6 +211,34 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
+class LoopControl : public Node {
+    NodePtr condition;
+    std::string label;
+
+public:
+    explicit LoopControl(const ParseNode& node);
+
+    SIGIL_NODISCARD const NodePtr& GetCondition() const;
+    SIGIL_NODISCARD std::string_view GetLabel() const;
+
+    SIGIL_NODISCARD bool HasLabel() const;
+    SIGIL_NODISCARD bool HasCondition() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
+class Break final : public LoopControl {
+public:
+    explicit Break(const ParseNode& node);
+    void Accept(Visitor& visitor) const override;
+};
+
+class Skip final : public LoopControl {
+public:
+    explicit Skip(const ParseNode& node);
+    void Accept(Visitor& visitor) const override;
+};
+
 template <LiteralType T>
 class Literal final : public Node {
     T value;
@@ -317,6 +349,19 @@ void PropagateStatements(const ParseNode& node, SC* root) {
                 break;
             case LoopFixed:
                 root->Add<class LoopFixed>(*n);
+                break;
+            case LoopControl:
+                if (n->tokens[0].type == TokenType::KW_break) {
+                    root->Add<Break>(*n);
+                    break;
+                }
+                if (n->tokens[0].type == TokenType::KW_skip) {
+                    root->Add<Skip>(*n);
+                    break;
+                }
+                Log->error("Unexpected loop control statement. Token was '{}'",
+                           magic_enum::enum_name(n->tokens[0].type)
+                );
                 break;
             default:
                 if (auto expr = CreateExpression(*n)) {

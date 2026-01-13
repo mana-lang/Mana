@@ -52,7 +52,13 @@ void CirceVisitor::Visit(const DataDeclaration& node) {
 
     if (const auto& init = node.GetInitializer()) {
         init->Accept(*this);
-        datum = PopRegBuffer();
+
+        // may be an identifier or constant
+        u16 src = PopRegBuffer();
+        datum   = AllocateRegister();
+        slice.Write(Op::Move, {datum, src});
+
+        FreeRegister(src);
     } else {
         datum = AllocateRegister();
         slice.Write(Op::LoadConstant, {datum, slice.AddConstant(0.0)});
@@ -144,12 +150,59 @@ void CirceVisitor::Visit(const If& node) {
     }
 }
 
-void CirceVisitor::Visit(const Loop& node) {}
+void CirceVisitor::Visit(const Loop& node) {
+    const i64 start_addr = slice.InstructionCount();
+    skip_buffer.push_back(start_addr);
+
+    node.GetBody()->Accept(*this);
+
+    // end of loop
+    slice.Write(Op::Jump, {CalcJumpBackwards(start_addr)});
+
+    for (const auto [break_jump, is_conditional] : break_buffer) {
+        slice.Patch(break_jump, CalcJumpDistance(break_jump, is_conditional), is_conditional ? 1 : 0);
+    }
+
+    skip_buffer.pop_back();
+    break_buffer.pop_back();
+}
 
 void CirceVisitor::Visit(const LoopIf& node) {}
 void CirceVisitor::Visit(const LoopIfPost& node) {}
 void CirceVisitor::Visit(const LoopRange& node) {}
 void CirceVisitor::Visit(const LoopFixed& node) {}
+
+void CirceVisitor::Visit(const Break& node) {
+    // break-if, has to be handled by loop
+    if (not node.HasCondition()) {
+        break_buffer.emplace_back(slice.Write(Op::Jump, {0xDEAD}), false);
+        return;
+    }
+
+    node.GetCondition()->Accept(*this);
+    const u16 condition = PopRegBuffer();
+
+    break_buffer.emplace_back(slice.Write(Op::JumpWhenTrue, {condition, 0xDEAD}), true);
+    FreeRegister(condition);
+}
+
+void CirceVisitor::Visit(const Skip& node) {
+    const i64 start_addr = skip_buffer.back();
+
+    // skip if
+    if (node.HasCondition()) {
+        node.GetCondition()->Accept(*this);
+        const u16 condition = PopRegBuffer();
+
+        slice.Write(Op::JumpWhenTrue, {condition, CalcJumpBackwards(start_addr, true)});
+        FreeRegister(condition);
+
+        return;
+    }
+
+    // skip
+    slice.Write(Op::Jump, {CalcJumpBackwards(start_addr)});
+}
 
 void CirceVisitor::Visit(const UnaryExpr& node) {
     node.GetVal().Accept(*this);
@@ -305,12 +358,31 @@ void CirceVisitor::Visit(const Literal<bool>& literal) {
     CreateLiteral(literal);
 }
 
-u16 CirceVisitor::CalcJumpDistance(const i64 jump_index, bool is_conditional) const {
+bool JumpIsWithinBounds(const i64 distance) {
+    return distance <= std::numeric_limits<i16>::max()
+           && distance >= std::numeric_limits<i16>::min();
+}
+
+u16 CirceVisitor::CalcJumpDistance(const i64 jump_index, const bool is_conditional) const {
     const auto jump_bytes = is_conditional ? CJMP_OP_BYTES : JMP_OP_BYTES;
 
-    const i64 jump_distance = slice.Instructions().size() - (jump_index + jump_bytes);
-    if (jump_distance > std::numeric_limits<i16>::max()
-        || jump_distance < std::numeric_limits<i16>::min()) {
+    const i64 jump_distance = slice.InstructionCount() - (jump_index + jump_bytes);
+
+    if (not JumpIsWithinBounds(jump_distance)) {
+        Log->error("Jump distance out of bounds");
+        return 0xDEAD;
+    }
+
+    return static_cast<u16>(jump_distance);
+}
+
+// i hate how similar these are, but adding another bool to calcjumpdist would probably be bad
+u16 CirceVisitor::CalcJumpBackwards(const i64 jump_index, const bool is_conditional) const {
+    const auto jump_bytes = is_conditional ? CJMP_OP_BYTES : JMP_OP_BYTES;
+
+    const i64 jump_distance = jump_index - (slice.InstructionCount() + jump_bytes);
+
+    if (not JumpIsWithinBounds(jump_distance)) {
         Log->error("Jump distance out of bounds");
         return 0xDEAD;
     }

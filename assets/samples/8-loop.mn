@@ -1,0 +1,13 @@
+mut data x = 0
+mut data y = 0
+
+loop {
+    x += 1
+
+    break if x >= 27
+
+    y += 2
+}
+
+data a = x
+data b = y

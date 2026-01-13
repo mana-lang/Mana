@@ -25,6 +25,8 @@ public:
     virtual void Visit(const class LoopRange& node) = 0;
     virtual void Visit(const class LoopFixed& node) = 0;
 
+    virtual void Visit(const class Break& node) = 0;
+    virtual void Visit(const class Skip& node) = 0;
 
     virtual void Visit(const class UnaryExpr& node) = 0;
     virtual void Visit(const class BinaryExpr& node) = 0;
