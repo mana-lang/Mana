@@ -1,0 +1,79 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Mana",
+  "scopeName": "source.mana",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#keywords" },
+    { "include": "#constants" },
+    { "include": "#numbers" },
+    { "include": "#operators" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [{
+        "name": "comment.line.double-slash.mana",
+        "match": "//.*$"
+      }]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.mana",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [{ "name": "constant.character.escape.mana", "match": "\\\\." }]
+        },
+        {
+          "name": "string.quoted.single.mana",
+          "begin": "'",
+          "end": "'",
+          "patterns": [{ "name": "constant.character.escape.mana", "match": "\\\\." }]
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.mana",
+          "match": "\\b(if|else|loop|for|in|break|skip|return|when|match|import|as|module|public|private)\\b"
+        },
+        {
+          "name": "storage.type.mana",
+          "match": "\\b(i8|i16|i32|i64|u8|u16|u32|u64|f32|f64|isize|usize|bool|string|char|byte|none|data|fn|mut|const|type|Tag|enum|variant|interface)\\b"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [{
+        "name": "constant.language.boolean.mana",
+        "match": "\\b(true|false)\\b"
+      }]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.mana",
+          "match": "\\b\\d+\\.\\d+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.mana",
+          "match": "\\b\\d+\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        { "name": "keyword.operator.assignment.compound.mana", "match": "(\\+=|-=|\\*=|/=|%=)" },
+        { "name": "keyword.operator.assignment.mana", "match": "=" },
+        { "name": "keyword.operator.comparison.mana", "match": "(==|!=|<=|>=|<|>)" },
+        { "name": "keyword.operator.logical.mana", "match": "\\b(and|or|not)\\b|&&|\\|\\||!" },
+        { "name": "keyword.operator.arithmetic.mana", "match": "(\\+|-|\\*|/|%)" },
+        { "name": "keyword.operator.arrow.mana", "match": "(->|=>)" },
+        { "name": "keyword.operator.range.mana", "match": "(\\.\\.|~)" },
+        { "name": "keyword.operator.special.mana", "match": "(::|:|\\.)" }
+      ]
+    }
+  }
+}

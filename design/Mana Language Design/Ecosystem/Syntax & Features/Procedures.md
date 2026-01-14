@@ -11,6 +11,7 @@ All procedures may also have the following **Attributes**:
 - Constant
 - Pure
 - Inline
+- Hot
 
 Additionally, some procedures are *polymorphic*:
 - Multi-Functions
@@ -43,7 +44,7 @@ Functions in Mana are declared with the `fn` keyword.
 
 They consist of a *name*, followed by a set of *parentheses* containing an *optional* list of *parameters*, separated by *commas*. They may also optionally specify a *return* type.
 
-*All* valid variable names are *also* valid function names.
+*All* valid datum names are *also* valid function names.
 
 A parameter's type *must* be specified. Multiple parameters of the same type *may* be grouped under commas sharing the same type annotation.
  

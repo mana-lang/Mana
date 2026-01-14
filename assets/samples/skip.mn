@@ -19,7 +19,7 @@ loop if j < 5 {
     if j == 3 {
         skip
     }
-    skip_count += 1
+    total_iterations += 1
 }
 
 // fixed loop (upcount)
