@@ -39,12 +39,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecosystem/Syntax & Features/Procedures.md",
+                "file": "Ecosystem/Syntax & Features/Types.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Procedures"
+              "title": "Types"
             }
           },
           {
@@ -229,17 +229,17 @@
   },
   "active": "2ff6dc201d061c65",
   "lastOpenFiles": [
-    "Ecosystem/Ecosystem.md",
-    "Ecosystem/Pitch.md",
-    "Ecosystem/Syntax & Features/Control Flow.md",
     "Ecosystem/Syntax & Features/Data.md",
+    "Ecosystem/Syntax & Features/Hello World.md",
+    "Ecosystem/Pitch.md",
+    "Ecosystem/Syntax & Features/Procedures.md",
+    "Ecosystem/Ecosystem.md",
+    "Ecosystem/Syntax & Features/Control Flow.md",
     "Ecosystem/Syntax & Features/Attributes.md",
     "Ecosystem/Syntax & Features/Operators.md",
     "Ecosystem/Syntax & Features/Types.md",
-    "Ecosystem/Syntax & Features/Procedures.md",
     "_Assets/Info_Artifacts.png",
     "_Assets/Info_Troves.png",
-    "Ecosystem/Syntax & Features/Hello World.md",
     "Ecosystem/Syntax & Features/Tags.md",
     "Ecosystem/Syntax & Features/Enumerations.md",
     "Ecosystem/Syntax & Features/Compile Time.md",

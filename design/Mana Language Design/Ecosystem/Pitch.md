@@ -1,6 +1,6 @@
 
 <h1><center><i>Mana</i></center></h1>
-<center><h6><i>A fast, safe, data-oriented programming language
+<center><h6><i>A fast, safe, data-centric programming language
 <br>purpose-built for game development</i></h6></center> 
 ---
 **Mana** empowers game developers by making it easy to write fast, modular, and reliable code, while still having all the flexibility of a high-level scripting language. 

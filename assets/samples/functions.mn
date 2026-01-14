@@ -8,10 +8,9 @@ fn Bar(a: f64, b: string) -> i16 {
 	fmt.Print("{a} | {b}")
 }
 
-data foo = Foo {.a = 95.4, .b = Bar, .c = "hey"}
+data foo: Foo = {.a = 95.4, .b = Bar, .c = "hey"}
 
 foo.b(22.7, foo.c) // identical to Bar(22.7, "hey")
-
 
 fn Invoke(baz: fn(f64, string) -> i16, a: f64, b: string) {
 	baz(a, b)
@@ -37,7 +36,6 @@ fn Sqrt(v: i32) {
 const fn Pi() -> f64 {
 	return 3.14159265358979
 }
-
 const fn ToRadians(degrees: f64) -> f64 {
 	return degrees * Pi() / 180
 }
