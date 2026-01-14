@@ -11,7 +11,7 @@ namespace ml = mana::literals;
 namespace mv = mana::vm;
 namespace ast = sigil::ast;
 
-class CirceVisitor final : public ast::Visitor {
+class BytecodeGenerator final : public ast::Visitor {
     struct Symbol {
         ml::u16 register_index;
         ml::u8 scope_depth;
@@ -43,7 +43,7 @@ class CirceVisitor final : public ast::Visitor {
     std::vector<LoopContext> loop_stack;
 
 public:
-    CirceVisitor();
+    BytecodeGenerator();
 
     CIRCE_NODISCARD mv::Slice GetSlice() const;
 

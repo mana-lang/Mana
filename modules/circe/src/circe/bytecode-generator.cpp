@@ -2,7 +2,7 @@
 #include <ranges>
 
 #include <circe/core/logger.hpp>
-#include <circe/circe-visitor.hpp>
+#include <circe/bytecode-generator.hpp>
 
 #include <mana/vm/opcode.hpp>
 
@@ -12,15 +12,15 @@ namespace circe {
 using namespace mana::vm;
 using namespace sigil::ast;
 
-CirceVisitor::CirceVisitor()
+BytecodeGenerator::BytecodeGenerator()
     : total_registers {},
       scope_depth {} {}
 
-Slice CirceVisitor::GetSlice() const {
+Slice BytecodeGenerator::GetSlice() const {
     return slice;
 }
 
-void CirceVisitor::Visit(const Artifact& artifact) {
+void BytecodeGenerator::Visit(const Artifact& artifact) {
     for (const auto& statement : artifact.GetChildren()) {
         statement->Accept(*this);
 
@@ -30,7 +30,7 @@ void CirceVisitor::Visit(const Artifact& artifact) {
     slice.Write(Op::Halt);
 }
 
-void CirceVisitor::Visit(const Scope& node) {
+void BytecodeGenerator::Visit(const Scope& node) {
     ++scope_depth;
     for (const auto& statement : node.GetStatements()) {
         statement->Accept(*this);
@@ -41,7 +41,7 @@ void CirceVisitor::Visit(const Scope& node) {
     --scope_depth;
 }
 
-void CirceVisitor::Visit(const DataDeclaration& node) {
+void BytecodeGenerator::Visit(const DataDeclaration& node) {
     const std::string name(node.GetName());
     if (symbols.contains(name)) {
         Log->error("Redefinition of '{}'", name);
@@ -67,7 +67,7 @@ void CirceVisitor::Visit(const DataDeclaration& node) {
     AddSymbol(name, datum, node.IsMutable());
 }
 
-void CirceVisitor::Visit(const Identifier& node) {
+void BytecodeGenerator::Visit(const Identifier& node) {
     const std::string name(node.GetName());
     if (const auto it = symbols.find(name);
         it != symbols.end()) {
@@ -79,7 +79,7 @@ void CirceVisitor::Visit(const Identifier& node) {
     slice.Write(Op::Halt);
 }
 
-void CirceVisitor::Visit(const Assignment& node) {
+void BytecodeGenerator::Visit(const Assignment& node) {
     const std::string name(node.GetIdentifier());
     const auto it = symbols.find(name);
     if (it == symbols.end()) {
@@ -128,7 +128,7 @@ void CirceVisitor::Visit(const Assignment& node) {
     FreeRegister(rhs);
 }
 
-void CirceVisitor::Visit(const If& node) {
+void BytecodeGenerator::Visit(const If& node) {
     node.GetCondition()->Accept(*this);
     const u16 cond_reg = PopRegBuffer();
 
@@ -150,7 +150,7 @@ void CirceVisitor::Visit(const If& node) {
     }
 }
 
-void CirceVisitor::Visit(const Loop& node) {
+void BytecodeGenerator::Visit(const Loop& node) {
     loop_stack.emplace_back();
 
     const i64 start_addr     = slice.InstructionCount();
@@ -172,7 +172,7 @@ void CirceVisitor::Visit(const Loop& node) {
     loop_stack.pop_back();
 }
 
-void CirceVisitor::Visit(const LoopIf& node) {
+void BytecodeGenerator::Visit(const LoopIf& node) {
     loop_stack.emplace_back();
     const i64 start_addr     = slice.InstructionCount();
     CurrentLoop().start_addr = start_addr;
@@ -200,10 +200,10 @@ void CirceVisitor::Visit(const LoopIf& node) {
     loop_stack.pop_back();
 }
 
-void CirceVisitor::Visit(const LoopIfPost& node) {}
-void CirceVisitor::Visit(const LoopRange& node) {}
+void BytecodeGenerator::Visit(const LoopIfPost& node) {}
+void BytecodeGenerator::Visit(const LoopRange& node) {}
 
-void CirceVisitor::Visit(const LoopFixed& node) {
+void BytecodeGenerator::Visit(const LoopFixed& node) {
     const u16 counter = AllocateRegister();
     const u16 limit   = AllocateRegister();
 
@@ -282,15 +282,15 @@ void CirceVisitor::Visit(const LoopFixed& node) {
     loop_stack.pop_back();
 }
 
-void CirceVisitor::Visit(const Break& node) {
+void BytecodeGenerator::Visit(const Break& node) {
     HandleLoopControl(true, node.GetCondition());
 }
 
-void CirceVisitor::Visit(const Skip& node) {
+void BytecodeGenerator::Visit(const Skip& node) {
     HandleLoopControl(false, node.GetCondition());
 }
 
-void CirceVisitor::Visit(const UnaryExpr& node) {
+void BytecodeGenerator::Visit(const UnaryExpr& node) {
     node.GetVal().Accept(*this);
 
     if (node.GetOp().size() > 1) {
@@ -321,7 +321,7 @@ void CirceVisitor::Visit(const UnaryExpr& node) {
     FreeRegister(src);
 }
 
-void CirceVisitor::Visit(const BinaryExpr& node) {
+void BytecodeGenerator::Visit(const BinaryExpr& node) {
     const auto op_str = node.GetOp();
 
     // logical ops need special treatment as they are control flow due to short-circuiting
@@ -418,7 +418,7 @@ void CirceVisitor::Visit(const BinaryExpr& node) {
     FreeRegisters({lhs, rhs});
 }
 
-void CirceVisitor::Visit(const ArrayLiteral& array) {
+void BytecodeGenerator::Visit(const ArrayLiteral& array) {
     const auto& array_elems = array.GetValues();
     if (array_elems.empty()) {
         return;
@@ -433,17 +433,17 @@ void CirceVisitor::Visit(const ArrayLiteral& array) {
     // TODO: add 'MakeArray' opcode to VM
 }
 
-void CirceVisitor::Visit(const Literal<f64>& literal) {
+void BytecodeGenerator::Visit(const Literal<f64>& literal) {
     CreateLiteral(literal);
 }
 
-void CirceVisitor::Visit(const Literal<i64>& literal) {
+void BytecodeGenerator::Visit(const Literal<i64>& literal) {
     CreateLiteral(literal);
 }
 
-void CirceVisitor::Visit(const Literal<void>& node) {}
+void BytecodeGenerator::Visit(const Literal<void>& node) {}
 
-void CirceVisitor::Visit(const Literal<bool>& literal) {
+void BytecodeGenerator::Visit(const Literal<bool>& literal) {
     CreateLiteral(literal);
 }
 
@@ -452,7 +452,7 @@ bool JumpIsWithinBounds(const i64 distance) {
            && distance >= std::numeric_limits<i16>::min();
 }
 
-u16 CirceVisitor::CalcJumpDistance(const i64 jump_index, const bool is_conditional) const {
+u16 BytecodeGenerator::CalcJumpDistance(const i64 jump_index, const bool is_conditional) const {
     const auto jump_bytes = is_conditional ? CJMP_OP_BYTES : JMP_OP_BYTES;
 
     const i64 jump_distance = slice.InstructionCount() - (jump_index + jump_bytes);
@@ -466,7 +466,10 @@ u16 CirceVisitor::CalcJumpDistance(const i64 jump_index, const bool is_condition
 }
 
 // i hate how similar these are, but adding another bool to calcjumpdist would probably be bad
-u16 CirceVisitor::CalcJumpBackwards(const i64 target_index, const i64 source_index, const bool is_conditional) const {
+u16 BytecodeGenerator::CalcJumpBackwards(const i64 target_index,
+                                         const i64 source_index,
+                                         const bool is_conditional
+) const {
     const auto jump_bytes = is_conditional ? CJMP_OP_BYTES : JMP_OP_BYTES;
 
     const i64 jump_distance = target_index - (source_index + jump_bytes);
@@ -479,7 +482,7 @@ u16 CirceVisitor::CalcJumpBackwards(const i64 target_index, const i64 source_ind
     return static_cast<u16>(jump_distance);
 }
 
-u16 CirceVisitor::AllocateRegister() {
+u16 BytecodeGenerator::AllocateRegister() {
     if (free_regs.empty()) {
         return total_registers++;
     }
@@ -490,7 +493,7 @@ u16 CirceVisitor::AllocateRegister() {
     return slot;
 }
 
-void CirceVisitor::FreeRegister(u16 reg) {
+void BytecodeGenerator::FreeRegister(u16 reg) {
     for (const u16 r : free_regs) {
         if (r == reg) {
             return;
@@ -502,19 +505,19 @@ void CirceVisitor::FreeRegister(u16 reg) {
     }
 }
 
-void CirceVisitor::FreeRegisters(std::initializer_list<u16> regs) {
+void BytecodeGenerator::FreeRegisters(std::initializer_list<u16> regs) {
     for (const auto reg : regs) {
         FreeRegister(reg);
     }
 }
 
-void CirceVisitor::FreeRegisters(const std::vector<u16>& regs) {
+void BytecodeGenerator::FreeRegisters(const std::vector<u16>& regs) {
     for (const auto reg : regs) {
         FreeRegister(reg);
     }
 }
 
-bool CirceVisitor::RegisterIsOwned(u16 reg) {
+bool BytecodeGenerator::RegisterIsOwned(u16 reg) {
     for (const auto& val : std::views::values(symbols)) { // NOLINT(*-use-anyofallof)
         if (val.register_index == reg) {
             return true;
@@ -523,7 +526,7 @@ bool CirceVisitor::RegisterIsOwned(u16 reg) {
     return false;
 }
 
-u16 CirceVisitor::PopRegBuffer() {
+u16 BytecodeGenerator::PopRegBuffer() {
     if (reg_buffer.empty()) {
         Log->error("Internal Compiler Error: Register stack underflow");
         return 0;
@@ -535,12 +538,12 @@ u16 CirceVisitor::PopRegBuffer() {
     return slot;
 }
 
-void CirceVisitor::ClearRegBuffer() {
+void BytecodeGenerator::ClearRegBuffer() {
     FreeRegisters(reg_buffer);
     reg_buffer.clear();
 }
 
-void CirceVisitor::CleanupCurrentScope() {
+void BytecodeGenerator::CleanupCurrentScope() {
     std::vector<std::string> to_remove;
     for (const auto& [name, symbol] : symbols) {
         if (symbol.scope_depth == scope_depth) {
@@ -554,11 +557,11 @@ void CirceVisitor::CleanupCurrentScope() {
     }
 }
 
-void CirceVisitor::AddSymbol(const std::string& name, u16 register_index, bool is_mutable) {
+void BytecodeGenerator::AddSymbol(const std::string& name, u16 register_index, bool is_mutable) {
     symbols[name] = {register_index, scope_depth, is_mutable};
 }
 
-void CirceVisitor::RemoveSymbol(const std::string& name) {
+void BytecodeGenerator::RemoveSymbol(const std::string& name) {
     if (not symbols.contains(name)) {
         Log->warn("Attempted to remove non-existent symbol '{}'", name);
         return;
@@ -570,11 +573,11 @@ void CirceVisitor::RemoveSymbol(const std::string& name) {
     FreeRegister(reg);
 }
 
-CirceVisitor::LoopContext& CirceVisitor::CurrentLoop() {
+BytecodeGenerator::LoopContext& BytecodeGenerator::CurrentLoop() {
     return loop_stack.back();
 }
 
-void CirceVisitor::HandleLoopControl(bool is_break, const NodePtr& condition) {
+void BytecodeGenerator::HandleLoopControl(bool is_break, const NodePtr& condition) {
     if (loop_stack.empty()) {
         Log->error("{} statement outside of loop", is_break ? "Break" : "Skip");
         return;

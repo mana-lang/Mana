@@ -5,7 +5,7 @@ enable_testing()
 
 set(CIRCE_SOURCES
         src/circe/main.cpp
-        src/circe/circe-visitor.cpp
+        src/circe/bytecode-generator.cpp
 
         src/circe/core/logger.cpp
         src/circe/core/cli.cpp
@@ -55,12 +55,5 @@ add_custom_command(
         ${CMAKE_SOURCE_DIR}/assets
         ${PROJECT_BINARY_DIR}/assets/
 )
-
-#add_custom_command(
-#        TARGET circe POST_BUILD
-#        COMMAND ${CMAKE_COMMAND} -E copy
-#        ${PROJECT_BINARY_DIR}/../sigil/libsigil.dll
-#        ${PROJECT_BINARY_DIR}/
-#)
 
 add_subdirectory(tests)

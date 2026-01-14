@@ -1,5 +1,5 @@
 #include <circe/core/logger.hpp>
-#include <circe/circe-visitor.hpp>
+#include <circe/bytecode-generator.hpp>
 #include <circe/core/cli.hpp>
 
 #include <sigil/ast/lexer.hpp>
@@ -56,7 +56,7 @@ int CompileFrom(const std::filesystem::path& in_path,
 
     const auto time_codegen_start = chrono::high_resolution_clock::now();
     const auto& ast               = parser.ViewAST();
-    CirceVisitor visitor;
+    BytecodeGenerator visitor;
     ast->Accept(visitor);
 
     auto slice                  = visitor.GetSlice();
