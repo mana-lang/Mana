@@ -4,16 +4,16 @@ project(sigil VERSION 0.1.0)
 enable_testing()
 
 set(SIGIL_SOURCES
-        src/sigil/ast/lexer.cpp
-        src/sigil/ast/parser.cpp
-        src/sigil/ast/parse-tree.cpp
-        src/sigil/ast/syntax-tree.cpp
-        src/sigil/ast/source-file.cpp
+        src/ast/lexer.cpp
+        src/ast/parser.cpp
+        src/ast/parse-tree.cpp
+        src/ast/syntax-tree.cpp
+        src/ast/source-file.cpp
 
-        src/sigil/core/logger.cpp
+        src/core/logger.cpp
 
-        src/sigil/error/error.cpp
-        src/sigil/error/error-sink.cpp
+        src/error/error.cpp
+        src/error/error-sink.cpp
 )
 
 set(SIGIL_INCLUDES
