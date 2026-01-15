@@ -1,7 +1,7 @@
 #include <hex/core/cli.hpp>
 #include <hex/core/disassembly.hpp>
 #include <hex/core/logger.hpp>
-#include <hex/vm/virtual-machine.hpp>
+#include <../include/hex/hex.hpp>
 
 #include <mana/vm/hexe.hpp>
 
@@ -10,9 +10,11 @@
 #include <chrono>
 #include <fstream>
 
+#include <mana/exit-codes.hpp>
+
 using namespace hex;
 
-void ExecuteVM(const std::filesystem::path& exe_path) {
+void Execute(const std::filesystem::path& exe_path) {
     namespace chrono = std::chrono;
     using namespace std::chrono_literals;
 
@@ -41,11 +43,11 @@ void ExecuteVM(const std::filesystem::path& exe_path) {
     Log->debug("");
 
     Log->debug("Executing...\n");
-    VirtualMachine vm;
+    Hex vm;
     Log->set_pattern("%v");
 
     const auto start_interp  = chrono::high_resolution_clock::now();
-    const auto interp_result = vm.Interpret(&in_slice);
+    const auto interp_result = vm.Execute(&in_slice);
     const auto end_interp    = chrono::high_resolution_clock::now();
 
     const auto result = magic_enum::enum_name(interp_result);
@@ -72,16 +74,12 @@ void ExecuteVM(const std::filesystem::path& exe_path) {
 int main(const int argc, char** argv) {
     CommandLineSettings cli(argc, argv);
 
-    cli.Populate();
+    const i64 result = cli.Populate();
 
-    if (cli.ShouldSayHi()) {
-        Log->debug("Hey!");
+    const std::string_view hexe_name = cli.HexeName();
+    if (hexe_name.empty()) {
+        return result;
     }
 
-    const std::string_view exe_name = cli.ExecutableName();
-    if (exe_name.empty()) {
-        return 0;
-    }
-
-    ExecuteVM(exe_name);
+    Execute(hexe_name);
 }

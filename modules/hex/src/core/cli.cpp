@@ -1,20 +1,17 @@
 #include <hex/core/cli.hpp>
 
+#include <mana/exit-codes.hpp>
 #include <mana/literals.hpp>
 
 namespace hex {
 CommandLineSettings::CommandLineSettings(const int argc, char** argv)
     : argc(argc),
-      argv(argv),
-      say_hi(false),
-      gen_testfile(false) {
+      argv(argv) {
     cli = std::make_unique<CLI::App>("Hex, the Mana VM");
 }
 
 i64 CommandLineSettings::Populate() {
-    cli->add_flag("-g,--greet", say_hi, "A polite greeting.");
-    cli->add_flag("-t", gen_testfile, "Generate a testfile.");
-    cli->add_option("-e, --executable,executable", executable, "The executable to run.");
+    cli->add_option("-e, --executable,executable", hexe_name, "The executable to run.");
 
     try {
         cli->parse(argc, argv);
@@ -24,23 +21,15 @@ i64 CommandLineSettings::Populate() {
         if (exit_code == 0) {
             if (const std::string_view helparg(argv[1]);
                 helparg == "--help" || helparg == "-h") {
-                return 1; // not an error code
+                return mana::Exit(mana::ExitCode::Success);
             }
         }
         return exit_code;
     }
-    return 0;
+    return mana::Exit(mana::ExitCode::Success);
 }
 
-bool CommandLineSettings::ShouldSayHi() const {
-    return say_hi;
-}
-
-bool CommandLineSettings::ShouldGenTestfile() const {
-    return gen_testfile;
-}
-
-auto CommandLineSettings::ExecutableName() const -> std::string_view {
-    return executable;
+std::string_view CommandLineSettings::HexeName() const {
+    return hexe_name;
 }
 } // namespace hex

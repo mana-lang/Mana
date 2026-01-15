@@ -13,14 +13,14 @@ enum class InterpretResult {
     RuntimeError,
 };
 
-class VirtualMachine {
+class Hex {
     ml::u8* ip {nullptr};
 
     std::vector<mvm::Value> registers;
 
 public:
-    VirtualMachine();
+    Hex();
 
-    InterpretResult Interpret(mvm::Hexe* next_slice);
+    InterpretResult Execute(mvm::Hexe* next_slice);
 };
 } // namespace hex

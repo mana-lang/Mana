@@ -10,7 +10,7 @@ set(HEX_SOURCES
         src/core/logger.cpp
         src/core/disassembly.cpp
 
-        src/vm/virtual-machine.cpp
+        src/hex.cpp
 )
 
 set(HEX_INCLUDES

@@ -1,5 +1,5 @@
 #include <hex/core/logger.hpp>
-#include <hex/vm/virtual-machine.hpp>
+#include <hex/hex.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
@@ -16,11 +16,11 @@ static constexpr std::size_t BASE_REG_SIZE = 256;
 #define NEXT_PAYLOAD (ip += 2, (static_cast<u16>(*(ip - 2) | *(ip - 1) << 8)))
 #define REG(idx) registers[idx]
 
-VirtualMachine::VirtualMachine() {
+Hex::Hex() {
     registers.resize(BASE_REG_SIZE);
 }
 
-InterpretResult VirtualMachine::Interpret(Hexe* bytecode) {
+InterpretResult Hex::Execute(Hexe* bytecode) {
     ip = bytecode->Instructions().data();
 
     const auto* constants = bytecode->Constants().data();
