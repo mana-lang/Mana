@@ -4,10 +4,10 @@ project(mana-core VERSION 0.0.1)
 enable_testing()
 
 set(MANA_SOURCES
-        src/mana/logger.cpp
+        src/logger.cpp
 
-        src/mana/vm/slice.cpp
-        src/mana/vm/value.cpp
+        src/vm/hexe.cpp
+        src/vm/value.cpp
 )
 
 set(MANA_INCLUDES

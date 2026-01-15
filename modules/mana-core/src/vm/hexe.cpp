@@ -1,4 +1,4 @@
-#include <mana/vm/slice.hpp>
+#include <mana/vm/hexe.hpp>
 
 #include <stdexcept>
 
@@ -11,14 +11,14 @@ IndexRange::IndexRange(const i64 init_offset, const i64 range)
     }
 }
 
-i64 Slice::Write(Op opcode) {
+i64 Hexe::Write(Op opcode) {
     instructions.push_back(static_cast<u8>(opcode));
 
     CheckSize();
     return instructions.size() - 1;
 }
 
-i64 Slice::Write(const Op opcode, std::initializer_list<u16> payloads) {
+i64 Hexe::Write(const Op opcode, std::initializer_list<u16> payloads) {
     instructions.push_back(static_cast<u8>(opcode));
     const auto index = instructions.size() - 1;
 
@@ -33,7 +33,7 @@ i64 Slice::Write(const Op opcode, std::initializer_list<u16> payloads) {
 }
 
 // does not perform bounds checking
-void Slice::Patch(const i64 instruction_index, const u16 new_value, const u8 payload_offset) {
+void Hexe::Patch(const i64 instruction_index, const u16 new_value, const u8 payload_offset) {
     // add 1 to skip past instruction
     const i64 payload = 1 + instruction_index + payload_offset * 2;
 
@@ -41,27 +41,27 @@ void Slice::Patch(const i64 instruction_index, const u16 new_value, const u8 pay
     instructions[payload + 1] = (new_value >> 8) & 0xFF;
 }
 
-i64 Slice::BackIndex() const {
+i64 Hexe::BackIndex() const {
     return static_cast<i64>(instructions.size()) - 1;
 }
 
-const ByteCode& Slice::Instructions() const {
+const ByteCode& Hexe::Instructions() const {
     return instructions;
 }
 
-ByteCode& Slice::Instructions() {
+ByteCode& Hexe::Instructions() {
     return instructions;
 }
 
-i64 Slice::InstructionCount() const {
+i64 Hexe::InstructionCount() const {
     return static_cast<i64>(instructions.size());
 }
 
-const std::vector<Value>& Slice::Constants() const {
+const std::vector<Value>& Hexe::Constants() const {
     return values;
 }
 
-ByteCode Slice::Serialize() {
+ByteCode Hexe::Serialize() {
     if (instructions.empty() && values.empty()) {
         return {};
     }
@@ -73,7 +73,7 @@ ByteCode Slice::Serialize() {
     return out;
 }
 
-ByteCode Slice::SerializeConstants() const {
+ByteCode Hexe::SerializeConstants() const {
     ByteCode out;
 
     if (ConstantCount() > std::numeric_limits<u16>::max()) {
@@ -106,7 +106,7 @@ ByteCode Slice::SerializeConstants() const {
     return out;
 }
 
-u64 Slice::ConstantPoolBytesCount() const {
+u64 Hexe::ConstantPoolBytesCount() const {
     u64 out = 0;
 
     for (const auto& value : values) {
@@ -117,7 +117,7 @@ u64 Slice::ConstantPoolBytesCount() const {
     return out;
 }
 
-u64 Slice::ConstantCount() const {
+u64 Hexe::ConstantCount() const {
     u64 out = 0;
     for (const auto& value : values) {
         out += value.length;
@@ -125,7 +125,7 @@ u64 Slice::ConstantCount() const {
     return out;
 }
 
-bool Slice::Deserialize(const ByteCode& bytes) {
+bool Hexe::Deserialize(const ByteCode& bytes) {
     if (bytes.empty()) {
         return false;
     }
@@ -173,11 +173,11 @@ bool Slice::Deserialize(const ByteCode& bytes) {
     return true;
 }
 
-void Slice::CheckSize() const {
+void Hexe::CheckSize() const {
     if (instructions.size() >= SLICE_INSTRUCTION_MAX) {
         /// TODO: ideally we handle this in such a way that we don't need to crash
         /// also i hate exceptions
-        throw std::runtime_error("Slice instruction limit reached");
+        throw std::runtime_error("Hexe instruction limit reached");
     }
 }
 } // namespace mana::vm

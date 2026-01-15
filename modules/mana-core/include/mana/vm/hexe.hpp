@@ -22,7 +22,7 @@ using ByteCode = std::vector<u8>;
 
 static constexpr auto SLICE_INSTRUCTION_MAX = std::numeric_limits<i64>::max();
 
-class Slice {
+class Hexe {
     ByteCode instructions;
 
     std::vector<Value> values;

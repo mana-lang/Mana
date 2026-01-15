@@ -16,7 +16,7 @@ BytecodeGenerator::BytecodeGenerator()
     : total_registers {},
       scope_depth {} {}
 
-Slice BytecodeGenerator::GetSlice() const {
+Hexe BytecodeGenerator::GetSlice() const {
     return slice;
 }
 

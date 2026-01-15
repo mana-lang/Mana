@@ -1,7 +1,7 @@
 #pragma once
 
 #include <mana/literals.hpp>
-#include <mana/vm/slice.hpp>
+#include <mana/vm/hexe.hpp>
 
 namespace hex {
 namespace ml = mana::literals;
@@ -21,6 +21,6 @@ class VirtualMachine {
 public:
     VirtualMachine();
 
-    InterpretResult Interpret(mvm::Slice* next_slice);
+    InterpretResult Interpret(mvm::Hexe* next_slice);
 };
 } // namespace hex

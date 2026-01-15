@@ -20,7 +20,7 @@ VirtualMachine::VirtualMachine() {
     registers.resize(BASE_REG_SIZE);
 }
 
-InterpretResult VirtualMachine::Interpret(Slice* slice) {
+InterpretResult VirtualMachine::Interpret(Hexe* slice) {
     ip = slice->Instructions().data();
 
     const auto* constants = slice->Constants().data();

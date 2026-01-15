@@ -6,7 +6,7 @@
 #include <sigil/ast/parser.hpp>
 #include <sigil/ast/syntax-tree.hpp>
 
-#include <mana/vm/slice.hpp>
+#include <mana/vm/hexe.hpp>
 
 #include <filesystem>
 #include <fstream>
