@@ -32,7 +32,7 @@ class BytecodeGenerator final : public ast::Visitor {
 
     using SymbolTable = std::unordered_map<std::string, Symbol>;
 
-    mv::Hexe slice;
+    mv::Hexe output;
     SymbolTable symbols;
     ml::u16 total_registers;
     ml::u8 scope_depth;
@@ -45,7 +45,7 @@ class BytecodeGenerator final : public ast::Visitor {
 public:
     BytecodeGenerator();
 
-    CIRCE_NODISCARD mv::Hexe GetSlice() const;
+    CIRCE_NODISCARD mv::Hexe GetBytecode() const;
 
     void Visit(const ast::Artifact& artifact) override;
     void Visit(const ast::Scope& node) override;
@@ -102,8 +102,8 @@ private:
     template <typename T>
     void CreateLiteral(const ast::Literal<T>& literal) {
         ml::u16 dst = AllocateRegister();
-        ml::u16 idx = slice.AddConstant(literal.Get());
-        slice.Write(mv::Op::LoadConstant, {dst, idx});
+        ml::u16 idx = output.AddConstant(literal.Get());
+        output.Write(mv::Op::LoadConstant, {dst, idx});
 
         reg_buffer.push_back(dst);
     }

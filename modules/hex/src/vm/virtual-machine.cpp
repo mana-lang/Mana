@@ -20,10 +20,10 @@ VirtualMachine::VirtualMachine() {
     registers.resize(BASE_REG_SIZE);
 }
 
-InterpretResult VirtualMachine::Interpret(Hexe* slice) {
-    ip = slice->Instructions().data();
+InterpretResult VirtualMachine::Interpret(Hexe* bytecode) {
+    ip = bytecode->Instructions().data();
 
-    const auto* constants = slice->Constants().data();
+    const auto* constants = bytecode->Constants().data();
 
     // this is for computed goto
     // it's important to note this list's order is rigid
@@ -72,8 +72,8 @@ InterpretResult VirtualMachine::Interpret(Hexe* slice) {
     };
 #   define DISPATCH()                                                   \
     {                                                                   \
-        const auto offset = ip - slice->Instructions().data();                                 \
-        if (offset < slice->Instructions().size()) {                                           \
+        const auto offset = ip - bytecode->Instructions().data();                                 \
+        if (offset < bytecode->Instructions().size()) {                                           \
             Log->debug("{:04} | {:<16}", offset, magic_enum::enum_name(static_cast<Op>(*ip))); \
         }                                                                                      \
         auto  label = *ip < dispatch_max ? dispatch_table[*ip++] : &&compile_error;  \
@@ -235,7 +235,7 @@ jmp: {
 #ifdef HEX_DEBUG
         i16 dist = static_cast<i16>(NEXT_PAYLOAD);
 
-        const auto target = ip - slice->Instructions().data() + dist;
+        const auto target = ip - bytecode->Instructions().data() + dist;
         Log->debug("  Jump ==> [{:04}]", target);
         ip += dist;
 #else
@@ -251,7 +251,7 @@ jmp_true: {
 
 #ifdef HEX_DEBUG
         const bool taken  = REG(reg).AsBool();
-        const auto target = ip - slice->Instructions().data() + dist;
+        const auto target = ip - bytecode->Instructions().data() + dist;
         Log->debug("  Jump ==> [{:04}] R{} ({}) => {}",
                    target,
                    reg,
@@ -272,7 +272,7 @@ jmp_false: {
 
 #ifdef HEX_DEBUG
         const bool taken  = !REG(reg).AsBool();
-        const auto target = ip - slice->Instructions().data() + dist;
+        const auto target = ip - bytecode->Instructions().data() + dist;
         Log->debug("  Jump ==> [{:04}] R{} ({}) => {}",
                    target,
                    reg,

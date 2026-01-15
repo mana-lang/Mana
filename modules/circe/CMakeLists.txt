@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.28)
-project(circe VERSION 0.0.1)
+project(circe VERSION 0.1.0)
 
 enable_testing()
 
 set(CIRCE_SOURCES
-        src/circe/main.cpp
-        src/circe/bytecode-generator.cpp
+        src/main.cpp
+        src/bytecode-generator.cpp
 
-        src/circe/core/logger.cpp
-        src/circe/core/cli.cpp
+        src/core/logger.cpp
+        src/core/cli.cpp
 )
 
 set(CIRCE_INCLUDES

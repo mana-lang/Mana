@@ -56,10 +56,10 @@ int CompileFrom(const std::filesystem::path& in_path,
 
     const auto time_codegen_start = chrono::high_resolution_clock::now();
     const auto& ast               = parser.ViewAST();
-    BytecodeGenerator visitor;
-    ast->Accept(visitor);
+    BytecodeGenerator generator;
+    ast->Accept(generator);
 
-    auto slice                  = visitor.GetSlice();
+    const auto hexe             = generator.GetBytecode();
     const auto time_codegen_end = chrono::high_resolution_clock::now();
 
     // If no output path is provided, use the input filename with .hexe extension
@@ -81,7 +81,7 @@ int CompileFrom(const std::filesystem::path& in_path,
         return Exit(ExitCode::OutputOpenError);
     }
 
-    const auto output = slice.Serialize();
+    const auto output = hexe.Serialize();
     out_file.write(reinterpret_cast<const char*>(output.data()), static_cast<std::streamsize>(output.size()));
 
     if (not out_file) {
@@ -112,8 +112,8 @@ int CompileFrom(const std::filesystem::path& in_path,
     if (verbose) {
         Log->info(divider);
         Log->info("  Tokens:         {}", token_count);
-        Log->info("  Instructions:   {} bytes", slice.Instructions().size());
-        Log->info("  Constant Pool:  {} constants ({} bytes)", slice.ConstantCount(), slice.ConstantPoolBytesCount());
+        Log->info("  Instructions:   {} bytes", hexe.Instructions().size());
+        Log->info("  Constant Pool:  {} constants ({} bytes)", hexe.ConstantCount(), hexe.ConstantPoolBytesCount());
         Log->info("  Executable:     {} bytes", output.size());
         Log->info("");
         Log->info("  == Lex:     {}us", time_lex.count());

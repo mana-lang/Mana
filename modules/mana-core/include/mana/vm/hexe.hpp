@@ -49,7 +49,7 @@ public:
 
     MANA_NODISCARD const std::vector<Value>& Constants() const;
 
-    // serializes a slice to a vector of unsigned char (bytes)
+    // serializes Hex bytecode to a vector of unsigned char (bytes)
     // for now, the sequence is:
     // - constant pool size in bytes (u64) -> 8
     // - constant pool
@@ -60,7 +60,7 @@ public:
     // - instructions (u16)
     // ---- must keep in mind Push instructions jump to 2-byte indices
     // ---- constant pool has a max size of 65535 (u16-max)
-    MANA_NODISCARD ByteCode Serialize();
+    MANA_NODISCARD ByteCode Serialize() const;
     MANA_NODISCARD ByteCode SerializeConstants() const;
 
     MANA_NODISCARD u64 ConstantPoolBytesCount() const;

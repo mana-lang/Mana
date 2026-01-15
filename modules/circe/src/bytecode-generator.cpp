@@ -16,8 +16,8 @@ BytecodeGenerator::BytecodeGenerator()
     : total_registers {},
       scope_depth {} {}
 
-Hexe BytecodeGenerator::GetSlice() const {
-    return slice;
+Hexe BytecodeGenerator::GetBytecode() const {
+    return output;
 }
 
 void BytecodeGenerator::Visit(const Artifact& artifact) {
@@ -27,7 +27,7 @@ void BytecodeGenerator::Visit(const Artifact& artifact) {
         // prevent dangling register references
         ClearRegBuffer();
     }
-    slice.Write(Op::Halt);
+    output.Write(Op::Halt);
 }
 
 void BytecodeGenerator::Visit(const Scope& node) {
@@ -56,12 +56,12 @@ void BytecodeGenerator::Visit(const DataDeclaration& node) {
         // may be an identifier or constant
         u16 src = PopRegBuffer();
         datum   = AllocateRegister();
-        slice.Write(Op::Move, {datum, src});
+        output.Write(Op::Move, {datum, src});
 
         FreeRegister(src);
     } else {
         datum = AllocateRegister();
-        slice.Write(Op::LoadConstant, {datum, slice.AddConstant(0.0)});
+        output.Write(Op::LoadConstant, {datum, output.AddConstant(0.0)});
     }
 
     AddSymbol(name, datum, node.IsMutable());
@@ -76,7 +76,7 @@ void BytecodeGenerator::Visit(const Identifier& node) {
     }
 
     Log->warn("Undefined identifier '{}'", name);
-    slice.Write(Op::Halt);
+    output.Write(Op::Halt);
 }
 
 void BytecodeGenerator::Visit(const Assignment& node) {
@@ -89,7 +89,7 @@ void BytecodeGenerator::Visit(const Assignment& node) {
 
     if (not it->second.is_mutable) {
         Log->error("Cannot assign to immutable data '{}'", name);
-        slice.Write(Op::Err);
+        output.Write(Op::Err);
         return;
     }
 
@@ -97,7 +97,7 @@ void BytecodeGenerator::Visit(const Assignment& node) {
     u16 rhs             = PopRegBuffer();
     std::string_view op = node.GetOp();
     if (op.size() == 1) {
-        slice.Write(Op::Move, {it->second.register_index, rhs});
+        output.Write(Op::Move, {it->second.register_index, rhs});
     } else {
         u16 lhs = it->second.register_index;
 
@@ -122,7 +122,7 @@ void BytecodeGenerator::Visit(const Assignment& node) {
             break;
         }
 
-        slice.Write(operation, {lhs, lhs, rhs});
+        output.Write(operation, {lhs, lhs, rhs});
     }
 
     FreeRegister(rhs);
@@ -132,41 +132,41 @@ void BytecodeGenerator::Visit(const If& node) {
     node.GetCondition()->Accept(*this);
     const u16 cond_reg = PopRegBuffer();
 
-    const i64 jmp_false = slice.Write(Op::JumpWhenFalse, {cond_reg, SENTINEL});
+    const i64 jmp_false = output.Write(Op::JumpWhenFalse, {cond_reg, SENTINEL});
     FreeRegister(cond_reg);
 
     node.GetThenBlock()->Accept(*this);
 
     if (const auto& else_branch = node.GetElseBranch()) {
-        const i64 jmp_end = slice.Write(Op::Jump, {SENTINEL});
+        const i64 jmp_end = output.Write(Op::Jump, {SENTINEL});
 
-        slice.Patch(jmp_false, CalcJumpDistance(jmp_false, true), 1);
+        output.Patch(jmp_false, CalcJumpDistance(jmp_false, true), 1);
 
         else_branch->Accept(*this);
 
-        slice.Patch(jmp_end, CalcJumpDistance(jmp_end), 0);
+        output.Patch(jmp_end, CalcJumpDistance(jmp_end), 0);
     } else {
-        slice.Patch(jmp_false, CalcJumpDistance(jmp_false, true), 1);
+        output.Patch(jmp_false, CalcJumpDistance(jmp_false, true), 1);
     }
 }
 
 void BytecodeGenerator::Visit(const Loop& node) {
     loop_stack.emplace_back();
 
-    const i64 start_addr     = slice.InstructionCount();
+    const i64 start_addr     = output.InstructionCount();
     CurrentLoop().start_addr = start_addr;
 
     node.GetBody()->Accept(*this);
 
     for (const auto [skip_index, has_condition] : CurrentLoop().pending_skips) {
-        slice.Patch(skip_index, CalcJumpBackwards(start_addr, skip_index, has_condition), has_condition);
+        output.Patch(skip_index, CalcJumpBackwards(start_addr, skip_index, has_condition), has_condition);
     }
 
     // end of loop
-    slice.Write(Op::Jump, {CalcJumpBackwards(start_addr, slice.InstructionCount())});
+    output.Write(Op::Jump, {CalcJumpBackwards(start_addr, output.InstructionCount())});
 
     for (const auto [break_jump, has_condition] : CurrentLoop().pending_breaks) {
-        slice.Patch(break_jump, CalcJumpDistance(break_jump, has_condition), has_condition);
+        output.Patch(break_jump, CalcJumpDistance(break_jump, has_condition), has_condition);
     }
 
     loop_stack.pop_back();
@@ -174,27 +174,27 @@ void BytecodeGenerator::Visit(const Loop& node) {
 
 void BytecodeGenerator::Visit(const LoopIf& node) {
     loop_stack.emplace_back();
-    const i64 start_addr     = slice.InstructionCount();
+    const i64 start_addr     = output.InstructionCount();
     CurrentLoop().start_addr = start_addr;
 
     node.GetCondition()->Accept(*this);
     const u16 condition = PopRegBuffer();
 
-    const i64 jmp_end = slice.Write(Op::JumpWhenFalse, {condition, SENTINEL});
+    const i64 jmp_end = output.Write(Op::JumpWhenFalse, {condition, SENTINEL});
     FreeRegister(condition);
 
     node.GetBody()->Accept(*this);
 
     for (const auto [skip_index, has_condition] : CurrentLoop().pending_skips) {
-        slice.Patch(skip_index, CalcJumpBackwards(start_addr, skip_index, has_condition), has_condition);
+        output.Patch(skip_index, CalcJumpBackwards(start_addr, skip_index, has_condition), has_condition);
     }
 
     // end of loop
-    slice.Write(Op::Jump, {CalcJumpBackwards(start_addr, slice.InstructionCount())});
-    slice.Patch(jmp_end, CalcJumpDistance(jmp_end, true), 1);
+    output.Write(Op::Jump, {CalcJumpBackwards(start_addr, output.InstructionCount())});
+    output.Patch(jmp_end, CalcJumpDistance(jmp_end, true), 1);
 
     for (const auto [break_jump, has_condition] : CurrentLoop().pending_breaks) {
-        slice.Patch(break_jump, CalcJumpDistance(break_jump, has_condition), has_condition);
+        output.Patch(break_jump, CalcJumpDistance(break_jump, has_condition), has_condition);
     }
 
     loop_stack.pop_back();
@@ -210,25 +210,25 @@ void BytecodeGenerator::Visit(const LoopFixed& node) {
     if (node.CountsDown()) {
         node.GetLimit()->Accept(*this);
         const u16 init_val = PopRegBuffer();
-        slice.Write(Op::Move, {counter, init_val});
+        output.Write(Op::Move, {counter, init_val});
 
         FreeRegister(init_val);
 
         // downcount always counts to 0
-        slice.Write(Op::LoadConstant, {limit, slice.AddConstant(0)});
+        output.Write(Op::LoadConstant, {limit, output.AddConstant(0)});
     } else {
-        slice.Write(Op::LoadConstant, {counter, slice.AddConstant(0)});
+        output.Write(Op::LoadConstant, {counter, output.AddConstant(0)});
 
         node.GetLimit()->Accept(*this);
         const u16 limit_val = PopRegBuffer();
-        slice.Write(Op::Move, {limit, limit_val});
+        output.Write(Op::Move, {limit, limit_val});
 
         FreeRegister(limit_val);
     }
 
     // loop start
     loop_stack.emplace_back();
-    const i64 start_addr = slice.InstructionCount();
+    const i64 start_addr = output.InstructionCount();
 
     // untangle counter direction
     Op cmp_op;
@@ -239,8 +239,8 @@ void BytecodeGenerator::Visit(const LoopFixed& node) {
     }
 
     const u16 condition = AllocateRegister();
-    slice.Write(cmp_op, {condition, counter, limit});
-    const i64 exit_jmp = slice.Write(Op::JumpWhenFalse, {condition, SENTINEL});
+    output.Write(cmp_op, {condition, counter, limit});
+    const i64 exit_jmp = output.Write(Op::JumpWhenFalse, {condition, SENTINEL});
 
     FreeRegister(condition);
 
@@ -254,22 +254,22 @@ void BytecodeGenerator::Visit(const LoopFixed& node) {
 
     // skip to end of body, not start of loop
     for (const auto& [skip_index, has_condition] : CurrentLoop().pending_skips) {
-        slice.Patch(skip_index, CalcJumpDistance(skip_index, has_condition), has_condition);
+        output.Patch(skip_index, CalcJumpDistance(skip_index, has_condition), has_condition);
     }
 
     // step counter before loop ends
     const u16 step = AllocateRegister();
-    slice.Write(Op::LoadConstant, {step, slice.AddConstant(1)});
-    slice.Write(node.CountsDown() ? Op::Sub : Op::Add, {counter, counter, step});
+    output.Write(Op::LoadConstant, {step, output.AddConstant(1)});
+    output.Write(node.CountsDown() ? Op::Sub : Op::Add, {counter, counter, step});
 
     FreeRegister(step);
 
     // loop end
-    slice.Write(Op::Jump, {CalcJumpBackwards(start_addr, slice.InstructionCount())});
-    slice.Patch(exit_jmp, CalcJumpDistance(exit_jmp, true), 1);
+    output.Write(Op::Jump, {CalcJumpBackwards(start_addr, output.InstructionCount())});
+    output.Patch(exit_jmp, CalcJumpDistance(exit_jmp, true), 1);
 
     for (const auto [break_jump, has_condition] : CurrentLoop().pending_breaks) {
-        slice.Patch(break_jump, CalcJumpDistance(break_jump, has_condition), has_condition);
+        output.Patch(break_jump, CalcJumpDistance(break_jump, has_condition), has_condition);
     }
 
     // cleanup
@@ -316,7 +316,7 @@ void BytecodeGenerator::Visit(const UnaryExpr& node) {
         return;
     }
 
-    slice.Write(op, {dst, src});
+    output.Write(op, {dst, src});
     reg_buffer.push_back(dst);
     FreeRegister(src);
 }
@@ -330,16 +330,16 @@ void BytecodeGenerator::Visit(const BinaryExpr& node) {
 
         const u16 lhs = PopRegBuffer();
         const u16 dst = AllocateRegister();
-        slice.Write(Op::Move, {dst, lhs});
+        output.Write(Op::Move, {dst, lhs});
 
-        const i64 jwf = slice.Write(jump_op, {lhs, SENTINEL});
+        const i64 jwf = output.Write(jump_op, {lhs, SENTINEL});
         FreeRegister(lhs);
 
         node.GetRight().Accept(*this);
         const u16 rhs = PopRegBuffer();
-        slice.Write(Op::Move, {dst, rhs});
+        output.Write(Op::Move, {dst, rhs});
 
-        slice.Patch(jwf, CalcJumpDistance(jwf, true), 1);
+        output.Patch(jwf, CalcJumpDistance(jwf, true), 1);
         reg_buffer.push_back(dst);
         FreeRegister(rhs);
     };
@@ -413,7 +413,7 @@ void BytecodeGenerator::Visit(const BinaryExpr& node) {
         return;
     }
 
-    slice.Write(op, {dst, lhs, rhs});
+    output.Write(op, {dst, lhs, rhs});
     reg_buffer.push_back(dst);
     FreeRegisters({lhs, rhs});
 }
@@ -455,7 +455,7 @@ bool JumpIsWithinBounds(const i64 distance) {
 u16 BytecodeGenerator::CalcJumpDistance(const i64 jump_index, const bool is_conditional) const {
     const auto jump_bytes = is_conditional ? CJMP_OP_BYTES : JMP_OP_BYTES;
 
-    const i64 jump_distance = slice.InstructionCount() - (jump_index + jump_bytes);
+    const i64 jump_distance = output.InstructionCount() - (jump_index + jump_bytes);
 
     if (not JumpIsWithinBounds(jump_distance)) {
         Log->error("Jump distance out of bounds");
@@ -591,11 +591,11 @@ void BytecodeGenerator::HandleLoopControl(bool is_break, const NodePtr& conditio
         condition->Accept(*this);
         const u16 cond_reg = PopRegBuffer();
 
-        jump_index = slice.Write(Op::JumpWhenTrue, {cond_reg, SENTINEL});
+        jump_index = output.Write(Op::JumpWhenTrue, {cond_reg, SENTINEL});
         FreeRegister(cond_reg);
     } else {
         // break/skip
-        jump_index = slice.Write(Op::Jump, {SENTINEL});
+        jump_index = output.Write(Op::Jump, {SENTINEL});
     }
 
     auto& buffer = is_break ? CurrentLoop().pending_breaks : CurrentLoop().pending_skips;

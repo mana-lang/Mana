@@ -61,7 +61,7 @@ const std::vector<Value>& Hexe::Constants() const {
     return values;
 }
 
-ByteCode Hexe::Serialize() {
+ByteCode Hexe::Serialize() const {
     if (instructions.empty() && values.empty()) {
         return {};
     }
