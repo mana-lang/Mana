@@ -234,8 +234,26 @@ interface Bar for type Foo {
 
 data foo = Foo {1, 2, false}
 data x = foo.Fuzz()
-```
 
+// when multiple interface functions share the exact same signature, 
+// and both are imported at once, 
+// you must disambiguate them with the scope resolution operator '::'
+
+interface Bru for type Foo {
+	mut fn Baz() -> i32 {
+		.a *= 27
+		return .a
+	}
+}
+
+data bru = foo.Bru::Baz()
+data baz = foo.Baz()
+```
+>[!danger] Error
+> Call to interface 'Baz()' is ambiguous. 
+> Possible options:
+> - Bru::Baz()
+> - Bar::Baz() 
 ##### Multi-Functions
 Multi-functions are *polymorphic functions* where many functions share the same name, but may have different argument lists and, if so, different return types as well.
 

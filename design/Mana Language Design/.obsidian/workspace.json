@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecosystem/Syntax & Features/Control Flow.md",
+                "file": "Ecosystem/Syntax & Features/Procedures.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Control Flow"
+              "title": "Procedures"
             }
           }
         ]
@@ -178,13 +178,13 @@
   },
   "active": "6a57afca6b64d7ce",
   "lastOpenFiles": [
-    "Ecosystem/Ecosystem.md",
     "Ecosystem/Syntax & Features/Types.md",
+    "Ecosystem/Syntax & Features/Control Flow.md",
+    "Ecosystem/Ecosystem.md",
     "Ecosystem/Syntax & Features/Data.md",
     "Ecosystem/Syntax & Features/Hello World.md",
     "Ecosystem/Pitch.md",
     "Ecosystem/Syntax & Features/Procedures.md",
-    "Ecosystem/Syntax & Features/Control Flow.md",
     "Ecosystem/Syntax & Features/Attributes.md",
     "Ecosystem/Syntax & Features/Operators.md",
     "_Assets/Info_Artifacts.png",
