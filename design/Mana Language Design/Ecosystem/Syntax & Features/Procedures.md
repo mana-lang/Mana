@@ -260,6 +260,16 @@ Multi-functions are *polymorphic functions* where many functions share the same 
 ##### Operators
 
 ##### Generic Functions
+```rust
+type T for
+fn Add(a, b: T) -> T {
+	return a + b
+}
+
+fn Sub<T>(a, b: T) -> T {
+	return a - b
+}
+```
 
 ##### Closures
 - Defined with the `fn` keyword inside another invocable

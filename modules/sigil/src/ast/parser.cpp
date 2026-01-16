@@ -652,6 +652,7 @@ bool Parser::MatchedArrayLiteral(ParseNode& node) {
     return true;
 }
 
+// grouping = "(" expr ")"
 bool Parser::MatchedGrouping(ParseNode& node) {
     if (CurrentToken().type != TokenType::Op_ParenLeft) {
         return false;
@@ -711,7 +712,6 @@ bool IsLiteral(const TokenType token) {
 }
 
 // primary  = grouping | array_literal | literal | ID
-// grouping = "(" expr ")"
 bool Parser::MatchedPrimary(ParseNode& node) {
     if (MatchedGrouping(node)) {
         return true;
