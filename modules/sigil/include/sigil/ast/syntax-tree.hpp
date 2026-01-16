@@ -92,6 +92,7 @@ public:
 // TODO: make MutableDataDeclaration to encode meaning in the type rather than a bool
 class DataDeclaration final : public Node {
     std::string_view name;
+    std::string_view type;
     NodePtr initializer;
     bool is_mutable;
 
@@ -99,6 +100,7 @@ public:
     explicit DataDeclaration(const ParseNode& node);
 
     SIGIL_NODISCARD std::string_view GetName() const;
+    SIGIL_NODISCARD std::string_view GetType() const;
     SIGIL_NODISCARD const NodePtr& GetInitializer() const;
     SIGIL_NODISCARD bool IsMutable() const;
 

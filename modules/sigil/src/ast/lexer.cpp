@@ -262,7 +262,7 @@ bool Lexer::LexedOperator() {
             token_type = Op_ScopeResolution; // ::
             break;
         }
-        token_type = Op_Annotation;
+        token_type = Op_Colon;
         break;
     case ',':
         token_type = Op_Comma;

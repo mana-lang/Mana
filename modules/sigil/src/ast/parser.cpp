@@ -121,29 +121,6 @@ std::string Parser::EmitParseTree(const ParseNode& node, std::string prepend) co
     return ret;
 }
 
-bool IsPrimitive(const TokenType token_type) {
-    switch (token_type) {
-        using enum TokenType;
-
-    case KW_i32:
-    case KW_i64:
-
-    case KW_u32:
-    case KW_u64:
-
-    case KW_f32:
-    case KW_f64:
-
-    case KW_char:
-    case KW_string:
-    case KW_byte:
-        return true;
-
-    default:
-        return false;
-    }
-}
-
 Token Parser::CurrentToken() const {
     return tokens[cursor];
 }
@@ -514,8 +491,35 @@ Parser::RangeExprResult Parser::MatchedRangeExpr(ParseNode& node) {
     return RangeExprResult::MatchedRange;
 }
 
+bool IsPrimitiveKeyword(const TokenType token) {
+    switch (token) {
+        using enum TokenType;
 
-// data_decl = KW_MUT? KW_DATA ID ('=' expr)?
+    case KW_i8:
+    case KW_i16:
+    case KW_i32:
+    case KW_i64:
+    case KW_u8:
+    case KW_u16:
+    case KW_u32:
+    case KW_u64:
+    case KW_f32:
+    case KW_f64:
+    case KW_byte:
+    case KW_bool:
+    case KW_char:
+    case KW_string:
+    case KW_isize:
+    case KW_usize:
+    case Lit_none: // 'none' is a literal as well as a type
+        return true;
+    default:
+        return false;
+    }
+}
+
+
+// data_decl = KW_MUT? KW_DATA ID (':' ID)? ('=' expr)?
 bool Parser::MatchedDataDeclaration(ParseNode& node) {
     const bool matched_keywords = CurrentToken().type == TokenType::KW_data
                                   || (CurrentToken().type == TokenType::KW_mut
@@ -525,8 +529,9 @@ bool Parser::MatchedDataDeclaration(ParseNode& node) {
     }
 
     auto& decl = node.NewBranch(Rule::DataDeclaration);
-    AddTokensTo(decl, TokenType::KW_data);
 
+    // covers both 'data x' and 'mut data x'
+    AddTokensTo(decl, TokenType::KW_data);
     if (not Expect(CurrentToken().type == TokenType::Identifier,
                    decl,
                    "Expected identifier"
@@ -535,7 +540,18 @@ bool Parser::MatchedDataDeclaration(ParseNode& node) {
     }
     AddCycledTokenTo(decl);
 
-    // declaration without initialisation
+    // data x: i32
+    if (CurrentToken().type == TokenType::Op_Colon) {
+        AddCycledTokenTo(decl);
+        if (Expect(IsPrimitiveKeyword(CurrentToken().type) || CurrentToken().type == TokenType::Identifier,
+                   decl,
+                   "Expected type"
+        )) {
+            AddCycledTokenTo(decl);
+        }
+    }
+
+    // data x: i32;
     if (CurrentToken().type == TokenType::Terminator) {
         return true;
     }

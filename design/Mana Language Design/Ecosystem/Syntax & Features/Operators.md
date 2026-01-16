@@ -32,8 +32,9 @@ Not all of these operators may be overloaded.
 	- Multiply-and-assign
 		- `a *= b`
 - `:`
-	- Annotation
-		- `x: i32`
+	- Colon
+		- Annotation
+			- `x: i32`
 -  `=` 
 	- Assignment
 		- `x = y`

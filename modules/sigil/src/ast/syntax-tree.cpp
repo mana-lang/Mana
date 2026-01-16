@@ -357,10 +357,20 @@ void Skip::Accept(Visitor& visitor) const {
 /// Datum
 DataDeclaration::DataDeclaration(const ParseNode& node)
     : initializer {nullptr} {
-    // Correctly find the identifier name among tokens (skip 'mut' or 'data')
-    for (const auto& token : node.tokens) {
+    const auto& tokens = node.tokens;
+    is_mutable         = tokens.front().type == TokenType::KW_mut;
+    // data keyword is irrelevant to AST
+    for (const auto& token : tokens) {
         if (token.type == TokenType::Identifier) {
             name = FetchTokenText(token);
+            break;
+        }
+    }
+
+    for (int i = 0; i < tokens.size(); ++i) {
+        if (tokens[i].type == TokenType::Op_Colon) {
+            // AST input is assumed to be correct, so we don't need to bounds check
+            type = FetchTokenText(tokens[i + 1]);
             break;
         }
     }
@@ -368,12 +378,14 @@ DataDeclaration::DataDeclaration(const ParseNode& node)
     if (not node.branches.empty()) {
         initializer = CreateExpression(*node.branches[0]);
     }
-
-    is_mutable = node.tokens.front().type == TokenType::KW_mut;
 }
 
 std::string_view DataDeclaration::GetName() const {
     return name;
+}
+
+std::string_view DataDeclaration::GetType() const {
+    return type;
 }
 
 const NodePtr& DataDeclaration::GetInitializer() const {

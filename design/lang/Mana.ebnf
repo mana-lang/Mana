@@ -51,7 +51,7 @@ range_expr = expr? range_op expr? ;
 
 loop_control = (KW_SKIP | KW_BREAK) (OP_TARGET ID)? if_condition? ;
 
-data_decl   = KW_MUT? KW_DATA ID ('=' expr)?    ;
+data_decl   = KW_MUT? KW_DATA ID (':' ID)? ('=' expr)?    ;
 
 assign = ID '=' expr       
 

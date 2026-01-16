@@ -20,7 +20,7 @@ enum class TokenType : ml::u8 {
     Op_DivAssign,
     Op_ModAssign,
 
-    Op_Annotation,
+    Op_Colon,
     Op_Comma,
     Op_Assign,
 
