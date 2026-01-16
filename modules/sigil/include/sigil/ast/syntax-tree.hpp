@@ -67,7 +67,7 @@ public:
 };
 
 class Artifact final : public Node, public StatementContainer {
-    std::string name;
+    std::string_view name;
 
 public:
     explicit Artifact(const std::string_view name)
@@ -80,7 +80,7 @@ public:
 };
 
 class Identifier final : public Node {
-    std::string name;
+    std::string_view name;
 
 public:
     explicit Identifier(const ParseNode& node);
@@ -91,7 +91,7 @@ public:
 
 // TODO: make MutableDataDeclaration to encode meaning in the type rather than a bool
 class DataDeclaration final : public Node {
-    std::string name;
+    std::string_view name;
     NodePtr initializer;
     bool is_mutable;
 
@@ -106,8 +106,8 @@ public:
 };
 
 class Assignment final : public Node {
-    std::string identifier;
-    std::string op;
+    std::string_view identifier;
+    std::string_view op;
     NodePtr value;
 
 public:
@@ -121,8 +121,6 @@ public:
 };
 
 class Scope final : public Node, public StatementContainer {
-    std::unordered_map<std::string, DataDeclaration*> datums;
-
 public:
     explicit Scope(const ParseNode& node);
 
@@ -182,7 +180,7 @@ class LoopRange final : public Node {
     NodePtr end;
     NodePtr body;
 
-    std::string counter;
+    std::string_view counter;
 
 public:
     explicit LoopRange(const ParseNode& node);
@@ -197,7 +195,7 @@ public:
 };
 
 class LoopFixed final : public Node {
-    std::string counter;
+    std::string_view counter;
     NodePtr limit;
     NodePtr body;
     bool inclusive;
@@ -219,7 +217,7 @@ public:
 
 class LoopControl : public Node {
     NodePtr condition;
-    std::string label;
+    std::string_view label;
 
 public:
     explicit LoopControl(const ParseNode& node);
@@ -290,12 +288,12 @@ private:
 };
 
 class BinaryExpr final : public Node {
-    std::string op;
+    std::string_view op;
     NodePtr left, right;
 
 public:
     explicit BinaryExpr(const ParseNode& node);
-    explicit BinaryExpr(const std::string& op, const ParseNode& left, const ParseNode& right);
+    // explicit BinaryExpr(const std::string& op, const ParseNode& left, const ParseNode& right);
     explicit BinaryExpr(std::string_view op, const ParseNode& left, const ParseNode& right);
 
     SIGIL_NODISCARD std::string_view GetOp() const;
@@ -310,7 +308,7 @@ private:
 };
 
 class UnaryExpr final : public Node {
-    std::string op;
+    std::string_view op;
     NodePtr val;
 
 public:

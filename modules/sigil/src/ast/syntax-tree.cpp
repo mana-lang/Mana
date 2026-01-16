@@ -546,11 +546,6 @@ BinaryExpr::BinaryExpr(const ParseNode& binary_node, const i64 depth) {
 BinaryExpr::BinaryExpr(const ParseNode& node)
     : BinaryExpr(node, 1) {}
 
-BinaryExpr::BinaryExpr(const std::string& op, const ParseNode& left, const ParseNode& right)
-    : op(op),
-      left(CreateExpression(left)),
-      right(CreateExpression(right)) {}
-
 BinaryExpr::BinaryExpr(const std::string_view op, const ParseNode& left, const ParseNode& right)
     : op(op),
       left(CreateExpression(left)),

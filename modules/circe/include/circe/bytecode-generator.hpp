@@ -30,7 +30,7 @@ class BytecodeGenerator final : public ast::Visitor {
         std::vector<JumpInstruction> pending_skips;
     };
 
-    using SymbolTable = std::unordered_map<std::string, Symbol>;
+    using SymbolTable = std::unordered_map<std::string_view, Symbol>;
 
     mv::Hexe output;
     SymbolTable symbols;
@@ -93,8 +93,8 @@ private:
 
     void CleanupCurrentScope();
 
-    void AddSymbol(const std::string& name, ml::u16 register_index, bool is_mutable);
-    void RemoveSymbol(const std::string& name);
+    void AddSymbol(std::string_view name, ml::u16 register_index, bool is_mutable);
+    void RemoveSymbol(std::string_view name);
 
     LoopContext& CurrentLoop();
     void HandleLoopControl(bool is_break, const ast::NodePtr& condition);

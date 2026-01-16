@@ -544,7 +544,7 @@ void BytecodeGenerator::ClearRegBuffer() {
 }
 
 void BytecodeGenerator::CleanupCurrentScope() {
-    std::vector<std::string> to_remove;
+    std::vector<std::string_view> to_remove;
     for (const auto& [name, symbol] : symbols) {
         if (symbol.scope_depth == scope_depth) {
             // delegate removal to avoid iterator invalidation
@@ -557,11 +557,11 @@ void BytecodeGenerator::CleanupCurrentScope() {
     }
 }
 
-void BytecodeGenerator::AddSymbol(const std::string& name, u16 register_index, bool is_mutable) {
+void BytecodeGenerator::AddSymbol(const std::string_view name, u16 register_index, bool is_mutable) {
     symbols[name] = {register_index, scope_depth, is_mutable};
 }
 
-void BytecodeGenerator::RemoveSymbol(const std::string& name) {
+void BytecodeGenerator::RemoveSymbol(const std::string_view name) {
     if (not symbols.contains(name)) {
         Log->warn("Attempted to remove non-existent symbol '{}'", name);
         return;
