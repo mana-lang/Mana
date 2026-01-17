@@ -528,7 +528,10 @@ bool Parser::MatchedDataDeclaration(ParseNode& node) {
         return false;
     }
 
-    auto& decl = node.NewBranch(Rule::DataDeclaration);
+    auto& decl = node.NewBranch(CurrentToken().type == TokenType::KW_mut
+                                    ? Rule::MutableDataDeclaration
+                                    : Rule::DataDeclaration
+    );
 
     // covers both 'data x' and 'mut data x'
     AddTokensTo(decl, TokenType::KW_data);

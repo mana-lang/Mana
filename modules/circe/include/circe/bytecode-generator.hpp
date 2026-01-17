@@ -47,9 +47,11 @@ public:
 
     CIRCE_NODISCARD mv::Hexe GetBytecode() const;
 
+
     void Visit(const ast::Artifact& artifact) override;
     void Visit(const ast::Scope& node) override;
 
+    void Visit(const ast::MutableDataDeclaration& node) override;
     void Visit(const ast::DataDeclaration& node) override;
     void Visit(const ast::Identifier& node) override;
     void Visit(const ast::Assignment& node) override;
@@ -98,6 +100,8 @@ private:
 
     LoopContext& CurrentLoop();
     void HandleLoopControl(bool is_break, const ast::NodePtr& condition);
+
+    void HandleDeclaration(const ast::Binding& node, bool is_mutable);
 
     template <typename T>
     void CreateLiteral(const ast::Literal<T>& literal) {

@@ -90,19 +90,32 @@ public:
 };
 
 // TODO: make MutableDataDeclaration to encode meaning in the type rather than a bool
-class DataDeclaration final : public Node {
+class Binding : public Node {
     std::string_view name;
     std::string_view type;
     NodePtr initializer;
-    bool is_mutable;
 
 public:
-    explicit DataDeclaration(const ParseNode& node);
+    explicit Binding(const ParseNode& node);
 
     SIGIL_NODISCARD std::string_view GetName() const;
     SIGIL_NODISCARD std::string_view GetType() const;
     SIGIL_NODISCARD const NodePtr& GetInitializer() const;
-    SIGIL_NODISCARD bool IsMutable() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
+
+class MutableDataDeclaration final : public Binding {
+public:
+    explicit MutableDataDeclaration(const ParseNode& node);
+
+    void Accept(Visitor& visitor) const override;
+};
+
+class DataDeclaration final : public Binding {
+public:
+    explicit DataDeclaration(const ParseNode& node);
 
     void Accept(Visitor& visitor) const override;
 };
@@ -334,6 +347,9 @@ void PropagateStatements(const ParseNode& node, SC* root) {
             using enum Rule;
 
             switch (n->rule) {
+            case MutableDataDeclaration:
+                root->Add<class MutableDataDeclaration>(*n);
+                break;
             case DataDeclaration:
                 root->Add<class DataDeclaration>(*n);
                 break;

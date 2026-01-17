@@ -13,6 +13,7 @@ public:
     virtual void Visit(const class Artifact& node) = 0;
     virtual void Visit(const class Scope& node) = 0;
 
+    virtual void Visit(const class MutableDataDeclaration& node) = 0;
     virtual void Visit(const class DataDeclaration& node) = 0;
     virtual void Visit(const class Identifier& node) = 0;
     virtual void Visit(const class Assignment& node) = 0;
@@ -38,4 +39,7 @@ public:
     virtual void Visit(const Literal<ml::f64>& node) = 0;
     virtual void Visit(const Literal<void>& node) = 0;
 };
+
+inline void Visitor::Visit(const class MutableDataDeclaration& node) {}
+inline void Visitor::Visit(const class DataDeclaration& node) {}
 } // namespace sigil::ast
