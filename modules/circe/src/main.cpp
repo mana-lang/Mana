@@ -32,8 +32,7 @@ struct ScopedTimer {
     }
 };
 
-int CompileFrom(const CompileSettings& compile_settings
-) {
+int CompileFrom(const CompileSettings& compile_settings) {
     namespace chrono = std::chrono;
     using namespace mana;
 
