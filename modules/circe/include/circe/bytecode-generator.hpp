@@ -47,7 +47,6 @@ public:
 
     CIRCE_NODISCARD mv::Hexe GetBytecode() const;
 
-
     void Visit(const ast::Artifact& artifact) override;
     void Visit(const ast::Scope& node) override;
 
