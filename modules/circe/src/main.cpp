@@ -32,14 +32,13 @@ struct ScopedTimer {
     }
 };
 
-int CompileFrom(const std::filesystem::path& in_path,
-                std::filesystem::path out_path,
-                bool verbose,
-                bool emit_ptree,
-                bool emit_tokens
+int CompileFrom(const CompileSettings& compile_settings
 ) {
     namespace chrono = std::chrono;
     using namespace mana;
+
+    const auto& in_path = compile_settings.InputFilePath();
+    auto out_path       = compile_settings.OutputPath(); // we might have to create our own outpath
 
     if (not std::filesystem::exists(in_path)) {
         Log->error("Input file '{}' does not exist", in_path.string());
@@ -118,7 +117,7 @@ int CompileFrom(const std::filesystem::path& in_path,
 
     const auto divider = std::string(compile_str.size(), '-');
 
-    if (verbose) {
+    if (compile_settings.EmitVerbose()) {
         const auto& bytecode = codegen.Bytecode();
         Log->info(divider);
         Log->info("  Tokens:         {}", lexer.TokenCount());
@@ -137,12 +136,12 @@ int CompileFrom(const std::filesystem::path& in_path,
         Log->info("  ---- Total: {}us", time_total.count());
     }
 
-    if (emit_ptree) {
+    if (compile_settings.EmitParseTree()) {
         Log->info("{}\n", divider);
         parser.PrintParseTree();
     }
 
-    if (emit_tokens) {
+    if (compile_settings.EmitTokens()) {
         Log->info("{}\n", divider);
         sigil::PrintTokens(parser.ViewTokenStream());
     }
@@ -151,16 +150,11 @@ int CompileFrom(const std::filesystem::path& in_path,
 }
 
 int main(int argc, char** argv) {
-    CommandLineSettings cli(argc, argv);
-    if (int result = cli.Populate();
+    const auto settings = ParseCommandLineCompileSettings(argc, argv);
+    if (int result = settings.ErrorCode();
         result != 0) {
         return result;
     }
 
-    if (cli.InputFile().empty()) {
-        Log->error("No input file provided");
-        return mana::Exit(mana::ExitCode::NoFileProvided);
-    }
-
-    return CompileFrom(cli.InputFile(), cli.OutputPath(), cli.EmitVerbose(), cli.EmitParseTree(), cli.EmitTokens());
+    return CompileFrom(settings);
 }
