@@ -487,7 +487,7 @@ void BytecodeGenerator::FreeRegister(u16 reg) {
     }
 }
 
-void BytecodeGenerator::FreeRegisters(std::initializer_list<u16> regs) {
+void BytecodeGenerator::FreeRegisters(const std::initializer_list<u16> regs) {
     for (const auto reg : regs) {
         FreeRegister(reg);
     }
