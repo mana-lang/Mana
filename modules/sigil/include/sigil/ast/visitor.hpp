@@ -2,6 +2,8 @@
 
 #include <sigil/core/concepts.hpp>
 
+#include <mana/literals.hpp>
+
 namespace sigil::ast {
 template <LiteralType T>
 class Literal;
@@ -35,11 +37,8 @@ public:
     virtual void Visit(const class ArrayLiteral& node) = 0;
 
     virtual void Visit(const Literal<bool>& node) = 0;
-    virtual void Visit(const Literal<ml::i64>& node) = 0;
-    virtual void Visit(const Literal<ml::f64>& node) = 0;
+    virtual void Visit(const Literal<mana::literals::i64>& node) = 0;
+    virtual void Visit(const Literal<mana::literals::f64>& node) = 0;
     virtual void Visit(const Literal<void>& node) = 0;
 };
-
-inline void Visitor::Visit(const class MutableDataDeclaration& node) {}
-inline void Visitor::Visit(const class DataDeclaration& node) {}
 } // namespace sigil::ast
