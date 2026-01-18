@@ -83,8 +83,16 @@ void Lexer::Reset() {
     line_start  = 0;
 }
 
+usize Lexer::TokenCount() const {
+    return tokens.size();
+}
+
 std::vector<Token>&& Lexer::RelinquishTokens() {
     return std::move(tokens);
+}
+
+const std::vector<Token>& Lexer::Tokens() const {
+    return tokens;
 }
 
 // ID = ^[a-zA-Z_][a-zA-Z0-9_]+

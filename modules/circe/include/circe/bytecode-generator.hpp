@@ -45,7 +45,7 @@ class BytecodeGenerator final : public ast::Visitor {
 public:
     BytecodeGenerator();
 
-    CIRCE_NODISCARD mv::Hexe GetBytecode() const;
+    CIRCE_NODISCARD mv::Hexe Bytecode() const;
 
     void Visit(const ast::Artifact& artifact) override;
     void Visit(const ast::Scope& node) override;

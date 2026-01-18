@@ -1,7 +1,6 @@
 #include <sigil/ast/semantic-analyzer.hpp>
 
 namespace sigil::ast {
-
 void SemanticAnalyzer::Visit(const Artifact& artifact) {}
 void SemanticAnalyzer::Visit(const Scope& node) {}
 void SemanticAnalyzer::Visit(const MutableDataDeclaration& node) {}
@@ -23,5 +22,4 @@ void SemanticAnalyzer::Visit(const Literal<ml::f64>& literal) {}
 void SemanticAnalyzer::Visit(const Literal<ml::i64>& literal) {}
 void SemanticAnalyzer::Visit(const Literal<void>& node) {}
 void SemanticAnalyzer::Visit(const Literal<bool>& literal) {}
-
 } // namespace sigil::ast

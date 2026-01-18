@@ -16,8 +16,21 @@
 using namespace mana::literals;
 using namespace circe;
 
-constexpr std::string IN_PATH  = "assets/samples/";
-constexpr std::string OUT_PATH = "../hex/";
+struct ScopedTimer {
+    using Clock    = std::chrono::high_resolution_clock;
+    using TimeUnit = std::chrono::microseconds;
+
+    TimeUnit& target;
+    Clock::time_point start;
+
+    explicit ScopedTimer(std::chrono::microseconds& output)
+        : target(output),
+          start(Clock::now()) {}
+
+    ~ScopedTimer() {
+        target = std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - start);
+    }
+};
 
 int CompileFrom(const std::filesystem::path& in_path,
                 std::filesystem::path out_path,
@@ -33,70 +46,66 @@ int CompileFrom(const std::filesystem::path& in_path,
         return Exit(ExitCode::FileNotFound);
     }
 
-    const auto time_total_start = chrono::high_resolution_clock::now();
-
-    const auto time_lex_start = chrono::high_resolution_clock::now();
+    std::chrono::microseconds time_lex, time_parse, time_codegen, time_write, time_total;
     sigil::Lexer lexer;
-    if (not lexer.Tokenize(in_path)) {
-        Log->error("Failed to tokenize file '{}'", in_path.string());
-        return Exit(ExitCode::LexerError);
+    sigil::Parser parser;
+    BytecodeGenerator codegen;
+    u64 output_size;
+
+    {
+        ScopedTimer total_timer(time_total);
+        {
+            ScopedTimer lexer_timer(time_lex);
+            if (not lexer.Tokenize(in_path)) {
+                Log->error("Failed to tokenize file '{}'", in_path.string());
+                return Exit(ExitCode::LexerError);
+            }
+        }
+
+        {
+            ScopedTimer parser_timer(time_parse);
+            parser.AcquireTokens(lexer.Tokens());
+            if (not parser.Parse()) {
+                Log->error("Failed to parse file '{}'", in_path.string());
+                return Exit(ExitCode::ParserError);
+            }
+        }
+
+        {
+            ScopedTimer codegen_timer(time_codegen);
+            parser.AST()->Accept(codegen);
+        }
+
+        {
+            ScopedTimer write_timer(time_write);
+            // If no output path is provided, use the input filename with .hexe extension
+            if (out_path.empty()) {
+                out_path = in_path;
+                out_path.replace_extension("hexe");
+            } else if (std::filesystem::is_directory(out_path) || not out_path.has_filename()) {
+                out_path /= in_path.filename().replace_extension(".hexe");
+            }
+
+            if (out_path.has_parent_path()) {
+                std::filesystem::create_directories(out_path.parent_path());
+            }
+
+            std::ofstream out_file(out_path, std::ios::binary);
+            if (not out_file) {
+                Log->error("Failed to open output file '{}'", out_path.string());
+                return Exit(ExitCode::OutputOpenError);
+            }
+            const auto output = codegen.Bytecode().Serialize();
+            out_file.write(reinterpret_cast<const char*>(output.data()), static_cast<std::streamsize>(output.size()));
+
+            if (not out_file) {
+                Log->error("Failed to write to output file '{}'", out_path.string());
+                return Exit(ExitCode::OutputWriteError);
+            }
+
+            output_size = output.size();
+        }
     }
-    const auto time_lex_end = chrono::high_resolution_clock::now();
-
-    auto tokens            = lexer.RelinquishTokens();
-    const auto token_count = tokens.size();
-
-    const auto time_parse_start = chrono::high_resolution_clock::now();
-    sigil::Parser parser(std::move(tokens));
-    if (not parser.Parse()) {
-        Log->error("Failed to parse file '{}'", in_path.string());
-        return Exit(ExitCode::ParserError);
-    }
-    const auto time_parse_end = chrono::high_resolution_clock::now();
-
-    const auto time_codegen_start = chrono::high_resolution_clock::now();
-    const auto& ast               = parser.ViewAST();
-    BytecodeGenerator generator;
-    ast->Accept(generator);
-
-    const auto hexe             = generator.GetBytecode();
-    const auto time_codegen_end = chrono::high_resolution_clock::now();
-
-    // If no output path is provided, use the input filename with .hexe extension
-    if (out_path.empty()) {
-        out_path = in_path;
-        out_path.replace_extension("hexe");
-    } else if (std::filesystem::is_directory(out_path) || not out_path.has_filename()) {
-        out_path /= in_path.filename().replace_extension(".hexe");
-    }
-
-    if (out_path.has_parent_path()) {
-        std::filesystem::create_directories(out_path.parent_path());
-    }
-
-    const auto time_write_start = chrono::high_resolution_clock::now();
-    std::ofstream out_file(out_path, std::ios::binary);
-    if (not out_file) {
-        Log->error("Failed to open output file '{}'", out_path.string());
-        return Exit(ExitCode::OutputOpenError);
-    }
-
-    const auto output = hexe.Serialize();
-    out_file.write(reinterpret_cast<const char*>(output.data()), static_cast<std::streamsize>(output.size()));
-
-    if (not out_file) {
-        Log->error("Failed to write to output file '{}'", out_path.string());
-        return Exit(ExitCode::OutputWriteError);
-    }
-
-    // write ends when total ends
-    const auto time_total_end = chrono::high_resolution_clock::now();
-
-    const auto time_lex     = chrono::duration_cast<chrono::microseconds>(time_lex_end - time_lex_start);
-    const auto time_parse   = chrono::duration_cast<chrono::microseconds>(time_parse_end - time_parse_start);
-    const auto time_codegen = chrono::duration_cast<chrono::microseconds>(time_codegen_end - time_codegen_start);
-    const auto time_write   = chrono::duration_cast<chrono::microseconds>(time_total_end - time_write_start);
-    const auto time_total   = chrono::duration_cast<chrono::microseconds>(time_total_end - time_total_start);
 
     const auto compile_str = fmt::format("Compiled '{}' => '{}'",
                                          in_path.filename().string(),
@@ -110,11 +119,15 @@ int CompileFrom(const std::filesystem::path& in_path,
     const auto divider = std::string(compile_str.size(), '-');
 
     if (verbose) {
+        const auto& bytecode = codegen.Bytecode();
         Log->info(divider);
-        Log->info("  Tokens:         {}", token_count);
-        Log->info("  Instructions:   {} bytes", hexe.Instructions().size());
-        Log->info("  Constant Pool:  {} constants ({} bytes)", hexe.ConstantCount(), hexe.ConstantPoolBytesCount());
-        Log->info("  Executable:     {} bytes", output.size());
+        Log->info("  Tokens:         {}", lexer.TokenCount());
+        Log->info("  Instructions:   {} bytes", bytecode.Instructions().size());
+        Log->info("  Constant Pool:  {} constants ({} bytes)",
+                  bytecode.ConstantCount(),
+                  bytecode.ConstantPoolBytesCount()
+        );
+        Log->info("  Executable:     {} bytes", output_size);
         Log->info("");
         Log->info("  == Lex:     {}us", time_lex.count());
         Log->info("  == Parse:   {}us", time_parse.count());
