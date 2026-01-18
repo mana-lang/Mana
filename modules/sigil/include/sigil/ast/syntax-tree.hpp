@@ -1,25 +1,23 @@
 #pragma once
 
+#include <sigil/core/concepts.hpp>
+#include <sigil/core/logger.hpp>
+
 #include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/visitor.hpp>
-#include <sigil/core/concepts.hpp>
 
-#include <mana/vm/primitive-type.hpp>
 #include <mana/literals.hpp>
-
-#include <memory>
-#include <string>
-#include <vector>
-#include <charconv>
-#include <unordered_map>
+#include <mana/vm/primitive-type.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
-#include <sigil/core/logger.hpp>
+#include <memory>
+#include <vector>
+#include <charconv>
+#include <string_view>
 
 namespace sigil::ast {
 namespace ml = mana::literals;
-
 
 class Visitor;
 
@@ -308,7 +306,6 @@ class BinaryExpr final : public Node {
 
 public:
     explicit BinaryExpr(const ParseNode& node);
-    // explicit BinaryExpr(const std::string& op, const ParseNode& left, const ParseNode& right);
     explicit BinaryExpr(std::string_view op, const ParseNode& left, const ParseNode& right);
 
     SIGIL_NODISCARD std::string_view GetOp() const;
