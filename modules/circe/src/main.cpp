@@ -17,10 +17,10 @@ using namespace mana::literals;
 using namespace circe;
 
 struct ScopedTimer {
-    using Clock    = std::chrono::high_resolution_clock;
-    using TimeUnit = std::chrono::microseconds;
+    using Clock     = std::chrono::high_resolution_clock;
+    using TimePoint = std::chrono::microseconds;
 
-    TimeUnit& target;
+    TimePoint& target;
     Clock::time_point start;
 
     explicit ScopedTimer(std::chrono::microseconds& output)
