@@ -9,6 +9,7 @@ set(SIGIL_SOURCES
         src/ast/parse-tree.cpp
         src/ast/syntax-tree.cpp
         src/ast/source-file.cpp
+        src/ast/semantic-analyzer.cpp
 
         src/core/logger.cpp
 

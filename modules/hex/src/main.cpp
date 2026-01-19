@@ -1,7 +1,7 @@
 #include <hex/core/cli.hpp>
 #include <hex/core/disassembly.hpp>
 #include <hex/core/logger.hpp>
-#include <../include/hex/hex.hpp>
+#include <hex/hex.hpp>
 
 #include <mana/vm/hexe.hpp>
 
@@ -9,8 +9,6 @@
 
 #include <chrono>
 #include <fstream>
-
-#include <mana/exit-codes.hpp>
 
 using namespace hex;
 
@@ -20,7 +18,7 @@ void Execute(const std::filesystem::path& exe_path) {
 
     const auto start_file = chrono::high_resolution_clock::now();
 
-    std::ifstream in_file(std::string(exe_path), std::ios::binary);
+    std::ifstream in_file(exe_path, std::ios::binary);
     if (not in_file) {
         Log->error("Failed to read file '{}'", exe_path.c_str());
         return;
@@ -73,7 +71,6 @@ void Execute(const std::filesystem::path& exe_path) {
 
 int main(const int argc, char** argv) {
     CommandLineSettings cli(argc, argv);
-
     const i64 result = cli.Populate();
 
     const std::string_view hexe_name = cli.HexeName();

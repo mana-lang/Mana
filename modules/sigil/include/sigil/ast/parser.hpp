@@ -27,14 +27,18 @@ private:
     };
 
 public:
-    explicit Parser(const TokenStream&& tokens);
+    explicit Parser(TokenStream&& tokens);
     explicit Parser(const TokenStream& tokens);
+
+    Parser();
+    void AcquireTokens(const TokenStream& tks);
+    void AcquireTokens(TokenStream&& tks);
 
     SIGIL_NODISCARD bool Parse();
 
     SIGIL_NODISCARD const ParseNode& ViewParseTree() const;
     SIGIL_NODISCARD const TokenStream& ViewTokenStream() const;
-    SIGIL_NODISCARD ast::Node* ViewAST() const;
+    SIGIL_NODISCARD ast::Node* AST() const;
 
     void PrintParseTree() const;
     void EmitParseTree(std::string_view file_name) const;

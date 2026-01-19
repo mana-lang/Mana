@@ -354,11 +354,11 @@ void Skip::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
-/// Datum
-DataDeclaration::DataDeclaration(const ParseNode& node)
+/// Binding
+Binding::Binding(const ParseNode& node)
     : initializer {nullptr} {
     const auto& tokens = node.tokens;
-    is_mutable         = tokens.front().type == TokenType::KW_mut;
+
     // data keyword is irrelevant to AST
     for (const auto& token : tokens) {
         if (token.type == TokenType::Identifier) {
@@ -380,21 +380,33 @@ DataDeclaration::DataDeclaration(const ParseNode& node)
     }
 }
 
-std::string_view DataDeclaration::GetName() const {
+std::string_view Binding::GetName() const {
     return name;
 }
 
-std::string_view DataDeclaration::GetType() const {
+std::string_view Binding::GetType() const {
     return type;
 }
 
-const NodePtr& DataDeclaration::GetInitializer() const {
+const NodePtr& Binding::GetInitializer() const {
     return initializer;
 }
 
-bool DataDeclaration::IsMutable() const {
-    return is_mutable;
+void Binding::Accept(Visitor& visitor) const {
+    Log->warn("Binding should never be visited directly");
 }
+
+/// MutableDataDeclaration
+MutableDataDeclaration::MutableDataDeclaration(const ParseNode& node)
+    : Binding {node} {}
+
+void MutableDataDeclaration::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+/// DataDeclaration
+DataDeclaration::DataDeclaration(const ParseNode& node)
+    : Binding {node} {}
 
 void DataDeclaration::Accept(Visitor& visitor) const {
     visitor.Visit(*this);

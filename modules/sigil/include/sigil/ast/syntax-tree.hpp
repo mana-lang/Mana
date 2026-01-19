@@ -1,25 +1,23 @@
 #pragma once
 
+#include <sigil/core/concepts.hpp>
+#include <sigil/core/logger.hpp>
+
 #include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/visitor.hpp>
-#include <sigil/core/concepts.hpp>
 
-#include <mana/vm/primitive-type.hpp>
 #include <mana/literals.hpp>
-
-#include <memory>
-#include <string>
-#include <vector>
-#include <charconv>
-#include <unordered_map>
+#include <mana/vm/primitive-type.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
-#include <sigil/core/logger.hpp>
+#include <memory>
+#include <vector>
+#include <charconv>
+#include <string_view>
 
 namespace sigil::ast {
 namespace ml = mana::literals;
-
 
 class Visitor;
 
@@ -90,19 +88,32 @@ public:
 };
 
 // TODO: make MutableDataDeclaration to encode meaning in the type rather than a bool
-class DataDeclaration final : public Node {
+class Binding : public Node {
     std::string_view name;
     std::string_view type;
     NodePtr initializer;
-    bool is_mutable;
 
 public:
-    explicit DataDeclaration(const ParseNode& node);
+    explicit Binding(const ParseNode& node);
 
     SIGIL_NODISCARD std::string_view GetName() const;
     SIGIL_NODISCARD std::string_view GetType() const;
     SIGIL_NODISCARD const NodePtr& GetInitializer() const;
-    SIGIL_NODISCARD bool IsMutable() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
+
+class MutableDataDeclaration final : public Binding {
+public:
+    explicit MutableDataDeclaration(const ParseNode& node);
+
+    void Accept(Visitor& visitor) const override;
+};
+
+class DataDeclaration final : public Binding {
+public:
+    explicit DataDeclaration(const ParseNode& node);
 
     void Accept(Visitor& visitor) const override;
 };
@@ -295,7 +306,6 @@ class BinaryExpr final : public Node {
 
 public:
     explicit BinaryExpr(const ParseNode& node);
-    // explicit BinaryExpr(const std::string& op, const ParseNode& left, const ParseNode& right);
     explicit BinaryExpr(std::string_view op, const ParseNode& left, const ParseNode& right);
 
     SIGIL_NODISCARD std::string_view GetOp() const;
@@ -334,6 +344,9 @@ void PropagateStatements(const ParseNode& node, SC* root) {
             using enum Rule;
 
             switch (n->rule) {
+            case MutableDataDeclaration:
+                root->Add<class MutableDataDeclaration>(*n);
+                break;
             case DataDeclaration:
                 root->Add<class DataDeclaration>(*n);
                 break;

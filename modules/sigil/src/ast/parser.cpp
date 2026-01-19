@@ -12,7 +12,7 @@ namespace sigil {
 using namespace ast;
 using namespace mana::literals;
 
-Parser::Parser(const TokenStream&& tokens)
+Parser::Parser(TokenStream&& tokens)
     : tokens {std::move(tokens)},
       cursor {},
       parse_tree {Rule::Undefined} {}
@@ -22,7 +22,24 @@ Parser::Parser(const TokenStream& tokens)
       cursor {},
       parse_tree {Rule::Undefined} {}
 
+Parser::Parser()
+    : cursor {},
+      parse_tree {Rule::Undefined} {}
+
+void Parser::AcquireTokens(const TokenStream& tks) {
+    tokens = tks;
+}
+
+void Parser::AcquireTokens(TokenStream&& tks) {
+    tokens = std::move(tks);
+}
+
 bool Parser::Parse() {
+    if (tokens.empty()) {
+        Log->error("No tokens to parse");
+        return false;
+    }
+
     parse_tree.rule = Rule::Artifact;
 
     cursor = 0;
@@ -47,7 +64,7 @@ auto Parser::ViewTokenStream() const -> const TokenStream& {
     return tokens;
 }
 
-auto Parser::ViewAST() const -> Node* {
+auto Parser::AST() const -> Node* {
     return syntax_tree.get();
 }
 
@@ -528,7 +545,10 @@ bool Parser::MatchedDataDeclaration(ParseNode& node) {
         return false;
     }
 
-    auto& decl = node.NewBranch(Rule::DataDeclaration);
+    auto& decl = node.NewBranch(CurrentToken().type == TokenType::KW_mut
+                                    ? Rule::MutableDataDeclaration
+                                    : Rule::DataDeclaration
+    );
 
     // covers both 'data x' and 'mut data x'
     AddTokensTo(decl, TokenType::KW_data);

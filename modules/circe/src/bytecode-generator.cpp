@@ -16,7 +16,7 @@ BytecodeGenerator::BytecodeGenerator()
     : total_registers {},
       scope_depth {} {}
 
-Hexe BytecodeGenerator::GetBytecode() const {
+Hexe BytecodeGenerator::Bytecode() const {
     return output;
 }
 
@@ -41,30 +41,12 @@ void BytecodeGenerator::Visit(const Scope& node) {
     --scope_depth;
 }
 
+void BytecodeGenerator::Visit(const MutableDataDeclaration& node) {
+    HandleDeclaration(node, true);
+}
+
 void BytecodeGenerator::Visit(const DataDeclaration& node) {
-    const std::string name(node.GetName());
-    if (symbols.contains(name)) {
-        Log->error("Redefinition of '{}'", name);
-        return;
-    }
-
-    u16 datum;
-
-    if (const auto& init = node.GetInitializer()) {
-        init->Accept(*this);
-
-        // may be an identifier or constant
-        u16 src = PopRegBuffer();
-        datum   = AllocateRegister();
-        output.Write(Op::Move, {datum, src});
-
-        FreeRegister(src);
-    } else {
-        datum = AllocateRegister();
-        output.Write(Op::LoadConstant, {datum, output.AddConstant(0.0)});
-    }
-
-    AddSymbol(name, datum, node.IsMutable());
+    HandleDeclaration(node, false);
 }
 
 void BytecodeGenerator::Visit(const Identifier& node) {
@@ -505,7 +487,7 @@ void BytecodeGenerator::FreeRegister(u16 reg) {
     }
 }
 
-void BytecodeGenerator::FreeRegisters(std::initializer_list<u16> regs) {
+void BytecodeGenerator::FreeRegisters(const std::initializer_list<u16> regs) {
     for (const auto reg : regs) {
         FreeRegister(reg);
     }
@@ -600,5 +582,31 @@ void BytecodeGenerator::HandleLoopControl(bool is_break, const NodePtr& conditio
 
     auto& buffer = is_break ? CurrentLoop().pending_breaks : CurrentLoop().pending_skips;
     buffer.emplace_back(jump_index, has_condition);
+}
+
+void BytecodeGenerator::HandleDeclaration(const Binding& node, bool is_mutable) {
+    const std::string name(node.GetName());
+    if (symbols.contains(name)) {
+        Log->error("Redefinition of '{}'", name);
+        return;
+    }
+
+    u16 datum;
+
+    if (const auto& init = node.GetInitializer()) {
+        init->Accept(*this);
+
+        // may be an identifier or constant
+        u16 src = PopRegBuffer();
+        datum   = AllocateRegister();
+        output.Write(Op::Move, {datum, src});
+
+        FreeRegister(src);
+    } else {
+        datum = AllocateRegister();
+        output.Write(Op::LoadConstant, {datum, output.AddConstant(0.0)});
+    }
+
+    AddSymbol(name, datum, is_mutable);
 }
 } // namespace circe

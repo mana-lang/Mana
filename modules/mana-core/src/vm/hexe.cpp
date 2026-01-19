@@ -18,7 +18,7 @@ i64 Hexe::Write(Op opcode) {
     return instructions.size() - 1;
 }
 
-i64 Hexe::Write(const Op opcode, std::initializer_list<u16> payloads) {
+i64 Hexe::Write(const Op opcode, const std::initializer_list<u16> payloads) {
     instructions.push_back(static_cast<u8>(opcode));
     const auto index = instructions.size() - 1;
 
