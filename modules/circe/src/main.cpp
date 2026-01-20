@@ -49,6 +49,7 @@ int CompileFrom(const CompileSettings& compile_settings) {
     std::chrono::microseconds time_lex, time_parse, time_analysis, time_codegen, time_write, time_total;
     sigil::Lexer lexer;
     sigil::Parser parser;
+    sigil::SemanticAnalyzer analyzer;
     BytecodeGenerator codegen;
     u64 output_size;
 
@@ -73,8 +74,13 @@ int CompileFrom(const CompileSettings& compile_settings) {
 
         {
             ScopedTimer analysis_timer(time_analysis);
-            sigil::SemanticAnalyzer analyzer;
             parser.AST()->Accept(analyzer);
+        }
+
+        if (analyzer.IssueCount() > 0) {
+            Log->critical("Aborting");
+            Log->error("Compilation failed with {} issues", analyzer.IssueCount());
+            return Exit(ExitCode::SemanticError);
         }
 
         {

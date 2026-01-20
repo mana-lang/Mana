@@ -54,6 +54,8 @@ class SemanticAnalyzer final : public ast::Visitor {
 public:
     SemanticAnalyzer();
 
+    SIGIL_NODISCARD ml::i32 IssueCount() const;
+
     void Visit(const ast::Artifact& artifact) override;
     void Visit(const ast::Scope& node) override;
 

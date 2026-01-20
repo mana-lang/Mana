@@ -37,6 +37,10 @@ SemanticAnalyzer::SemanticAnalyzer()
     types[PrimitiveName(None)] = {TypeSize::None, 0};
 }
 
+ml::i32 SemanticAnalyzer::IssueCount() const {
+    return issue_counter;
+}
+
 void SemanticAnalyzer::EnterScope() {
     ++scope_depth;
 }
@@ -73,6 +77,7 @@ void SemanticAnalyzer::BufferType(std::string_view type_name) {
 void SemanticAnalyzer::AddSymbol(std::string_view name, std::string_view type, bool is_mutable) {
     if (symbols.contains(name)) {
         Log->error("Redefinition of '{}'", name);
+        ++issue_counter;
         return;
     }
 
@@ -96,12 +101,14 @@ void SemanticAnalyzer::HandleDeclaration(const Binding& node, bool is_mutable) {
 
     if (not types.contains(type)) {
         Log->error("Unknown type '{}'", type);
+        ++issue_counter;
         return;
     }
 
     // might have to also '&& node.HasTypeAnnotation()'
     if (type != expr_type) {
         Log->error("Type mismatch: expected '{}', got '{}'", type, expr_type);
+        ++issue_counter;
         return;
     }
 
@@ -138,6 +145,7 @@ void SemanticAnalyzer::Visit(const Identifier& node) {
 
     if (symbol == nullptr) {
         Log->error("Undefined identifier '{}'", node.GetName());
+        ++issue_counter;
         return;
     }
 
@@ -151,12 +159,14 @@ void SemanticAnalyzer::Visit(const Assignment& node) {
 
     if (symbol == nullptr) {
         Log->error("Attempt to assign to undefined datum '{}'", identifier);
+        ++issue_counter;
         return;
     }
 
 
     if (not symbol->is_mutable) {
         Log->error("Attempt to assign to immutable datum '{}'", identifier);
+        ++issue_counter;
         return; // is it wise to return here and avoid error checking on the assigned expression?
     }
 
@@ -165,6 +175,7 @@ void SemanticAnalyzer::Visit(const Assignment& node) {
     const auto expr_type = PopTypeBuffer();
     if (expr_type != symbol->type) {
         Log->error("Type mismatch: expected '{}', got '{}'", symbol->type, expr_type);
+        ++issue_counter;
     }
 }
 
@@ -226,6 +237,7 @@ void SemanticAnalyzer::Visit(const LoopFixed& node) {
 void SemanticAnalyzer::Visit(const Break& node) {
     if (loop_depth == 0) {
         Log->error("Break outside loop");
+        ++issue_counter;
         return;
     }
 
@@ -237,6 +249,7 @@ void SemanticAnalyzer::Visit(const Break& node) {
 void SemanticAnalyzer::Visit(const Skip& node) {
     if (loop_depth == 0) {
         Log->error("Skip outside loop");
+        ++issue_counter;
         return;
     }
 
