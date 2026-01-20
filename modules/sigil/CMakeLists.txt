@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(sigil VERSION 0.1.1)
+project(sigil VERSION 0.1.3)
 
 enable_testing()
 
