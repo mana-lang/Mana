@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(circe VERSION 0.1.1)
+project(circe VERSION 0.1.6)
 
 enable_testing()
 

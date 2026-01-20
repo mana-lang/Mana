@@ -1,5 +1,7 @@
 #include <circe/core/cli.hpp>
 
+#include <CLI11/CLI11.hpp>
+
 namespace circe {
 const std::filesystem::path& CompileSettings::InputFilePath() const {
     return input_path;

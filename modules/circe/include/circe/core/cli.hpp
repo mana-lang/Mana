@@ -1,9 +1,9 @@
 #pragma once
 
-#include <CLI11/CLI11.hpp>
-#include <memory>
-#include <string>
+#include <mana/literals.hpp>
+
 #include <filesystem>
+
 
 namespace circe {
 struct CompileSettings {
@@ -21,11 +21,11 @@ private:
     std::filesystem::path input_path;
     std::filesystem::path output_path;
 
-    bool verbose;
-    bool emit_ptree;
-    bool emit_tokens;
+    bool verbose {false};
+    bool emit_ptree {false};
+    bool emit_tokens {false};
 
-    int exit_code;
+    int exit_code {mana::literals::SENTINEL};
 };
 
 CompileSettings ParseCommandLineCompileSettings(int argc, char** argv);

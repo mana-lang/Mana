@@ -1,12 +1,10 @@
-#include <algorithm>
-#include <ranges>
-
 #include <circe/core/logger.hpp>
 #include <circe/bytecode-generator.hpp>
 
 #include <mana/vm/opcode.hpp>
 
-#include <magic_enum/magic_enum.hpp>
+#include <algorithm>
+#include <ranges>
 
 namespace circe {
 using namespace mana::vm;
@@ -49,27 +47,27 @@ void BytecodeGenerator::Visit(const DataDeclaration& node) {
 }
 
 void BytecodeGenerator::Visit(const Identifier& node) {
-    const std::string name(node.GetName());
+    const auto name(node.GetName());
     if (const auto it = symbols.find(name);
         it != symbols.end()) {
         reg_buffer.push_back(it->second.register_index);
         return;
     }
 
-    Log->warn("Undefined identifier '{}'", name);
+    Log->warn("BCG: Undefined identifier '{}'", name);
     output.Write(Op::Halt);
 }
 
 void BytecodeGenerator::Visit(const Assignment& node) {
-    const std::string name(node.GetIdentifier());
+    const auto name(node.GetIdentifier());
     const auto it = symbols.find(name);
     if (it == symbols.end()) {
-        Log->warn("Undefined identifier '{}'", name);
+        Log->warn("BCG: Undefined identifier '{}'", name);
         return;
     }
 
     if (not it->second.is_mutable) {
-        Log->error("Cannot assign to immutable data '{}'", name);
+        Log->error("BCG: Cannot assign to immutable data '{}'", name);
         output.Write(Op::Err);
         return;
     }
@@ -228,7 +226,7 @@ void BytecodeGenerator::Visit(const LoopFixed& node) {
     // loop 5 i -> we need to promote i to a variable
     // while it's incremented, it still counts as immutable
     if (node.HasCounter()) {
-        AddSymbol(std::string(node.GetCounter()), counter, false);
+        AddSymbol((node.GetCounter()), counter, false);
     }
 
     node.GetBody()->Accept(*this);
@@ -255,7 +253,7 @@ void BytecodeGenerator::Visit(const LoopFixed& node) {
 
     // cleanup
     if (node.HasCounter()) {
-        RemoveSymbol(std::string(node.GetCounter()));
+        RemoveSymbol(node.GetCounter());
     }
 
     FreeRegister(limit);
@@ -275,7 +273,7 @@ void BytecodeGenerator::Visit(const UnaryExpr& node) {
     node.GetVal().Accept(*this);
 
     if (node.GetOp().size() > 1) {
-        Log->error("Unhandled unary expression");
+        Log->error("BCG: Unhandled unary expression");
         return;
     }
 
@@ -291,7 +289,7 @@ void BytecodeGenerator::Visit(const UnaryExpr& node) {
         op = Op::Not;
         break;
     default:
-        Log->error("Invalid unary expression");
+        Log->error("BCG: Invalid unary expression");
         FreeRegister(src);
         FreeRegister(PopRegBuffer());
         return;
@@ -389,7 +387,7 @@ void BytecodeGenerator::Visit(const BinaryExpr& node) {
         FreeRegisters({lhs, rhs});
         return;
     default:
-        Log->error("Unknown Binary Operator '{}'", node.GetOp());
+        Log->error("BCG: Unknown Binary Operator '{}'", node.GetOp());
         FreeRegisters({lhs, rhs});
         return;
     }
@@ -439,7 +437,7 @@ u16 BytecodeGenerator::CalcJumpDistance(const i64 jump_index, const bool is_cond
     const i64 jump_distance = output.InstructionCount() - (jump_index + jump_bytes);
 
     if (not JumpIsWithinBounds(jump_distance)) {
-        Log->error("Jump distance out of bounds");
+        Log->error("BCG: Jump distance out of bounds");
         return SENTINEL;
     }
 
@@ -456,7 +454,7 @@ u16 BytecodeGenerator::CalcJumpBackwards(const i64 target_index,
     const i64 jump_distance = target_index - (source_index + jump_bytes);
 
     if (not JumpIsWithinBounds(jump_distance)) {
-        Log->error("Jump distance out of bounds");
+        Log->error("BCG: Jump distance out of bounds");
         return SENTINEL;
     }
 
@@ -509,7 +507,7 @@ bool BytecodeGenerator::RegisterIsOwned(u16 reg) {
 
 u16 BytecodeGenerator::PopRegBuffer() {
     if (reg_buffer.empty()) {
-        Log->error("Internal Compiler Error: Register stack underflow");
+        Log->error("BCG: Internal Compiler Error: Register stack underflow");
         return 0;
     }
 
@@ -550,7 +548,7 @@ void BytecodeGenerator::AddSymbol(const std::string_view name, u16 register_inde
 
 void BytecodeGenerator::RemoveSymbol(const std::string_view name) {
     if (not symbols.contains(name)) {
-        Log->warn("Attempted to remove non-existent symbol '{}'", name);
+        Log->warn("BCG: Attempted to remove non-existent symbol '{}'", name);
         return;
     }
 
@@ -566,7 +564,7 @@ BytecodeGenerator::LoopContext& BytecodeGenerator::CurrentLoop() {
 
 void BytecodeGenerator::HandleLoopControl(bool is_break, const NodePtr& condition) {
     if (loop_stack.empty()) {
-        Log->error("{} statement outside of loop", is_break ? "Break" : "Skip");
+        Log->error("BCG: {} statement outside of loop", is_break ? "Break" : "Skip");
         return;
     }
 
@@ -590,9 +588,9 @@ void BytecodeGenerator::HandleLoopControl(bool is_break, const NodePtr& conditio
 }
 
 void BytecodeGenerator::HandleDeclaration(const Binding& node, bool is_mutable) {
-    const std::string name(node.GetName());
+    const auto name = node.GetName();
     if (symbols.contains(name)) {
-        Log->error("Redefinition of '{}'", name);
+        Log->error("BCG: Redefinition of '{}'", name);
         return;
     }
 
