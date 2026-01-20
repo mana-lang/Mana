@@ -7,6 +7,7 @@
 namespace sigil::ast {
 template <LiteralType T>
 class Literal;
+class Binding;
 
 class Visitor {
 public:

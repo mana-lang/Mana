@@ -2,8 +2,9 @@
 #include <sigil/ast/keywords.hpp>
 #include <sigil/ast/syntax-tree.hpp>
 
-namespace sigil::ast {
+namespace sigil {
 using namespace mana::literals;
+using namespace ast;
 using enum PrimitiveType;
 
 SemanticAnalyzer::SemanticAnalyzer()
@@ -274,4 +275,4 @@ void SemanticAnalyzer::Visit(const Literal<void>&) {
 void SemanticAnalyzer::Visit(const Literal<bool>&) {
     BufferType(PrimitiveName(Bool));
 }
-} // namespace sigil::ast
+} // namespace sigil

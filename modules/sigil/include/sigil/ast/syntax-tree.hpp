@@ -21,8 +21,6 @@ namespace ml = mana::literals;
 
 class Visitor;
 
-using NodePtr = std::shared_ptr<class Node>;
-
 // As the ptree gets constructed before the AST,
 // AST nodes assume their ptree input is correct
 class Node {
@@ -31,6 +29,8 @@ public:
 
     virtual void Accept(Visitor& visitor) const = 0;
 };
+
+using NodePtr = std::shared_ptr<Node>;
 
 class Statement final : public Node {
     NodePtr child;

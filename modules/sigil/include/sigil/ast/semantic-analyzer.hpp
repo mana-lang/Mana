@@ -8,10 +8,11 @@
 #include <string_view>
 #include <array>
 
-namespace sigil::ast {
+namespace sigil {
+//
 namespace ml = mana::literals;
 
-class SemanticAnalyzer final : public Visitor {
+class SemanticAnalyzer final : public ast::Visitor {
     struct Datum {
         std::string_view type;
         ml::u8 scope_depth;
@@ -53,33 +54,33 @@ class SemanticAnalyzer final : public Visitor {
 public:
     SemanticAnalyzer();
 
-    void Visit(const Artifact& artifact) override;
-    void Visit(const Scope& node) override;
+    void Visit(const ast::Artifact& artifact) override;
+    void Visit(const ast::Scope& node) override;
 
-    void Visit(const MutableDataDeclaration& node) override;
-    void Visit(const DataDeclaration& node) override;
-    void Visit(const Identifier& node) override;
-    void Visit(const Assignment& node) override;
+    void Visit(const ast::MutableDataDeclaration& node) override;
+    void Visit(const ast::DataDeclaration& node) override;
+    void Visit(const ast::Identifier& node) override;
+    void Visit(const ast::Assignment& node) override;
 
-    void Visit(const If& node) override;
+    void Visit(const ast::If& node) override;
 
-    void Visit(const Loop& node) override;
-    void Visit(const LoopIf& node) override;
-    void Visit(const LoopIfPost& node) override;
-    void Visit(const LoopRange& node) override;
-    void Visit(const LoopFixed& node) override;
+    void Visit(const ast::Loop& node) override;
+    void Visit(const ast::LoopIf& node) override;
+    void Visit(const ast::LoopIfPost& node) override;
+    void Visit(const ast::LoopRange& node) override;
+    void Visit(const ast::LoopFixed& node) override;
 
-    void Visit(const Break& node) override;
-    void Visit(const Skip& node) override;
+    void Visit(const ast::Break& node) override;
+    void Visit(const ast::Skip& node) override;
 
-    void Visit(const UnaryExpr& node) override;
-    void Visit(const BinaryExpr& node) override;
-    void Visit(const ArrayLiteral& array) override;
+    void Visit(const ast::UnaryExpr& node) override;
+    void Visit(const ast::BinaryExpr& node) override;
+    void Visit(const ast::ArrayLiteral& array) override;
 
-    void Visit(const Literal<ml::f64>& literal) override;
-    void Visit(const Literal<ml::i64>& literal) override;
-    void Visit(const Literal<void>& node) override;
-    void Visit(const Literal<bool>& literal) override;
+    void Visit(const ast::Literal<ml::f64>& literal) override;
+    void Visit(const ast::Literal<ml::i64>& literal) override;
+    void Visit(const ast::Literal<void>& node) override;
+    void Visit(const ast::Literal<bool>& literal) override;
 
 private:
     void EnterScope();
@@ -91,6 +92,6 @@ private:
     void AddSymbol(std::string_view name, std::string_view type, bool is_mutable);
     const Datum* GetSymbol(std::string_view name) const;
 
-    void HandleDeclaration(const class Binding& node, bool is_mutable);
+    void HandleDeclaration(const ast::Binding& node, bool is_mutable);
 };
-} // namespace sigil::ast
+} // namespace sigil

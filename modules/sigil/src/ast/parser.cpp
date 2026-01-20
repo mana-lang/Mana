@@ -47,6 +47,7 @@ bool Parser::Parse() {
 
     ConstructAST(parse_tree);
 
+
     // In case there's any trailing newlines
     SkipNewlines();
 

@@ -13,6 +13,8 @@
 
 #include <mana/exit-codes.hpp>
 
+#include <sigil/ast/semantic-analyzer.hpp>
+
 using namespace mana::literals;
 using namespace circe;
 
@@ -44,7 +46,7 @@ int CompileFrom(const CompileSettings& compile_settings) {
         return Exit(ExitCode::FileNotFound);
     }
 
-    std::chrono::microseconds time_lex, time_parse, time_codegen, time_write, time_total;
+    std::chrono::microseconds time_lex, time_parse, time_analysis, time_codegen, time_write, time_total;
     sigil::Lexer lexer;
     sigil::Parser parser;
     BytecodeGenerator codegen;
@@ -67,6 +69,12 @@ int CompileFrom(const CompileSettings& compile_settings) {
                 Log->error("Failed to parse file '{}'", in_path.string());
                 return Exit(ExitCode::ParserError);
             }
+        }
+
+        {
+            ScopedTimer analysis_timer(time_analysis);
+            sigil::SemanticAnalyzer analyzer;
+            parser.AST()->Accept(analyzer);
         }
 
         {
@@ -129,6 +137,7 @@ int CompileFrom(const CompileSettings& compile_settings) {
         Log->info("");
         Log->info("  == Lex:     {}us", time_lex.count());
         Log->info("  == Parse:   {}us", time_parse.count());
+        Log->info("  == Analyze: {}us", time_analysis.count());
         Log->info("  == Codegen: {}us", time_codegen.count());
         Log->info("  == Write:   {}us", time_write.count());
         Log->info("");
