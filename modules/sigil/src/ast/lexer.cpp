@@ -402,8 +402,8 @@ void Lexer::LexUnknown() {
 }
 
 bool Lexer::MatchedKeyword(const std::string_view identifier) {
-    if (const auto keyword = keyword_map.find(identifier);
-        keyword != keyword_map.end()) {
+    if (const auto keyword = KEYWORDS.find(identifier);
+        keyword != KEYWORDS.end()) {
         AddToken(keyword->second, identifier.length());
         return true;
     }

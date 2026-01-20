@@ -92,7 +92,8 @@ private:
     ml::u16 PopRegBuffer();
     void ClearRegBuffer();
 
-    void CleanupCurrentScope();
+    void EnterScope();
+    void ExitScope();
 
     void AddSymbol(std::string_view name, ml::u16 register_index, bool is_mutable);
     void RemoveSymbol(std::string_view name);

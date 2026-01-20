@@ -97,12 +97,13 @@ public:
     explicit Binding(const ParseNode& node);
 
     SIGIL_NODISCARD std::string_view GetName() const;
-    SIGIL_NODISCARD std::string_view GetType() const;
+    SIGIL_NODISCARD std::string_view GetTypeName() const;
     SIGIL_NODISCARD const NodePtr& GetInitializer() const;
+
+    SIGIL_NODISCARD bool HasTypeAnnotation() const;
 
     void Accept(Visitor& visitor) const override;
 };
-
 
 class MutableDataDeclaration final : public Binding {
 public:

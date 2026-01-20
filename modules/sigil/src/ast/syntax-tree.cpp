@@ -384,12 +384,16 @@ std::string_view Binding::GetName() const {
     return name;
 }
 
-std::string_view Binding::GetType() const {
+std::string_view Binding::GetTypeName() const {
     return type;
 }
 
 const NodePtr& Binding::GetInitializer() const {
     return initializer;
+}
+
+bool Binding::HasTypeAnnotation() const {
+    return not type.empty();
 }
 
 void Binding::Accept(Visitor& visitor) const {

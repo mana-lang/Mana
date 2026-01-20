@@ -31,14 +31,13 @@ void BytecodeGenerator::Visit(const Artifact& artifact) {
 }
 
 void BytecodeGenerator::Visit(const Scope& node) {
-    ++scope_depth;
+    EnterScope();
     for (const auto& statement : node.GetStatements()) {
         statement->Accept(*this);
         ClearRegBuffer();
     }
 
-    CleanupCurrentScope();
-    --scope_depth;
+    ExitScope();
 }
 
 void BytecodeGenerator::Visit(const MutableDataDeclaration& node) {
@@ -525,11 +524,16 @@ void BytecodeGenerator::ClearRegBuffer() {
     reg_buffer.clear();
 }
 
-void BytecodeGenerator::CleanupCurrentScope() {
+void BytecodeGenerator::EnterScope() {
+    ++scope_depth;
+}
+
+void BytecodeGenerator::ExitScope() {
     std::vector<std::string_view> to_remove;
+    to_remove.reserve(symbols.size());
+
     for (const auto& [name, symbol] : symbols) {
         if (symbol.scope_depth == scope_depth) {
-            // delegate removal to avoid iterator invalidation
             to_remove.push_back(name);
         }
     }
@@ -537,6 +541,7 @@ void BytecodeGenerator::CleanupCurrentScope() {
     for (const auto& name : to_remove) {
         RemoveSymbol(name);
     }
+    --scope_depth;
 }
 
 void BytecodeGenerator::AddSymbol(const std::string_view name, u16 register_index, bool is_mutable) {

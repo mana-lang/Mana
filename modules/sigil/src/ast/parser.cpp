@@ -560,9 +560,12 @@ bool Parser::MatchedDataDeclaration(ParseNode& node) {
     }
     AddCycledTokenTo(decl);
 
+    bool is_annotated = false;
     // data x: i32
     if (CurrentToken().type == TokenType::Op_Colon) {
+        is_annotated = true;
         AddCycledTokenTo(decl);
+
         if (Expect(IsPrimitiveKeyword(CurrentToken().type) || CurrentToken().type == TokenType::Identifier,
                    decl,
                    "Expected type"
@@ -573,6 +576,8 @@ bool Parser::MatchedDataDeclaration(ParseNode& node) {
 
     // data x: i32;
     if (CurrentToken().type == TokenType::Terminator) {
+        // (mut) data x; -> error
+        Expect(is_annotated, decl, "Expected annotation for uninitialized type");
         return true;
     }
 

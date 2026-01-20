@@ -143,7 +143,7 @@ fn main() {
 
 Note: In the above example, `x` can never be initialized, because it's not `mut`.
  
- ##### Constants
+##### Constants
 Compile-time constants are created with the `const` keyword.
 They *must* have their type annotated, and cannot be unassigned.
 
