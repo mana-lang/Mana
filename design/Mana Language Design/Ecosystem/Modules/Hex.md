@@ -41,7 +41,7 @@ The `hex` executable provides a driver for running Mana programs. When running i
 As with all Mana modules, Hex utilizes a centralized `spdlog` instance for structured logging and error reporting.
 
 ### Goals & Future Considerations
-Currently, Hex is exclusively a bytecode interpreter -- with the long-term goal of developing it into an embeddable Mana runtime that can either execute bytecode or JIT machine code.
+Currently, Hex is exclusively a bytecode interpreter with the long-term goal of developing it into an embeddable Mana runtime that can either execute bytecode or JIT machine code.
 
 The aim is to maximize speed while maintaining Hex's runtime hot-reload flexibility.
 
@@ -49,7 +49,7 @@ A medium-term goal is to give Mana & Hex enough features & stability that it can
 
 C++ was chosen as Mana's primary interface language because it's also the language of choice for most game engines. While the ultimate goal would be to see its use in game engine development, Mana would need to see fairly widespread use for it to reach a level of maturity where it's robust enough to warrant such a massive investment. 
 
-A far more pragmatic outcome is that Mana gets adopted by smaller engines and game projects, and larger engines could integrate it as an optional scripting language. From there, having native engine modules written in Mana (e.g.  as a `.dll`) becomes a trivial endeavor, as facilitating the integration of standalone Mana modules is one of Hex' primary features.
+A far more pragmatic outcome is that Mana gets adopted by smaller engines and game projects, and larger engines could integrate it as an optional scripting language. From there, having native engine modules written in Mana (e.g.  as a `.dll`) becomes a trivial endeavor, as facilitating the integration of standalone Mana modules is one of Hex's primary features.
 
 Hex is essentially the heart of Mana. It addresses the core problem Mana solves (fast execution and rapid iteration with expressive syntax) while sidelining the general issue with the adoption of new technologies. 
 

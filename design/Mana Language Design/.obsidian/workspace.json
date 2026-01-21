@@ -22,7 +22,7 @@
             }
           },
           {
-            "id": "0c9d3b6518085d23",
+            "id": "a5828a4a68123791",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -33,18 +33,6 @@
               },
               "icon": "lucide-file",
               "title": "Hex"
-            }
-          },
-          {
-            "id": "a5828a4a68123791",
-            "type": "leaf",
-            "state": {
-              "type": "release-notes",
-              "state": {
-                "currentVersion": "1.11.5"
-              },
-              "icon": "lucide-book-up",
-              "title": "Release Notes 1.11.5"
             }
           },
           {
@@ -245,15 +233,15 @@
       "webpage-html-export:Export as HTML": false
     }
   },
-  "active": "0c9d3b6518085d23",
+  "active": "a5828a4a68123791",
   "lastOpenFiles": [
-    "Ecosystem/Pitch.md",
-    "Ecosystem/Modules/Hex.md",
+    "Ecosystem/Modules/Sigil.md",
     "Ecosystem/Modules/Salem.md",
+    "Ecosystem/Modules/Hex.md",
+    "Ecosystem/Modules/Circe.md",
+    "Ecosystem/Pitch.md",
     "Ecosystem/Syntax & Features/Control Flow.md",
     "Ecosystem/Syntax & Features/Types.md",
-    "Ecosystem/Modules/Circe.md",
-    "Ecosystem/Modules/Sigil.md",
     "Ecosystem/Ecosystem.md",
     "Ecosystem/Syntax & Features/Data.md",
     "Ecosystem/Modules",
