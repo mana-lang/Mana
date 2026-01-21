@@ -32,7 +32,7 @@ class BytecodeGenerator final : public ast::Visitor {
 
     using SymbolTable = std::unordered_map<std::string_view, Symbol>;
 
-    mv::Hexe output;
+    mv::Hexe bytecode;
     SymbolTable symbols;
     ml::u16 total_registers;
     ml::u8 scope_depth;
@@ -106,8 +106,8 @@ private:
     template <typename T>
     void CreateLiteral(const ast::Literal<T>& literal) {
         ml::u16 dst = AllocateRegister();
-        ml::u16 idx = output.AddConstant(literal.Get());
-        output.Write(mv::Op::LoadConstant, {dst, idx});
+        ml::u16 idx = bytecode.AddConstant(literal.Get());
+        bytecode.Write(mv::Op::LoadConstant, {dst, idx});
 
         reg_buffer.push_back(dst);
     }

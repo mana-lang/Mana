@@ -190,10 +190,9 @@ void Loop::Accept(Visitor& visitor) const {
 }
 
 /// LoopIf
-LoopIf::LoopIf(const ParseNode& node) {
-    condition = CreateExpression(*node.branches[0]);
-    body      = std::make_shared<Scope>(*node.branches[1]);
-}
+LoopIf::LoopIf(const ParseNode& node)
+    : condition {CreateExpression(*node.branches[0])},
+      body {std::make_shared<Scope>(*node.branches[1])} {}
 
 const NodePtr& LoopIf::GetCondition() const {
     return condition;
@@ -209,7 +208,17 @@ void LoopIf::Accept(Visitor& visitor) const {
 
 /// LoopIfPost
 LoopIfPost::LoopIfPost(const ParseNode& node)
-    : LoopIf(node) {}
+    : condition {CreateExpression(*node.branches[1])},
+      body {std::make_shared<Scope>(*node.branches[0])} {}
+
+
+const NodePtr& LoopIfPost::GetCondition() const {
+    return condition;
+}
+
+const NodePtr& LoopIfPost::GetBody() const {
+    return body;
+}
 
 void LoopIfPost::Accept(Visitor& visitor) const {
     visitor.Visit(*this);

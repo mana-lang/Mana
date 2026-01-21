@@ -182,10 +182,16 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
-// semantically distinguishes from LoopIf without wasted padding
-class LoopIfPost final : public LoopIf {
+class LoopIfPost final : public Node {
+    NodePtr condition;
+    NodePtr body;
+
 public:
     explicit LoopIfPost(const ParseNode& node);
+
+    SIGIL_NODISCARD const NodePtr& GetCondition() const;
+    SIGIL_NODISCARD const NodePtr& GetBody() const;
+
     void Accept(Visitor& visitor) const override;
 };
 

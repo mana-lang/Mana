@@ -211,7 +211,7 @@ bool Lexer::LexedOperator() {
     const auto current = Source[cursor];
     const auto next    = Source[cursor + 1];
     TokenType token_type;
-
+    //
     switch (current) {
         using enum TokenType;
 
