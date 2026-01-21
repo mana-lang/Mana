@@ -1,6 +1,6 @@
 #pragma once
 
-#include <mana/vm/hexe.hpp>
+#include <mana/vm/bytecode.hpp>
 
 #include <mana/literals.hpp>
 #include <mana/vm/opcode.hpp>
@@ -12,5 +12,5 @@ namespace ml = mana::literals;
  * @brief Prints the register-based bytecode in a human-readable format.
  * Matches the new 3-address instruction set (Dst, L, R).
  */
-void PrintBytecode(const mana::vm::Hexe& s);
+void PrintBytecode(const mana::vm::ByteCode& s);
 } // namespace hex

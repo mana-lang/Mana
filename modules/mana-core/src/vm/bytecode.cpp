@@ -1,4 +1,4 @@
-#include <mana/vm/hexe.hpp>
+#include <mana/vm/bytecode.hpp>
 
 #include <stdexcept>
 
@@ -11,14 +11,14 @@ IndexRange::IndexRange(const i64 init_offset, const i64 range)
     }
 }
 
-i64 Hexe::Write(Op opcode) {
+i64 ByteCode::Write(Op opcode) {
     instructions.push_back(static_cast<u8>(opcode));
 
     CheckSize();
     return instructions.size() - 1;
 }
 
-i64 Hexe::Write(const Op opcode, const std::initializer_list<u16> payloads) {
+i64 ByteCode::Write(const Op opcode, const std::initializer_list<u16> payloads) {
     instructions.push_back(static_cast<u8>(opcode));
     const auto index = instructions.size() - 1;
 
@@ -33,7 +33,7 @@ i64 Hexe::Write(const Op opcode, const std::initializer_list<u16> payloads) {
 }
 
 // does not perform bounds checking
-void Hexe::Patch(const i64 instruction_index, const u16 new_value, const u8 payload_offset) {
+void ByteCode::Patch(const i64 instruction_index, const u16 new_value, const u8 payload_offset) {
     // add 1 to skip past instruction
     const i64 payload = 1 + instruction_index + payload_offset * 2;
 
@@ -41,27 +41,27 @@ void Hexe::Patch(const i64 instruction_index, const u16 new_value, const u8 payl
     instructions[payload + 1] = (new_value >> 8) & 0xFF;
 }
 
-i64 Hexe::BackIndex() const {
+i64 ByteCode::BackIndex() const {
     return static_cast<i64>(instructions.size()) - 1;
 }
 
-const std::vector<u8>& Hexe::Instructions() const {
+const std::vector<u8>& ByteCode::Instructions() const {
     return instructions;
 }
 
-std::vector<u8>& Hexe::Instructions() {
+std::vector<u8>& ByteCode::Instructions() {
     return instructions;
 }
 
-i64 Hexe::InstructionCount() const {
+i64 ByteCode::InstructionCount() const {
     return static_cast<i64>(instructions.size());
 }
 
-const std::vector<Value>& Hexe::Constants() const {
+const std::vector<Value>& ByteCode::Constants() const {
     return values;
 }
 
-std::vector<u8> Hexe::Serialize() const {
+std::vector<u8> ByteCode::Serialize() const {
     if (instructions.empty() && values.empty()) {
         return {};
     }
@@ -73,7 +73,7 @@ std::vector<u8> Hexe::Serialize() const {
     return out;
 }
 
-std::vector<u8> Hexe::SerializeConstants() const {
+std::vector<u8> ByteCode::SerializeConstants() const {
     std::vector<u8> out;
 
     if (ConstantCount() > std::numeric_limits<u16>::max()) {
@@ -106,7 +106,7 @@ std::vector<u8> Hexe::SerializeConstants() const {
     return out;
 }
 
-u64 Hexe::ConstantPoolBytesCount() const {
+u64 ByteCode::ConstantPoolBytesCount() const {
     u64 out = 0;
 
     for (const auto& value : values) {
@@ -117,7 +117,7 @@ u64 Hexe::ConstantPoolBytesCount() const {
     return out;
 }
 
-u64 Hexe::ConstantCount() const {
+u64 ByteCode::ConstantCount() const {
     u64 out = 0;
     for (const auto& value : values) {
         out += value.length;
@@ -125,7 +125,7 @@ u64 Hexe::ConstantCount() const {
     return out;
 }
 
-bool Hexe::Deserialize(const std::vector<u8>& bytes) {
+bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
     if (bytes.empty()) {
         return false;
     }
@@ -173,7 +173,7 @@ bool Hexe::Deserialize(const std::vector<u8>& bytes) {
     return true;
 }
 
-void Hexe::CheckSize() const {
+void ByteCode::CheckSize() const {
     if (instructions.size() >= SLICE_INSTRUCTION_MAX) {
         /// TODO: ideally we handle this in such a way that we don't need to crash
         /// also i hate exceptions

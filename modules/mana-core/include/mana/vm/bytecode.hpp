@@ -20,7 +20,7 @@ struct IndexRange {
 
 static constexpr auto SLICE_INSTRUCTION_MAX = std::numeric_limits<i64>::max();
 
-class Hexe {
+class ByteCode {
     std::vector<u8> instructions;
 
     std::vector<Value> values;

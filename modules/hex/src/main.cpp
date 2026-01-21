@@ -3,7 +3,7 @@
 #include <hex/core/logger.hpp>
 #include <hex/hex.hpp>
 
-#include <mana/vm/hexe.hpp>
+#include <mana/vm/bytecode.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
@@ -31,7 +31,7 @@ void Execute(const std::filesystem::path& exe_path) {
     in_file.read(reinterpret_cast<char*>(raw.data()), file_size);
 
     const auto start_deser = chrono::high_resolution_clock::now();
-    mana::vm::Hexe in_slice;
+    mana::vm::ByteCode in_slice;
     in_slice.Deserialize(raw);
     const auto end_deser = chrono::high_resolution_clock::now();
 

@@ -20,7 +20,7 @@ Hex::Hex() {
     registers.resize(BASE_REG_SIZE);
 }
 
-InterpretResult Hex::Execute(Hexe* bytecode) {
+InterpretResult Hex::Execute(ByteCode* bytecode) {
     ip = bytecode->Instructions().data();
 
     const auto* constants = bytecode->Constants().data();

@@ -13,7 +13,7 @@ static u16 ReadPayload(const u8 first_byte, const u8 second_byte) {
     return static_cast<u16>(first_byte | (second_byte << 8));
 }
 
-void PrintBytecode(const Hexe& s) {
+void PrintBytecode(const ByteCode& s) {
     const auto& code = s.Instructions();
 
     for (i64 i = 0; i < code.size(); ++i) {

@@ -4,7 +4,7 @@
 #include <sigil/ast/visitor.hpp>
 
 #include <mana/literals.hpp>
-#include <mana/vm/hexe.hpp>
+#include <mana/vm/bytecode.hpp>
 
 namespace circe {
 namespace ml = mana::literals;
@@ -32,7 +32,7 @@ class BytecodeGenerator final : public ast::Visitor {
 
     using SymbolTable = std::unordered_map<std::string_view, Symbol>;
 
-    mv::Hexe bytecode;
+    mv::ByteCode bytecode;
     SymbolTable symbols;
     ml::u16 total_registers;
     ml::u8 scope_depth;
@@ -45,7 +45,7 @@ class BytecodeGenerator final : public ast::Visitor {
 public:
     BytecodeGenerator();
 
-    CIRCE_NODISCARD mv::Hexe Bytecode() const;
+    CIRCE_NODISCARD mv::ByteCode Bytecode() const;
 
     void Visit(const ast::Artifact& artifact) override;
     void Visit(const ast::Scope& node) override;

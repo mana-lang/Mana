@@ -6,7 +6,7 @@ enable_testing()
 set(MANA_SOURCES
         src/logger.cpp
 
-        src/vm/hexe.cpp
+        src/vm/bytecode.cpp
         src/vm/value.cpp
 )
 
