@@ -45,11 +45,11 @@ i64 Hexe::BackIndex() const {
     return static_cast<i64>(instructions.size()) - 1;
 }
 
-const ByteCode& Hexe::Instructions() const {
+const std::vector<u8>& Hexe::Instructions() const {
     return instructions;
 }
 
-ByteCode& Hexe::Instructions() {
+std::vector<u8>& Hexe::Instructions() {
     return instructions;
 }
 
@@ -61,20 +61,20 @@ const std::vector<Value>& Hexe::Constants() const {
     return values;
 }
 
-ByteCode Hexe::Serialize() const {
+std::vector<u8> Hexe::Serialize() const {
     if (instructions.empty() && values.empty()) {
         return {};
     }
 
-    ByteCode out = SerializeConstants();
+    std::vector<u8> out = SerializeConstants();
 
     out.insert(out.end(), instructions.begin(), instructions.end());
 
     return out;
 }
 
-ByteCode Hexe::SerializeConstants() const {
-    ByteCode out;
+std::vector<u8> Hexe::SerializeConstants() const {
+    std::vector<u8> out;
 
     if (ConstantCount() > std::numeric_limits<u16>::max()) {
         throw std::runtime_error("Constant Pool too large to serialize");
@@ -125,7 +125,7 @@ u64 Hexe::ConstantCount() const {
     return out;
 }
 
-bool Hexe::Deserialize(const ByteCode& bytes) {
+bool Hexe::Deserialize(const std::vector<u8>& bytes) {
     if (bytes.empty()) {
         return false;
     }

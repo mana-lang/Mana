@@ -18,12 +18,10 @@ struct IndexRange {
     IndexRange() = delete;
 };
 
-using ByteCode = std::vector<u8>;
-
 static constexpr auto SLICE_INSTRUCTION_MAX = std::numeric_limits<i64>::max();
 
 class Hexe {
-    ByteCode instructions;
+    std::vector<u8> instructions;
 
     std::vector<Value> values;
 
@@ -42,8 +40,8 @@ public:
 
     MANA_NODISCARD i64 BackIndex() const;
 
-    MANA_NODISCARD const ByteCode& Instructions() const;
-    MANA_NODISCARD ByteCode& Instructions();
+    MANA_NODISCARD const std::vector<u8>& Instructions() const;
+    MANA_NODISCARD std::vector<u8>& Instructions();
 
     MANA_NODISCARD i64 InstructionCount() const;
 
@@ -60,14 +58,14 @@ public:
     // - instructions (u16)
     // ---- must keep in mind Push instructions jump to 2-byte indices
     // ---- constant pool has a max size of 65535 (u16-max)
-    MANA_NODISCARD ByteCode Serialize() const;
-    MANA_NODISCARD ByteCode SerializeConstants() const;
+    MANA_NODISCARD std::vector<u8> Serialize() const;
+    MANA_NODISCARD std::vector<u8> SerializeConstants() const;
 
     MANA_NODISCARD u64 ConstantPoolBytesCount() const;
     MANA_NODISCARD u64 ConstantCount() const;
 
     // this function assumes correct input
-    bool Deserialize(const ByteCode& bytes);
+    bool Deserialize(const std::vector<u8>& bytes);
 
     template <typename T>
         requires std::is_integral_v<T> || std::is_floating_point_v<T>

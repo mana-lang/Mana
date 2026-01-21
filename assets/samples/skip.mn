@@ -2,7 +2,7 @@ mut data i = 0
 mut data j = 0
 
 loop {    
-    break if i < 10
+    break if i >= 10
     i += 1
 
     skip if i % 2 == 0
