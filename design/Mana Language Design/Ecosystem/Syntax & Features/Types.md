@@ -126,6 +126,5 @@ type Foo {
 	c: string
 }
 ```
-
 > [!note]
 `[Locked]` data is restricted to only be modifiable by interface functions. However, **Mana** allows anywhere to create an associated function for a type. `[Locked]` is merely an indicator that a type member *shouldn't* freely be modified, for some reason or another.
