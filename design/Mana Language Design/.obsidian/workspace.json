@@ -36,6 +36,18 @@
             }
           },
           {
+            "id": "a5828a4a68123791",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.11.5"
+              },
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.11.5"
+            }
+          },
+          {
             "id": "d9dc5d924889ce69",
             "type": "leaf",
             "state": {

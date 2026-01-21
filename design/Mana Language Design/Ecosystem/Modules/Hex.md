@@ -41,14 +41,16 @@ The `hex` executable provides a driver for running Mana programs. When running i
 As with all Mana modules, Hex utilizes a centralized `spdlog` instance for structured logging and error reporting.
 
 ### Goals & Future Considerations
-Hex is currently exclusively a bytecode interpreter, but the aim is to convert it into an embeddable Mana runtime that can either execute bytecode or JIT machine code. The aim is to maximize speed despite all the flexibility offered by Hex.
+Currently, Hex is exclusively a bytecode interpreter -- with the long-term goal of developing it into an embeddable Mana runtime that can either execute bytecode or JIT machine code.
 
-A medium-term goal is to have Mana & Hex have enough features that it can serve as a replacement for **Lua**. While Lua is a very powerful and ubiquitous language, it can be a little cumbersome to embed in an engine, as a lot of glue is required. The goal is to start by offering an excellent C++ interface to easily integrate Mana code into any C++ project, and be able to utilize it as a scripting language much like Lua, but with far less setup and glue, on top of being able to make use of Mana's game development-centric features. 
+The aim is to maximize speed while maintaining Hex's runtime hot-reload flexibility.
 
-C++ was chosen as Mana's primary interface language because the vast majority of game engines are built with it. While the ultimate endgame for Mana would be for game engines to be written in it, this would never happen as long as Mana is neither mature and robust enough to be worth such a time investment, nor sees any widespread use. 
+A medium-term goal is to give Mana & Hex enough features & stability that it can serve as a practical replacement for **Lua**. While Lua is a very powerful and ubiquitous language, it can be cumbersome to embed into an engine, as a lot of glue is required. By offering an excellent C++ interface to seamlessly integrate Hex into any C++ project, Mana can be used as a scripting language much like Lua, but with far less setup and glue, on top of being able to make use of Mana's game development-centric features. 
 
-A far more realistic outcome is that Mana can potentially be adopted by smaller engines and game projects and, once people start seeing its value, perhaps one day larger engines can integrate it as an optional scripting language, before any serious engines would be built with it.
+C++ was chosen as Mana's primary interface language because it's also the language of choice for most game engines. While the ultimate goal would be to see its use in game engine development, Mana would need to see fairly widespread use for it to reach a level of maturity where it's robust enough to warrant such a massive investment. 
 
-Due to its nature as a hybrid language, it should have some amount of ABI compatibility with C++, which would enable Mana code to gradually enter existing engines in scripting form, and eventually replace or extend entire binary modules (e.g. as a `.dll`). The runtime would remove a lot of the typical glue needed to make this go smoothly and work well.
+A far more pragmatic outcome is that Mana gets adopted by smaller engines and game projects, and larger engines could integrate it as an optional scripting language. From there, having native engine modules written in Mana (e.g.  as a `.dll`) becomes a trivial endeavor, as facilitating the integration of standalone Mana modules is one of Hex' primary features.
 
-Hex being such a low-overhead, high performance, and plug-and-play runtime would ensure that adoption isn't a complete fantasy.
+Hex is essentially the heart of Mana. It addresses the core problem Mana solves (fast execution and rapid iteration with expressive syntax) while sidelining the general issue with the adoption of new technologies. 
+
+You can retain your existing workflows and gradually discover and adopt Mana, all thanks to Hex.
