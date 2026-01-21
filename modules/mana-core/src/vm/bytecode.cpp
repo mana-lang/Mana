@@ -58,11 +58,11 @@ i64 ByteCode::InstructionCount() const {
 }
 
 const std::vector<Value>& ByteCode::Constants() const {
-    return values;
+    return constant_pool;
 }
 
 std::vector<u8> ByteCode::Serialize() const {
-    if (instructions.empty() && values.empty()) {
+    if (instructions.empty() && constant_pool.empty()) {
         return {};
     }
 
@@ -86,7 +86,7 @@ std::vector<u8> ByteCode::SerializeConstants() const {
         out.push_back((constant_bytes_count >> i * 8) & 0xFF);
     }
 
-    for (const auto& value : values) {
+    for (const auto& value : constant_pool) {
         out.push_back(static_cast<u8>(value.type));
 
         for (i64 i = 0; i < sizeof(value.length); ++i) {
@@ -109,7 +109,7 @@ std::vector<u8> ByteCode::SerializeConstants() const {
 u64 ByteCode::ConstantPoolBytesCount() const {
     u64 out = 0;
 
-    for (const auto& value : values) {
+    for (const auto& value : constant_pool) {
         out += value.length * sizeof(Value::Data); // num elements
         out += sizeof(value.type);
         out += sizeof(value.length); // array length still has to be included
@@ -119,7 +119,7 @@ u64 ByteCode::ConstantPoolBytesCount() const {
 
 u64 ByteCode::ConstantCount() const {
     u64 out = 0;
-    for (const auto& value : values) {
+    for (const auto& value : constant_pool) {
         out += value.length;
     }
     return out;
@@ -130,7 +130,7 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
         return false;
     }
 
-    values.clear();
+    constant_pool.clear();
 
     // bytes taken up by value-count slot in the constant pool
     std::array<u8, sizeof(u64)> count_bytes {};
@@ -165,7 +165,7 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
             value.WriteValueBytes(value_bytes, i);
             offset += sizeof(Value::Data);
         }
-        values.push_back(value);
+        constant_pool.push_back(value);
     }
 
     instructions.insert(instructions.begin(), bytes.begin() + pool_range.end, bytes.end());

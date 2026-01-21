@@ -49,7 +49,7 @@ void PrintBytecode(const ByteCode& s) {
             const auto& val = s.Constants()[idx];
 
             const auto log_val = [&](auto v) {
-                Log->debug("{:04} | {} R{} <- {} [constant index: {}]", offset, name, reg, v, idx);
+                Log->debug("{:04} | {} R{} <- {} [pool index: {}]", offset, name, reg, v, idx);
             };
 
             switch (val.GetType()) {

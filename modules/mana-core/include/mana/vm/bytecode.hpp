@@ -6,6 +6,7 @@
 
 #include <cstdlib>
 #include <limits>
+#include <stdexcept>
 #include <vector>
 
 namespace mana::vm {
@@ -20,10 +21,12 @@ struct IndexRange {
 
 static constexpr auto SLICE_INSTRUCTION_MAX = std::numeric_limits<i64>::max();
 
+template <typename T>
+concept ConstantType = std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>;
+
 class ByteCode {
     std::vector<u8> instructions;
-
-    std::vector<Value> values;
+    std::vector<Value> constant_pool;
 
 public:
     // returns opcode's index
@@ -67,29 +70,28 @@ public:
     // this function assumes correct input
     bool Deserialize(const std::vector<u8>& bytes);
 
-    template <typename T>
-        requires std::is_integral_v<T> || std::is_floating_point_v<T>
-                 || std::is_same_v<T, bool>
-    u16 AddConstant(const T value) {
-        values.push_back(value);
-
-        return values.size() - 1;
-    }
-
-    template <typename T>
-        requires std::is_integral_v<T> || std::is_floating_point_v<T>
-                 || std::is_same_v<T, bool>
-    u16 AddConstants(const std::vector<T>& constants) {
-        if (values.size() >= std::numeric_limits<u16>::max()) {
-            // error
-            std::abort();
+    template <ConstantType CT>
+    u16 AddConstant(const CT value) {
+        // only need to store unique constants
+        for (i64 i = 0; i < constant_pool.size(); ++i) {
+            if (constant_pool[i] == value) {
+                return i;
+            }
         }
 
-        const auto first_elem_index = values.size();
+        constant_pool.push_back(value);
+        return constant_pool.size() - 1;
+    }
 
-        values.push_back(Value {constants});
+    template <ConstantType CT>
+    u16 AddArray(const std::vector<CT>& array) {
+        if (constant_pool.size() >= std::numeric_limits<u16>::max()) {
+            // we really need to remove all instances of exception throws at some point
+            throw std::runtime_error("Constant Pool too large to serialize");
+        }
 
-        return first_elem_index;
+        constant_pool.push_back(Value {array});
+        return constant_pool.size() - 1;
     }
 
 private:
