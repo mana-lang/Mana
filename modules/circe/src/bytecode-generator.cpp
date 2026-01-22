@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <ranges>
 
+#include <sigil/ast/keywords.hpp>
+
 namespace circe {
 using namespace mana::vm;
 using namespace sigil::ast;
@@ -304,8 +306,9 @@ void BytecodeGenerator::Visit(const Skip& node) {
 
 void BytecodeGenerator::Visit(const UnaryExpr& node) {
     node.GetVal().Accept(*this);
+    const auto op_text = node.GetOp();
 
-    if (node.GetOp().size() > 1) {
+    if (op_text.size() > 1 && op_text != "not") {
         Log->error("BCG: Unhandled unary expression");
         return;
     }
@@ -313,24 +316,30 @@ void BytecodeGenerator::Visit(const UnaryExpr& node) {
     u16 src = PopRegBuffer();
     u16 dst = AllocateRegister();
 
-    Op op;
-    switch (node.GetOp()[0]) {
+    const auto write = [this, src, dst](const Op op) {
+        bytecode.Write(op, {dst, src});
+        reg_buffer.push_back(dst);
+        FreeRegister(dst);
+    };
+
+    switch (op_text[0]) {
     case '-':
-        op = Op::Negate;
-        break;
-    case '!':
-        op = Op::Not;
-        break;
-    default:
-        Log->error("BCG: Invalid unary expression");
-        FreeRegister(src);
-        FreeRegister(PopRegBuffer());
+        write(Op::Negate);
         return;
+    case 'n':
+        if (op_text != "not") {
+            break;
+        }
+    case '!':
+        write(Op::Not);
+        return;
+    default:
+        break;
     }
 
-    bytecode.Write(op, {dst, src});
-    reg_buffer.push_back(dst);
+    Log->error("BCG: Invalid unary expression");
     FreeRegister(src);
+    FreeRegister(PopRegBuffer());
 }
 
 void BytecodeGenerator::Visit(const BinaryExpr& node) {
