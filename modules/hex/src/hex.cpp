@@ -70,8 +70,6 @@ InterpretResult Hex::Execute(ByteCode* bytecode) {
             return "???";
         }
     };
-#   define DISPATCH()                                                   \
-    {                                                                   \
 #   define DISPATCH()                                                                          \
     {                                                                                          \
         const auto offset = ip - bytecode->Instructions().data();                              \
