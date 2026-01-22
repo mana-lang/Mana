@@ -85,10 +85,7 @@ public:
 
     template <ConstantType CT>
     u16 AddArray(const std::vector<CT>& array) {
-        if (constant_pool.size() >= std::numeric_limits<u16>::max()) {
-            // we really need to remove all instances of exception throws at some point
-            throw std::runtime_error("Constant Pool too large to serialize");
-        }
+        CheckSize();
 
         constant_pool.push_back(Value {array});
         return constant_pool.size() - 1;

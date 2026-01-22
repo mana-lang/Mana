@@ -236,6 +236,11 @@ void BytecodeGenerator::Visit(const LoopFixed& node) {
         FreeRegister(limit_val);
     }
 
+    // allocate step before loop start so we don't reload the constant repeatedly
+    // we'll clear this register at the end
+    const u16 step = AllocateRegister();
+    bytecode.Write(Op::LoadConstant, {step, bytecode.AddConstant(1)}); // fixed increment is always 1
+
     // loop start
     loop_stack.emplace_back();
     const i64 start_addr = bytecode.InstructionCount();
@@ -268,11 +273,7 @@ void BytecodeGenerator::Visit(const LoopFixed& node) {
     }
 
     // step counter before loop ends
-    const u16 step = AllocateRegister();
-    bytecode.Write(Op::LoadConstant, {step, bytecode.AddConstant(1)}); // fixed increment is always 1
     bytecode.Write(node.CountsDown() ? Op::Sub : Op::Add, {counter, counter, step});
-
-    FreeRegister(step);
 
     // loop end
     bytecode.Write(Op::Jump, {CalcJumpBackwards(start_addr, bytecode.InstructionCount())});
@@ -289,6 +290,7 @@ void BytecodeGenerator::Visit(const LoopFixed& node) {
 
     FreeRegister(limit);
     FreeRegister(counter);
+    FreeRegister(step);
     loop_stack.pop_back();
 }
 
@@ -533,6 +535,7 @@ bool BytecodeGenerator::RegisterIsOwned(u16 reg) {
             return true;
         }
     }
+
     return false;
 }
 
