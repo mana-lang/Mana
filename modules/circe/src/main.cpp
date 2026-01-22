@@ -79,7 +79,10 @@ int CompileFrom(const CompileSettings& compile_settings) {
 
         if (analyzer.IssueCount() > 0) {
             Log->critical("Aborting");
-            Log->error("Compilation failed with {} issues", analyzer.IssueCount());
+            Log->error("Compilation failed with {} issue{}",
+                       analyzer.IssueCount(),
+                       analyzer.IssueCount() > 1 ? "s" : ""
+            );
             return Exit(ExitCode::SemanticError);
         }
 

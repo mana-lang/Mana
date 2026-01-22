@@ -91,6 +91,8 @@ private:
     std::string_view PopTypeBuffer();
     void BufferType(std::string_view type_name);
 
+    bool TypesMatch(std::string_view lhs, std::string_view rhs) const;
+
     void AddSymbol(std::string_view name, std::string_view type, bool is_mutable);
     const Datum* GetSymbol(std::string_view name) const;
 

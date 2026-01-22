@@ -19,6 +19,7 @@ SemanticAnalyzer::SemanticAnalyzer()
     types[PrimitiveName(I64)]   = {TypeSize::QuadWord, 0};
     types[PrimitiveName(Isize)] = {TypeSize::QuadWord, 0};
     // we're not supporting 32bit systems for the foreseeable future
+    // so isize/usize can just be 64-bit until maybe console support or something changes that
 
     types[PrimitiveName(U8)]    = {TypeSize::Byte, 0};
     types[PrimitiveName(U16)]   = {TypeSize::Word, 0};
@@ -74,6 +75,31 @@ void SemanticAnalyzer::BufferType(std::string_view type_name) {
     type_buffer[1] = type_name;
 }
 
+bool IsIntPrimitive(std::string_view type) {
+    return type == PrimitiveName(I8)
+           || type == PrimitiveName(I16)
+           || type == PrimitiveName(I32)
+           || type == PrimitiveName(I64);
+}
+
+bool IsUintPrimitive(std::string_view type) {
+    return type == PrimitiveName(U8)
+           || type == PrimitiveName(U16)
+           || type == PrimitiveName(U32)
+           || type == PrimitiveName(U64);
+}
+
+bool IsFloatPrimitive(std::string_view type) {
+    return type == PrimitiveName(F32) || type == PrimitiveName(F64);
+}
+
+bool SemanticAnalyzer::TypesMatch(const std::string_view lhs, const std::string_view rhs) const {
+    return lhs == rhs
+           || (IsIntPrimitive(lhs) && IsIntPrimitive(rhs))
+           || (IsUintPrimitive(lhs) && IsUintPrimitive(rhs))
+           || (IsFloatPrimitive(lhs) && IsFloatPrimitive(rhs));
+}
+
 void SemanticAnalyzer::AddSymbol(std::string_view name, std::string_view type, bool is_mutable) {
     if (symbols.contains(name)) {
         Log->error("Redefinition of '{}'", name);
@@ -106,7 +132,7 @@ void SemanticAnalyzer::HandleDeclaration(const Binding& node, bool is_mutable) {
     }
 
     // might have to also '&& node.HasTypeAnnotation()'
-    if (type != expr_type) {
+    if (not TypesMatch(expr_type, type)) {
         Log->error("Type mismatch: expected '{}', got '{}'", type, expr_type);
         ++issue_counter;
         return;
@@ -173,7 +199,7 @@ void SemanticAnalyzer::Visit(const Assignment& node) {
     node.GetValue()->Accept(*this);
 
     const auto expr_type = PopTypeBuffer();
-    if (expr_type != symbol->type) {
+    if (not TypesMatch(expr_type, symbol->type)) {
         Log->error("Type mismatch: expected '{}', got '{}'", symbol->type, expr_type);
         ++issue_counter;
     }
