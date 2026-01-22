@@ -230,8 +230,9 @@ void SemanticAnalyzer::Visit(const LoopIfPost& node) {
 void SemanticAnalyzer::Visit(const LoopRange& node) {
     ++loop_depth;
 
-    // counter is mandatory in ranged loop and input is assumed to be correct
+    // counter is mandatory in ranged loop
     AddSymbol(node.GetCounter(), PrimitiveName(I64), false);
+    symbols[node.GetCounter()].scope_depth += 1; // the counter is part of the if's scope
 
     node.GetStart()->Accept(*this);
     node.GetEnd()->Accept(*this);
@@ -245,6 +246,7 @@ void SemanticAnalyzer::Visit(const LoopFixed& node) {
 
     if (node.HasCounter()) {
         AddSymbol(node.GetCounter(), PrimitiveName(I64), false);
+        symbols[node.GetCounter()].scope_depth += 1; // the counter is part of the if's scope
     }
 
     node.GetLimit()->Accept(*this);

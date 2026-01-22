@@ -1,7 +1,0 @@
-mut data a = 0
-
-loop 12 i {
-    a += i
-}
-
-data x = a
