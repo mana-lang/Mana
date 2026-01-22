@@ -41,7 +41,7 @@ The `hex` executable provides a driver for running Mana programs. When running i
 As with all Mana modules, Hex utilizes a centralized `spdlog` instance for structured logging and error reporting.
 
 ### Goals & Future Considerations
-Currently, Hex is exclusively a bytecode interpreter with the long-term goal of developing it into an embeddable Mana runtime that can either execute bytecode or JIT machine code.
+Currently, Hex is exclusively a bytecode interpreter. The long-term goal is to develop it into an embeddable Mana runtime that can either execute bytecode or JIT machine code.
 
 The aim is to maximize speed while maintaining Hex's runtime hot-reload flexibility.
 

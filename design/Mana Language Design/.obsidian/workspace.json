@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecosystem/Syntax & Features/Control Flow.md",
+                "file": "Ecosystem/Modules/Circe.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Control Flow"
+              "title": "Circe"
             }
           }
         ],
@@ -193,13 +193,13 @@
   },
   "active": "2c9e96cd2e2ede9b",
   "lastOpenFiles": [
+    "Ecosystem/Modules/Salem.md",
+    "Ecosystem/Modules/Hex.md",
+    "Ecosystem/Syntax & Features/Control Flow.md",
     "Ecosystem/Ecosystem.md",
     "Ecosystem/Modules/Circe.md",
     "Ecosystem/Pitch.md",
-    "Ecosystem/Modules/Hex.md",
     "Ecosystem/Modules/Sigil.md",
-    "Ecosystem/Modules/Salem.md",
-    "Ecosystem/Syntax & Features/Control Flow.md",
     "Ecosystem/Syntax & Features/Types.md",
     "Ecosystem/Syntax & Features/Data.md",
     "Ecosystem/Modules",
