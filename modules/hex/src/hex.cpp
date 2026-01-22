@@ -72,12 +72,14 @@ InterpretResult Hex::Execute(ByteCode* bytecode) {
     };
 #   define DISPATCH()                                                   \
     {                                                                   \
+#   define DISPATCH()                                                                          \
+    {                                                                                          \
         const auto offset = ip - bytecode->Instructions().data();                              \
         if (offset < bytecode->Instructions().size()) {                                        \
             Log->debug("{:04} | {:<16}", offset, magic_enum::enum_name(static_cast<Op>(*ip))); \
         }                                                                                      \
-        auto  label = *ip < dispatch_max ? dispatch_table[*ip++] : &&compile_error;  \
-        goto *label;                                                                 \
+        auto  label = *ip < dispatch_max ? dispatch_table[*ip++] : &&compile_error;            \
+        goto *label;                                                                           \
     }
 
     constexpr auto dispatch_max = dispatch_table.size();
