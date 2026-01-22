@@ -155,6 +155,16 @@ void Value::WriteValueBytes(const std::array<u8, sizeof(Data)>& bytes,
     goto* choice[type]
 
 bool Value::operator==(const Value& other) const {
+    if (type != other.type) {
+        return false;
+    }
+
+    // we don't have logic for comparing arrays quite yet
+    // so [1,2,3] == [1,2,3] currently will just eval to false
+    if (length > 1 || other.length > 1) {
+        return false;
+    }
+
     COMPUTED_GOTO();
 
 CASE_INT:
