@@ -101,7 +101,7 @@ private:
     LoopContext& CurrentLoop();
     void HandleLoopControl(bool is_break, const ast::NodePtr& condition);
 
-    void HandleDeclaration(const ast::Binding& node, bool is_mutable);
+    void HandleDeclaration(const ast::Initializer& node, bool is_mutable);
 
     template <typename T>
     void CreateLiteral(const ast::Literal<T>& literal) {

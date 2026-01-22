@@ -621,7 +621,7 @@ void BytecodeGenerator::HandleLoopControl(bool is_break, const NodePtr& conditio
     buffer.emplace_back(jump_index, has_condition);
 }
 
-void BytecodeGenerator::HandleDeclaration(const Binding& node, bool is_mutable) {
+void BytecodeGenerator::HandleDeclaration(const Initializer& node, bool is_mutable) {
     const auto name = node.GetName();
     if (symbols.contains(name)) {
         Log->error("BCG: Redefinition of '{}'", name);

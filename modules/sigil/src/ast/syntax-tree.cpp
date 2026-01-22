@@ -364,7 +364,7 @@ void Skip::Accept(Visitor& visitor) const {
 }
 
 /// Binding
-Binding::Binding(const ParseNode& node)
+Initializer::Initializer(const ParseNode& node)
     : initializer {nullptr} {
     const auto& tokens = node.tokens;
 
@@ -389,29 +389,29 @@ Binding::Binding(const ParseNode& node)
     }
 }
 
-std::string_view Binding::GetName() const {
+std::string_view Initializer::GetName() const {
     return name;
 }
 
-std::string_view Binding::GetTypeName() const {
+std::string_view Initializer::GetTypeName() const {
     return type;
 }
 
-const NodePtr& Binding::GetInitializer() const {
+const NodePtr& Initializer::GetInitializer() const {
     return initializer;
 }
 
-bool Binding::HasTypeAnnotation() const {
+bool Initializer::HasTypeAnnotation() const {
     return not type.empty();
 }
 
-void Binding::Accept(Visitor& visitor) const {
+void Initializer::Accept(Visitor& visitor) const {
     Log->warn("Binding should never be visited directly");
 }
 
 /// MutableDataDeclaration
 MutableDataDeclaration::MutableDataDeclaration(const ParseNode& node)
-    : Binding {node} {}
+    : Initializer {node} {}
 
 void MutableDataDeclaration::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
@@ -419,7 +419,7 @@ void MutableDataDeclaration::Accept(Visitor& visitor) const {
 
 /// DataDeclaration
 DataDeclaration::DataDeclaration(const ParseNode& node)
-    : Binding {node} {}
+    : Initializer {node} {}
 
 void DataDeclaration::Accept(Visitor& visitor) const {
     visitor.Visit(*this);

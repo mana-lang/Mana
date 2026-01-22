@@ -115,33 +115,31 @@ const SemanticAnalyzer::Datum* SemanticAnalyzer::GetSymbol(std::string_view name
     return it != symbols.end() ? &it->second : nullptr;
 }
 
-void SemanticAnalyzer::HandleDeclaration(const Binding& node, bool is_mutable) {
+void SemanticAnalyzer::HandleInitializer(const Initializer& node, bool is_mutable) {
     // evaluate expr first
-    const auto& init = node.GetInitializer();
-    if (init != nullptr) {
+    const auto& init    = node.GetInitializer();
+    const bool has_init = init != nullptr;
+
+    if (has_init) {
         init->Accept(*this);
     }
-    const auto expr_type = PopTypeBuffer();
 
-    const auto type = node.HasTypeAnnotation() ? node.GetTypeName() : expr_type;
+    const auto initializer_type = has_init ? PopTypeBuffer() : PrimitiveName(None);
+    const auto annotation_type  = node.HasTypeAnnotation() ? node.GetTypeName() : initializer_type;
 
-    if (not types.contains(type)) {
-        Log->error("Unknown type '{}'", type);
+    if (not types.contains(annotation_type)) {
+        Log->error("Unknown type '{}'", annotation_type);
         ++issue_counter;
-        return;
     }
 
-    // might have to also '&& node.HasTypeAnnotation()'
-    if (not TypesMatch(expr_type, type)) {
-        Log->error("Type mismatch: expected '{}', got '{}'", type, expr_type);
+    if (has_init && not TypesMatch(initializer_type, annotation_type)) {
+        Log->error("Type mismatch: expected '{}', got '{}'", annotation_type, initializer_type);
         ++issue_counter;
-        return;
     }
 
-    AddSymbol(node.GetName(), type, is_mutable);
+    AddSymbol(node.GetName(), annotation_type, is_mutable);
 }
 
-// Visit methods
 void SemanticAnalyzer::Visit(const Artifact& artifact) {
     EnterScope();
     for (const auto& statement : artifact.GetChildren()) {
@@ -159,11 +157,11 @@ void SemanticAnalyzer::Visit(const Scope& node) {
 }
 
 void SemanticAnalyzer::Visit(const MutableDataDeclaration& node) {
-    HandleDeclaration(node, true);
+    HandleInitializer(node, true);
 }
 
 void SemanticAnalyzer::Visit(const DataDeclaration& node) {
-    HandleDeclaration(node, false);
+    HandleInitializer(node, false);
 }
 
 void SemanticAnalyzer::Visit(const Identifier& node) {
@@ -186,20 +184,15 @@ void SemanticAnalyzer::Visit(const Assignment& node) {
     if (symbol == nullptr) {
         Log->error("Attempt to assign to undefined datum '{}'", identifier);
         ++issue_counter;
-        return;
-    }
-
-
-    if (not symbol->is_mutable) {
+    } else if (not symbol->is_mutable) {
         Log->error("Attempt to assign to immutable datum '{}'", identifier);
         ++issue_counter;
-        return; // is it wise to return here and avoid error checking on the assigned expression?
     }
 
     node.GetValue()->Accept(*this);
 
     const auto expr_type = PopTypeBuffer();
-    if (not TypesMatch(expr_type, symbol->type)) {
+    if (symbol != nullptr && not TypesMatch(expr_type, symbol->type)) {
         Log->error("Type mismatch: expected '{}', got '{}'", symbol->type, expr_type);
         ++issue_counter;
     }

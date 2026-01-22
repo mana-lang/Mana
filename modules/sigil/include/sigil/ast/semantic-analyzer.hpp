@@ -96,6 +96,6 @@ private:
     void AddSymbol(std::string_view name, std::string_view type, bool is_mutable);
     const Datum* GetSymbol(std::string_view name) const;
 
-    void HandleDeclaration(const ast::Binding& node, bool is_mutable);
+    void HandleInitializer(const ast::Initializer& node, bool is_mutable);
 };
 } // namespace sigil

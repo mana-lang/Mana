@@ -87,14 +87,13 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
-// TODO: make MutableDataDeclaration to encode meaning in the type rather than a bool
-class Binding : public Node {
+class Initializer : public Node {
     std::string_view name;
     std::string_view type;
     NodePtr initializer;
 
 public:
-    explicit Binding(const ParseNode& node);
+    explicit Initializer(const ParseNode& node);
 
     SIGIL_NODISCARD std::string_view GetName() const;
     SIGIL_NODISCARD std::string_view GetTypeName() const;
@@ -105,14 +104,14 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
-class MutableDataDeclaration final : public Binding {
+class MutableDataDeclaration final : public Initializer {
 public:
     explicit MutableDataDeclaration(const ParseNode& node);
 
     void Accept(Visitor& visitor) const override;
 };
 
-class DataDeclaration final : public Binding {
+class DataDeclaration final : public Initializer {
 public:
     explicit DataDeclaration(const ParseNode& node);
 
