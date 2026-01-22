@@ -13,8 +13,8 @@
     { "include": "#constants" },
     { "include": "#numbers" },
     { "include": "#functions" },
-    { "include": "#identifiers" },
-    { "include": "#operators" }
+    { "include": "#operators" },
+    { "include": "#identifiers" }
   ],
   "repository": {
     "scoped-declarations": {
