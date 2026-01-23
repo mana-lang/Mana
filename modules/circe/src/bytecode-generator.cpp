@@ -51,39 +51,25 @@ void BytecodeGenerator::Visit(const DataDeclaration& node) {
 }
 
 void BytecodeGenerator::Visit(const Identifier& node) {
-    const auto name(node.GetName());
-    if (const auto it = symbols.find(name);
+    // even though input is assumed to be correct
+    // we don't wanna fail silently if semantic analysis fails
+    if (const auto it = symbols.find(node.GetName());
         it != symbols.end()) {
         reg_buffer.push_back(it->second.register_index);
-        return;
     }
-
-    Log->warn("BCG: Undefined identifier '{}'", name);
-    bytecode.Write(Op::Halt);
 }
 
 void BytecodeGenerator::Visit(const Assignment& node) {
-    const auto name(node.GetIdentifier());
-    const auto it = symbols.find(name);
-    if (it == symbols.end()) {
-        Log->warn("BCG: Undefined identifier '{}'", name);
-        return;
-    }
-
-    if (not it->second.is_mutable) {
-        Log->error("BCG: Cannot assign to immutable data '{}'", name);
-        bytecode.Write(Op::Err);
-        return;
-    }
+    const auto& symbol = symbols[node.GetIdentifier()];
 
     node.GetValue()->Accept(*this);
-    u16 rhs             = PopRegBuffer();
-    std::string_view op = node.GetOp();
-    if (op.size() == 1) {
-        bytecode.Write(Op::Move, {it->second.register_index, rhs});
-    } else {
-        u16 lhs = it->second.register_index;
+    u16 rhs = PopRegBuffer();
 
+    u16 lhs       = symbol.register_index;
+    const auto op = node.GetOp();
+    if (op == "=") {
+        bytecode.Write(Op::Move, {lhs, rhs});
+    } else {
         auto operation = Op::Err;
         switch (op[0]) {
         case '+':
@@ -177,7 +163,6 @@ void BytecodeGenerator::Visit(const LoopIf& node) {
         bytecode.Patch(skip_index, CalcJumpDistance(skip_index, has_condition), has_condition);
     }
 
-    // end of loop, we either jump back or skip past that
     bytecode.Write(Op::Jump, {CalcJumpBackwards(start_addr, bytecode.InstructionCount())});
     bytecode.Patch(jmp_end, CalcJumpDistance(jmp_end, true), CONDITIONAL_JUMP);
 
@@ -308,42 +293,32 @@ void BytecodeGenerator::Visit(const UnaryExpr& node) {
     node.GetVal().Accept(*this);
     const auto op_text = node.GetOp();
 
-    if (op_text.size() > 1 && op_text != "not") {
-        Log->error("BCG: Unhandled unary expression");
-        return;
-    }
-
     u16 src = PopRegBuffer();
     u16 dst = AllocateRegister();
 
-    const auto write = [this, src, dst](const Op op) {
-        bytecode.Write(op, {dst, src});
-        reg_buffer.push_back(dst);
-        FreeRegister(dst);
-    };
-
+    Op op;
     switch (op_text[0]) {
     case '-':
-        write(Op::Negate);
-        return;
-    case 'n':
-        if (op_text != "not") {
-            break;
-        }
-    case '!':
-        write(Op::Not);
-        return;
-    default:
+        op = Op::Negate;
         break;
+    case 'n': // 'not'
+        [[fallthrough]];
+    case '!':
+        op = Op::Not;
+        break;
+    default:
+        Log->error("Internal Compiler Error: Invalid unary expression");
+        FreeRegister(src);
+        return;
     }
 
-    Log->error("BCG: Invalid unary expression");
-    FreeRegister(src);
-    FreeRegister(PopRegBuffer());
+    bytecode.Write(op, {dst, src});
+    reg_buffer.push_back(dst);
+    FreeRegister(dst);
 }
 
 void BytecodeGenerator::Visit(const BinaryExpr& node) {
-    const auto op_str = node.GetOp();
+    const auto op_text = node.GetOp();
 
     // logical ops need special treatment as they are control flow due to short-circuiting
     const auto jump = [this, &node](const Op jump_op) {
@@ -366,12 +341,12 @@ void BytecodeGenerator::Visit(const BinaryExpr& node) {
     };
 
 
-    if (op_str == "&&") {
+    if (op_text == "&&") {
         jump(Op::JumpWhenFalse);
         return;
     }
 
-    if (op_str == "||") {
+    if (op_text == "||") {
         jump(Op::JumpWhenTrue);
         return;
     }
@@ -384,7 +359,7 @@ void BytecodeGenerator::Visit(const BinaryExpr& node) {
     u16 dst = AllocateRegister();
 
     Op op;
-    switch (op_str[0]) {
+    switch (op_text[0]) {
     case '+':
         op = Op::Add;
         break;
@@ -401,36 +376,31 @@ void BytecodeGenerator::Visit(const BinaryExpr& node) {
         op = Op::Mod;
         break;
     case '>':
-        if (op_str.size() == 2 && op_str[1] == '=') {
+        if (op_text == ">=") {
             op = Op::Cmp_GreaterEq;
             break;
         }
         op = Op::Cmp_Greater;
         break;
     case '<':
-        if (op_str.size() == 2 && op_str[1] == '=') {
+        if (op_text == "<=") {
             op = Op::Cmp_LesserEq;
             break;
         }
         op = Op::Cmp_Lesser;
         break;
     case '=':
-        if (op_str.size() == 2 && op_str[1] == '=') {
+        if (op_text == "==") {
             op = Op::Equals;
             break;
         }
-        FreeRegisters({lhs, rhs});
-        return; // prevent accidental fallthrough
     case '!':
-        if (op_str.size() == 2 && op_str[1] == '=') {
+        if (op_text == "!=") {
             op = Op::NotEquals;
             break;
         }
-        FreeRegisters({lhs, rhs});
-        return;
     default:
-        Log->error("BCG: Unknown Binary Operator '{}'", node.GetOp());
-        FreeRegisters({lhs, rhs});
+        Log->error("Internal Compiler Error: Unknown Binary Operator '{}'", node.GetOp());
         return;
     }
 
@@ -479,7 +449,7 @@ u16 BytecodeGenerator::CalcJumpDistance(const i64 jump_index, const bool is_cond
     const i64 jump_distance = bytecode.InstructionCount() - (jump_index + jump_bytes);
 
     if (not JumpIsWithinBounds(jump_distance)) {
-        Log->error("BCG: Jump distance out of bounds");
+        Log->error("Internal Compiler Error: Jump distance out of bounds");
         return SENTINEL;
     }
 
@@ -496,7 +466,7 @@ u16 BytecodeGenerator::CalcJumpBackwards(const i64 target_index,
     const i64 jump_distance = target_index - (source_index + jump_bytes);
 
     if (not JumpIsWithinBounds(jump_distance)) {
-        Log->error("BCG: Jump distance out of bounds");
+        Log->error("Internal Compiler Error: Jump distance out of bounds");
         return SENTINEL;
     }
 
@@ -550,7 +520,7 @@ bool BytecodeGenerator::RegisterIsOwned(u16 reg) {
 
 u16 BytecodeGenerator::PopRegBuffer() {
     if (reg_buffer.empty()) {
-        Log->error("BCG: Internal Compiler Error: Register stack underflow");
+        Log->error("Internal Compiler Error: Register stack underflow");
         return 0;
     }
 
@@ -591,7 +561,7 @@ void BytecodeGenerator::AddSymbol(const std::string_view name, u16 register_inde
 
 void BytecodeGenerator::RemoveSymbol(const std::string_view name) {
     if (not symbols.contains(name)) {
-        Log->warn("BCG: Attempted to remove non-existent symbol '{}'", name);
+        Log->warn("Internal Compiler Error: Attempted to remove non-existent symbol '{}'", name);
         return;
     }
 
@@ -606,11 +576,6 @@ BytecodeGenerator::LoopContext& BytecodeGenerator::CurrentLoop() {
 }
 
 void BytecodeGenerator::HandleLoopControl(bool is_break, const NodePtr& condition) {
-    if (loop_stack.empty()) {
-        Log->error("BCG: {} statement outside of loop", is_break ? "Break" : "Skip");
-        return;
-    }
-
     const bool has_condition = condition != nullptr;
     i64 jump_index;
 
@@ -632,10 +597,6 @@ void BytecodeGenerator::HandleLoopControl(bool is_break, const NodePtr& conditio
 
 void BytecodeGenerator::HandleDeclaration(const Initializer& node, bool is_mutable) {
     const auto name = node.GetName();
-    if (symbols.contains(name)) {
-        Log->error("BCG: Redefinition of '{}'", name);
-        return;
-    }
 
     u16 datum;
 
