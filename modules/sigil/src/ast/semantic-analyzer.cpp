@@ -227,6 +227,10 @@ void SemanticAnalyzer::Visit(const LoopIfPost& node) {
     --loop_depth;
 }
 
+bool IsIntegral(const std::string_view type) {
+    return IsIntPrimitive(type) || IsUintPrimitive(type);
+}
+
 void SemanticAnalyzer::Visit(const LoopRange& node) {
     ++loop_depth;
 
@@ -235,7 +239,16 @@ void SemanticAnalyzer::Visit(const LoopRange& node) {
     symbols[node.GetCounter()].scope_depth += 1; // the counter is part of the if's scope
 
     node.GetStart()->Accept(*this);
+    const auto start_type = PopTypeBuffer();
+
     node.GetEnd()->Accept(*this);
+    const auto end_type = PopTypeBuffer();
+
+    if (not IsIntegral(start_type) || not IsIntegral(end_type)) {
+        Log->error("Range loop requires integral start and end values");
+        ++issue_counter;
+    }
+
     node.GetBody()->Accept(*this);
 
     --loop_depth;
