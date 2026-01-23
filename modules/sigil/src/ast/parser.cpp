@@ -362,7 +362,7 @@ bool Parser::MatchedLoopControl(ParseNode& node) {
     auto& loop_control = node.NewBranch(Rule::LoopControl);
     AddCycledTokenTo(loop_control);
 
-    if (CurrentToken().type == TokenType::Op_Target) {
+    if (CurrentToken().type == TokenType::Op_Binding) {
         AddCycledTokenTo(loop_control);
 
         if (not Expect(CurrentToken().type == TokenType::Identifier,
@@ -398,7 +398,7 @@ bool Parser::MatchedLoopBody(ParseNode& node) {
     // infinite/post-conditional
     // loop_body = scope if_condition?
     if (MatchedScope(node)) {
-        if (CurrentToken().type != TokenType::Op_Target) {
+        if (CurrentToken().type != TokenType::Op_Binding) {
             // this is an infinite loop, so we don't need to do anything
             // as the loop rule already exists on this node
             return true;

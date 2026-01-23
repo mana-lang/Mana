@@ -221,7 +221,7 @@ bool Lexer::LexedOperator() {
             break;
         }
         if (next == '>') {
-            token_type = Op_Target; // =>
+            token_type = Op_Binding; // =>
             break;
         }
         token_type = Op_Assign;
@@ -368,7 +368,7 @@ bool Lexer::LexedOperator() {
     case Op_ReturnType:
     case Op_LogicalAnd:
     case Op_LogicalOr:
-    case Op_Target:
+    case Op_Binding:
     case Op_ExclusiveRange:
     case Op_AddAssign:
     case Op_SubAssign:
