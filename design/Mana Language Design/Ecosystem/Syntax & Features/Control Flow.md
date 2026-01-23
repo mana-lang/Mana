@@ -48,8 +48,7 @@ loop ~5 i {
 
 
 // for (int i = 3; i <= 5; ++i)
-loop 3~5 i  
-loop 3..5 i // exclusive variant
+loop 3..5 i  
 	
 // while x == 5
 loop if x == 5
@@ -91,7 +90,7 @@ loop {
 }
 
 // loops may be labeled
-loop A: 2..10 i {
+loop A: 2 .. arr.Last() i {
 	loop B: if i % 5 == 0 {
 		if cond {
 			skip => A // go back to the start of A
@@ -101,8 +100,9 @@ loop A: 2..10 i {
 }
 
 // you can still use break-if and skip-if
-loop A: 5~15 i {
+loop A: elems.Size() .. 0 i {
 	loop B: if i % 3 == 0 {
+		DoStuff()
 		skip if cond => A
 	}
 	break if other_cond => B
@@ -111,7 +111,7 @@ loop A: 5~15 i {
 
 
 ##### Ranged Iteration
-In **Mana**, you can iterate over a *range* of elements using the `for` keyword.
+You can iterate over a collection using the `for` keyword.
 
 ```kotlin
 data values = [55, 23, 99]
