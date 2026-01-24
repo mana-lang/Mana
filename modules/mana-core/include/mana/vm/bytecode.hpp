@@ -19,7 +19,7 @@ struct IndexRange {
     IndexRange() = delete;
 };
 
-static constexpr auto SLICE_INSTRUCTION_MAX = std::numeric_limits<i64>::max();
+static constexpr auto BYTECODE_INSTRUCTION_MAX = std::numeric_limits<i64>::max();
 
 template <typename T>
 concept ConstantType = std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>;

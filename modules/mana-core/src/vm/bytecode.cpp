@@ -174,7 +174,7 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
 }
 
 void ByteCode::CheckSize() const {
-    if (instructions.size() >= SLICE_INSTRUCTION_MAX) {
+    if (instructions.size() >= BYTECODE_INSTRUCTION_MAX) {
         /// TODO: ideally we handle this in such a way that we don't need to crash
         /// also i hate exceptions
         throw std::runtime_error("Hexe instruction limit reached");

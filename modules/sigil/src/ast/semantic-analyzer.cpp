@@ -238,10 +238,10 @@ void SemanticAnalyzer::Visit(const LoopRange& node) {
     AddSymbol(node.GetCounter(), PrimitiveName(I64), false);
     symbols[node.GetCounter()].scope_depth += 1; // the counter is part of the if's scope
 
-    node.GetStart()->Accept(*this);
+    node.GetOrigin()->Accept(*this);
     const auto start_type = PopTypeBuffer();
 
-    node.GetEnd()->Accept(*this);
+    node.GetDestination()->Accept(*this);
     const auto end_type = PopTypeBuffer();
 
     if (not IsIntegral(start_type) || not IsIntegral(end_type)) {
@@ -257,12 +257,7 @@ void SemanticAnalyzer::Visit(const LoopRange& node) {
 void SemanticAnalyzer::Visit(const LoopFixed& node) {
     ++loop_depth;
 
-    if (node.HasCounter()) {
-        AddSymbol(node.GetCounter(), PrimitiveName(I64), false);
-        symbols[node.GetCounter()].scope_depth += 1; // the counter is part of the if's scope
-    }
-
-    node.GetLimit()->Accept(*this);
+    node.GetCountTarget()->Accept(*this);
     node.GetBody()->Accept(*this);
 
     --loop_depth;

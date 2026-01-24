@@ -226,22 +226,37 @@ void LoopIfPost::Accept(Visitor& visitor) const {
 
 /// LoopRange
 LoopRange::LoopRange(const ParseNode& node) {
-    start   = CreateExpression(*node.branches[0]);
-    end     = CreateExpression(*node.branches[1]);
-    body    = std::make_shared<Scope>(*node.branches[2]);
-    counter = FetchTokenText(node.tokens[0]);
+    is_mutable = node.tokens[0].type == TokenType::KW_mut;
+    counter    = FetchTokenText(node.tokens[is_mutable]);
+
+    if (node.branches.size() == 2) {
+        origin      = nullptr;
+        destination = CreateExpression(*node.branches[0]);
+        body        = std::make_shared<Scope>(*node.branches[1]);
+        return;
+    }
+    if (node.branches.size() == 3) {
+        origin      = CreateExpression(*node.branches[0]);
+        destination = CreateExpression(*node.branches[1]);
+        body        = std::make_shared<Scope>(*node.branches[2]);
+        return;
+    }
 }
 
-const NodePtr& LoopRange::GetStart() const {
-    return start;
+const NodePtr& LoopRange::GetOrigin() const {
+    return origin;
 }
 
-const NodePtr& LoopRange::GetEnd() const {
-    return end;
+const NodePtr& LoopRange::GetDestination() const {
+    return destination;
 }
 
 std::string_view LoopRange::GetCounter() const {
     return counter;
+}
+
+bool LoopRange::CounterIsMutable() const {
+    return is_mutable;
 }
 
 const NodePtr& LoopRange::GetBody() const {
@@ -253,63 +268,17 @@ void LoopRange::Accept(Visitor& visitor) const {
 }
 
 /// LoopFixed
-LoopFixed::LoopFixed(const ParseNode& node)
-    : inclusive {false},
-      counts_down {false} {
+LoopFixed::LoopFixed(const ParseNode& node) {
+    count = CreateExpression(*node.branches[0]);
     body  = std::make_shared<Scope>(*node.branches[1]);
-    limit = CreateExpression(*node.branches[0]);
-
-    // loop 5
-    if (node.tokens.size() == 1) {
-        return;
-    }
-
-    // loop 5 i
-    if (node.tokens.size() == 2) {
-        counter = FetchTokenText(node.tokens[1]);
-        return;
-    }
-
-    // the parser is cheeky and swaps the token orders based on where the tilde is
-    if (node.tokens.size() == 3) {
-        // loop 5~ i
-        if (node.tokens[2].type == TokenType::Op_Tilde) {
-            counter     = FetchTokenText(node.tokens[1]);
-            inclusive   = true;
-            counts_down = true;
-            return;
-        }
-
-        // loop ~5 i
-        counter   = FetchTokenText(node.tokens[2]);
-        inclusive = true;
-
-        return;
-    }
 }
 
-const NodePtr& LoopFixed::GetLimit() const {
-    return limit;
+const NodePtr& LoopFixed::GetCountTarget() const {
+    return count;
 }
 
 const NodePtr& LoopFixed::GetBody() const {
     return body;
-}
-
-std::string_view LoopFixed::GetCounter() const {
-    return counter;
-}
-
-bool LoopFixed::HasCounter() const {
-    return not counter.empty();
-}
-
-bool LoopFixed::IsInclusive() const {
-    return inclusive;
-}
-
-bool LoopFixed::CountsDown() const {
-    return counts_down;
 }
 
 void LoopFixed::Accept(Visitor& visitor) const {

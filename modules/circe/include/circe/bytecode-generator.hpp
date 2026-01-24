@@ -24,8 +24,6 @@ class BytecodeGenerator final : public ast::Visitor {
     };
 
     struct LoopContext {
-        ml::i64 start_addr {ml::SENTINEL_64};
-
         std::vector<JumpInstruction> pending_breaks;
         std::vector<JumpInstruction> pending_skips;
     };
@@ -95,12 +93,18 @@ private:
     void EnterScope();
     void ExitScope();
 
+    void EnterLoop();
+    void ExitLoop();
+
     void AddSymbol(std::string_view name, ml::u16 register_index, bool is_mutable);
     void RemoveSymbol(std::string_view name);
 
     LoopContext& CurrentLoop();
-    void HandleLoopControl(bool is_break, const ast::NodePtr& condition);
 
+    void HandlePendingSkips();
+    void HandlePendingBreaks();
+
+    void HandleLoopControl(bool is_break, const ast::NodePtr& condition);
     void HandleDeclaration(const ast::Initializer& node, bool is_mutable);
 
     template <typename T>

@@ -32,7 +32,7 @@ enum class TokenType : ml::u8 {
     Op_BracketRight,
 
     Op_Access,
-    Op_ExclusiveRange,
+    Op_Range,
     Op_ScopeResolution,
 
     Op_LogicalNot,
@@ -53,7 +53,7 @@ enum class TokenType : ml::u8 {
     Op_Attribute,
 
     Op_Ref,
-    Op_Tilde,
+    Op_Move,
     Op_Copy,
 
     Lit_String,

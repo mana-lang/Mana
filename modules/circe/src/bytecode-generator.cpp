@@ -120,35 +120,29 @@ void BytecodeGenerator::Visit(const If& node) {
 }
 
 void BytecodeGenerator::Visit(const Loop& node) {
-    loop_stack.emplace_back();
+    EnterLoop();
 
-    const i64 start_addr     = bytecode.InstructionCount();
-    CurrentLoop().start_addr = start_addr;
+    const i64 start_addr = bytecode.InstructionCount();
 
     node.GetBody()->Accept(*this);
 
     // calc skips before loop ends so we don't jump over them
     // this also helps resolve end-of-loop logic in other types of loops
     // in here, we just do it this way for consistency
-    for (const auto [skip_index, has_condition] : CurrentLoop().pending_skips) {
-        bytecode.Patch(skip_index, CalcJumpDistance(skip_index, has_condition), has_condition);
-    }
+    HandlePendingSkips();
 
     // end of loop
     bytecode.Write(Op::Jump, {CalcJumpBackwards(start_addr, bytecode.InstructionCount())});
 
-    for (const auto [break_jump, has_condition] : CurrentLoop().pending_breaks) {
-        bytecode.Patch(break_jump, CalcJumpDistance(break_jump, has_condition), has_condition);
-    }
+    HandlePendingBreaks();
 
-    loop_stack.pop_back();
+    ExitLoop();
 }
 
 void BytecodeGenerator::Visit(const LoopIf& node) {
-    loop_stack.emplace_back();
-    // record start
-    const i64 start_addr     = bytecode.InstructionCount();
-    CurrentLoop().start_addr = start_addr;
+    EnterLoop();
+
+    const i64 start_addr = bytecode.InstructionCount();
 
     node.GetCondition()->Accept(*this);
     const u16 condition = PopRegBuffer();
@@ -158,32 +152,25 @@ void BytecodeGenerator::Visit(const LoopIf& node) {
     FreeRegister(condition);
 
     node.GetBody()->Accept(*this);
-
-    for (const auto [skip_index, has_condition] : CurrentLoop().pending_skips) {
-        bytecode.Patch(skip_index, CalcJumpDistance(skip_index, has_condition), has_condition);
-    }
+    HandlePendingSkips();
 
     bytecode.Write(Op::Jump, {CalcJumpBackwards(start_addr, bytecode.InstructionCount())});
     bytecode.Patch(jmp_end, CalcJumpDistance(jmp_end, true), CONDITIONAL_JUMP);
 
-    for (const auto [break_jump, has_condition] : CurrentLoop().pending_breaks) {
-        bytecode.Patch(break_jump, CalcJumpDistance(break_jump, has_condition), has_condition);
-    }
+    HandlePendingBreaks();
 
-    loop_stack.pop_back();
+    ExitLoop();
 }
 
 // same as LoopIf, except we do the condition evaluation after the body
 void BytecodeGenerator::Visit(const LoopIfPost& node) {
-    loop_stack.emplace_back();
-    const i64 start_addr     = bytecode.InstructionCount();
-    CurrentLoop().start_addr = start_addr;
+    EnterLoop();
+
+    const i64 start_addr = bytecode.InstructionCount();
 
     node.GetBody()->Accept(*this);
 
-    for (const auto [skip_index, has_condition] : CurrentLoop().pending_skips) {
-        bytecode.Patch(skip_index, CalcJumpDistance(skip_index, has_condition), has_condition);
-    }
+    HandlePendingSkips();
 
     // end of loop
     node.GetCondition()->Accept(*this);
@@ -191,94 +178,51 @@ void BytecodeGenerator::Visit(const LoopIfPost& node) {
     bytecode.Write(Op::JumpWhenTrue, {condition, CalcJumpBackwards(start_addr, bytecode.InstructionCount(), true)});
     FreeRegister(condition);
 
-    for (const auto [break_jump, has_condition] : CurrentLoop().pending_breaks) {
-        bytecode.Patch(break_jump, CalcJumpDistance(break_jump, has_condition), has_condition);
-    }
+    HandlePendingBreaks();
 
-    loop_stack.pop_back();
+    ExitLoop();
 }
 
 void BytecodeGenerator::Visit(const LoopRange& node) {}
 
 void BytecodeGenerator::Visit(const LoopFixed& node) {
+    EnterLoop();
+
+    // setup
     const u16 counter = AllocateRegister();
-    const u16 limit   = AllocateRegister();
+    bytecode.Write(Op::LoadConstant, {counter, bytecode.AddConstant(0)});
 
-    if (node.CountsDown()) {
-        node.GetLimit()->Accept(*this);
-        const u16 init_val = PopRegBuffer();
-        bytecode.Write(Op::Move, {counter, init_val});
-
-        FreeRegister(init_val);
-
-        // downcount always counts to 0
-        bytecode.Write(Op::LoadConstant, {limit, bytecode.AddConstant(0)});
-    } else {
-        bytecode.Write(Op::LoadConstant, {counter, bytecode.AddConstant(0)});
-
-        node.GetLimit()->Accept(*this);
-        const u16 limit_val = PopRegBuffer();
-        bytecode.Write(Op::Move, {limit, limit_val});
-
-        FreeRegister(limit_val);
-    }
-
-    // allocate step before loop start so we don't reload the constant repeatedly
-    // we'll clear this register at the end
     const u16 step = AllocateRegister();
-    bytecode.Write(Op::LoadConstant, {step, bytecode.AddConstant(1)}); // fixed increment is always 1
+    bytecode.Write(Op::LoadConstant, {step, bytecode.AddConstant(1)});
 
-    // loop start
-    loop_stack.emplace_back();
+    node.GetCountTarget()->Accept(*this);
+    const u16 target = PopRegBuffer();
+
     const i64 start_addr = bytecode.InstructionCount();
 
-    // untangle counter direction
-    Op cmp_op;
-    if (node.CountsDown()) {
-        cmp_op = node.IsInclusive() ? Op::Cmp_GreaterEq : Op::Cmp_Greater;
-    } else {
-        cmp_op = node.IsInclusive() ? Op::Cmp_LesserEq : Op::Cmp_Lesser;
-    }
+    const u16 cond = AllocateRegister();
+    bytecode.Write(Op::Cmp_Lesser, {cond, counter, target});
+    const i64 exit = bytecode.Write(Op::JumpWhenFalse, {cond, SENTINEL});
 
-    const u16 condition = AllocateRegister();
-    bytecode.Write(cmp_op, {condition, counter, limit});
-    const i64 exit_jmp = bytecode.Write(Op::JumpWhenFalse, {condition, SENTINEL});
-
-    FreeRegister(condition);
-
-    // loop 5 i -> we need to promote i to a variable
-    // while it's incremented, it still counts as immutable
-    if (node.HasCounter()) {
-        AddSymbol(node.GetCounter(), counter, false);
-    }
 
     node.GetBody()->Accept(*this);
 
-    // skip to end of body, not start of loop
-    for (const auto& [skip_index, has_condition] : CurrentLoop().pending_skips) {
-        bytecode.Patch(skip_index, CalcJumpDistance(skip_index, has_condition), has_condition);
-    }
+    HandlePendingSkips();
 
-    // step counter before loop ends
-    bytecode.Write(node.CountsDown() ? Op::Sub : Op::Add, {counter, counter, step});
-
-    // loop end
+    // increment and bounce back to start
+    bytecode.Write(Op::Add, {counter, counter, step});
     bytecode.Write(Op::Jump, {CalcJumpBackwards(start_addr, bytecode.InstructionCount())});
-    bytecode.Patch(exit_jmp, CalcJumpDistance(exit_jmp, true), CONDITIONAL_JUMP);
 
-    for (const auto [break_jump, has_condition] : CurrentLoop().pending_breaks) {
-        bytecode.Patch(break_jump, CalcJumpDistance(break_jump, has_condition), has_condition);
-    }
+    bytecode.Patch(exit, CalcJumpDistance(exit, true), CONDITIONAL_JUMP);
 
-    // cleanup
-    if (node.HasCounter()) {
-        RemoveSymbol(node.GetCounter());
-    }
+    HandlePendingBreaks();
 
-    FreeRegister(limit);
-    FreeRegister(counter);
+    FreeRegister(cond);
+    FreeRegister(target);
     FreeRegister(step);
-    loop_stack.pop_back();
+    FreeRegister(counter);
+
+    ExitLoop();
 }
 
 void BytecodeGenerator::Visit(const Break& node) {
@@ -555,6 +499,16 @@ void BytecodeGenerator::ExitScope() {
     --scope_depth;
 }
 
+void BytecodeGenerator::EnterLoop() {
+    EnterScope();
+    loop_stack.emplace_back();
+}
+
+void BytecodeGenerator::ExitLoop() {
+    loop_stack.pop_back();
+    ExitScope();
+}
+
 void BytecodeGenerator::AddSymbol(const std::string_view name, u16 register_index, bool is_mutable) {
     symbols[name] = {register_index, scope_depth, is_mutable};
 }
@@ -573,6 +527,18 @@ void BytecodeGenerator::RemoveSymbol(const std::string_view name) {
 
 BytecodeGenerator::LoopContext& BytecodeGenerator::CurrentLoop() {
     return loop_stack.back();
+}
+
+void BytecodeGenerator::HandlePendingSkips() {
+    for (const auto [skip_index, has_condition] : CurrentLoop().pending_skips) {
+        bytecode.Patch(skip_index, CalcJumpDistance(skip_index, has_condition), has_condition);
+    }
+}
+
+void BytecodeGenerator::HandlePendingBreaks() {
+    for (const auto [break_jump, has_condition] : CurrentLoop().pending_breaks) {
+        bytecode.Patch(break_jump, CalcJumpDistance(break_jump, has_condition), has_condition);
+    }
 }
 
 void BytecodeGenerator::HandleLoopControl(bool is_break, const NodePtr& condition) {

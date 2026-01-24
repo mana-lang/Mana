@@ -194,6 +194,10 @@ void Parser::AddCycledTokenTo(ParseNode& node) {
     }
 }
 
+void Parser::SkipCurrentToken() {
+    ++cursor;
+}
+
 bool Parser::ProgressedParseTree(ParseNode& node) {
     // don't process eof (final token) before quitting
     if (cursor + 1 >= tokens.size() - 1) {
@@ -202,7 +206,7 @@ bool Parser::ProgressedParseTree(ParseNode& node) {
 
     // we want to skip over empty lines
     if (CurrentToken().type == TokenType::Terminator) {
-        ++cursor;
+        SkipCurrentToken();
         return true;
     }
 
@@ -353,7 +357,7 @@ bool Parser::MatchedIfTail(ParseNode& node) {
     return true;
 }
 
-// loop_control = (KW_SKIP | KW_BREAK) (OP_TARGET ID)? if_condition?
+// loop_control = (KW_SKIP | KW_BREAK) (OP_BINDING ID)? if_condition?
 bool Parser::MatchedLoopControl(ParseNode& node) {
     if (CurrentToken().type != TokenType::KW_skip && CurrentToken().type != TokenType::KW_break) {
         return false;
@@ -362,6 +366,10 @@ bool Parser::MatchedLoopControl(ParseNode& node) {
     auto& loop_control = node.NewBranch(Rule::LoopControl);
     AddCycledTokenTo(loop_control);
 
+    // break/skip if cond
+    MatchedIfCondition(loop_control);
+
+    // break/skip (if cond)? => A
     if (CurrentToken().type == TokenType::Op_Binding) {
         AddCycledTokenTo(loop_control);
 
@@ -375,19 +383,23 @@ bool Parser::MatchedLoopControl(ParseNode& node) {
         AddCycledTokenTo(loop_control);
     }
 
-    MatchedIfCondition(loop_control);
-
     return true;
 }
 
-// loop = KW_LOOP loop_body ;
+// loop = KW_LOOP (ID ':')? loop_body
 bool Parser::MatchedLoop(ParseNode& node) {
     if (CurrentToken().type != TokenType::KW_loop) {
         return false;
     }
 
     auto& loop = node.NewBranch(Rule::Loop);
-    AddCycledTokenTo(loop);
+    SkipCurrentToken();
+
+    if (CurrentToken().type == TokenType::Identifier
+        && PeekNextToken().type == TokenType::Op_Colon
+    ) {
+        AddTokensTo(loop, TokenType::Op_Colon);
+    }
 
     Expect(MatchedLoopBody(loop), loop, "Expected loop body");
 
@@ -396,117 +408,93 @@ bool Parser::MatchedLoop(ParseNode& node) {
 
 bool Parser::MatchedLoopBody(ParseNode& node) {
     // infinite/post-conditional
-    // loop_body = scope if_condition?
+    // loop_body = scope (OP_BINDING if_condition)?
     if (MatchedScope(node)) {
-        if (CurrentToken().type != TokenType::Op_Binding) {
-            // this is an infinite loop, so we don't need to do anything
-            // as the loop rule already exists on this node
-            return true;
+        if (CurrentToken().type == TokenType::Op_Binding) {
+            AddCycledTokenTo(node);
+            Expect(MatchedIfCondition(node), node, "Expected if condition after '=>'");
+            node.rule = Rule::LoopIfPost;
         }
-        AddCycledTokenTo(node);
-        MatchedIfCondition(node);
-        node.rule = Rule::LoopIfPost;
-
+        // don't need to do anything if loop is infinite
         return true;
     }
 
     // conditional
     // loop_body = if_condition scope
     if (MatchedIfCondition(node)) {
-        Expect(MatchedScope(node), node, "Expected scope for loop body");
         node.rule = Rule::LoopIf;
+        Expect(MatchedScope(node), node, "Expected scope for loop body");
         return true;
     }
 
-    switch (MatchedRangeExpr(node)) {
-    case RangeExprResult::MatchedRange: {
-        // ranged iteration
-        // loop_body = range_expr ID scope
+    // fixed/ranged iteration
+    // loop_body = expr (OP_RANGE expr)? (OP_BINDING mut? ID)? scope
+    if (not MatchedExpression(node)) {
+        // we've matched against nothing atp, so just exit early
+        return false;
+    }
+
+    if (MatchedScope(node)) {
+        // loop x {}
+        node.rule = Rule::LoopFixed;
+        return true;
+    }
+
+    // we've matched an expr, but no scope.
+    // next token must be either op_range or a op_binding
+    if (CurrentToken().type != TokenType::Op_Range) {
+        if (not Expect(CurrentToken().type == TokenType::Op_Binding, node, "Expected range or binding")) {
+            return true;
+        }
+        SkipCurrentToken();
+
+        if (CurrentToken().type == TokenType::KW_mut) {
+            // loop x => mut
+            AddCycledTokenTo(node);
+        }
+
+        if (not Expect(CurrentToken().type == TokenType::Identifier, node, "Range must bind to an identifier")) {
+            return true;
+        }
+
+        // loop x => mut? y
+        AddCycledTokenTo(node);
         node.rule = Rule::LoopRange;
 
-        if (not Expect(CurrentToken().type == TokenType::Identifier, node, "Expected identifier")) {
-            return true;
-        }
-        AddCycledTokenTo(node);
-
         Expect(MatchedScope(node), node, "Expected scope for loop body");
         return true;
     }
-    case RangeExprResult::MatchedExpr: {
-        // fixed iteration
-        // loop_body = (expr OP_RANGE_INC | expr) ID? scope
-        node.rule = Rule::LoopFixed;
+    // it's a full range
+    AddCycledTokenTo(node);
 
-        i64 tilde_pos = -1;
-        if (CurrentToken().type == TokenType::Op_Tilde) {
-            tilde_pos = cursor++; // fake cycle to encode positional information for ast
-        }
-
-        const bool has_tilde = tilde_pos != -1;
-
-        if (CurrentToken().type == TokenType::Identifier) {
-            AddCycledTokenTo(node);
-        } else if (not Expect(not has_tilde, node, "Down-count requires identifier")) {
-            // loop 5~ {...} is ill-formed
-            return true;
-        }
-
-        if (has_tilde) {
-            node.tokens.push_back(tokens[tilde_pos]);
-        }
-
-        Expect(MatchedScope(node), node, "Expected scope for loop body");
-
+    if (not Expect(MatchedExpression(node), node, "Range operator takes two operands")) {
         return true;
     }
-    case RangeExprResult::NoMatch:
-        break;
-    }
 
-    // at this point, no tokens should've been cycled, but we may still have a leading tilde for inclusive fixed-if
-    if (CurrentToken().type == TokenType::Op_Tilde) {
-        // loop_body = OP_RANGE_INC expr ID? scope
-        node.rule = Rule::LoopFixed;
-        AddCycledTokenTo(node);
-
-        if (not Expect(MatchedExpression(node), node, "Expected expression")) {
-            return true;
-        }
-
-        if (not Expect(CurrentToken().type == TokenType::Identifier, node, "Up-count requires identifier")) {
-            // tilde without identifier is malformed
-            return true;
-        }
-        AddCycledTokenTo(node);
-
-        Expect(MatchedScope(node), node, "Expected scope for loop body");
+    if (not Expect(CurrentToken().type == TokenType::Op_Binding,
+                   node,
+                   "Expected binding operator after range expression"
+    )) {
         return true;
     }
-    return false;
-}
 
-// range_expr = expr? OP_RANGE_INC expr? | expr? OP_RANGE_EXC expr?
-Parser::RangeExprResult Parser::MatchedRangeExpr(ParseNode& node) {
-    using enum TokenType;
+    // loop x..y =>
+    AddCycledTokenTo(node);
 
-    const bool starts_with_expr = MatchedExpression(node);
-
-    const auto op = CurrentToken().type;
-    if (op != Op_Copy && op != Op_ExclusiveRange) {
-        return starts_with_expr ? RangeExprResult::MatchedExpr : RangeExprResult::NoMatch;
+    if (CurrentToken().type == TokenType::KW_mut) {
+        // loop x..y => mut
+        AddCycledTokenTo(node);
+    }
+    if (not Expect(CurrentToken().type == TokenType::Identifier, node, "Range must bind to identifier")) {
+        return true;
     }
 
-    auto& range = node.NewBranch(Rule::LoopRangeExpr);
-    AddCycledTokenTo(range);
+    // loop x..y => mut? z
+    AddCycledTokenTo(node);
+    node.rule = Rule::LoopRange;
 
-    if (starts_with_expr) {
-        const auto lhs_index = node.branches.size() - 2;
-        range.AcquireBranchOf(node, lhs_index);
-    }
-
-    MatchedExpression(range);
-
-    return RangeExprResult::MatchedRange;
+    Expect(MatchedScope(node), node, "Expected scope for loop body");
+    return true;
 }
 
 bool IsPrimitiveKeyword(const TokenType token) {

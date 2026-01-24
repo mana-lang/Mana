@@ -13,9 +13,8 @@ KW_RETURN = "return" ;
 KW_LOOP      = "loop"  ;
 KW_SKIP      = "skip"  ;
 KW_BREAK     = "break" ;
-OP_RANGE_INC = "~"     ;
-OP_RANGE_EXC = ".."    ;
-OP_TARGET    = "=>"    ;
+OP_RANGE     = ".."    ;
+OP_BINDING   = "=>"    ;
 
 TERMINATOR = "\n" | ";";
 
@@ -34,22 +33,13 @@ if_tail = KW_ELSE (if_block | scope) ;
 
 loop = KW_LOOP (ID ':')? loop_body ;
 
-loop_body = scope if_condition?            (* infinite / post-conditional *)
-          | if_condition scope             (* conditional *)
-          | range_expr ID scope            (* ranged iteration *)
-          | fixed_expr ID? scope           (* fixed iteration, expr must evaluate to integer *)
+loop_body = scope (OP_BINDING if_condition)?                  (* infinite / post-conditional *)
+          | if_condition scope                                (* conditional *)
+          | expr scope                                        (* fixed *)
+          | expr (OP_RANGE expr)? OP_BINDING mut? ID scope    (* ranged *)   
           ;
 
-range_op = OP_RANGE_EXC | OP_RANGE_INC ;
-
-fixed_expr = expr OP_RANGE_INC
-           | OP_RANGE_INC expr
-           | expr
-           ;
-
-range_expr = expr? range_op expr? ;
-
-loop_control = (KW_SKIP | KW_BREAK) (OP_TARGET ID)? if_condition? ;
+loop_control = (KW_SKIP | KW_BREAK) (OP_BINDING ID)? if_condition? ;
 
 data_decl   = KW_MUT? KW_DATA ID (':' ID)? ('=' expr)?    ;
 

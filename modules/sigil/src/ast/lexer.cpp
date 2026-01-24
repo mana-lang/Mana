@@ -295,7 +295,7 @@ bool Lexer::LexedOperator() {
         break;
     case '.':
         if (next == '.') {
-            token_type = Op_ExclusiveRange;
+            token_type = Op_Range;
             break;
         }
         token_type = Op_Access;
@@ -336,7 +336,7 @@ bool Lexer::LexedOperator() {
         token_type = Op_Ref;
         break;
     case '~':
-        token_type = Op_Tilde;
+        token_type = Op_Move;
         break;
     case '$':
         token_type = Op_Copy;
@@ -369,7 +369,7 @@ bool Lexer::LexedOperator() {
     case Op_LogicalAnd:
     case Op_LogicalOr:
     case Op_Binding:
-    case Op_ExclusiveRange:
+    case Op_Range:
     case Op_AddAssign:
     case Op_SubAssign:
     case Op_MulAssign:

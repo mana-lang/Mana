@@ -1,17 +1,5 @@
-mut data a = 0
-loop 12 {
-    a += 1
-}
-data x = a
-
 mut data b = 0
-loop 12 i {
+loop 12 {
     b += i
 }
-data y = b
 
-mut data c = 100
-loop 12~ i {
-    c -= i
-}
-data z = c

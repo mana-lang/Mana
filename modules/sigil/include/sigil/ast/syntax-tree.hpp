@@ -195,41 +195,35 @@ public:
 };
 
 class LoopRange final : public Node {
-    NodePtr start;
-    NodePtr end;
+    NodePtr origin;
+    NodePtr destination;
     NodePtr body;
 
     std::string_view counter;
+    bool is_mutable;
 
 public:
     explicit LoopRange(const ParseNode& node);
 
-    SIGIL_NODISCARD const NodePtr& GetStart() const;
-    SIGIL_NODISCARD const NodePtr& GetEnd() const;
+    SIGIL_NODISCARD const NodePtr& GetOrigin() const;
+    SIGIL_NODISCARD const NodePtr& GetDestination() const;
     SIGIL_NODISCARD const NodePtr& GetBody() const;
 
     SIGIL_NODISCARD std::string_view GetCounter() const;
+    SIGIL_NODISCARD bool CounterIsMutable() const;
 
     void Accept(Visitor& visitor) const override;
 };
 
 class LoopFixed final : public Node {
-    std::string_view counter;
-    NodePtr limit;
+    NodePtr count;
     NodePtr body;
-    bool inclusive;
-    bool counts_down;
 
 public:
     explicit LoopFixed(const ParseNode& node);
 
-    SIGIL_NODISCARD const NodePtr& GetLimit() const;
+    SIGIL_NODISCARD const NodePtr& GetCountTarget() const;
     SIGIL_NODISCARD const NodePtr& GetBody() const;
-    SIGIL_NODISCARD std::string_view GetCounter() const;
-
-    SIGIL_NODISCARD bool HasCounter() const;
-    SIGIL_NODISCARD bool IsInclusive() const;
-    SIGIL_NODISCARD bool CountsDown() const;
 
     void Accept(Visitor& visitor) const override;
 };
