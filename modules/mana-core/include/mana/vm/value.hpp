@@ -26,7 +26,7 @@ inline PrimitiveType GetManaTypeFrom(bool) {
 }
 
 struct Value {
-    friend class Slice;
+    friend class ByteCode;
 
     union Data {
         i64 as_i64;

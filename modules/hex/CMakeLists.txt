@@ -1,16 +1,16 @@
 cmake_minimum_required(VERSION 3.28)
-project(hex VERSION 0.0.10)
+project(hex VERSION 0.1.0)
 
 enable_testing()
 
 set(HEX_SOURCES
-        src/hex/main.cpp
+        src/main.cpp
 
-        src/hex/core/cli.cpp
-        src/hex/core/logger.cpp
-        src/hex/core/disassembly.cpp
+        src/core/cli.cpp
+        src/core/logger.cpp
+        src/core/disassembly.cpp
 
-        src/hex/vm/virtual-machine.cpp
+        src/hex.cpp
 )
 
 set(HEX_INCLUDES

@@ -14,57 +14,72 @@ if x {
 } else if y {
 	DoSomeOtherStuff()
 } else {
-	DoSomeCrazyStuff()
+	DoCrazyStuff()
 }
+
+// conditional assignment is also possible via the binding operator
+data a: i64 => if x || y {
+	a = 89 // inside the bound if, 'a' is temporarily assignable
+} else {
+	a = 943
+}
+// 'a' is still immutable here
+  
+// you can do it on a single line for short conditional assignments
+data b: u32 => if x && y { b = 7 } else { b = 27 }
 ```
 
 ##### Loop
 ```rust
-// 'while true'
+// infinite loop, aka: 'while true'
 loop {
 	DoSomething()
 }
 
-// repeats 5 times
-loop 5 {
+// conditional loop, aka: while x == 5
+loop if x == 5 {
+	EatSomething()
+}
+
+// post-conditional, aka: do {...} while x == 5
+loop { 
+	SayHi()
+} => if x == 5
+
+// fixed loop. runs exactly 8 times
+loop 8 {
 	DoSomething()
 }
 
-// creates variable 'i' that starts zeroed
-// counts up at the end of each loop
-loop 5 i {
-	DoSomething(i) // 0, 1, 2, 3, 4
+// ranged loop
+// binds inclusive range from 0 to 8 to a local temporary 'i'
+// aka: for (int i = 0; i <= 8; ++i)
+loop 8 => i {
+	DoSomething()
 }
 
-// inclusive version
-// for (int i = 0; i <= 5; ++i)
-loop ~5 i {
-// 'loop 5~ i' to count from 5 to 0
-	thing[i].DoSomething()
+// identical to the above, except it starts at 8 and counts down to 0
+// aka: for (int i = 8; i >= 0; --i)
+loop 8..0 => i {
+	things[i].DoSstuff()
 }
 
-// all loops are scoped, so from here on out
-// assume that the missing scope blocks are for brevity only
+
+// identical to the above. 
+// ranges can be arbitrary and will count from lhs to rhs
+// aka: for (int i = 3; i <= 8; ++i)
+loop 3..8 => i {}  
 
 
-// for (int i = 3; i <= 5; ++i)
-loop 3~5 i  
-loop 3..5 i // exclusive variant
-	
-// while x == 5
-loop if x == 5
+// the bound temporary is immutable unless otherwise stated
+loop 12..0 => mut i {}
 
-// do {...} while x == 5
-loop { 
-	/* some code */ 
-} => if x == 5
 
-// within this loop, 'x' is temporarily mutable
-// and is initially zeroed
-data x => loop {
+// data declarations may also be bound to loops
+data x => loop if x < 30 {
 	// do stuff
 	x = Something()
-} // after the loop block, 'x' is immutable
+}
 
 
 // break and skip statements
@@ -91,9 +106,9 @@ loop {
 }
 
 // loops may be labeled
-loop A: 2..10 i {
+loop A: 2 .. arr.BackIndex() => i {
 	loop B: if i % 5 == 0 {
-		if cond {
+		if some_cond {
 			skip => A // go back to the start of A
 		}
 		break => A // exits from outer loop A
@@ -101,8 +116,9 @@ loop A: 2..10 i {
 }
 
 // you can still use break-if and skip-if
-loop A: 5~15 i {
+loop A: elems.Size() .. 0 => mut i {
 	loop B: if i % 3 == 0 {
+		DoStuff()
 		skip if cond => A
 	}
 	break if other_cond => B
@@ -111,7 +127,7 @@ loop A: 5~15 i {
 
 
 ##### Ranged Iteration
-In **Mana**, you can iterate over a *range* of elements using the `for` keyword.
+You can iterate over a collection using the `for` keyword.
 
 ```kotlin
 data values = [55, 23, 99]

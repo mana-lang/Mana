@@ -40,11 +40,11 @@
   "expandedSpaces": [
     "/",
     "//Ecosystem Overview",
-    "//Ecosystem",
     "//Tags",
     "//Ecosystem/Ecosystem/Syntax",
-    "//Ecosystem/Ecosystem/Syntax & Features",
-    "//_Assets"
+    "//Ecosystem",
+    "//Ecosystem/Ecosystem/Modules",
+    "//Ecosystem/Ecosystem/Syntax & Features"
   ],
   "expandFolderOnClick": true,
   "spacesFolder": "Tags",

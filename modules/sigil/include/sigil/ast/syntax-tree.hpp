@@ -1,29 +1,25 @@
 #pragma once
 
+#include <sigil/core/concepts.hpp>
+#include <sigil/core/logger.hpp>
+
 #include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/visitor.hpp>
-#include <sigil/core/concepts.hpp>
 
-#include <mana/vm/primitive-type.hpp>
 #include <mana/literals.hpp>
-
-#include <memory>
-#include <string>
-#include <vector>
-#include <charconv>
-#include <unordered_map>
+#include <mana/vm/primitive-type.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
-#include <sigil/core/logger.hpp>
+#include <memory>
+#include <vector>
+#include <charconv>
+#include <string_view>
 
 namespace sigil::ast {
 namespace ml = mana::literals;
 
-
 class Visitor;
-
-using NodePtr = std::shared_ptr<class Node>;
 
 // As the ptree gets constructed before the AST,
 // AST nodes assume their ptree input is correct
@@ -33,6 +29,8 @@ public:
 
     virtual void Accept(Visitor& visitor) const = 0;
 };
+
+using NodePtr = std::shared_ptr<Node>;
 
 class Statement final : public Node {
     NodePtr child;
@@ -67,7 +65,7 @@ public:
 };
 
 class Artifact final : public Node, public StatementContainer {
-    std::string name;
+    std::string_view name;
 
 public:
     explicit Artifact(const std::string_view name)
@@ -80,7 +78,7 @@ public:
 };
 
 class Identifier final : public Node {
-    std::string name;
+    std::string_view name;
 
 public:
     explicit Identifier(const ParseNode& node);
@@ -89,25 +87,40 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
-// TODO: make MutableDataDeclaration to encode meaning in the type rather than a bool
-class DataDeclaration final : public Node {
-    std::string name;
+class Initializer : public Node {
+    std::string_view name;
+    std::string_view type;
     NodePtr initializer;
-    bool is_mutable;
 
 public:
-    explicit DataDeclaration(const ParseNode& node);
+    explicit Initializer(const ParseNode& node);
 
     SIGIL_NODISCARD std::string_view GetName() const;
+    SIGIL_NODISCARD std::string_view GetTypeName() const;
     SIGIL_NODISCARD const NodePtr& GetInitializer() const;
-    SIGIL_NODISCARD bool IsMutable() const;
+
+    SIGIL_NODISCARD bool HasTypeAnnotation() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
+class MutableDataDeclaration final : public Initializer {
+public:
+    explicit MutableDataDeclaration(const ParseNode& node);
+
+    void Accept(Visitor& visitor) const override;
+};
+
+class DataDeclaration final : public Initializer {
+public:
+    explicit DataDeclaration(const ParseNode& node);
 
     void Accept(Visitor& visitor) const override;
 };
 
 class Assignment final : public Node {
-    std::string identifier;
-    std::string op;
+    std::string_view identifier;
+    std::string_view op;
     NodePtr value;
 
 public:
@@ -121,8 +134,6 @@ public:
 };
 
 class Scope final : public Node, public StatementContainer {
-    std::unordered_map<std::string, DataDeclaration*> datums;
-
 public:
     explicit Scope(const ParseNode& node);
 
@@ -170,56 +181,56 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
-// semantically distinguishes from LoopIf without wasted padding
-class LoopIfPost final : public LoopIf {
+class LoopIfPost final : public Node {
+    NodePtr condition;
+    NodePtr body;
+
 public:
     explicit LoopIfPost(const ParseNode& node);
+
+    SIGIL_NODISCARD const NodePtr& GetCondition() const;
+    SIGIL_NODISCARD const NodePtr& GetBody() const;
+
     void Accept(Visitor& visitor) const override;
 };
 
 class LoopRange final : public Node {
-    NodePtr start;
-    NodePtr end;
+    NodePtr origin;
+    NodePtr destination;
     NodePtr body;
 
-    std::string counter;
+    std::string_view counter;
+    bool is_mutable;
 
 public:
     explicit LoopRange(const ParseNode& node);
 
-    SIGIL_NODISCARD const NodePtr& GetStart() const;
-    SIGIL_NODISCARD const NodePtr& GetEnd() const;
+    SIGIL_NODISCARD const NodePtr& GetOrigin() const;
+    SIGIL_NODISCARD const NodePtr& GetDestination() const;
     SIGIL_NODISCARD const NodePtr& GetBody() const;
 
-    SIGIL_NODISCARD std::string_view GetCounter() const;
+    SIGIL_NODISCARD std::string_view GetCounterName() const;
+    SIGIL_NODISCARD bool CounterIsMutable() const;
 
     void Accept(Visitor& visitor) const override;
 };
 
 class LoopFixed final : public Node {
-    std::string counter;
-    NodePtr limit;
+    NodePtr count;
     NodePtr body;
-    bool inclusive;
-    bool counts_down;
 
 public:
     explicit LoopFixed(const ParseNode& node);
 
-    SIGIL_NODISCARD const NodePtr& GetLimit() const;
+    SIGIL_NODISCARD const NodePtr& GetCountTarget() const;
     SIGIL_NODISCARD const NodePtr& GetBody() const;
-    SIGIL_NODISCARD std::string_view GetCounter() const;
-
-    SIGIL_NODISCARD bool HasCounter() const;
-    SIGIL_NODISCARD bool IsInclusive() const;
-    SIGIL_NODISCARD bool CountsDown() const;
 
     void Accept(Visitor& visitor) const override;
 };
 
 class LoopControl : public Node {
     NodePtr condition;
-    std::string label;
+    std::string_view label;
 
 public:
     explicit LoopControl(const ParseNode& node);
@@ -290,12 +301,11 @@ private:
 };
 
 class BinaryExpr final : public Node {
-    std::string op;
+    std::string_view op;
     NodePtr left, right;
 
 public:
     explicit BinaryExpr(const ParseNode& node);
-    explicit BinaryExpr(const std::string& op, const ParseNode& left, const ParseNode& right);
     explicit BinaryExpr(std::string_view op, const ParseNode& left, const ParseNode& right);
 
     SIGIL_NODISCARD std::string_view GetOp() const;
@@ -310,7 +320,7 @@ private:
 };
 
 class UnaryExpr final : public Node {
-    std::string op;
+    std::string_view op;
     NodePtr val;
 
 public:
@@ -334,6 +344,9 @@ void PropagateStatements(const ParseNode& node, SC* root) {
             using enum Rule;
 
             switch (n->rule) {
+            case MutableDataDeclaration:
+                root->Add<class MutableDataDeclaration>(*n);
+                break;
             case DataDeclaration:
                 root->Add<class DataDeclaration>(*n);
                 break;

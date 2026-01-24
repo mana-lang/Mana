@@ -1,0 +1,18 @@
+mut data i = 0
+mut data j = 0
+
+loop {    
+    break if i >= 10
+    i += 1
+
+    skip if i % 2 == 0
+    j += 1
+}
+
+data a = i
+data b = j
+
+i = 0
+j = 0
+
+

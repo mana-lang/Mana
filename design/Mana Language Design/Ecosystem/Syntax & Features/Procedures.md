@@ -11,6 +11,7 @@ All procedures may also have the following **Attributes**:
 - Constant
 - Pure
 - Inline
+- Hot
 
 Additionally, some procedures are *polymorphic*:
 - Multi-Functions
@@ -43,7 +44,7 @@ Functions in Mana are declared with the `fn` keyword.
 
 They consist of a *name*, followed by a set of *parentheses* containing an *optional* list of *parameters*, separated by *commas*. They may also optionally specify a *return* type.
 
-*All* valid variable names are *also* valid function names.
+*All* valid datum names are *also* valid function names.
 
 A parameter's type *must* be specified. Multiple parameters of the same type *may* be grouped under commas sharing the same type annotation.
  
@@ -233,14 +234,42 @@ interface Bar for type Foo {
 
 data foo = Foo {1, 2, false}
 data x = foo.Fuzz()
-```
 
+// when multiple interface functions share the exact same signature, 
+// and both are imported at once, 
+// you must disambiguate them with the scope resolution operator '::'
+
+interface Bru for type Foo {
+	mut fn Baz() -> i32 {
+		.a *= 27
+		return .a
+	}
+}
+
+data bru = foo.Bru::Baz()
+data baz = foo.Baz()
+```
+>[!danger] Error
+> Call to interface 'Baz()' is ambiguous. 
+> Possible options:
+> - Bru::Baz()
+> - Bar::Baz() 
 ##### Multi-Functions
 Multi-functions are *polymorphic functions* where many functions share the same name, but may have different argument lists and, if so, different return types as well.
 
 ##### Operators
 
 ##### Generic Functions
+```rust
+type T for
+fn Add(a, b: T) -> T {
+	return a + b
+}
+
+fn Sub<T>(a, b: T) -> T {
+	return a - b
+}
+```
 
 ##### Closures
 - Defined with the `fn` keyword inside another invocable

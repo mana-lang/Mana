@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.28)
-project(mana-core VERSION 0.0.1)
+project(mana-core VERSION 0.1.2)
 
 enable_testing()
 
 set(MANA_SOURCES
-        src/mana/logger.cpp
+        src/logger.cpp
 
-        src/mana/vm/slice.cpp
-        src/mana/vm/value.cpp
+        src/vm/bytecode.cpp
+        src/vm/value.cpp
 )
 
 set(MANA_INCLUDES

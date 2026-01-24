@@ -1,0 +1,12 @@
+mut data x = 0
+loop {
+    x += 1
+} => if x > 10
+
+mut data y = 0
+loop if y > 10 {
+    y += 1
+}
+
+data a = x
+data b = y

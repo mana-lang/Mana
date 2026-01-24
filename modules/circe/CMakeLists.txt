@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.28)
-project(circe VERSION 0.0.1)
+project(circe VERSION 0.1.6)
 
 enable_testing()
 
 set(CIRCE_SOURCES
-        src/circe/main.cpp
-        src/circe/circe-visitor.cpp
+        src/main.cpp
+        src/bytecode-generator.cpp
 
-        src/circe/core/logger.cpp
-        src/circe/core/cli.cpp
+        src/core/logger.cpp
+        src/core/cli.cpp
 )
 
 set(CIRCE_INCLUDES
@@ -55,12 +55,5 @@ add_custom_command(
         ${CMAKE_SOURCE_DIR}/assets
         ${PROJECT_BINARY_DIR}/assets/
 )
-
-#add_custom_command(
-#        TARGET circe POST_BUILD
-#        COMMAND ${CMAKE_COMMAND} -E copy
-#        ${PROJECT_BINARY_DIR}/../sigil/libsigil.dll
-#        ${PROJECT_BINARY_DIR}/
-#)
 
 add_subdirectory(tests)

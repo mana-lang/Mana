@@ -13,48 +13,26 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecosystem/Ecosystem.md",
+                "file": "Ecosystem/Syntax & Features/Data.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Ecosystem"
+              "title": "Data"
             }
           },
           {
-            "id": "c8cf3af40632c61d",
+            "id": "2c9e96cd2e2ede9b",
             "type": "leaf",
             "state": {
-              "type": "image",
+              "type": "markdown",
               "state": {
-                "file": "_Assets/ManaEcosystem.png"
+                "file": "Ecosystem/Syntax & Features/Control Flow.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-image",
-              "title": "ManaEcosystem"
-            }
-          },
-          {
-            "id": "d4fe36da7b5ca1e8",
-            "type": "leaf",
-            "state": {
-              "type": "image",
-              "state": {
-                "file": "_Assets/Info_Troves.png"
-              },
-              "icon": "lucide-image",
-              "title": "Info_Troves"
-            }
-          },
-          {
-            "id": "240c512a2991fe54",
-            "type": "leaf",
-            "state": {
-              "type": "image",
-              "state": {
-                "file": "_Assets/Info_Artifacts.png"
-              },
-              "icon": "lucide-image",
-              "title": "Info_Artifacts"
+              "icon": "lucide-file",
+              "title": "Control Flow"
             }
           }
         ],
@@ -213,23 +191,29 @@
       "webpage-html-export:Export as HTML": false
     }
   },
-  "active": "c8cf3af40632c61d",
+  "active": "2c9e96cd2e2ede9b",
   "lastOpenFiles": [
+    "Ecosystem/Syntax & Features/Data.md",
+    "Ecosystem/Syntax & Features/Procedures.md",
+    "Ecosystem/Syntax & Features/Types.md",
+    "Ecosystem/Syntax & Features/Enumerations.md",
+    "Ecosystem/Syntax & Features/Tags.md",
+    "Ecosystem/Syntax & Features/Variants.md",
+    "Ecosystem/Syntax & Features/Compile Time.md",
+    "Ecosystem/Syntax & Features/Control Flow.md",
+    "Ecosystem/Modules/Circe.md",
+    "Ecosystem/Modules/Salem.md",
+    "Ecosystem/Modules/Hex.md",
     "Ecosystem/Ecosystem.md",
     "Ecosystem/Pitch.md",
-    "Ecosystem/Syntax & Features/Control Flow.md",
-    "Ecosystem/Syntax & Features/Data.md",
+    "Ecosystem/Modules/Sigil.md",
+    "Ecosystem/Modules",
+    "Modules.md",
     "Ecosystem/Syntax & Features/Attributes.md",
     "Ecosystem/Syntax & Features/Operators.md",
-    "Ecosystem/Syntax & Features/Types.md",
-    "Ecosystem/Syntax & Features/Procedures.md",
+    "Ecosystem/Syntax & Features/Hello World.md",
     "_Assets/Info_Artifacts.png",
     "_Assets/Info_Troves.png",
-    "Ecosystem/Syntax & Features/Hello World.md",
-    "Ecosystem/Syntax & Features/Tags.md",
-    "Ecosystem/Syntax & Features/Enumerations.md",
-    "Ecosystem/Syntax & Features/Compile Time.md",
-    "Ecosystem/Syntax & Features/Variants.md",
     "Ecosystem/Syntax & Features/Flexible Data.md",
     "_Templates/Dummy.md",
     "_Templates",
@@ -245,21 +229,16 @@
     "Ecosystem/Syntax/Control Flow.md",
     "Ecosystem/Syntax/Procedures.md",
     "Ecosystem/Syntax/Enumerations.md",
-    "Ecosystem/Syntax/Data.md",
-    "Ecosystem/Syntax/Hello World.md",
     "Ecosystem/Syntax/Enumerations.html",
     "Ecosystem/Syntax",
     "_Assets/Pasted image 20250903011646.png",
     "_Assets/Pasted image 20250902210535.png",
     "Tags",
     "Mana",
-    "Gameplay/Systems/Player/Combat.md",
-    "Gameplay/Systems/Player/Injectors.md",
     "_Assets/Pasted image 20250812214022.png",
     "_Assets/Pasted image 20250812213834.png",
     "_Assets/Pasted image 20250723010416.png",
     "Characters/Niandes",
-    "Characters/Altire",
     "Gameplay/Regions/Lumina/Map.canvas",
     "Untitled.canvas"
   ]

@@ -1,0 +1,28 @@
+data t = true
+
+mut data x = 22
+
+// if
+if t {
+    x *= 2
+} 
+
+data a = x
+
+// else if
+if x == 30 {
+    x = 60
+} else if x > 30 {
+    x *= 4
+}
+
+data b = x
+
+// else
+if not t {
+    x = 8
+} else if x == 8 {
+    x = 16
+} else {
+    x = 64
+}

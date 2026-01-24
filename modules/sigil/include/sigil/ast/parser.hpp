@@ -20,21 +20,19 @@ class Parser {
     std::unique_ptr<ast::Artifact> syntax_tree;
 
 private:
-    enum class RangeExprResult : ml::u8 {
-        MatchedExpr,
-        MatchedRange,
-        NoMatch
-    };
-
 public:
-    explicit Parser(const TokenStream&& tokens);
+    explicit Parser(TokenStream&& tokens);
     explicit Parser(const TokenStream& tokens);
+
+    Parser();
+    void AcquireTokens(const TokenStream& tks);
+    void AcquireTokens(TokenStream&& tks);
 
     SIGIL_NODISCARD bool Parse();
 
     SIGIL_NODISCARD const ParseNode& ViewParseTree() const;
     SIGIL_NODISCARD const TokenStream& ViewTokenStream() const;
-    SIGIL_NODISCARD ast::Node* ViewAST() const;
+    SIGIL_NODISCARD ast::Node* AST() const;
 
     void PrintParseTree() const;
     void EmitParseTree(std::string_view file_name) const;
@@ -58,6 +56,8 @@ private:
     void AddTokensTo(ParseNode& node, ml::i64 count);
     void AddCurrentTokenTo(ParseNode& node) const;
     void AddCycledTokenTo(ParseNode& node);
+
+    void SkipCurrentToken();
 
     bool ProgressedParseTree(ParseNode& node);
 
@@ -87,7 +87,6 @@ private:
 
     bool MatchedLoop(ParseNode& node);
     bool MatchedLoopBody(ParseNode& node);
-    RangeExprResult MatchedRangeExpr(ParseNode& node);
 
     bool MatchedDataDeclaration(ParseNode& node);
     bool MatchedAssignment(ParseNode& node);

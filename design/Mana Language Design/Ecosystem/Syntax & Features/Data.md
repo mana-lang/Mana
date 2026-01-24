@@ -41,6 +41,24 @@ fn main() {
 >[!tip] Output
 >Catch-22
 
+
+##### Binding
+The *binding operator* `=>` in a data declaration allows you to perform inline logic without affecting the datum's mutability.
+```kotlin
+data x: i32 => {
+	// 'x' binds to this scope
+	// within this scope, 'x' is assignable
+	RunSomeFunc()
+	DoSomeTest()
+	x = FetchResult()
+}
+```
+Because data is defaulted unless otherwise specified in Mana, you can perform arithmetic on a datum before it's been assigned, by knowing its default initial value.
+
+For primitives, the default values are `0` and `false`.
+
+For UDTs, they are either the default values of *all* fields, or the values specified in the type's interface.
+
 ##### Assignment Deduction
 **Mana** makes certain assumptions about data when it's assigned to other data.
 Depending on the context, it may *copy*, *reference*, or *move* the data.
@@ -143,7 +161,7 @@ fn main() {
 
 Note: In the above example, `x` can never be initialized, because it's not `mut`.
  
- ##### Constants
+##### Constants
 Compile-time constants are created with the `const` keyword.
 They *must* have their type annotated, and cannot be unassigned.
 
