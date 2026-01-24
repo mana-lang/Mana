@@ -51,6 +51,6 @@ target_compile_definitions(sigil PUBLIC SIGIL_VER_MAJOR=${PROJECT_VERSION_MAJOR}
 target_compile_definitions(sigil PUBLIC SIGIL_VER_MINOR=${PROJECT_VERSION_MINOR})
 target_compile_definitions(sigil PUBLIC SIGIL_VER_PATCH=${PROJECT_VERSION_PATCH})
 
-target_compile_definitions(sigil PUBLIC SIGIL_VER_STRING="${PROJECT_VERSION}")
+target_compile_definitions(sigil PUBLIC SIGIL_VER_STRING="${PROJECT_VERSION}-${MANA_BUILD_REV}")
 
 add_subdirectory(tests)

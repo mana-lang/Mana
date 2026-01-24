@@ -6,11 +6,14 @@
 namespace hex {
 CommandLineSettings::CommandLineSettings(const int argc, char** argv)
     : argc(argc),
-      argv(argv) {
+      argv(argv),
+      say_hi {false},
+      gen_testfile {false} {
     cli = std::make_unique<CLI::App>("Hex, the Mana VM");
 }
 
 i64 CommandLineSettings::Populate() {
+    cli->set_version_flag("-v,--version", "Hex v" HEX_VER_STRING);
     cli->add_option("-e, --executable,executable", hexe_name, "The executable to run.");
 
     try {
@@ -24,6 +27,7 @@ i64 CommandLineSettings::Populate() {
                 return mana::Exit(mana::ExitCode::Success);
             }
         }
+        should_exit = true;
         return exit_code;
     }
     return mana::Exit(mana::ExitCode::Success);
@@ -31,5 +35,9 @@ i64 CommandLineSettings::Populate() {
 
 std::string_view CommandLineSettings::HexeName() const {
     return hexe_name;
+}
+
+bool CommandLineSettings::ShouldExit() {
+    return should_exit;
 }
 } // namespace hex
