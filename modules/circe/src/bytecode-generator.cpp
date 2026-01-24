@@ -188,22 +188,26 @@ void BytecodeGenerator::Visit(const LoopRange& node) {}
 void BytecodeGenerator::Visit(const LoopFixed& node) {
     EnterLoop();
 
-    // setup
     const u16 counter = AllocateRegister();
     bytecode.Write(Op::LoadConstant, {counter, bytecode.AddConstant(0)});
 
     const u16 step = AllocateRegister();
     bytecode.Write(Op::LoadConstant, {step, bytecode.AddConstant(1)});
 
+    // we haven't entered the body yet, but the target belongs to that scope
+    // since the target may be a literal, we need to do it like this
+    ++scope_depth;
     node.GetCountTarget()->Accept(*this);
     const u16 target = PopRegBuffer();
+    --scope_depth;
 
     const i64 start_addr = bytecode.InstructionCount();
 
+    // while the parser tries to guard against negative counts, they may be undetectable at compile time
+    // in that case, the loop would end immediately
     const u16 cond = AllocateRegister();
     bytecode.Write(Op::Cmp_Lesser, {cond, counter, target});
     const i64 exit = bytecode.Write(Op::JumpWhenFalse, {cond, SENTINEL});
-
 
     node.GetBody()->Accept(*this);
 
@@ -258,7 +262,7 @@ void BytecodeGenerator::Visit(const UnaryExpr& node) {
 
     bytecode.Write(op, {dst, src});
     reg_buffer.push_back(dst);
-    FreeRegister(dst);
+    FreeRegister(src);
 }
 
 void BytecodeGenerator::Visit(const BinaryExpr& node) {
@@ -500,13 +504,11 @@ void BytecodeGenerator::ExitScope() {
 }
 
 void BytecodeGenerator::EnterLoop() {
-    EnterScope();
     loop_stack.emplace_back();
 }
 
 void BytecodeGenerator::ExitLoop() {
     loop_stack.pop_back();
-    ExitScope();
 }
 
 void BytecodeGenerator::AddSymbol(const std::string_view name, u16 register_index, bool is_mutable) {

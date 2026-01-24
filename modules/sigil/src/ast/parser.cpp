@@ -437,6 +437,13 @@ bool Parser::MatchedLoopBody(ParseNode& node) {
     if (MatchedScope(node)) {
         // loop x {}
         node.rule = Rule::LoopFixed;
+
+        Expect(node.branches[0]->rule != Rule::Unary
+               && node.branches[0]->tokens[0].type != TokenType::Op_Minus,
+               node,
+               "Negative fixed loops lead to unexpected behaviour"
+        );
+
         return true;
     }
 

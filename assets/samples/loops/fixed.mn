@@ -1,5 +1,16 @@
-mut data b = 0
-loop 12 {
-    b += i
+mut data a: i32
+data b = 5
+
+loop b {
+    a += 1
 }
+
+data c = a
+
+mut data d = 0
+loop 6 {
+    d += 1
+} 
+
+data e = d
 

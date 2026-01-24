@@ -209,7 +209,7 @@ public:
     SIGIL_NODISCARD const NodePtr& GetDestination() const;
     SIGIL_NODISCARD const NodePtr& GetBody() const;
 
-    SIGIL_NODISCARD std::string_view GetCounter() const;
+    SIGIL_NODISCARD std::string_view GetCounterName() const;
     SIGIL_NODISCARD bool CounterIsMutable() const;
 
     void Accept(Visitor& visitor) const override;

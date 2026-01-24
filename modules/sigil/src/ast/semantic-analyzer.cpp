@@ -235,8 +235,8 @@ void SemanticAnalyzer::Visit(const LoopRange& node) {
     ++loop_depth;
 
     // counter is mandatory in ranged loop
-    AddSymbol(node.GetCounter(), PrimitiveName(I64), false);
-    symbols[node.GetCounter()].scope_depth += 1; // the counter is part of the if's scope
+    AddSymbol(node.GetCounterName(), PrimitiveName(I64), false);
+    symbols[node.GetCounterName()].scope_depth += 1; // the counter is part of the if's scope
 
     node.GetOrigin()->Accept(*this);
     const auto start_type = PopTypeBuffer();
@@ -258,6 +258,13 @@ void SemanticAnalyzer::Visit(const LoopFixed& node) {
     ++loop_depth;
 
     node.GetCountTarget()->Accept(*this);
+
+    const auto counter_type = PopTypeBuffer();
+    if (not IsIntegral(counter_type)) {
+        Log->error("Loop count must be of integral type");
+        ++issue_counter;
+    }
+
     node.GetBody()->Accept(*this);
 
     --loop_depth;

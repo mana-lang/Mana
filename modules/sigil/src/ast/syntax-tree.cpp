@@ -251,7 +251,7 @@ const NodePtr& LoopRange::GetDestination() const {
     return destination;
 }
 
-std::string_view LoopRange::GetCounter() const {
+std::string_view LoopRange::GetCounterName() const {
     return counter;
 }
 
