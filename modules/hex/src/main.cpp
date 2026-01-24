@@ -73,6 +73,10 @@ int main(const int argc, char** argv) {
     CommandLineSettings cli(argc, argv);
     const i64 result = cli.Populate();
 
+    if (cli.ShouldExit()) {
+        return result;
+    }
+
     const std::string_view hexe_name = cli.HexeName();
     if (hexe_name.empty()) {
         return result;

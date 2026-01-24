@@ -168,7 +168,7 @@ int CompileFrom(const CompileSettings& compile_settings) {
 
 int main(int argc, char** argv) {
     const auto settings = ParseCommandLineCompileSettings(argc, argv);
-    if (settings.ErrorCode() != 0) {
+    if (settings.ErrorCode() != 0 || settings.ShouldExit()) {
         return settings.ErrorCode();
     }
 

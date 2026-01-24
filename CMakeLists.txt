@@ -26,6 +26,17 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
+find_package(Git QUIET)
+
+set(MANA_BUILD_REV "0")
+if (GIT_FOUND)
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} -C ${CMAKE_SOURCE_DIR} rev-list --count HEAD
+            OUTPUT_VARIABLE MANA_BUILD_REV
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+endif ()
+
 add_subdirectory(modules/salem)
 add_subdirectory(modules/sigil)
 add_subdirectory(modules/hex)

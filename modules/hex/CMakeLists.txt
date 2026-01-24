@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(hex VERSION 0.1.0)
+project(hex VERSION 0.1.17)
 
 enable_testing()
 
@@ -50,7 +50,7 @@ target_compile_definitions(hex PRIVATE HEX_VER_MAJOR=${PROJECT_VERSION_MAJOR})
 target_compile_definitions(hex PRIVATE HEX_VER_MINOR=${PROJECT_VERSION_MINOR})
 target_compile_definitions(hex PRIVATE HEX_VER_PATCH=${PROJECT_VERSION_PATCH})
 
-target_compile_definitions(hex PRIVATE HEX_VER_STRING="${PROJECT_VERSION}")
+target_compile_definitions(hex PRIVATE HEX_VER_STRING="${PROJECT_VERSION}-${MANA_BUILD_REV}")
 
 add_custom_command(
         TARGET hex POST_BUILD

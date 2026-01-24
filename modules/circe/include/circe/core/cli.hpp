@@ -14,6 +14,7 @@ struct CompileSettings {
     CIRCE_NODISCARD bool EmitVerbose() const;
     CIRCE_NODISCARD bool EmitParseTree() const;
     CIRCE_NODISCARD bool EmitTokens() const;
+    CIRCE_NODISCARD bool ShouldExit() const;
 
     CIRCE_NODISCARD int ErrorCode() const;
 
@@ -21,9 +22,10 @@ private:
     std::filesystem::path input_path;
     std::filesystem::path output_path;
 
-    bool verbose {false};
+    bool emit_detail {false};
     bool emit_ptree {false};
     bool emit_tokens {false};
+    bool should_exit {false};
 
     int exit_code {mana::literals::SENTINEL};
 };

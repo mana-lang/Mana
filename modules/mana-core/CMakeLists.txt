@@ -40,7 +40,7 @@ target_compile_definitions(mana-core PUBLIC MANA_VER_MAJOR=${PROJECT_VERSION_MAJ
 target_compile_definitions(mana-core PUBLIC MANA_VER_MINOR=${PROJECT_VERSION_MINOR})
 target_compile_definitions(mana-core PUBLIC MANA_VER_PATCH=${PROJECT_VERSION_PATCH})
 
-target_compile_definitions(mana-core PUBLIC MANA_VER_STRING="${PROJECT_VERSION}")
+target_compile_definitions(mana-core PUBLIC MANA_VER_STRING="${PROJECT_VERSION}-${MANA_BUILD_REV}")
 target_compile_definitions(mana-core PUBLIC MANA_NAME="Mana")
 
 add_subdirectory(tests)
