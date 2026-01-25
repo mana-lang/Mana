@@ -101,12 +101,13 @@ private:
 
     LoopContext& CurrentLoop();
 
-    void WriteRangeLoopDirectionEval(ml::u16 origin_reg,
-                                     ml::u16 destination_reg,
-                                     ml::u16 step_reg
-    );
-    ml::u16 AllocRangeLoopOriginRegister(const ast::NodePtr& node);
-    ml::u16 AllocLoopCounterRegister(std::string_view counter_name);
+    struct RangeLoopRegisters {
+        ml::u16 end;
+        ml::u16 step;
+        ml::u16 counter;
+    };
+
+    RangeLoopRegisters PerformRangeLoopSetup(const ast::LoopRange& node);
 
     void HandlePendingSkips();
     void HandlePendingBreaks();
