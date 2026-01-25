@@ -224,7 +224,14 @@ void SemanticAnalyzer::Visit(const Skip& node) {
 }
 
 void SemanticAnalyzer::Visit(const UnaryExpr& node) {
+    const auto op = node.GetOp();
     node.GetVal().Accept(*this);
+    const auto val_type = PopTypeBuffer();
+
+    if (op == "!" && val_type != PrimitiveName(Bool)) {
+        Log->error("Attempted to negate non-boolean expression");
+        ++issue_counter;
+    }
 }
 
 void SemanticAnalyzer::Visit(const BinaryExpr& node) {
