@@ -83,6 +83,8 @@ int CompileFrom(const CompileSettings& compile_settings) {
                        analyzer.IssueCount(),
                        analyzer.IssueCount() > 1 ? "s" : ""
             );
+
+            parser.PrintParseTree();
             return Exit(ExitCode::SemanticError);
         }
 
@@ -168,6 +170,7 @@ int CompileFrom(const CompileSettings& compile_settings) {
 
 int main(int argc, char** argv) {
     const auto settings = ParseCommandLineCompileSettings(argc, argv);
+
     if (settings.ErrorCode() != 0 || settings.ShouldExit()) {
         return settings.ErrorCode();
     }

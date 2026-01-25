@@ -15,7 +15,6 @@ class BytecodeGenerator final : public ast::Visitor {
     struct Symbol {
         ml::u16 register_index;
         ml::u8 scope_depth;
-        bool is_mutable;
     };
 
     struct JumpInstruction {
@@ -58,8 +57,9 @@ public:
     void Visit(const ast::Loop& node) override;
     void Visit(const ast::LoopIf& node) override;
     void Visit(const ast::LoopIfPost& node) override;
-    void Visit(const ast::LoopRange& node) override;
     void Visit(const ast::LoopFixed& node) override;
+    void Visit(const ast::LoopRange& node) override;
+    void Visit(const ast::LoopRangeMutable& node) override;
 
     void Visit(const ast::Break& node) override;
     void Visit(const ast::Skip& node) override;
@@ -96,10 +96,18 @@ private:
     void EnterLoop();
     void ExitLoop();
 
-    void AddSymbol(std::string_view name, ml::u16 register_index, bool is_mutable);
+    void AddSymbol(std::string_view name, ml::u16 register_index);
     void RemoveSymbol(std::string_view name);
 
     LoopContext& CurrentLoop();
+
+    struct RangeLoopRegisters {
+        ml::u16 end;
+        ml::u16 step;
+        ml::u16 counter;
+    };
+
+    RangeLoopRegisters PerformRangeLoopSetup(const ast::LoopRange& node);
 
     void HandlePendingSkips();
     void HandlePendingBreaks();

@@ -69,8 +69,9 @@ public:
     void Visit(const ast::Loop& node) override;
     void Visit(const ast::LoopIf& node) override;
     void Visit(const ast::LoopIfPost& node) override;
-    void Visit(const ast::LoopRange& node) override;
     void Visit(const ast::LoopFixed& node) override;
+    void Visit(const ast::LoopRange& node) override;
+    void Visit(const ast::LoopRangeMutable& node) override;
 
     void Visit(const ast::Break& node) override;
     void Visit(const ast::Skip& node) override;
@@ -97,5 +98,7 @@ private:
     const Datum* GetSymbol(std::string_view name) const;
 
     void HandleInitializer(const ast::Initializer& node, bool is_mutable);
+
+    void HandleRangedLoop(const ast::LoopRange& node, bool is_mutable);
 };
 } // namespace sigil

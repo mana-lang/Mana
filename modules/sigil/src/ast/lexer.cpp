@@ -186,7 +186,8 @@ bool Lexer::LexedNumber() {
 
     // FLOAT = INT.[0-9]+
     // if we encounter a dot, it can't be an int
-    if (Source[cursor] != '.') {
+    if (Source[cursor] != '.' // two dots could be a range operator, so we know it's an int
+        || Source[cursor + 1] == '.') {
         AddToken(TokenType::Lit_Int, length);
         return true;
     }
