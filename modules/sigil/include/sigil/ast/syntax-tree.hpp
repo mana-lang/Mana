@@ -194,13 +194,12 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
-class LoopRange final : public Node {
+class LoopRange : public Node {
     NodePtr origin;
     NodePtr destination;
     NodePtr body;
 
     std::string_view counter;
-    bool is_mutable;
 
 public:
     explicit LoopRange(const ParseNode& node);
@@ -210,7 +209,13 @@ public:
     SIGIL_NODISCARD const NodePtr& GetBody() const;
 
     SIGIL_NODISCARD std::string_view GetCounterName() const;
-    SIGIL_NODISCARD bool CounterIsMutable() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
+class LoopRangeMutable : public LoopRange {
+public:
+    explicit LoopRangeMutable(const ParseNode& node);
 
     void Accept(Visitor& visitor) const override;
 };
@@ -363,6 +368,13 @@ void PropagateStatements(const ParseNode& node, SC* root) {
                 root->Add<class LoopIfPost>(*n);
                 break;
             case LoopRange:
+                if (n->tokens[0].type == TokenType::KW_mut) {
+                    // mut token is useless past this point
+                    n->tokens[0] = n->tokens[1];
+                    n->tokens.pop_back();
+                    root->Add<LoopRangeMutable>(*n);
+                    break;
+                }
                 root->Add<class LoopRange>(*n);
                 break;
             case LoopFixed:

@@ -1,0 +1,9 @@
+mut data a = 0
+mut data b = 0
+loop 4..14 => i {
+    a += 1
+    b = i
+}
+
+data c = a
+data d = b

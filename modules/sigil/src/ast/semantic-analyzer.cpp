@@ -7,6 +7,28 @@ using namespace mana::literals;
 using namespace ast;
 using enum PrimitiveType;
 
+bool IsSignedIntegral(std::string_view type) {
+    return type == PrimitiveName(I8)
+           || type == PrimitiveName(I16)
+           || type == PrimitiveName(I32)
+           || type == PrimitiveName(I64);
+}
+
+bool IsUnsignedIntegral(std::string_view type) {
+    return type == PrimitiveName(U8)
+           || type == PrimitiveName(U16)
+           || type == PrimitiveName(U32)
+           || type == PrimitiveName(U64);
+}
+
+bool IsFloatPrimitive(std::string_view type) {
+    return type == PrimitiveName(F32) || type == PrimitiveName(F64);
+}
+
+bool IsIntegral(const std::string_view type) {
+    return IsSignedIntegral(type) || IsUnsignedIntegral(type);
+}
+
 SemanticAnalyzer::SemanticAnalyzer()
     : scope_depth {0},
       loop_depth {0},
@@ -65,81 +87,6 @@ void SemanticAnalyzer::ExitScope() {
 
 constexpr auto TB_ERROR = "_TYPEBUFFER_ERROR_";
 
-std::string_view SemanticAnalyzer::PopTypeBuffer() {
-    type_buffer[0] = type_buffer[1];
-    type_buffer[1] = TB_ERROR;
-    return type_buffer[0];
-}
-
-void SemanticAnalyzer::BufferType(std::string_view type_name) {
-    type_buffer[1] = type_name;
-}
-
-bool IsIntPrimitive(std::string_view type) {
-    return type == PrimitiveName(I8)
-           || type == PrimitiveName(I16)
-           || type == PrimitiveName(I32)
-           || type == PrimitiveName(I64);
-}
-
-bool IsUintPrimitive(std::string_view type) {
-    return type == PrimitiveName(U8)
-           || type == PrimitiveName(U16)
-           || type == PrimitiveName(U32)
-           || type == PrimitiveName(U64);
-}
-
-bool IsFloatPrimitive(std::string_view type) {
-    return type == PrimitiveName(F32) || type == PrimitiveName(F64);
-}
-
-bool SemanticAnalyzer::TypesMatch(const std::string_view lhs, const std::string_view rhs) const {
-    return lhs == rhs
-           || (IsIntPrimitive(lhs) && IsIntPrimitive(rhs))
-           || (IsUintPrimitive(lhs) && IsUintPrimitive(rhs))
-           || (IsFloatPrimitive(lhs) && IsFloatPrimitive(rhs));
-}
-
-void SemanticAnalyzer::AddSymbol(std::string_view name, std::string_view type, bool is_mutable) {
-    if (symbols.contains(name)) {
-        Log->error("Redefinition of '{}'", name);
-        ++issue_counter;
-        return;
-    }
-
-    symbols[name] = {type, scope_depth, is_mutable};
-}
-
-const SemanticAnalyzer::Datum* SemanticAnalyzer::GetSymbol(std::string_view name) const {
-    const auto it = symbols.find(name);
-    return it != symbols.end() ? &it->second : nullptr;
-}
-
-void SemanticAnalyzer::HandleInitializer(const Initializer& node, bool is_mutable) {
-    // evaluate expr first
-    const auto& init    = node.GetInitializer();
-    const bool has_init = init != nullptr;
-
-    if (has_init) {
-        init->Accept(*this);
-    }
-
-    const auto initializer_type = has_init ? PopTypeBuffer() : PrimitiveName(None);
-    const auto annotation_type  = node.HasTypeAnnotation() ? node.GetTypeName() : initializer_type;
-
-    if (not types.contains(annotation_type)) {
-        Log->error("Unknown type '{}'", annotation_type);
-        ++issue_counter;
-    }
-
-    if (has_init && not TypesMatch(initializer_type, annotation_type)) {
-        Log->error("Type mismatch: expected '{}', got '{}'", annotation_type, initializer_type);
-        ++issue_counter;
-    }
-
-    AddSymbol(node.GetName(), annotation_type, is_mutable);
-}
-
 void SemanticAnalyzer::Visit(const Artifact& artifact) {
     EnterScope();
     for (const auto& statement : artifact.GetChildren()) {
@@ -166,7 +113,7 @@ void SemanticAnalyzer::Visit(const DataDeclaration& node) {
 
 void SemanticAnalyzer::Visit(const Identifier& node) {
     const auto* symbol = GetSymbol(node.GetName());
-
+//
     if (symbol == nullptr) {
         Log->error("Undefined identifier '{}'", node.GetName());
         ++issue_counter;
@@ -227,33 +174,6 @@ void SemanticAnalyzer::Visit(const LoopIfPost& node) {
     --loop_depth;
 }
 
-bool IsIntegral(const std::string_view type) {
-    return IsIntPrimitive(type) || IsUintPrimitive(type);
-}
-
-void SemanticAnalyzer::Visit(const LoopRange& node) {
-    ++loop_depth;
-
-    // counter is mandatory in ranged loop
-    AddSymbol(node.GetCounterName(), PrimitiveName(I64), false);
-    symbols[node.GetCounterName()].scope_depth += 1; // the counter is part of the if's scope
-
-    node.GetOrigin()->Accept(*this);
-    const auto start_type = PopTypeBuffer();
-
-    node.GetDestination()->Accept(*this);
-    const auto end_type = PopTypeBuffer();
-
-    if (not IsIntegral(start_type) || not IsIntegral(end_type)) {
-        Log->error("Range loop requires integral start and end values");
-        ++issue_counter;
-    }
-
-    node.GetBody()->Accept(*this);
-
-    --loop_depth;
-}
-
 void SemanticAnalyzer::Visit(const LoopFixed& node) {
     ++loop_depth;
 
@@ -268,6 +188,15 @@ void SemanticAnalyzer::Visit(const LoopFixed& node) {
     node.GetBody()->Accept(*this);
 
     --loop_depth;
+}
+
+void SemanticAnalyzer::Visit(const LoopRange& node) {
+    HandleRangedLoop(node, false);
+}
+
+// only codegen cares about the difference
+void SemanticAnalyzer::Visit(const LoopRangeMutable& node) {
+    HandleRangedLoop(node, true);
 }
 
 void SemanticAnalyzer::Visit(const Break& node) {
@@ -303,6 +232,7 @@ void SemanticAnalyzer::Visit(const BinaryExpr& node) {
     node.GetLeft().Accept(*this);
 }
 
+
 void SemanticAnalyzer::Visit(const ArrayLiteral& array) {
     for (const auto& value : array.GetValues()) {
         value->Accept(*this);
@@ -323,5 +253,95 @@ void SemanticAnalyzer::Visit(const Literal<void>&) {
 
 void SemanticAnalyzer::Visit(const Literal<bool>&) {
     BufferType(PrimitiveName(Bool));
+}
+
+std::string_view SemanticAnalyzer::PopTypeBuffer() {
+    type_buffer[0] = type_buffer[1];
+    type_buffer[1] = TB_ERROR;
+    return type_buffer[0];
+}
+
+void SemanticAnalyzer::BufferType(std::string_view type_name) {
+    type_buffer[1] = type_name;
+}
+
+bool SemanticAnalyzer::TypesMatch(const std::string_view lhs, const std::string_view rhs) const {
+    return lhs == rhs
+           || (IsSignedIntegral(lhs) && IsSignedIntegral(rhs))
+           || (IsUnsignedIntegral(lhs) && IsUnsignedIntegral(rhs))
+           || (IsFloatPrimitive(lhs) && IsFloatPrimitive(rhs));
+}
+
+void SemanticAnalyzer::AddSymbol(std::string_view name, std::string_view type, bool is_mutable) {
+    if (symbols.contains(name)) {
+        Log->error("Redefinition of '{}'", name);
+        ++issue_counter;
+        return;
+    }
+
+    symbols[name] = {type, scope_depth, is_mutable};
+}
+
+const SemanticAnalyzer::Datum* SemanticAnalyzer::GetSymbol(std::string_view name) const {
+    const auto it = symbols.find(name);
+    return it != symbols.end() ? &it->second : nullptr;
+}
+
+void SemanticAnalyzer::HandleInitializer(const Initializer& node, bool is_mutable) {
+    // evaluate expr first
+    const auto& init    = node.GetInitializer();
+    const bool has_init = init != nullptr;
+
+    if (has_init) {
+        init->Accept(*this);
+    }
+
+    const auto initializer_type = has_init ? PopTypeBuffer() : PrimitiveName(None);
+    const auto annotation_type  = node.HasTypeAnnotation() ? node.GetTypeName() : initializer_type;
+
+    if (not types.contains(annotation_type)) {
+        Log->error("Unknown type '{}'", annotation_type);
+        ++issue_counter;
+    }
+
+    if (has_init && not TypesMatch(initializer_type, annotation_type)) {
+        Log->error("Type mismatch: expected '{}', got '{}'", annotation_type, initializer_type);
+        ++issue_counter;
+    }
+
+    AddSymbol(node.GetName(), annotation_type, is_mutable);
+}
+
+void SemanticAnalyzer::HandleRangedLoop(const LoopRange& node, bool is_mutable) {
+    ++loop_depth;
+
+    // counter is mandatory in ranged loop
+    ++scope_depth;
+    AddSymbol(node.GetCounterName(), PrimitiveName(I64), is_mutable);
+
+    const bool has_origin = node.GetOrigin() != nullptr;
+    if (has_origin) {
+        node.GetOrigin()->Accept(*this);
+    }
+
+    const auto start_type = has_origin ? PopTypeBuffer() : PrimitiveName(I64);
+
+    node.GetDestination()->Accept(*this);
+    const auto end_type = PopTypeBuffer();
+
+    if (not IsIntegral(start_type) || not IsIntegral(end_type)) {
+        Log->error("Range loop requires integral start and end values");
+        ++issue_counter;
+    }
+
+    if (not IsSignedIntegral(start_type) || not IsSignedIntegral(end_type)) {
+        Log->warn("Using unsigned integers in ranges is bug-prone. Prefer signed integers instead");
+    }
+
+    --scope_depth; // the range segment is part of the loop's scope
+
+    node.GetBody()->Accept(*this);
+
+    --loop_depth;
 }
 } // namespace sigil

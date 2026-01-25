@@ -472,7 +472,7 @@ bool Parser::MatchedLoopBody(ParseNode& node) {
         return true;
     }
     // it's a full range
-    AddCycledTokenTo(node);
+    SkipCurrentToken();
 
     if (not Expect(MatchedExpression(node), node, "Range operator takes two operands")) {
         return true;
@@ -486,7 +486,7 @@ bool Parser::MatchedLoopBody(ParseNode& node) {
     }
 
     // loop x..y =>
-    AddCycledTokenTo(node);
+    SkipCurrentToken();
 
     if (CurrentToken().type == TokenType::KW_mut) {
         // loop x..y => mut

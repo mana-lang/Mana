@@ -64,7 +64,6 @@ loop 8..0 => i {
 	things[i].DoSstuff()
 }
 
-
 // identical to the above. 
 // ranges can be arbitrary and will count from lhs to rhs
 // aka: for (int i = 3; i <= 8; ++i)

@@ -226,8 +226,7 @@ void LoopIfPost::Accept(Visitor& visitor) const {
 
 /// LoopRange
 LoopRange::LoopRange(const ParseNode& node) {
-    is_mutable = node.tokens[0].type == TokenType::KW_mut;
-    counter    = FetchTokenText(node.tokens[is_mutable]);
+    counter = FetchTokenText(node.tokens[0]);
 
     if (node.branches.size() == 2) {
         origin      = nullptr;
@@ -235,12 +234,11 @@ LoopRange::LoopRange(const ParseNode& node) {
         body        = std::make_shared<Scope>(*node.branches[1]);
         return;
     }
-    if (node.branches.size() == 3) {
-        origin      = CreateExpression(*node.branches[0]);
-        destination = CreateExpression(*node.branches[1]);
-        body        = std::make_shared<Scope>(*node.branches[2]);
-        return;
-    }
+
+    // it's either a partial or full range
+    origin      = CreateExpression(*node.branches[0]);
+    destination = CreateExpression(*node.branches[1]);
+    body        = std::make_shared<Scope>(*node.branches[2]);
 }
 
 const NodePtr& LoopRange::GetOrigin() const {
@@ -255,15 +253,19 @@ std::string_view LoopRange::GetCounterName() const {
     return counter;
 }
 
-bool LoopRange::CounterIsMutable() const {
-    return is_mutable;
-}
-
 const NodePtr& LoopRange::GetBody() const {
     return body;
 }
 
 void LoopRange::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+/// LoopRangeMutable
+LoopRangeMutable::LoopRangeMutable(const ParseNode& node)
+    : LoopRange {node} {}
+
+void LoopRangeMutable::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 

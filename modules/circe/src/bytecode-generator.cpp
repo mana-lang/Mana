@@ -183,7 +183,107 @@ void BytecodeGenerator::Visit(const LoopIfPost& node) {
     ExitLoop();
 }
 
-void BytecodeGenerator::Visit(const LoopRange& node) {}
+void BytecodeGenerator::Visit(const LoopRange& node) {
+    EnterLoop();
+
+    const u16 range_start = AllocRangeLoopOriginRegister(node.GetOrigin());
+
+    node.GetDestination()->Accept(*this);
+    const u16 range_end = PopRegBuffer();
+
+    const u16 step = AllocateRegister();
+    bytecode.Write(Op::LoadConstant, {step, bytecode.AddConstant(1)});
+
+    WriteRangeLoopDirectionEval(range_start, range_end, step);
+
+    const u16 counter = AllocLoopCounterRegister(node.GetCounterName());
+
+    bytecode.Write(Op::Move, {counter, range_start});
+    FreeRegister(range_start);
+
+    // we add or subtract 1 since ranges are inclusive
+    // this lets us compare to "equals" rather than jwf greater/lesser
+    bytecode.Write(Op::Add, {range_end, range_end, step});
+
+    // loop starts here
+    const i64 start_addr = bytecode.InstructionCount();
+
+    const u16 cond = AllocateRegister();
+    bytecode.Write(Op::Equals, {cond, counter, range_end});
+    const i64 exit = bytecode.Write(Op::JumpWhenTrue, {cond, SENTINEL});
+
+    node.GetBody()->Accept(*this);
+    HandlePendingSkips();
+
+    bytecode.Write(Op::Add, {counter, counter, step});
+    bytecode.Write(Op::Jump, {CalcJumpBackwards(start_addr, bytecode.InstructionCount())});
+
+    bytecode.Patch(exit, CalcJumpDistance(exit, true), CONDITIONAL_JUMP);
+
+    FreeRegister(cond);
+    FreeRegister(counter);
+    FreeRegister(step);
+    FreeRegister(range_end);
+
+    HandlePendingBreaks();
+
+    ExitLoop();
+}
+
+void BytecodeGenerator::Visit(const LoopRangeMutable& node) {
+    EnterLoop();
+
+    const u16 start_range = AllocRangeLoopOriginRegister(node.GetOrigin());
+
+    node.GetDestination()->Accept(*this);
+    const u16 end_range = PopRegBuffer();
+
+    const u16 step = AllocateRegister();
+    bytecode.Write(Op::LoadConstant, {step, bytecode.AddConstant(1)});
+
+    WriteRangeLoopDirectionEval(start_range, end_range, step);
+
+    const u16 counter = AllocLoopCounterRegister(node.GetCounterName());
+
+    bytecode.Write(Op::Move, {counter, start_range});
+    FreeRegister(start_range);
+
+    // loop starts here
+    const i64 start_addr = bytecode.InstructionCount();
+
+    // for mutable loop counters, we can't just compare to equals
+    // so we do something slightly more involved
+    // (end - counter) * step >= 0
+    const u16 diff = AllocateRegister();
+    bytecode.Write(Op::Sub, {diff, end_range, counter});
+    bytecode.Write(Op::Mul, {diff, diff, step});
+
+    const u16 zero = AllocateRegister();
+    bytecode.Write(Op::LoadConstant, {zero, bytecode.AddConstant(0)});
+    const u16 cond = AllocateRegister();
+    bytecode.Write(Op::Cmp_GreaterEq, {cond, diff, zero});
+    const i64 exit = bytecode.Write(Op::JumpWhenFalse, {cond, SENTINEL});
+
+    node.GetBody()->Accept(*this);
+
+    HandlePendingSkips();
+
+    bytecode.Write(Op::Add, {counter, counter, step});
+    bytecode.Write(Op::Jump, {CalcJumpBackwards(start_addr, bytecode.InstructionCount())});
+
+    bytecode.Patch(exit, CalcJumpDistance(exit, true), CONDITIONAL_JUMP);
+
+    FreeRegister(cond);
+    FreeRegister(counter);
+    FreeRegister(step);
+    FreeRegister(end_range);
+    FreeRegister(diff);
+    FreeRegister(zero);
+
+    HandlePendingBreaks();
+
+    ExitLoop();
+}
 
 void BytecodeGenerator::Visit(const LoopFixed& node) {
     EnterLoop();
@@ -511,8 +611,8 @@ void BytecodeGenerator::ExitLoop() {
     loop_stack.pop_back();
 }
 
-void BytecodeGenerator::AddSymbol(const std::string_view name, u16 register_index, bool is_mutable) {
-    symbols[name] = {register_index, scope_depth, is_mutable};
+void BytecodeGenerator::AddSymbol(const std::string_view name, u16 register_index) {
+    symbols[name] = {register_index, scope_depth};
 }
 
 void BytecodeGenerator::RemoveSymbol(const std::string_view name) {
@@ -529,6 +629,36 @@ void BytecodeGenerator::RemoveSymbol(const std::string_view name) {
 
 BytecodeGenerator::LoopContext& BytecodeGenerator::CurrentLoop() {
     return loop_stack.back();
+}
+
+void BytecodeGenerator::WriteRangeLoopDirectionEval(u16 origin_reg, u16 destination_reg, u16 step_reg) {
+    // loop 2..8 and loop 8..2 need a different step value
+    const u16 is_ascending = AllocateRegister();
+    bytecode.Write(Op::Cmp_LesserEq, {is_ascending, origin_reg, destination_reg});
+    const i64 neg_jmp = bytecode.Write(Op::JumpWhenTrue, {is_ascending, SENTINEL});
+    bytecode.Write(Op::Negate, {step_reg, step_reg});
+    bytecode.Patch(neg_jmp, CalcJumpDistance(neg_jmp, true), CONDITIONAL_JUMP);
+    FreeRegister(is_ascending);
+}
+
+u16 BytecodeGenerator::AllocRangeLoopOriginRegister(const NodePtr& node) {
+    if (node == nullptr) {
+        const u16 origin = AllocateRegister();
+        bytecode.Write(Op::LoadConstant, {origin, bytecode.AddConstant(0)});
+        return origin;
+    }
+
+    node->Accept(*this);
+    return PopRegBuffer();
+}
+
+u16 BytecodeGenerator::AllocLoopCounterRegister(std::string_view counter_name) {
+    ++scope_depth;
+    const u16 counter = AllocateRegister();
+    AddSymbol(counter_name, counter);
+    --scope_depth;
+
+    return counter;
 }
 
 void BytecodeGenerator::HandlePendingSkips() {
@@ -582,6 +712,6 @@ void BytecodeGenerator::HandleDeclaration(const Initializer& node, bool is_mutab
         bytecode.Write(Op::LoadConstant, {datum, bytecode.AddConstant(0.0)});
     }
 
-    AddSymbol(name, datum, is_mutable);
+    AddSymbol(name, datum);
 }
 } // namespace circe
