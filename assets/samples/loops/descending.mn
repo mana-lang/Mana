@@ -1,10 +1,10 @@
 mut data a = 0
 mut data b = 0
-loop 14..4 => i {
+
+loop 14..3 => i {
     a += 1
     b = i
 }
 
 data c = a
 data d = b
-

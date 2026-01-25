@@ -1,5 +1,6 @@
 mut data a = 0
 mut data b = 0
+
 loop 4..24 => mut i {
     a += 1
     i += 3
@@ -8,4 +9,3 @@ loop 4..24 => mut i {
 
 data c = a
 data d = b
-

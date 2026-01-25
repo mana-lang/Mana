@@ -4,3 +4,5 @@ loop {
     x += 1
     break if x >= 15
 }
+
+data a = x

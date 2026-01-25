@@ -11,4 +11,3 @@ loop c..d => mut i {
 
 data e = a
 data f = b
-
