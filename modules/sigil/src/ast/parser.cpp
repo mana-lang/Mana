@@ -556,10 +556,9 @@ bool Parser::MatchedDataDeclaration(ParseNode& node) {
     }
     AddCycledTokenTo(decl);
 
-    bool is_annotated = false;
     // data x: i32
-    if (CurrentToken().type == TokenType::Op_Colon) {
-        is_annotated = true;
+    bool is_annotated = CurrentToken().type == TokenType::Op_Colon;
+    if (is_annotated) {
         AddCycledTokenTo(decl);
 
         if (Expect(IsPrimitiveKeyword(CurrentToken().type) || CurrentToken().type == TokenType::Identifier,

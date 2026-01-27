@@ -30,7 +30,7 @@ fn Foo() -> i32 {
 	return 5 + 6
 }
 
-data Foo: fn() -> i32 {
+data Foo: fn = () -> i32 {
 	return 5 + 6
 }
 ```
@@ -48,24 +48,20 @@ They consist of a *name*, followed by a set of *parentheses* containing an *opti
 
 A parameter's type *must* be specified. Multiple parameters of the same type *may* be grouped under commas sharing the same type annotation.
  
-If a return type is *not* specified, it is *deduced* to be the type of the *first* return expression.
-If no return expression exists, the return type is deduced to be `none`.
+If a return type is *not* specified, it is *deduced* to be `none`.
+
+ Returning *any* value from a function with `none` return type results in a compile error.
 ```rust
-fn Add(a: i32, b: i32) {
-	return a + b
-}
+import std.fmt
 
 fn Subtract(a, b: f32) -> f32 {
 	return a - b
 }
-```
-
- The `none` return type *may* be specified, in which case returning any value from a function results in a compile error.
-```rust
-import std.fmt
 
 fn PrintIf(b: bool) -> none {
-	if not b: return false // error
+	if not b {
+		return false // error
+	}
 	
 	fmt.Print("Printing")
 }
@@ -196,10 +192,10 @@ fn Sqrt(v: i32) {
 }
 ```
 
-##### Type Interface Functions
-You may associate functions to types by creating *type interfaces*. 
+##### Associated Functions
+You may *associate* functions to types by creating *type interfaces*. 
 
-Type interface functions are mostly like regular functions, save for a few key differences:
+Associate functions are mostly like regular functions, save for a few key differences:
 - They may be declared `mut`
 	- `mut` functions may modify type members
 		- This includes `@[Locked]` type members
@@ -235,7 +231,7 @@ interface Bar for type Foo {
 data foo = Foo {1, 2, false}
 data x = foo.Fuzz()
 
-// when multiple interface functions share the exact same signature, 
+// when multiple associate functions share the exact same signature, 
 // and both are imported at once, 
 // you must disambiguate them with the scope resolution operator '::'
 
@@ -250,16 +246,99 @@ data bru = foo.Bru::Baz()
 data baz = foo.Baz()
 ```
 >[!danger] Error
-> Call to interface 'Baz()' is ambiguous. 
+> Call to associate 'Baz()' is ambiguous. 
 > Possible options:
 > - Bru::Baz()
 > - Bar::Baz() 
-##### Multi-Functions
-Multi-functions are *polymorphic functions* where many functions share the same name, but may have different argument lists and, if so, different return types as well.
+##### Polyfunctions
+Polyfunctions are *polymorphic functions*, meaning that there are two or more functions that share the same name, but have different argument lists and, if so, may have different return types as well.
 
+Each definition of a polyfunction is a *specialization* of that function.
+```rust
+fn PrintValue(a, b: i32) -> i32 {
+	data p = a + b
+	fmt.PrintLine("I'm an integer: {p}")
+	
+	return p
+}
+
+fn PrintValue(a, b: f32) -> f64 {
+	data p = a + b
+	fmt.PrintLine("I'm a decimal: {p}")
+	
+	return p
+}
+
+fn PrintValue(a: string) {
+	fmt.PrintLine("I'm a string, I don't return anything: {a}")
+}
+
+fn Main() {
+	data a = PrintValue(12, 34)
+	data b = PrintValue(1.2, 34.5)
+	
+	PrintValue("Woah")
+}
+```
+> [!tip] Output
+> I'm an integer: 46
+> I'm a decimal: 35.7
+> I'm a string, I don't return anything: Woah
 ##### Operators
+"Mana is data-centric. Everything in Mana is is data, even functions."
 
-##### Generic Functions
+*But what does this actually mean?*
+
+Mana's focus is exclusively on data and transformations. As part of this philosophy, the only way to transform data is through *operators*. 
+
+The way to think about Mana's data-orientation is:
+- Types *describe* data
+- Bindings *contain* data
+- Operators *transform* data
+
+In essence; *functions in Mana are just specialized operators.*
+
+By specializing an operator, you are describing to Mana how a certain type interacts with transformations.
+
+You can specialize operators in the *interface block* of any given type. Because operators are the "source" of invocability in Mana, they do not contain the `fn` keyword in their declaration. Instead they bind directly to a *parenthesized-list* expression and have an optional return type. 
+```rust
+type Vec2 {
+	a: f32
+	b: f32
+}
+
+interface for type Invocator {
+	operator + => (other: &Vec2) -> Vec2 {
+		return Vec2 {.a + other.a, .b + other.b}
+	}
+}
+
+fn Main() {
+	data a = Vec2 {23, 43}
+	data b = Vec2 {97.1, 664.5}
+	data c = a + b // 123.1, 707.5
+}
+```
+
+By default, operators for composite types return `none`. To make them return something else, you have to specialize them.
+```rust
+type Vec3 {
+	a: f32
+	b: f32
+	c: f32
+}
+
+fn Main() {
+	data a = Vec3 {1, 2, 3}
+	data b = Vec3 {4, 5, 6}
+	data c = a + b
+}
+```
+>[!danger] Error
+> `Vec3::operator+` does not take two arguments because it is unspecialized.
+> Consider writing a specialization in the interface for `Vec3`
+
+##### Generic Polyfunctions
 ```rust
 type T for
 fn Add(a, b: T) -> T {
@@ -298,7 +377,7 @@ type Invocator {
 }
 
 interface for type Invocator {
-	operator () => mut fn(x: i32) -> i32 {
+	operator () => mut (x: i32) -> i32 {
 		.a += x
 		return .a
 	}

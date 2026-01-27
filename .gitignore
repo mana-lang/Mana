@@ -7,13 +7,16 @@ mana-output/
 # Obsidian cache
 .makemd/
 *.mdb
+design/Mana Language Design/.obsidian/workspace.json
 
 # clangd cache
 .cache/ 
 
+# Config files
 CMakeUserPresets.json
 compile_commands.json
 
+# IDE folders
 out/
 .vs/
 .vscode/
@@ -44,5 +47,3 @@ out/
 *.exe
 *.out
 *.app
-
-design/Mana Language Design/.obsidian/workspace.json

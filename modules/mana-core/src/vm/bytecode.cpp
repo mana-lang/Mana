@@ -19,8 +19,8 @@ i64 ByteCode::Write(Op opcode) {
 }
 
 i64 ByteCode::Write(const Op opcode, const std::initializer_list<u16> payloads) {
+    const auto index = instructions.size();
     instructions.push_back(static_cast<u8>(opcode));
-    const auto index = instructions.size() - 1;
 
     // payloads are 16-bit unsigned little endian
     for (const auto payload : payloads) {

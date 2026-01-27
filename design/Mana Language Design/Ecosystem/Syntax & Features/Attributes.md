@@ -20,9 +20,6 @@ Below is a list of valid Attributes:
 		- Will run the function at compile-time, if possible, and replace the call site with its result
 		- If it cannot run at compile-time, it will instead replace the call with its contents, if possible
 		- If this is not possible, it remains a regular function call
-- *Flexible*
-	- Usage:  *Before* a type declaration
-	- Effect: Will aggressively optimise for cache locality at the cost of having unpredictable data layouts. 
 - *Discardable*
 	- Usage: *Before* a function with a return type
 	- Effect: Will provide a compiler warning if the return value of this function is not used

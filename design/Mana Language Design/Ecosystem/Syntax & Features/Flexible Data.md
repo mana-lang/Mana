@@ -1,3 +1,15 @@
+## Note
+After some consideration, I think it would be far, far better to build an "Optimization Analyzer" which can be run separate from compilation, which would perform a data-flow analysis in a specific Trove and identify areas where data-layout optimizations can be made, and then tell the user about those.
+
+It would essentially be a static analysis tool with a heavy emphasis on finding performance optimizations and bottlenecks. We could call this tool **Scepter** or something.
+
+While performance is a very important focus point of Mana, I've come to believe that data should behave exactly as described by the user; additionally, if we *can* identify such optimizations, wouldn't it be far more effective to let the user make those optimizations themselves and have a predictable data layout still?
+
+It would make the user more aware of what actually affects the performance of their program and where these bottlenecks happen, and additionally not mess up their code under the hood for no reason.
+
+In our modern world where LLMs can just hallucinate performance issues and optimizations, there may still be a good use for such a tool; but in light of how challenging many of Mana's tasks are, this sort of tool is still really low priority.
+
+For the sake of posterity, I'm keeping this file; however, I will be removing the `Flexible` attribute listing from [Attributes](Attributes.md).
 
 ##### Flexible Data
 Types may be annotated with the `Flexible` attribute. 

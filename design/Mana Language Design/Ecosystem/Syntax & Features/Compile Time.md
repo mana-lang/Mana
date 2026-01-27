@@ -1,5 +1,4 @@
 
-
 ##### When
 The `when` keyword is like `if`, but for *compile-time*. It is used for *conditional compilation* and *generics*, and can *only* evaluate `const` expressions.
 ```kotlin

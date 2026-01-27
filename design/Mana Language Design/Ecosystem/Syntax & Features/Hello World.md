@@ -1,6 +1,6 @@
 
 ##### Hello World
-```kotlin
+```rust
 import std.fmt
 
 // This is a comment    

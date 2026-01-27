@@ -1,4 +1,5 @@
-*Variants* in **Mana** work very similarly to **Rust** *enums*.
+
+*Variants* in **Mana** define a *sum type*. They provide a way to enumerate with a payload.
 
 ```kotlin
 variant Action {
@@ -13,4 +14,6 @@ variant Action {
 }
 ```
 
-Variants are similar to *enums* in that they indicate a list of possibilities, however, variants can hold *any* kind of data, whereas enums are always some kind of integral constant. This makes Variants a *sum type* and allows you to utilise all the power you would expect from Rust enums.
+Variants are similar to *enums* in that they indicate a list of possibilities; however, variants can hold *any* kind of data, whereas enums are always some kind of integral constant.
+
+While variants have a *discriminant*, this is opaque to the user. 

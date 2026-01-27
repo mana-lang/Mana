@@ -3,7 +3,7 @@
 
 Mana's *enums*, like many other languages, offer a simple means of creating labeled values. However, they can do a lot more than that.
 ##### C++ Style Enums
-If you're familiar with **C++** enums, that is how Mana enums work in their most basic form.
+If you're familiar with the **C++** `enum class`, that is how Mana enums work in their most basic form.
 ```kotlin
 enum Colour {
 	Red    // 0
@@ -67,7 +67,7 @@ enum MeleeWeapon {
 }
 
 // append 'MeleeWeapon' labels to 'Weapon'
-enum Weapon += enum MeleeWeapon
+enum Weapon += MeleeWeapon
 
 // these labels will be treated as though they are part of 'Weapon'
 data flail = Weapon.Flail
@@ -76,8 +76,8 @@ data flail = Weapon.Flail
 data melee_flail = MeleeWeapon.Flail
 
 // enums can easily be serialized to strings
-std.println("{1}: {2}", enum.to_string(flail), enum.underlying(flail))
-std.print("{1}: {2}", enum.to_string(melee_flail), enum.underlying(melee_flail))
+std.println("{1}: {2}", enum.AsString(flail), enum.Underlying(flail))
+std.print("{1}: {2}", enum.AsString(melee_flail), enum.Underlying(melee_flail))
 ```
 >[!tip] Output
 > Weapon.Flail: 6
@@ -136,7 +136,11 @@ enum Weapon -= MeleeWeapon.Khopesh // ok
 While it is fine to *append* to an enum, it is generally *discouraged* to explicitly remove from it, as that may lead to unexpected bugs. It is better to allow removal to happen automatically.
 
 ##### Underlying type
-To override the default behaviour of enums, such as changing their enumeration values, you must *explicitly* specify their *underlying type*. This type *must* be an *integral* type, such as `i32`, but *cannot* be a `bool`, even though booleans are technically integral types.
+To override the default behaviour of enums, such as changing their enumeration values, you must *explicitly* specify their underlying type.  This is because enums will, by default, be the smallest underlying type they can count up to, which is `u8` for the vast majority of cases.
+
+However, you may want negative values for enum fields, or to utilize them as bit flags. To prevent unexpected behaviour in those cases, annotation is mandatory when overriding enum fields.
+
+The underlying type *must* be an *integral* type, such as `i32`. 
 ```kotlin
 // the following enum declaration won't compile
 enum Unspecified {
@@ -150,6 +154,8 @@ enum Specified : u8 {
 	B = 20
 }
 ```
+> [!note] Note
+> Even though `bool` is technically an integral type, it is uniquely *not* permitted for use as an enum's underlying type.
 
 By default, each next label will increase the previous label's value by 1. However, this behaviour can be overridden by specifying *at least two* label values explicitly. Mana will then follow the pattern described by the programmer until it encounters another set of *two* explicit values, or the enum ends.
 ```kotlin
@@ -159,7 +165,7 @@ enum Countdown : u8 {
 	Nine   = 9
 	Eight // 8
 	Seven // 7
-	Six   // etc...
+	Six   // etc... -> WILL underflow to 255 eventually, will warn if so
 }
 
 enum Skip : u8 {
@@ -173,7 +179,7 @@ enum Skip : u8 {
 // it only considers the last two entries
 enum Fibonacci : u8 {
 	A  = 1
-	B  = 1
+	B  = 1 // still unsure if this should be an error
 	C  = 2
 	D  = 3
 	E  = 5
@@ -182,14 +188,17 @@ enum Fibonacci : u8 {
 	// not quite fibonacci...
 }
 
+// specifically, only the last two /specific/ entries
 enum Pattern : u8 {
 	A   = 3
 	B   = 6
 	C  // 9
-	D   = 10
-	E  // 13
-	F   = 11
-	G   = 15
+	D   = 10 // specifically specific
+	E  // 14
+	F   = 15
+	G   = 17
 	H  // 19, etc
 }
+
 ```
+

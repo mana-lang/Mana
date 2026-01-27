@@ -609,7 +609,7 @@ BytecodeGenerator::LoopContext& BytecodeGenerator::CurrentLoop() {
     return loop_stack.back();
 }
 
-BytecodeGenerator::RangeLoopRegisters BytecodeGenerator::PerformRangeLoopSetup(const ast::LoopRange& node) {
+BytecodeGenerator::RangeLoopRegisters BytecodeGenerator::PerformRangeLoopSetup(const LoopRange& node) {
     const auto alloc_origin = [this](const NodePtr& origin) {
         if (origin == nullptr) {
             const u16 reg = AllocateRegister();

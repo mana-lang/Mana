@@ -33,7 +33,7 @@ fn
 ```
 
 
-Besides the primitive types, **Mana** also has some special type-related keywords.
+Besides the primitive types, Mana also has some special type-related keywords.
 ```C#
 	// same as u8, except when handling text
 	// [byte] is interpreted differently from [u8]
@@ -44,15 +44,30 @@ byte
 string
 
 	// unit type/non-type
-	// data of this type may not be declared
-	// and functions can not return this type
 none
 ```
-Attempting to create data of type `none` will result in a compile error. Setting a function's return type to `none` indicates it *may not* return any value; it would be equivalent to a `void` function in *C*.
-##### Custom Types
-You may also create your own types in **Mana**. You do so using the `type` keyword.
 
-A user-defined type block consists of the type keyword and the type's name, followed by a block of *type members* or *fields*, each with their own type specified.
+
+##### None
+`none` is a special keyword which is both a type and a value, but represents no-type and no-value. What this means is:
+- Functions
+	- You may specify `none` as the return type of a function, which will be the same as specifying no return type. This prevents the function from returning any value.
+	- You may *not* return `none` from a function.
+- Mutable Data
+	- You may assign `none` to a mutable datum during initialization, and that will leave it uninitialized. 
+	- You may *not* annotate a datum with type `none`, even if you assign it `none`
+	- You may *not* assign `none` to an un-annotated datum.
+	- You may *not* assign `none` to an immutable datum, even if annotated.
+- Pattern Matching
+	- You may have *one* match arm that matches to `none`
+	- This arm represents not having matched anything.
+
+In short, `none` is the way with which you describe the *absence* of things in Mana.
+
+##### Composite Types
+Composite types can be created using the `type` keyword.
+
+A **Composite Type** block consists of the type keyword and the type's name, followed by a block of *fields* (*type members*), each with their own type annotated.
 ```rust
 type Foo {
 	a: i32
@@ -60,28 +75,34 @@ type Foo {
 	c: string
 }
 ```
-
-Data of this type is declared as normal, and its members' data *must* be initialized individually in one of two ways:
 ```kotlin
 // implicit
 data foo = Foo {102, 43.3, "hello"}
 
 // explicit
 data bar = Foo {.b = 43.3
-				.a = 102
-				.c = "hello"}
+				.c = "hello"} // 'a' will be 0
 ```
 
-For *implicit* initialization, the data members *must* be initialized in the *same* order they were declared in their type declaration, and *all* data members *must* be initialized.
+For *implicit* initialization, the fields *must* be initialized in the *same* order they were declared in their type declaration, and *all* data members *must* be initialized.
 
-*Explicit* initialization does *not* have these requirements. Any members left uninitialized in an explicit initializer will be *zeroed*.
+*Explicit* initialization does *not* have these requirements. Any fields left uninitialized in an explicit initializer will be *defaulted*.
 
 Typically, it is preferable to use *explicit* initialization.
 
-Both types of initialization are done via a *list*, which means they may either be separated by commas, or by newlines.
+Both types of initialization are done via a *braced-list*, which means they may either be separated by commas, or by newlines.
+
+If there is no *braced-list* in the declaration, *all* members are defaulted.
+```kotlin
+data bax = Foo
+```
+In this example:
+- `a` will be `0`
+- `b` will be `0.0`
+- `c` will be `""`
 
 ##### Default Values
-You *may* declare a *default value* for a *type member*. Type members with default values will use their default value instead of their zero-value when omitted from an explicit initializer.
+You *may* declare a *default value* for a field. Type members with default values will use their default value instead of their zero-value when omitted from an explicit initializer.
 ```rust
 type Foo {
 	a: i32
@@ -90,11 +111,11 @@ type Foo {
 }
 ```
 ```kotlin
-data foo = Foo {.a = 102, .c = "hello"}
+data foo = Foo {.a = 102, .c = "hello"} // 'b' will be 32.99
 ```
 
 ##### Locking Mutable Data
-Mutable data may be annotated with the `@[Locked]` attribute to indicate that anything from an outer scope is not allowed to write to it. This is particularly useful inside custom types.
+Fields may be annotated with the `@[Locked]` attribute to indicate that *only* mutable associated functions may modify them.
 
 **Mana** does *not* have the concept of granular private access specifiers for individual type members. However, sometimes you want a value which may be modified by an interface function, but not by anything else. In these scenarios, you would want to use `@[Locked]`.
 ```rust

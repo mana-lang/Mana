@@ -132,7 +132,7 @@ You can iterate over a collection using the `for` keyword.
 data values = [55, 23, 99]
 
 for elem in values {
-	fmt.PrintLine("{elem}")
+	fmt.Print("{elem}\n")
 }
 ```
 >[!tip] Output
