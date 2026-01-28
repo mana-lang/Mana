@@ -21,6 +21,11 @@ class BytecodeGenerator final : public ast::Visitor {
         ScopeDepth scope_depth;
     };
 
+    struct Constant {
+        Register register_index;
+        ScopeDepth scope_depth;
+    };
+
     struct JumpInstruction {
         ml::i64 jump_index;
         bool is_conditional;
@@ -32,7 +37,7 @@ class BytecodeGenerator final : public ast::Visitor {
     };
 
     using SymbolTable   = std::unordered_map<std::string_view, Symbol>;
-    using ConstantTable = std::unordered_map<Register, ScopeDepth>;
+    using ConstantTable = std::unordered_map<ml::u16, Constant>;
 
     SymbolTable symbols;
     ConstantTable constants;
@@ -126,11 +131,15 @@ private:
 
     template <mv::ValuePrimitive VP>
     void CreateLiteral(const ast::Literal<VP>& literal) {
-        Register reg  = AllocateRegister();
-        ml::u16 index = bytecode.AddConstant(literal.Get());
+        const auto index = bytecode.AddConstant(literal.Get());
+        if (constants.contains(index)) {
+            reg_buffer.push_back(constants[index].register_index);
+            return;
+        }
+        const auto reg = AllocateRegister();
         bytecode.Write(mv::Op::LoadConstant, {reg, index});
 
-        constants[reg] = scope_depth;
+        constants[index] = {reg, scope_depth};
 
         reg_buffer.push_back(reg);
     }

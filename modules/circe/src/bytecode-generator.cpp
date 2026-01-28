@@ -365,7 +365,6 @@ void BytecodeGenerator::Visit(const BinaryExpr& node) {
         FreeRegister(rhs);
     };
 
-
     if (op_text == "&&") {
         jump(Op::JumpWhenFalse);
         return;
@@ -531,7 +530,7 @@ Register BytecodeGenerator::AllocateRegister() {
 }
 
 void BytecodeGenerator::FreeRegister(Register reg) {
-    for (const Register r : free_regs) {
+    for (const auto r : free_regs) {
         if (r == reg) {
             return;
         }
@@ -555,8 +554,14 @@ void BytecodeGenerator::FreeRegisters(const std::vector<Register>& regs) {
 }
 
 bool BytecodeGenerator::RegisterIsOwned(Register reg) {
-    for (const auto& val : std::views::values(symbols)) { // NOLINT(*-use-anyofallof)
-        if (val.register_index == reg) {
+    for (const auto [r, scope] : std::views::values(symbols)) {
+        if (r == reg) {
+            return true;
+        }
+    }
+
+    for (const auto [r, scope] : std::views::values(constants)) {
+        if (r == reg) {
             return true;
         }
     }
@@ -564,10 +569,11 @@ bool BytecodeGenerator::RegisterIsOwned(Register reg) {
     return false;
 }
 
+// TODO: investigate constant registers being overridden
 Register BytecodeGenerator::PopRegBuffer() {
     if (reg_buffer.empty()) {
         Log->error("Internal Compiler Error: Register stack underflow");
-        return 0;
+        return -1;
     }
 
     const auto slot = reg_buffer.back();
@@ -586,18 +592,36 @@ void BytecodeGenerator::EnterScope() {
 }
 
 void BytecodeGenerator::ExitScope() {
-    std::vector<std::string_view> to_remove;
-    to_remove.reserve(symbols.size());
+    std::vector<std::string_view> deleted_symbols;
+    deleted_symbols.reserve(symbols.size());
 
     for (const auto& [name, symbol] : symbols) {
         if (symbol.scope_depth == scope_depth) {
-            to_remove.push_back(name);
+            deleted_symbols.push_back(name);
         }
     }
 
-    for (const auto& name : to_remove) {
+    for (const auto& name : deleted_symbols) {
         RemoveSymbol(name);
     }
+
+    // constants can "go out of scope" too,
+    // albeit for different reasons
+    std::vector<u16> deleted_constants;
+    deleted_constants.reserve(constants.size());
+
+    for (const auto index : std::views::keys(constants)) {
+        if (constants[index].scope_depth == scope_depth) {
+            deleted_constants.push_back(index);
+        }
+    }
+
+    for (const auto& index : deleted_constants) {
+        const auto reg = constants[index].register_index;
+        constants.erase(index);
+        FreeRegister(reg);
+    }
+
     --scope_depth;
 }
 
@@ -620,7 +644,7 @@ void BytecodeGenerator::RemoveSymbol(const std::string_view name) {
     }
 
     // prevent duplicate entries in e.g. 'data x = y'
-    auto reg = symbols[name].register_index;
+    const auto reg = symbols[name].register_index;
     symbols.erase(name);
     FreeRegister(reg);
 }
