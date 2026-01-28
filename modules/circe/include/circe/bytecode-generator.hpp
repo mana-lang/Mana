@@ -74,11 +74,14 @@ public:
     void Visit(const ast::Literal<bool>& literal) override;
 
 private:
-    ml::u16 CalcJumpDistance(ml::i64 jump_index, bool is_conditional = false) const;
-    ml::u16 CalcJumpBackwards(ml::i64 target_index,
-                              ml::i64 source_index,
-                              bool is_conditional = false
-    ) const;
+    bool IsOpJumpOp(mv::Op op) const;
+    void JumpBackwards(ml::i64 target_index);
+    void JumpBackwardsConditional(mv::Op op, ml::u16 condition_register, ml::i64 target_index);
+    void PatchJumpForward(ml::i64 target_index);
+    void PatchJumpBackward(ml::i64 target_index);
+    void PatchJumpForwardConditional(ml::i64 target_index);
+    void PatchJumpBackwardConditional(ml::i64 target_index);
+    ml::u16 CalcJump(ml::i64 target_index, bool is_forward, bool is_conditional) const;
 
     ml::u16 AllocateRegister();
     void FreeRegister(ml::u16 reg);
@@ -115,13 +118,13 @@ private:
     void HandleLoopControl(bool is_break, const ast::NodePtr& condition);
     void HandleDeclaration(const ast::Initializer& node, bool is_mutable);
 
-    template <typename T>
-    void CreateLiteral(const ast::Literal<T>& literal) {
-        ml::u16 dst = AllocateRegister();
-        ml::u16 idx = bytecode.AddConstant(literal.Get());
-        bytecode.Write(mv::Op::LoadConstant, {dst, idx});
+    template <mv::ValuePrimitive VP>
+    void CreateLiteral(const ast::Literal<VP>& literal) {
+        ml::u16 reg      = AllocateRegister();
+        ml::u16 constant = bytecode.AddConstant(literal.Get());
+        bytecode.Write(mv::Op::LoadConstant, {reg, constant});
 
-        reg_buffer.push_back(dst);
+        reg_buffer.push_back(reg);
     }
 };
 } // namespace circe

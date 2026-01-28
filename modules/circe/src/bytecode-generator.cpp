@@ -12,8 +12,6 @@ namespace circe {
 using namespace mana::vm;
 using namespace sigil::ast;
 
-constexpr u8 CONDITIONAL_JUMP = 1;
-
 BytecodeGenerator::BytecodeGenerator()
     : total_registers {},
       scope_depth {} {}
@@ -108,14 +106,12 @@ void BytecodeGenerator::Visit(const If& node) {
 
     if (const auto& else_branch = node.GetElseBranch()) {
         const i64 jmp_end = bytecode.Write(Op::Jump, {SENTINEL});
-
-        bytecode.Patch(jmp_false, CalcJumpDistance(jmp_false, true), CONDITIONAL_JUMP);
+        PatchJumpForwardConditional(jmp_false);
 
         else_branch->Accept(*this);
-
-        bytecode.Patch(jmp_end, CalcJumpDistance(jmp_end));
+        PatchJumpForward(jmp_end);
     } else {
-        bytecode.Patch(jmp_false, CalcJumpDistance(jmp_false, true), CONDITIONAL_JUMP);
+        PatchJumpForwardConditional(jmp_false);
     }
 }
 
@@ -132,7 +128,7 @@ void BytecodeGenerator::Visit(const Loop& node) {
     HandlePendingSkips();
 
     // end of loop
-    bytecode.Write(Op::Jump, {CalcJumpBackwards(start_addr, bytecode.InstructionCount())});
+    JumpBackwards(start_addr);
 
     HandlePendingBreaks();
 
@@ -154,8 +150,8 @@ void BytecodeGenerator::Visit(const LoopIf& node) {
     node.GetBody()->Accept(*this);
     HandlePendingSkips();
 
-    bytecode.Write(Op::Jump, {CalcJumpBackwards(start_addr, bytecode.InstructionCount())});
-    bytecode.Patch(jmp_end, CalcJumpDistance(jmp_end, true), CONDITIONAL_JUMP);
+    JumpBackwards(start_addr);
+    PatchJumpForwardConditional(jmp_end);
 
     HandlePendingBreaks();
 
@@ -175,7 +171,8 @@ void BytecodeGenerator::Visit(const LoopIfPost& node) {
     // end of loop
     node.GetCondition()->Accept(*this);
     const u16 condition = PopRegBuffer();
-    bytecode.Write(Op::JumpWhenTrue, {condition, CalcJumpBackwards(start_addr, bytecode.InstructionCount(), true)});
+    JumpBackwardsConditional(Op::JumpWhenTrue, condition, start_addr);
+
     FreeRegister(condition);
 
     HandlePendingBreaks();
@@ -204,9 +201,8 @@ void BytecodeGenerator::Visit(const LoopRange& node) {
     HandlePendingSkips();
 
     bytecode.Write(Op::Add, {range.counter, range.counter, range.step});
-    bytecode.Write(Op::Jump, {CalcJumpBackwards(start_addr, bytecode.InstructionCount())});
-
-    bytecode.Patch(exit, CalcJumpDistance(exit, true), CONDITIONAL_JUMP);
+    JumpBackwards(start_addr);
+    PatchJumpForwardConditional(exit);
 
     FreeRegister(cond);
     FreeRegister(range.counter);
@@ -247,9 +243,9 @@ void BytecodeGenerator::Visit(const LoopRangeMutable& node) {
     HandlePendingSkips();
 
     bytecode.Write(Op::Add, {range.counter, range.counter, range.step});
-    bytecode.Write(Op::Jump, {CalcJumpBackwards(start_addr, bytecode.InstructionCount())});
 
-    bytecode.Patch(exit, CalcJumpDistance(exit, true), CONDITIONAL_JUMP);
+    JumpBackwards(start_addr);
+    PatchJumpForwardConditional(exit);
 
     FreeRegister(range.end);
     FreeRegister(range.step);
@@ -293,9 +289,9 @@ void BytecodeGenerator::Visit(const LoopFixed& node) {
 
     // increment and bounce back to start
     bytecode.Write(Op::Add, {counter, counter, step});
-    bytecode.Write(Op::Jump, {CalcJumpBackwards(start_addr, bytecode.InstructionCount())});
 
-    bytecode.Patch(exit, CalcJumpDistance(exit, true), CONDITIONAL_JUMP);
+    JumpBackwards(start_addr);
+    PatchJumpForwardConditional(exit);
 
     HandlePendingBreaks();
 
@@ -361,7 +357,8 @@ void BytecodeGenerator::Visit(const BinaryExpr& node) {
         const u16 rhs = PopRegBuffer();
         bytecode.Write(Op::Move, {dst, rhs});
 
-        bytecode.Patch(jwf, CalcJumpDistance(jwf, true), CONDITIONAL_JUMP);
+        PatchJumpForwardConditional(jwf);
+
         reg_buffer.push_back(dst);
         FreeRegister(rhs);
     };
@@ -464,32 +461,53 @@ void BytecodeGenerator::Visit(const Literal<bool>& literal) {
     CreateLiteral(literal);
 }
 
+bool BytecodeGenerator::IsOpJumpOp(const Op op) const {
+    return op == Op::Jump || op == Op::JumpWhenTrue || op == Op::JumpWhenFalse;
+}
+
+void BytecodeGenerator::JumpBackwards(i64 target_index) {
+    bytecode.Write(Op::Jump, {CalcJump(target_index, false, false)});
+}
+
+void BytecodeGenerator::JumpBackwardsConditional(const Op op, u16 condition_register, i64 target_index) {
+    if (not IsOpJumpOp(op)) {
+        Log->error("Internal Compiler Error: JumpBackwardsConditional called on non-jump op '{}'",
+                   magic_enum::enum_name(op)
+        );
+        return;
+    }
+    bytecode.Write(op, {condition_register, CalcJump(target_index, false, true)});
+}
+
+void BytecodeGenerator::PatchJumpForward(i64 target_index) {
+    bytecode.Patch(target_index, CalcJump(target_index, true, false));
+}
+
+void BytecodeGenerator::PatchJumpBackward(i64 target_index) {
+    bytecode.Patch(target_index, CalcJump(target_index, false, false));
+}
+
+void BytecodeGenerator::PatchJumpForwardConditional(i64 target_index) {
+    static constexpr u8 conditional_offset = 1;
+    bytecode.Patch(target_index, CalcJump(target_index, true, true), conditional_offset);
+}
+
+void BytecodeGenerator::PatchJumpBackwardConditional(i64 target_index) {
+    static constexpr u8 conditional_offset = 1;
+    bytecode.Patch(target_index, CalcJump(target_index, false, true), conditional_offset);
+}
+
 bool JumpIsWithinBounds(const i64 distance) {
     return distance <= std::numeric_limits<i16>::max()
            && distance >= std::numeric_limits<i16>::min();
 }
 
-u16 BytecodeGenerator::CalcJumpDistance(const i64 jump_index, const bool is_conditional) const {
+u16 BytecodeGenerator::CalcJump(const i64 target_index, bool is_forward, bool is_conditional) const {
     const auto jump_bytes = is_conditional ? CJMP_OP_BYTES : JMP_OP_BYTES;
 
-    const i64 jump_distance = bytecode.InstructionCount() - (jump_index + jump_bytes);
-
-    if (not JumpIsWithinBounds(jump_distance)) {
-        Log->error("Internal Compiler Error: Jump distance out of bounds");
-        return SENTINEL;
-    }
-
-    return static_cast<u16>(jump_distance);
-}
-
-// i hate how similar these are, but adding another bool to calcjumpdist would probably be bad
-u16 BytecodeGenerator::CalcJumpBackwards(const i64 target_index,
-                                         const i64 source_index,
-                                         const bool is_conditional
-) const {
-    const auto jump_bytes = is_conditional ? CJMP_OP_BYTES : JMP_OP_BYTES;
-
-    const i64 jump_distance = target_index - (source_index + jump_bytes);
+    const i64 jump_distance = is_forward
+                                  ? bytecode.InstructionCount() - (target_index + jump_bytes)
+                                  : target_index - (bytecode.InstructionCount() + jump_bytes);
 
     if (not JumpIsWithinBounds(jump_distance)) {
         Log->error("Internal Compiler Error: Jump distance out of bounds");
@@ -633,7 +651,9 @@ BytecodeGenerator::RangeLoopRegisters BytecodeGenerator::PerformRangeLoopSetup(c
     bytecode.Write(Op::Cmp_LesserEq, {is_ascending, origin, destination});
     const i64 neg_jmp = bytecode.Write(Op::JumpWhenTrue, {is_ascending, SENTINEL});
     bytecode.Write(Op::Negate, {step, step});
-    bytecode.Patch(neg_jmp, CalcJumpDistance(neg_jmp, true), CONDITIONAL_JUMP);
+
+    // we do a very short jump over the neg instruction if we're ascending
+    PatchJumpForwardConditional(neg_jmp);
     FreeRegister(is_ascending);
 
     // counter's scope technically belongs to the loop, so we manually increment it here
@@ -649,14 +669,22 @@ BytecodeGenerator::RangeLoopRegisters BytecodeGenerator::PerformRangeLoopSetup(c
 }
 
 void BytecodeGenerator::HandlePendingSkips() {
-    for (const auto [skip_index, has_condition] : CurrentLoop().pending_skips) {
-        bytecode.Patch(skip_index, CalcJumpDistance(skip_index, has_condition), has_condition);
+    for (const auto [skip_target, has_condition] : CurrentLoop().pending_skips) {
+        if (has_condition) {
+            PatchJumpForwardConditional(skip_target);
+        } else {
+            PatchJumpForward(skip_target);
+        }
     }
 }
 
 void BytecodeGenerator::HandlePendingBreaks() {
-    for (const auto [break_jump, has_condition] : CurrentLoop().pending_breaks) {
-        bytecode.Patch(break_jump, CalcJumpDistance(break_jump, has_condition), has_condition);
+    for (const auto [loop_end, has_condition] : CurrentLoop().pending_breaks) {
+        if (has_condition) {
+            PatchJumpForwardConditional(loop_end);
+        } else {
+            PatchJumpForward(loop_end);
+        }
     }
 }
 
