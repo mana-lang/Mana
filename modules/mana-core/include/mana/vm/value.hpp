@@ -25,6 +25,9 @@ inline PrimitiveType GetManaTypeFrom(bool) {
     return Bool;
 }
 
+template <typename T>
+concept ValuePrimitive = std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>;
+
 struct Value {
     friend class ByteCode;
 
@@ -96,13 +99,10 @@ struct Value {
 
     ~Value();
 
-    template <typename T>
-        requires std::is_integral_v<T>
-                 || std::is_floating_point_v<T>
-                 || std::is_same_v<T, bool>
-    explicit Value(const std::vector<T>& values)
+    template <ValuePrimitive VP>
+    explicit Value(const std::vector<VP>& values)
         : length(values.size()),
-          type(GetManaTypeFrom(T {})) {
+          type(GetManaTypeFrom(VP {})) {
         if (length == 0) {
             data = nullptr;
             return;
@@ -114,13 +114,12 @@ struct Value {
             data = new Data[length];
         }
 
-        // init using if constexpr to avoid narrowing warnings
         for (u64 i = 0; i < length; ++i) {
-            if constexpr (std::is_same_v<T, bool>) {
+            if constexpr (std::is_same_v<VP, bool>) {
                 data[i].as_bool = values[i];
-            } else if constexpr (std::is_floating_point_v<T>) {
+            } else if constexpr (std::is_floating_point_v<VP>) {
                 data[i].as_f64 = static_cast<f64>(values[i]);
-            } else if constexpr (std::is_unsigned_v<T>) {
+            } else if constexpr (std::is_unsigned_v<VP>) {
                 data[i].as_u64 = static_cast<u64>(values[i]);
             } else {
                 data[i].as_i64 = static_cast<i64>(values[i]);
