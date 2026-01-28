@@ -412,8 +412,9 @@ bool Parser::MatchedLoopBody(ParseNode& node) {
     if (MatchedScope(node)) {
         if (CurrentToken().type == TokenType::Op_Binding) {
             AddCycledTokenTo(node);
-            Expect(MatchedIfCondition(node), node, "Expected if condition after '=>'");
             node.rule = Rule::LoopIfPost;
+
+            Expect(MatchedIfCondition(node), node, "Expected if condition after '=>'");
         }
         // don't need to do anything if loop is infinite
         return true;
