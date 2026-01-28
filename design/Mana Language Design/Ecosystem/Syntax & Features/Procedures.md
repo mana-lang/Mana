@@ -5,7 +5,7 @@ The term *procedure* is used as a catch-all term for *executable things* in **Ma
 - Closures
 - Delegates
 - Invocators
-- Type Interfaces
+- Associates
 
 All procedures may also have the following **Attributes**:
 - Constant
@@ -13,10 +13,9 @@ All procedures may also have the following **Attributes**:
 - Inline
 - Hot
 
-Additionally, some procedures are *polymorphic*:
-- Multi-Functions
+Additionally, procedures can be *polymorphic*. This includes:
+- Functions
 - Operators
-- Generic Functions
 
 
 ##### Executable Data
@@ -307,7 +306,7 @@ type Vec2 {
 	b: f32
 }
 
-interface for type Invocator {
+interface for type Vec2 {
 	operator + => (other: &Vec2) -> Vec2 {
 		return Vec2 {.a + other.a, .b + other.b}
 	}
@@ -351,12 +350,39 @@ fn Sub<T>(a, b: T) -> T {
 ```
 
 ##### Closures
+Closures are essentially syntax sugar for ad-hoc invocators.
 - Defined with the `fn` keyword inside another invocable
 - May capture surrounding data
     - If unspecified, capture is inferred by Mana’s type-checking semantics
 - Capture semantics are part of the closure’s type
 - May be named or anonymous
 - Otherwise behave like functions
+
+Tentative syntax:
+```rust
+data x = 32
+data y = "hello"
+data v = Vec2 {5, 10}
+
+data closure = fn(a: i32) => [$x, &y, mut &v] -> i32 {
+	fmt.Print(.y) // captures are members of the closure invocator
+	
+	.v.x = a
+	.v.y = .x
+	
+	return a * x
+}
+```
+
+Capturing surrounding type would have to be with a named `this`
+```rust
+
+// this: ID <- 'ID' becomes standin for `this`,
+// because closure has its own `this`
+data f = fn() => [mut this: foo] {
+	.foo.something = SomethingElse()
+}
+```
 
 ##### Delegates
 - Type-safe multicast invocable references
@@ -366,7 +392,7 @@ fn Sub<T>(a, b: T) -> T {
 - Commonly used for event-driven behavior
 
 ##### Invocators
-Invocators are *types* with a defined `()` operator.
+Invocators are *types* with a specialized `()` operator.
 
 They have all the state of any user-defined type, with associated invocation behaviour. They can be thought of as functions that carry state.
 
