@@ -592,20 +592,21 @@ bool Parser::MatchedDataDeclaration(ParseNode& node) {
     return true;
 }
 
+bool IsCompoundAssignment(const TokenType op) {
+    return op == TokenType::Op_AddAssign
+           || op == TokenType::Op_SubAssign
+           || op == TokenType::Op_MulAssign
+           || op == TokenType::Op_DivAssign
+           || op == TokenType::Op_ModAssign;
+}
+
 bool Parser::MatchedAssignment(ParseNode& node) {
     if (CurrentToken().type != TokenType::Identifier) {
         return false;
     }
 
-    TokenType op = PeekNextToken().type;
-
-    bool is_compound = op == TokenType::Op_AddAssign
-                       || op == TokenType::Op_SubAssign
-                       || op == TokenType::Op_MulAssign
-                       || op == TokenType::Op_DivAssign
-                       || op == TokenType::Op_ModAssign;
-
-    if (op != TokenType::Op_Assign && not is_compound) {
+    const TokenType op = PeekNextToken().type;
+    if (op != TokenType::Op_Assign && not IsCompoundAssignment(op)) {
         return false;
     }
 
