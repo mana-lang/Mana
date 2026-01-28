@@ -1,0 +1,9 @@
+mut data a = 10
+
+a += 8
+a *= 8
+a -= 8
+a /= 8
+a %= 8
+
+data b = a
