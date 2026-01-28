@@ -198,6 +198,10 @@ void Parser::SkipCurrentToken() {
     ++cursor;
 }
 
+void Parser::SkipTokens(ml::i32 count) {
+    cursor += count;
+}
+
 bool Parser::ProgressedParseTree(ParseNode& node) {
     // don't process eof (final token) before quitting
     if (cursor + 1 >= tokens.size() - 1) {
@@ -243,17 +247,14 @@ bool Parser::Expect(const bool condition,
     return true;
 }
 
-// stmt = if_stmt | loop | (decl | assign | expr) TERMINATOR
+// stmt = fn_decl | if_stmt | loop | (decl | assign | expr) TERMINATOR
 bool Parser::MatchedStatement(ParseNode& node) {
     auto& stmt = node.NewBranch(Rule::Statement);
 
-    // if-blocks aren't terminated since they have a scope, so we exit early on match
-    if (MatchedIfBlock(stmt)) {
-        return true;
-    }
-
-    // same for match
-    if (MatchedLoop(stmt)) {
+    // block statements aren't terminated since they have a scope, so we exit early on match
+    if (MatchedFunctionDeclaration(stmt)
+        || MatchedIfBlock(stmt)
+        || MatchedLoop(stmt)) {
         return true;
     }
 
@@ -502,6 +503,91 @@ bool Parser::MatchedLoopBody(ParseNode& node) {
     node.rule = Rule::LoopRange;
 
     Expect(MatchedScope(node), node, "Expected scope for loop body");
+    return true;
+}
+
+// fn_decl = KW_FN ID param_list ret_type? scope
+bool Parser::MatchedFunctionDeclaration(ParseNode& node) {
+    if (CurrentToken().type != TokenType::KW_fn) {
+        return false;
+    }
+    SkipCurrentToken();
+
+    auto& fn_decl = node.NewBranch(Rule::FunctionDeclaration);
+
+    // fn a
+    if (not Expect(CurrentToken().type == TokenType::Identifier, fn_decl, "Expected function name")) {
+        return true;
+    }
+    AddCycledTokenTo(fn_decl);
+
+    // fn a(b: i32, c, d: f64)
+    if (not Expect(MatchedParameterList(fn_decl), fn_decl, "Expected parameter list")) {
+        return true;
+    }
+
+    // fn a() -> i32
+    if (CurrentToken().type == TokenType::Op_ReturnType) {
+        SkipCurrentToken();
+
+        Expect(PeekNextToken().type == TokenType::Identifier, fn_decl, "Expected return type");
+        AddCycledTokenTo(fn_decl);
+    }
+
+    // fn a() {}
+    Expect(MatchedScope(fn_decl), fn_decl, "Expected function body");
+    return true;
+}
+
+// param_list = '(' (param (',' param)*)? ')'
+bool Parser::MatchedParameterList(ParseNode& node) {
+    if (CurrentToken().type != TokenType::Op_ParenLeft) {
+        return false;
+    }
+
+    auto& param_list = node.NewBranch(Rule::ParameterList);
+
+    // fn x()
+    if (PeekNextToken().type == TokenType::Op_ParenRight) {
+        SkipTokens(2);
+        return true;
+    }
+
+    // param = ID (':' ID)?
+    const auto handle_param = [&param_list, this]() {
+        if (CurrentToken().type != TokenType::Identifier) {
+            return false;
+        }
+
+        auto& param = param_list.NewBranch(Rule::Parameter);
+        AddCycledTokenTo(param);
+        if (CurrentToken().type != TokenType::Op_Colon) {
+            return true;
+        }
+        SkipCurrentToken();
+
+        if (not Expect(CurrentToken().type == TokenType::Identifier, param, "Expected type")) {
+            return true;
+        }
+        AddCycledTokenTo(param);
+        return true;
+    };
+
+    // handle first parameter
+    if (not Expect(handle_param(), param_list, "Expected parameter")) {
+        return true;
+    }
+
+    // handle rest
+    while (CurrentToken().type == TokenType::Op_Comma) {
+        SkipCurrentToken();
+        if (not Expect(handle_param(), param_list, "Expected parameter")) {
+            return true;
+        }
+    }
+
+    Expect(CurrentToken().type == TokenType::Op_ParenRight, param_list, "Expected closing parenthesis");
+
     return true;
 }
 

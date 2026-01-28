@@ -41,7 +41,7 @@ Data which may be invoked to process other data is referred to as being *invocab
 ##### Functions
 Functions in Mana are declared with the `fn` keyword. 
 
-They consist of a *name*, followed by a set of *parentheses* containing an *optional* list of *parameters*, separated by *commas*. They may also optionally specify a *return* type.
+They consist of a *name*, followed by a *parameter-list* expression containing an *optional* list of *parameters*, separated by *commas*. They may also optionally specify a *return* type.
 
 *All* valid datum names are *also* valid function names.
 

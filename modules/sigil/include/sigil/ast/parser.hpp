@@ -58,6 +58,7 @@ private:
     void AddCycledTokenTo(ParseNode& node);
 
     void SkipCurrentToken();
+    void SkipTokens(ml::i32 count);
 
     bool ProgressedParseTree(ParseNode& node);
 
@@ -87,6 +88,9 @@ private:
 
     bool MatchedLoop(ParseNode& node);
     bool MatchedLoopBody(ParseNode& node);
+
+    bool MatchedFunctionDeclaration(ParseNode& node);
+    bool MatchedParameterList(ParseNode& node);
 
     bool MatchedDataDeclaration(ParseNode& node);
     bool MatchedAssignment(ParseNode& node);

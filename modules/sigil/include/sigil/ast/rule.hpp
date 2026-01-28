@@ -31,6 +31,10 @@ enum class Rule : ml::u8 {
 
     LoopControl,
 
+    FunctionDeclaration,
+    ParameterList,
+    Parameter,
+
     DataDeclaration,
     MutableDataDeclaration,
     Assignment,

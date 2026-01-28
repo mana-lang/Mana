@@ -16,20 +16,29 @@ KW_BREAK     = "break" ;
 OP_RANGE     = ".."    ;
 OP_BINDING   = "=>"    ;
 
+KW_FN     = "fn" ;
+OP_RETURN = "->" ;
+
 TERMINATOR = "\n" | ";";
 
-  (* rules *)
+(* parse rules *)
 artifact = stmt* EOF ;
 
-stmt   = if_block 
+stmt   = fn_decl
+       | if_block 
        | loop 
        | (loop_control | data_decl | assign | expr) TERMINATOR ;
 
 
-if_condition = KW_IF expr
+fn_decl = KW_FN ID param_list ret_type?  scope  ;
+param_list = '(' (param (',' param)*)? ')'    ;
+param = ID type_spec?                         ;
+ret_type = OP_RETURN ID                       ;
+
+if_condition = KW_IF expr ;
 
 if_block = if_condition scope if_tail? ;
-if_tail = KW_ELSE (if_block | scope) ;
+if_tail = KW_ELSE (if_block | scope)   ;
 
 loop = KW_LOOP (ID ':')? loop_body ;
 
@@ -41,14 +50,18 @@ loop_body = scope (OP_BINDING if_condition)?                  (* infinite / post
 
 loop_control = (KW_SKIP | KW_BREAK) (OP_BINDING ID)? if_condition? ;
 
-data_decl   = KW_MUT? KW_DATA ID (':' ID)? ('=' expr)?    ;
+data_decl   = KW_MUT? KW_DATA ID type_spec? ('=' expr)?    ;
+type_spec   = (':' ID) ;
 
-assign = ID '=' expr       
+assign = ID '=' expr   ;   
 
-scope  = "{" stmt* "}"
+scope  = '{' stmt* '}' ;
 
 return = KW_RETURN expr TERMINATOR ;
 
+(* Todo: still need to bake associativity into the grammar *)
+(* e.g. logical = equality | logical ('&&' | '||') equality *)
+(* also need to give AND higher precedence than OR *)
 expr       = logical                                  ;  
 logical    = equality ( ('&&' | '||') equality )*     ;
 equality   = comparison (  ('!=' | '==') comparison)* ;
@@ -58,12 +71,12 @@ factor     = unary ( ('/' | '*') unary )*             ;
 unary      = ('!' | '-') unary | primary              ;
 primary    = grouping | literal | array_literal | ID  ;
 
-grouping   = "(" expr ")" ;
+grouping   = '(' expr ')' ;
 literal    = number
            | string
-           | "true"
-           | "false"
-           | "none"
+           | 'true'
+           | 'false'
+           | 'none'
            ;
 
 array_literal = '[' elem_list? ']'   ;
