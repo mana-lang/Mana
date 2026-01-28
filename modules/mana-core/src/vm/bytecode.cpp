@@ -14,7 +14,7 @@ IndexRange::IndexRange(const i64 init_offset, const i64 range)
 i64 ByteCode::Write(Op opcode) {
     instructions.push_back(static_cast<u8>(opcode));
 
-    CheckSize();
+    CheckInstructionSize();
     return instructions.size() - 1;
 }
 
@@ -28,7 +28,7 @@ i64 ByteCode::Write(const Op opcode, const std::initializer_list<u16> payloads) 
         instructions.push_back((payload >> 8) & 0xFF);
     }
 
-    CheckSize();
+    CheckInstructionSize();
     return index;
 }
 
@@ -76,9 +76,7 @@ std::vector<u8> ByteCode::Serialize() const {
 std::vector<u8> ByteCode::SerializeConstants() const {
     std::vector<u8> out;
 
-    if (ConstantCount() > std::numeric_limits<u16>::max()) {
-        throw std::runtime_error("Constant Pool too large to serialize");
-    }
+    CheckConstantPoolSize();
 
     // serialize all values, including array indices
     const u64 constant_bytes_count = ConstantPoolBytesCount();
@@ -117,6 +115,8 @@ u64 ByteCode::ConstantPoolBytesCount() const {
     return out;
 }
 
+// TODO: I think this is not right lol
+// unfortunately, we need to figure out arrays in Hex before we can address this
 u64 ByteCode::ConstantCount() const {
     u64 out = 0;
     for (const auto& value : constant_pool) {
@@ -173,11 +173,17 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
     return true;
 }
 
-void ByteCode::CheckSize() const {
+void ByteCode::CheckInstructionSize() const {
     if (instructions.size() >= BYTECODE_INSTRUCTION_MAX) {
         /// TODO: ideally we handle this in such a way that we don't need to crash
         /// also i hate exceptions
-        throw std::runtime_error("Hexe instruction limit reached");
+        throw std::runtime_error("Bytecode instruction limit exceeded");
+    }
+}
+
+void ByteCode::CheckConstantPoolSize() const {
+    if (ConstantCount() >= BYTECODE_CONSTANT_MAX) {
+        throw std::runtime_error("Bytecode constant pool exceeded maximum size");
     }
 }
 } // namespace mana::vm
