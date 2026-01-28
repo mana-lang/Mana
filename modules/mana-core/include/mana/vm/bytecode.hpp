@@ -20,9 +20,7 @@ struct IndexRange {
 };
 
 static constexpr auto BYTECODE_INSTRUCTION_MAX = std::numeric_limits<i64>::max();
-
-template <typename T>
-concept ConstantType = std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>;
+static constexpr auto BYTECODE_CONSTANT_MAX    = std::numeric_limits<u16>::max();
 
 class ByteCode {
     std::vector<u8> instructions;
@@ -70,7 +68,7 @@ public:
     // this function assumes correct input
     bool Deserialize(const std::vector<u8>& bytes);
 
-    template <ConstantType CT>
+    template <ValuePrimitive CT>
     u16 AddConstant(const CT value) {
         // only need to store unique constants
         for (i64 i = 0; i < constant_pool.size(); ++i) {
@@ -80,18 +78,20 @@ public:
         }
 
         constant_pool.push_back(value);
+ CheckConstantPoolSize();
         return constant_pool.size() - 1;
     }
 
-    template <ConstantType CT>
+    template <ValuePrimitive CT>
     u16 AddArray(const std::vector<CT>& array) {
-        CheckSize();
-
         constant_pool.push_back(Value {array});
+
+        CheckConstantPoolSize();
         return constant_pool.size() - 1;
     }
 
 private:
-    void CheckSize() const;
+    void CheckInstructionSize() const;
+    void CheckConstantPoolSize() const;
 };
 } // namespace mana::vm
