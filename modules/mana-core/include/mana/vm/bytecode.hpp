@@ -68,8 +68,8 @@ public:
     // this function assumes correct input
     bool Deserialize(const std::vector<u8>& bytes);
 
-    template <ValuePrimitive CT>
-    u16 AddConstant(const CT value) {
+    template <ValuePrimitive VP>
+    u16 AddConstant(const VP value) {
         // only need to store unique constants
         for (i64 i = 0; i < constant_pool.size(); ++i) {
             if (constant_pool[i] == value) {
@@ -78,7 +78,7 @@ public:
         }
 
         constant_pool.push_back(value);
- CheckConstantPoolSize();
+        CheckConstantPoolSize();
         return constant_pool.size() - 1;
     }
 

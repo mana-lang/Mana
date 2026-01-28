@@ -149,8 +149,8 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
 
     for (i64 offset = pool_range.start; offset < pool_range.end;) {
         const auto type = static_cast<PrimitiveType>(bytes[offset]);
-        offset          += sizeof(PrimitiveType);
 
+        offset += sizeof(PrimitiveType);
         for (i64 i = 0; i < length_bytes.size(); ++i) {
             length_bytes[i] = bytes[i + offset];
         }
