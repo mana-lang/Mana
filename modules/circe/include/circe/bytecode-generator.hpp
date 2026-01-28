@@ -11,10 +11,14 @@ namespace ml = mana::literals;
 namespace mv = mana::vm;
 namespace ast = sigil::ast;
 
+using Register = ml::u16;
+
 class BytecodeGenerator final : public ast::Visitor {
+    using ScopeDepth = ml::u8;
+
     struct Symbol {
-        ml::u16 register_index;
-        ml::u8 scope_depth;
+        Register register_index;
+        ScopeDepth scope_depth;
     };
 
     struct JumpInstruction {
@@ -27,17 +31,21 @@ class BytecodeGenerator final : public ast::Visitor {
         std::vector<JumpInstruction> pending_skips;
     };
 
-    using SymbolTable = std::unordered_map<std::string_view, Symbol>;
+    using SymbolTable   = std::unordered_map<std::string_view, Symbol>;
+    using ConstantTable = std::unordered_map<Register, ScopeDepth>;
 
-    mv::ByteCode bytecode;
     SymbolTable symbols;
-    ml::u16 total_registers;
-    ml::u8 scope_depth;
+    ConstantTable constants;
 
-    std::vector<ml::u16> reg_buffer;
-    std::vector<ml::u16> free_regs;
+    ml::u16 total_registers;
+    ScopeDepth scope_depth;
+
+    std::vector<Register> reg_buffer;
+    std::vector<Register> free_regs;
 
     std::vector<LoopContext> loop_stack;
+
+    mv::ByteCode bytecode;
 
 public:
     BytecodeGenerator();
@@ -74,23 +82,23 @@ public:
     void Visit(const ast::Literal<bool>& literal) override;
 
 private:
-    bool IsOpJumpOp(mv::Op op) const;
+    bool IsConditionalJumpOp(mv::Op op) const;
     void JumpBackwards(ml::i64 target_index);
-    void JumpBackwardsConditional(mv::Op op, ml::u16 condition_register, ml::i64 target_index);
+    void JumpBackwardsConditional(mv::Op op, Register condition_register, ml::i64 target_index);
     void PatchJumpForward(ml::i64 target_index);
     void PatchJumpBackward(ml::i64 target_index);
     void PatchJumpForwardConditional(ml::i64 target_index);
     void PatchJumpBackwardConditional(ml::i64 target_index);
-    ml::u16 CalcJump(ml::i64 target_index, bool is_forward, bool is_conditional) const;
+    Register CalcJump(ml::i64 target_index, bool is_forward, bool is_conditional) const;
 
-    ml::u16 AllocateRegister();
-    void FreeRegister(ml::u16 reg);
-    void FreeRegisters(std::initializer_list<ml::u16> regs);
-    void FreeRegisters(const std::vector<ml::u16>& regs);
+    Register AllocateRegister();
+    void FreeRegister(Register reg);
+    void FreeRegisters(std::initializer_list<Register> regs);
+    void FreeRegisters(const std::vector<Register>& regs);
 
-    bool RegisterIsOwned(ml::u16 reg);
+    bool RegisterIsOwned(Register reg);
 
-    ml::u16 PopRegBuffer();
+    Register PopRegBuffer();
     void ClearRegBuffer();
 
     void EnterScope();
@@ -99,15 +107,13 @@ private:
     void EnterLoop();
     void ExitLoop();
 
-    void AddSymbol(std::string_view name, ml::u16 register_index);
+    void AddSymbol(std::string_view name, Register index);
     void RemoveSymbol(std::string_view name);
 
     LoopContext& CurrentLoop();
 
     struct RangeLoopRegisters {
-        ml::u16 end;
-        ml::u16 step;
-        ml::u16 counter;
+        Register end, step, counter;
     };
 
     RangeLoopRegisters PerformRangeLoopSetup(const ast::LoopRange& node);
@@ -120,9 +126,11 @@ private:
 
     template <mv::ValuePrimitive VP>
     void CreateLiteral(const ast::Literal<VP>& literal) {
-        ml::u16 reg      = AllocateRegister();
-        ml::u16 constant = bytecode.AddConstant(literal.Get());
-        bytecode.Write(mv::Op::LoadConstant, {reg, constant});
+        Register reg  = AllocateRegister();
+        ml::u16 index = bytecode.AddConstant(literal.Get());
+        bytecode.Write(mv::Op::LoadConstant, {reg, index});
+
+        constants[reg] = scope_depth;
 
         reg_buffer.push_back(reg);
     }

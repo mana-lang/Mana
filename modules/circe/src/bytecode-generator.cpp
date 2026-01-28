@@ -1,12 +1,12 @@
 #include <circe/core/logger.hpp>
 #include <circe/bytecode-generator.hpp>
 
+#include <sigil/ast/keywords.hpp>
+
 #include <mana/vm/opcode.hpp>
 
 #include <algorithm>
 #include <ranges>
-
-#include <sigil/ast/keywords.hpp>
 
 namespace circe {
 using namespace mana::vm;
@@ -32,6 +32,7 @@ void BytecodeGenerator::Visit(const Artifact& artifact) {
 
 void BytecodeGenerator::Visit(const Scope& node) {
     EnterScope();
+
     for (const auto& statement : node.GetStatements()) {
         statement->Accept(*this);
         ClearRegBuffer();
@@ -61,9 +62,10 @@ void BytecodeGenerator::Visit(const Assignment& node) {
     const auto& symbol = symbols[node.GetIdentifier()];
 
     node.GetValue()->Accept(*this);
-    u16 rhs = PopRegBuffer();
 
-    u16 lhs       = symbol.register_index;
+    const auto rhs = PopRegBuffer();
+    const auto lhs = symbol.register_index;
+
     const auto op = node.GetOp();
     if (op == "=") {
         bytecode.Write(Op::Move, {lhs, rhs});
@@ -97,7 +99,7 @@ void BytecodeGenerator::Visit(const Assignment& node) {
 
 void BytecodeGenerator::Visit(const If& node) {
     node.GetCondition()->Accept(*this);
-    const u16 cond_reg = PopRegBuffer();
+    const auto cond_reg = PopRegBuffer();
 
     const i64 jmp_false = bytecode.Write(Op::JumpWhenFalse, {cond_reg, SENTINEL});
     FreeRegister(cond_reg);
@@ -141,7 +143,7 @@ void BytecodeGenerator::Visit(const LoopIf& node) {
     const i64 start_addr = bytecode.InstructionCount();
 
     node.GetCondition()->Accept(*this);
-    const u16 condition = PopRegBuffer();
+    const auto condition = PopRegBuffer();
 
     // the jump out of the loop needs to happen immediately after condition evaluation
     const i64 jmp_end = bytecode.Write(Op::JumpWhenFalse, {condition, SENTINEL});
@@ -170,7 +172,7 @@ void BytecodeGenerator::Visit(const LoopIfPost& node) {
 
     // end of loop
     node.GetCondition()->Accept(*this);
-    const u16 condition = PopRegBuffer();
+    const auto condition = PopRegBuffer();
     JumpBackwardsConditional(Op::JumpWhenTrue, condition, start_addr);
 
     FreeRegister(condition);
@@ -189,7 +191,7 @@ void BytecodeGenerator::Visit(const LoopRange& node) {
     // this lets us compare to "equals" rather than jwf greater/lesser
     bytecode.Write(Op::Add, {range.end, range.end, range.step});
 
-    const u16 cond = AllocateRegister();
+    const auto cond = AllocateRegister();
 
     // loop starts here
     const i64 start_addr = bytecode.InstructionCount();
@@ -220,10 +222,10 @@ void BytecodeGenerator::Visit(const LoopRangeMutable& node) {
     const auto range = PerformRangeLoopSetup(node);
 
     // allocate persistent registers before loop
-    const u16 zero = AllocateRegister();
+    const auto zero = AllocateRegister();
     bytecode.Write(Op::LoadConstant, {zero, bytecode.AddConstant(0)});
 
-    const u16 cond = AllocateRegister();
+    const auto cond = AllocateRegister();
 
     // loop starts here
     const i64 start_addr = bytecode.InstructionCount();
@@ -231,7 +233,7 @@ void BytecodeGenerator::Visit(const LoopRangeMutable& node) {
     // for mutable loop counters, we can't just compare to equals
     // so we do something slightly more involved
     // (end - counter) * step >= 0
-    const u16 diff = AllocateRegister();
+    const auto diff = AllocateRegister();
     bytecode.Write(Op::Sub, {diff, range.end, range.counter});
     bytecode.Write(Op::Mul, {diff, diff, range.step});
 
@@ -262,24 +264,24 @@ void BytecodeGenerator::Visit(const LoopRangeMutable& node) {
 void BytecodeGenerator::Visit(const LoopFixed& node) {
     EnterLoop();
 
-    const u16 counter = AllocateRegister();
+    const auto counter = AllocateRegister();
     bytecode.Write(Op::LoadConstant, {counter, bytecode.AddConstant(0)});
 
-    const u16 step = AllocateRegister();
+    const auto step = AllocateRegister();
     bytecode.Write(Op::LoadConstant, {step, bytecode.AddConstant(1)});
 
     // we haven't entered the body yet, but the target belongs to that scope
     // since the target may be a literal, we need to do it like this
     ++scope_depth;
     node.GetCountTarget()->Accept(*this);
-    const u16 target = PopRegBuffer();
+    const auto target = PopRegBuffer();
     --scope_depth;
 
     const i64 start_addr = bytecode.InstructionCount();
 
     // while the parser tries to guard against negative counts, they may be undetectable at compile time
     // in that case, the loop would end immediately
-    const u16 cond = AllocateRegister();
+    const auto cond = AllocateRegister();
     bytecode.Write(Op::Cmp_Lesser, {cond, counter, target});
     const i64 exit = bytecode.Write(Op::JumpWhenFalse, {cond, SENTINEL});
 
@@ -315,8 +317,8 @@ void BytecodeGenerator::Visit(const UnaryExpr& node) {
     node.GetVal().Accept(*this);
     const auto op_text = node.GetOp();
 
-    u16 src = PopRegBuffer();
-    u16 dst = AllocateRegister();
+    auto src = PopRegBuffer();
+    auto dst = AllocateRegister();
 
     Op op;
     switch (op_text[0]) {
@@ -346,15 +348,15 @@ void BytecodeGenerator::Visit(const BinaryExpr& node) {
     const auto jump = [this, &node](const Op jump_op) {
         node.GetLeft().Accept(*this);
 
-        const u16 lhs = PopRegBuffer();
-        const u16 dst = AllocateRegister();
+        const auto lhs = PopRegBuffer();
+        const auto dst = AllocateRegister();
         bytecode.Write(Op::Move, {dst, lhs});
 
         const i64 jwf = bytecode.Write(jump_op, {lhs, SENTINEL});
         FreeRegister(lhs);
 
         node.GetRight().Accept(*this);
-        const u16 rhs = PopRegBuffer();
+        const auto rhs = PopRegBuffer();
         bytecode.Write(Op::Move, {dst, rhs});
 
         PatchJumpForwardConditional(jwf);
@@ -377,9 +379,9 @@ void BytecodeGenerator::Visit(const BinaryExpr& node) {
     node.GetLeft().Accept(*this);
     node.GetRight().Accept(*this);
 
-    u16 rhs = PopRegBuffer();
-    u16 lhs = PopRegBuffer();
-    u16 dst = AllocateRegister();
+    auto rhs = PopRegBuffer();
+    auto lhs = PopRegBuffer();
+    auto dst = AllocateRegister();
 
     Op op;
     switch (op_text[0]) {
@@ -461,16 +463,16 @@ void BytecodeGenerator::Visit(const Literal<bool>& literal) {
     CreateLiteral(literal);
 }
 
-bool BytecodeGenerator::IsOpJumpOp(const Op op) const {
-    return op == Op::Jump || op == Op::JumpWhenTrue || op == Op::JumpWhenFalse;
+bool BytecodeGenerator::IsConditionalJumpOp(const Op op) const {
+    return op == Op::JumpWhenTrue || op == Op::JumpWhenFalse;
 }
 
 void BytecodeGenerator::JumpBackwards(i64 target_index) {
     bytecode.Write(Op::Jump, {CalcJump(target_index, false, false)});
 }
 
-void BytecodeGenerator::JumpBackwardsConditional(const Op op, u16 condition_register, i64 target_index) {
-    if (not IsOpJumpOp(op)) {
+void BytecodeGenerator::JumpBackwardsConditional(const Op op, Register condition_register, i64 target_index) {
+    if (not IsConditionalJumpOp(op)) {
         Log->error("Internal Compiler Error: JumpBackwardsConditional called on non-jump op '{}'",
                    magic_enum::enum_name(op)
         );
@@ -502,7 +504,7 @@ bool JumpIsWithinBounds(const i64 distance) {
            && distance >= std::numeric_limits<i16>::min();
 }
 
-u16 BytecodeGenerator::CalcJump(const i64 target_index, bool is_forward, bool is_conditional) const {
+Register BytecodeGenerator::CalcJump(const i64 target_index, bool is_forward, bool is_conditional) const {
     const auto jump_bytes = is_conditional ? CJMP_OP_BYTES : JMP_OP_BYTES;
 
     const i64 jump_distance = is_forward
@@ -514,22 +516,22 @@ u16 BytecodeGenerator::CalcJump(const i64 target_index, bool is_forward, bool is
         return SENTINEL;
     }
 
-    return static_cast<u16>(jump_distance);
+    return static_cast<Register>(jump_distance);
 }
 
-u16 BytecodeGenerator::AllocateRegister() {
+Register BytecodeGenerator::AllocateRegister() {
     if (free_regs.empty()) {
         return total_registers++;
     }
 
-    const u16 slot = free_regs.back();
+    const auto slot = free_regs.back();
     free_regs.pop_back();
 
     return slot;
 }
 
-void BytecodeGenerator::FreeRegister(u16 reg) {
-    for (const u16 r : free_regs) {
+void BytecodeGenerator::FreeRegister(Register reg) {
+    for (const Register r : free_regs) {
         if (r == reg) {
             return;
         }
@@ -540,19 +542,19 @@ void BytecodeGenerator::FreeRegister(u16 reg) {
     }
 }
 
-void BytecodeGenerator::FreeRegisters(const std::initializer_list<u16> regs) {
+void BytecodeGenerator::FreeRegisters(const std::initializer_list<Register> regs) {
     for (const auto reg : regs) {
         FreeRegister(reg);
     }
 }
 
-void BytecodeGenerator::FreeRegisters(const std::vector<u16>& regs) {
+void BytecodeGenerator::FreeRegisters(const std::vector<Register>& regs) {
     for (const auto reg : regs) {
         FreeRegister(reg);
     }
 }
 
-bool BytecodeGenerator::RegisterIsOwned(u16 reg) {
+bool BytecodeGenerator::RegisterIsOwned(Register reg) {
     for (const auto& val : std::views::values(symbols)) { // NOLINT(*-use-anyofallof)
         if (val.register_index == reg) {
             return true;
@@ -562,13 +564,13 @@ bool BytecodeGenerator::RegisterIsOwned(u16 reg) {
     return false;
 }
 
-u16 BytecodeGenerator::PopRegBuffer() {
+Register BytecodeGenerator::PopRegBuffer() {
     if (reg_buffer.empty()) {
         Log->error("Internal Compiler Error: Register stack underflow");
         return 0;
     }
 
-    const u16 slot = reg_buffer.back();
+    const auto slot = reg_buffer.back();
     reg_buffer.pop_back();
 
     return slot;
@@ -607,8 +609,8 @@ void BytecodeGenerator::ExitLoop() {
     loop_stack.pop_back();
 }
 
-void BytecodeGenerator::AddSymbol(const std::string_view name, u16 register_index) {
-    symbols[name] = {register_index, scope_depth};
+void BytecodeGenerator::AddSymbol(const std::string_view name, Register index) {
+    symbols[name] = {index, scope_depth};
 }
 
 void BytecodeGenerator::RemoveSymbol(const std::string_view name) {
@@ -618,7 +620,7 @@ void BytecodeGenerator::RemoveSymbol(const std::string_view name) {
     }
 
     // prevent duplicate entries in e.g. 'data x = y'
-    u16 reg = symbols[name].register_index;
+    auto reg = symbols[name].register_index;
     symbols.erase(name);
     FreeRegister(reg);
 }
@@ -630,7 +632,7 @@ BytecodeGenerator::LoopContext& BytecodeGenerator::CurrentLoop() {
 BytecodeGenerator::RangeLoopRegisters BytecodeGenerator::PerformRangeLoopSetup(const LoopRange& node) {
     const auto alloc_origin = [this](const NodePtr& origin) {
         if (origin == nullptr) {
-            const u16 reg = AllocateRegister();
+            const auto reg = AllocateRegister();
             bytecode.Write(Op::LoadConstant, {reg, bytecode.AddConstant(0)});
             return reg;
         }
@@ -638,16 +640,16 @@ BytecodeGenerator::RangeLoopRegisters BytecodeGenerator::PerformRangeLoopSetup(c
         origin->Accept(*this);
         return PopRegBuffer();
     };
-    const u16 origin = alloc_origin(node.GetOrigin());
+    const auto origin = alloc_origin(node.GetOrigin());
 
     node.GetDestination()->Accept(*this);
-    const u16 destination = PopRegBuffer();
+    const auto destination = PopRegBuffer();
 
-    const u16 step = AllocateRegister();
+    const auto step = AllocateRegister();
     bytecode.Write(Op::LoadConstant, {step, bytecode.AddConstant(1)});
 
     // loop 2..8 and loop 8..2 need a different step value
-    const u16 is_ascending = AllocateRegister();
+    const auto is_ascending = AllocateRegister();
     bytecode.Write(Op::Cmp_LesserEq, {is_ascending, origin, destination});
     const i64 neg_jmp = bytecode.Write(Op::JumpWhenTrue, {is_ascending, SENTINEL});
     bytecode.Write(Op::Negate, {step, step});
@@ -658,7 +660,7 @@ BytecodeGenerator::RangeLoopRegisters BytecodeGenerator::PerformRangeLoopSetup(c
 
     // counter's scope technically belongs to the loop, so we manually increment it here
     ++scope_depth;
-    const u16 counter = AllocateRegister();
+    const auto counter = AllocateRegister();
     AddSymbol(node.GetCounterName(), counter);
     --scope_depth;
 
@@ -695,7 +697,7 @@ void BytecodeGenerator::HandleLoopControl(bool is_break, const NodePtr& conditio
     if (has_condition) {
         // break/skip if cond
         condition->Accept(*this);
-        const u16 cond_reg = PopRegBuffer();
+        const auto cond_reg = PopRegBuffer();
 
         jump_index = bytecode.Write(Op::JumpWhenTrue, {cond_reg, SENTINEL});
         FreeRegister(cond_reg);
@@ -711,14 +713,14 @@ void BytecodeGenerator::HandleLoopControl(bool is_break, const NodePtr& conditio
 void BytecodeGenerator::HandleDeclaration(const Initializer& node, bool is_mutable) {
     const auto name = node.GetName();
 
-    u16 datum;
+    Register datum;
 
     if (const auto& init = node.GetInitializer()) {
         init->Accept(*this);
 
         // may be an identifier or constant
-        u16 src = PopRegBuffer();
-        datum   = AllocateRegister();
+        const auto src = PopRegBuffer();
+        datum          = AllocateRegister();
         bytecode.Write(Op::Move, {datum, src});
 
         FreeRegister(src);
