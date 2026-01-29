@@ -1,13 +1,15 @@
-mut data a = 0
-mut data b = 0
-data c = 5
-data d = 47
+fn Main() {
+    mut data a = 0
+    mut data b = 0
+    data c = 5
+    data d = 47
 
-loop c..d => mut i {
-    a += 1
-    i += 3
-    b = i
+    loop c..d => mut i {
+        a += 1
+        i += 3
+        b = i
+    }
+
+    data e = a
+    data f = b
 }
-
-data e = a
-data f = b

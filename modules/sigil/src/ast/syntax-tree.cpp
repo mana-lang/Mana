@@ -74,58 +74,14 @@ LiteralData MakeLiteral(const Token& token) {
     return {nullptr, mana::PrimitiveType::Invalid};
 }
 
-NodePtr CreateExpression(const ParseNode& node) {
-    using enum Rule;
-
-    const auto& token = node.tokens.empty() ? Token {} : node.tokens[0];
-
-    switch (node.rule) {
-    case Assignment:
-        return std::make_shared<class Assignment>(node);
-    case Grouping:
-        return CreateExpression(*node.branches[0]);
-    case Literal:
-        return MakeLiteral(token).value;
-    case Identifier:
-        return std::make_shared<class Identifier>(node);
-    case ArrayLiteral:
-        return std::make_shared<class ArrayLiteral>(node);
-    case Unary:
-        return std::make_shared<UnaryExpr>(node);
-    case Factor:
-    case Term:
-    case Comparison:
-    case Equality:
-    case Logical:
-        return std::make_shared<BinaryExpr>(node);
-    default:
-        Log->error("Rule '{}' is not a valid expression", magic_enum::enum_name(node.rule));
-        return nullptr;
-    }
-}
-
+/// Artifact
 Artifact::Artifact(const std::string_view name, const ParseNode& node)
     : name(name) {
     for (auto& decl : node.branches) {
-        switch (decl->rule) {
-            using enum Rule;
-        case FunctionDeclaration:
-            declarations.emplace_back(std::make_shared<class FunctionDeclaration>(*decl));
-            break;
-        case DataDeclaration:
-            declarations.emplace_back(std::make_shared<class DataDeclaration>(*decl));
-            break;
-        case MutableDataDeclaration:
-            declarations.emplace_back(std::make_shared<class MutableDataDeclaration>(*decl));
-            break;
-        default:
-            Log->error("Expected declaration");
-            break;
-        }
+        declarations.emplace_back(CreateDeclaration(*decl));
     }
 }
 
-/// Artifact
 auto Artifact::GetName() const -> std::string_view {
     return name;
 }
@@ -483,63 +439,64 @@ void Assignment::Accept(Visitor& visitor) const {
 
 /// Scope
 Scope::Scope(const ParseNode& node) {
-    for (const auto& scope : node.branches) {
-        for (const auto& stmt : scope->branches) {
-            using enum Rule;
+    for (const auto& stmt : node.branches) {
+        using enum Rule;
 
-            switch (stmt->rule) {
-            case Return:
-                AddStatement<class Return>(*stmt);
-                break;
-            case If:
-                AddStatement<class If>(*stmt);
-                break;
-            case Loop:
-                AddStatement<class Loop>(*stmt);
-                break;
-            case LoopIf:
-                AddStatement<class LoopIf>(*stmt);
-                break;
-            case LoopIfPost:
-                AddStatement<class LoopIfPost>(*stmt);
-                break;
-            case LoopRange:
-                if (stmt->tokens[0].type == TokenType::KW_mut) {
-                    // mut token is useless past this point
-                    stmt->tokens[0] = stmt->tokens[1];
-                    stmt->tokens.pop_back();
-                    AddStatement<LoopRangeMutable>(*stmt);
-                    break;
-                }
-                AddStatement<class LoopRange>(*stmt);
-                break;
-            case LoopFixed:
-                AddStatement<class LoopFixed>(*stmt);
-                break;
-            case LoopControl:
-                if (stmt->tokens[0].type == TokenType::KW_break) {
-                    AddStatement<Break>(*stmt);
-                    break;
-                }
-                if (stmt->tokens[0].type == TokenType::KW_skip) {
-                    AddStatement<Skip>(*stmt);
-                    break;
-                }
-                Log->error("Unexpected loop control statement. Token was '{}'",
-                           magic_enum::enum_name(stmt->tokens[0].type)
-                );
-                break;
-            default:
-                if (auto expr = CreateExpression(*stmt)) {
-                    AddStatement(std::move(expr));
-                } else {
-                    Log->error("Expected statement");
-                }
+        switch (stmt->rule) {
+        case Return:
+            AddStatement<class Return>(*stmt);
+            break;
+        case If:
+            AddStatement<class If>(*stmt);
+            break;
+        case Loop:
+            AddStatement<class Loop>(*stmt);
+            break;
+        case LoopIf:
+            AddStatement<class LoopIf>(*stmt);
+            break;
+        case LoopIfPost:
+            AddStatement<class LoopIfPost>(*stmt);
+            break;
+        case LoopRange:
+            if (stmt->tokens[0].type == TokenType::KW_mut) {
+                // mut token is useless past this point
+                stmt->tokens[0] = stmt->tokens[1];
+                stmt->tokens.pop_back();
+                AddStatement<LoopRangeMutable>(*stmt);
                 break;
             }
+            AddStatement<class LoopRange>(*stmt);
+            break;
+        case LoopFixed:
+            AddStatement<class LoopFixed>(*stmt);
+            break;
+        case LoopControl:
+            if (stmt->tokens[0].type == TokenType::KW_break) {
+                AddStatement<Break>(*stmt);
+                break;
+            }
+            if (stmt->tokens[0].type == TokenType::KW_skip) {
+                AddStatement<Skip>(*stmt);
+                break;
+            }
+            Log->error("Unexpected loop control statement. Token was '{}'",
+                       magic_enum::enum_name(stmt->tokens[0].type)
+            );
+            break;
+        default:
+            if (auto decl = CreateDeclaration(*stmt)) {
+                AddStatement(std::move(decl));
+            } else if (auto expr = CreateExpression(*stmt)) {
+                AddStatement(std::move(expr));
+            } else {
+                Log->error("Expected statement");
+            }
+            break;
         }
     }
 }
+
 
 void Scope::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
@@ -730,5 +687,51 @@ std::string_view UnaryExpr::GetOp() const {
 
 const Node& UnaryExpr::GetVal() const {
     return *val;
+}
+
+NodePtr CreateExpression(const ParseNode& node) {
+    using enum Rule;
+
+    const auto& token = node.tokens.empty() ? Token {} : node.tokens[0];
+
+    switch (node.rule) {
+    case Assignment:
+        return std::make_shared<class Assignment>(node);
+    case Grouping:
+        return CreateExpression(*node.branches[0]);
+    case Literal:
+        return MakeLiteral(token).value;
+    case Identifier:
+        return std::make_shared<class Identifier>(node);
+    case ArrayLiteral:
+        return std::make_shared<class ArrayLiteral>(node);
+    case Unary:
+        return std::make_shared<UnaryExpr>(node);
+    case Factor:
+    case Term:
+    case Comparison:
+    case Equality:
+    case Logical:
+        return std::make_shared<BinaryExpr>(node);
+    default:
+        Log->trace("Failed expression check for '{}'", magic_enum::enum_name(node.rule));
+        return nullptr;
+    }
+}
+
+NodePtr CreateDeclaration(const ParseNode& node) {
+    using enum Rule;
+
+    switch (node.rule) {
+    case FunctionDeclaration:
+        return std::make_shared<class FunctionDeclaration>(node);
+    case DataDeclaration:
+        return std::make_shared<class DataDeclaration>(node);
+    case MutableDataDeclaration:
+        return std::make_shared<class MutableDataDeclaration>(node);
+    default:
+        Log->trace("Failed declaration check for '{}'", magic_enum::enum_name(node.rule));
+        return nullptr;
+    }
 }
 } // namespace sigil::ast

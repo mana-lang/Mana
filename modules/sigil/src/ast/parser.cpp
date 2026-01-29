@@ -230,6 +230,7 @@ void Parser::ConstructAST(const ParseNode& node) {
         return;
     }
 
+    // this creates the AST
     syntax_tree = std::make_unique<Artifact>(Source().Name(), node);
 }
 
@@ -246,52 +247,36 @@ bool Parser::Expect(const bool condition,
 }
 
 bool Parser::MatchedDeclaration(ParseNode& node) {
-    auto& decl = node.NewBranch(Rule::Declaration);
-
-    const bool is_declaration = MatchedDataDeclaration(decl)
-                                || MatchedFunctionDeclaration(decl);
-
-    if (not is_declaration) {
-        if (decl.branches.empty()) {
-            // if decl has branches, there may be a Rule::Mistake, so we only pop on dead match
-            node.PopBranch();
-        }
-    }
-    return is_declaration;
+    return MatchedDataDeclaration(node) || MatchedFunctionDeclaration(node);
 }
 
 // stmt = decl | if_block | loop
 //      | (ret_stmt | loop_control | assign | expr) TERMINATOR
 bool Parser::MatchedStatement(ParseNode& node) {
-    auto& stmt = node.NewBranch(Rule::Statement);
-
-    // block statements aren't terminated since they have a scope, so we exit early on match
-    if (MatchedDeclaration(stmt)
-        || MatchedIfBlock(stmt)
-        || MatchedLoop(stmt)) {
+    // these statements aren't terminated since they have a scope, so we exit early on match
+    if (MatchedDeclaration(node)
+        || MatchedIfBlock(node)
+        || MatchedLoop(node)) {
         return true;
     }
 
-    const bool is_statement = MatchedReturn(stmt)
-                              || MatchedLoopControl(stmt)
-                              || MatchedAssignment(stmt)
-                              || MatchedExpression(stmt);
+    const bool is_statement = MatchedReturn(node)
+                              || MatchedLoopControl(node)
+                              || MatchedAssignment(node)
+                              || MatchedExpression(node);
 
     if (not is_statement) {
-        if (stmt.branches.empty()) {
-            node.PopBranch();
-        }
         return false;
     }
 
     if (not Expect(CurrentToken().type == TokenType::Terminator,
-                   stmt,
+                   node,
                    "Expected terminator"
     )) {
         return true;
     }
+    AddCycledTokenTo(node);
 
-    AddCycledTokenTo(stmt);
     return true;
 }
 

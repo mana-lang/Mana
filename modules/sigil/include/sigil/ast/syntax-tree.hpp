@@ -35,7 +35,7 @@ class Artifact final : public Node {
     std::vector<NodePtr> declarations;
 
 public:
-    explicit Artifact(std::string_view name, const ParseNode& node);
+    Artifact(std::string_view name, const ParseNode& node);
 
     SIGIL_NODISCARD auto GetName() const -> std::string_view;
     SIGIL_NODISCARD auto GetChildren() const -> const std::vector<NodePtr>&;
@@ -366,4 +366,5 @@ private:
 };
 
 NodePtr CreateExpression(const ParseNode& node);
+NodePtr CreateDeclaration(const ParseNode& node);
 } // namespace sigil::ast

@@ -22,13 +22,18 @@ OP_RETURN = "->" ;
 TERMINATOR = "\n" | ";";
 
 (* parse rules *)
-artifact = stmt* EOF ;
+artifact = decl* EOF ;
 
-stmt   = fn_decl
+decl = fn_decl
+     | data_decl TERMINATOR
+     ;
+
+stmt   = decl
        | if_block 
        | loop 
-       | (return | loop_control | data_decl | assign | expr) TERMINATOR ;
+       | (return | loop_control | assign | expr) TERMINATOR ;
 
+scope  = '{' stmt* '}' ;
 
 fn_decl = KW_FN ID param_list ret_type? scope   ;
 param_list = '(' (param (',' param)*)? ')'      ;
@@ -36,6 +41,9 @@ param = ID type_spec?                           ;
 ret_type = OP_RETURN ID                         ;
 
 return = KW_RETURN expr? ;
+
+data_decl   = KW_MUT? KW_DATA ID type_spec? ('=' expr)? ;
+type_spec   = (':' ID) ;
 
 if_condition = KW_IF expr  ;
 
@@ -52,12 +60,7 @@ loop_body = scope (OP_BINDING if_condition)?                  (* infinite / post
 
 loop_control = (KW_SKIP | KW_BREAK) (OP_BINDING ID)? if_condition? ;
 
-data_decl   = KW_MUT? KW_DATA ID type_spec? ('=' expr)? ;
-type_spec   = (':' ID) ;
-
 assign = ID '=' expr   ;   
-
-scope  = '{' stmt* '}' ;
 
 (* Todo: still need to bake associativity into the grammar *)
 (* e.g. logical = equality | logical ('&&' | '||') equality *)
