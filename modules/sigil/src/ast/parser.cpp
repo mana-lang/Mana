@@ -198,7 +198,7 @@ void Parser::SkipCurrentToken() {
     ++cursor;
 }
 
-void Parser::SkipTokens(ml::i32 count) {
+void Parser::SkipTokens(const ml::i32 count) {
     cursor += count;
 }
 
@@ -247,7 +247,7 @@ bool Parser::Expect(const bool condition,
     return true;
 }
 
-// stmt = fn_decl | if_stmt | loop | (decl | assign | expr) TERMINATOR
+// stmt = fn_decl | if_stmt | loop | (ret_stmt | loop_ctl | decl | assign | expr) TERMINATOR
 bool Parser::MatchedStatement(ParseNode& node) {
     auto& stmt = node.NewBranch(Rule::Statement);
 
@@ -258,7 +258,8 @@ bool Parser::MatchedStatement(ParseNode& node) {
         return true;
     }
 
-    const bool is_statement = MatchedLoopControl(stmt)
+    const bool is_statement = MatchedReturnStatement(stmt)
+                              || MatchedLoopControl(stmt)
                               || MatchedDataDeclaration(stmt)
                               || MatchedAssignment(stmt)
                               || MatchedExpression(stmt);
@@ -587,6 +588,20 @@ bool Parser::MatchedParameterList(ParseNode& node) {
     }
 
     Expect(CurrentToken().type == TokenType::Op_ParenRight, param_list, "Expected closing parenthesis");
+
+    return true;
+}
+
+// ret_stmt = KW_RETURN expr?
+bool Parser::MatchedReturnStatement(ParseNode& node) {
+    if (CurrentToken().type != TokenType::KW_return) {
+        return false;
+    }
+    SkipCurrentToken();
+
+    auto& ret_stmt = node.NewBranch(Rule::ReturnStatement);
+
+    MatchedExpression(ret_stmt);
 
     return true;
 }

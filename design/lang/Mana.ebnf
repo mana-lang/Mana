@@ -27,13 +27,15 @@ artifact = stmt* EOF ;
 stmt   = fn_decl
        | if_block 
        | loop 
-       | (loop_control | data_decl | assign | expr) TERMINATOR ;
+       | (ret_stmt | loop_control | data_decl | assign | expr) TERMINATOR ;
 
 
 fn_decl = KW_FN ID param_list ret_type?  scope  ;
-param_list = '(' (param (',' param)*)? ')'    ;
-param = ID type_spec?                         ;
-ret_type = OP_RETURN ID                       ;
+param_list = '(' (param (',' param)*)? ')'      ;
+param = ID type_spec?                           ;
+ret_type = OP_RETURN ID                         ;
+
+ret_stmt = KW_RETURN expr?
 
 if_condition = KW_IF expr ;
 

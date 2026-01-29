@@ -34,6 +34,7 @@ enum class Rule : ml::u8 {
     FunctionDeclaration,
     ParameterList,
     Parameter,
+    ReturnStatement,
 
     DataDeclaration,
     MutableDataDeclaration,
