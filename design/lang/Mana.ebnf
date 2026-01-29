@@ -27,17 +27,17 @@ artifact = stmt* EOF ;
 stmt   = fn_decl
        | if_block 
        | loop 
-       | (ret_stmt | loop_control | data_decl | assign | expr) TERMINATOR ;
+       | (return | loop_control | data_decl | assign | expr) TERMINATOR ;
 
 
-fn_decl = KW_FN ID param_list ret_type?  scope  ;
+fn_decl = KW_FN ID param_list ret_type? scope   ;
 param_list = '(' (param (',' param)*)? ')'      ;
 param = ID type_spec?                           ;
 ret_type = OP_RETURN ID                         ;
 
-ret_stmt = KW_RETURN expr?
+return = KW_RETURN expr? ;
 
-if_condition = KW_IF expr ;
+if_condition = KW_IF expr  ;
 
 if_block = if_condition scope if_tail? ;
 if_tail = KW_ELSE (if_block | scope)   ;
@@ -52,14 +52,12 @@ loop_body = scope (OP_BINDING if_condition)?                  (* infinite / post
 
 loop_control = (KW_SKIP | KW_BREAK) (OP_BINDING ID)? if_condition? ;
 
-data_decl   = KW_MUT? KW_DATA ID type_spec? ('=' expr)?    ;
+data_decl   = KW_MUT? KW_DATA ID type_spec? ('=' expr)? ;
 type_spec   = (':' ID) ;
 
 assign = ID '=' expr   ;   
 
 scope  = '{' stmt* '}' ;
-
-return = KW_RETURN expr TERMINATOR ;
 
 (* Todo: still need to bake associativity into the grammar *)
 (* e.g. logical = equality | logical ('&&' | '||') equality *)

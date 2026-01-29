@@ -258,7 +258,7 @@ bool Parser::MatchedStatement(ParseNode& node) {
         return true;
     }
 
-    const bool is_statement = MatchedReturnStatement(stmt)
+    const bool is_statement = MatchedReturn(stmt)
                               || MatchedLoopControl(stmt)
                               || MatchedDataDeclaration(stmt)
                               || MatchedAssignment(stmt)
@@ -283,6 +283,7 @@ bool Parser::MatchedStatement(ParseNode& node) {
     return true;
 }
 
+// scope  = '{' stmt* '}'
 bool Parser::MatchedScope(ParseNode& node) {
     if (CurrentToken().type != TokenType::Op_BraceLeft) {
         return false;
@@ -592,8 +593,8 @@ bool Parser::MatchedParameterList(ParseNode& node) {
     return true;
 }
 
-// ret_stmt = KW_RETURN expr?
-bool Parser::MatchedReturnStatement(ParseNode& node) {
+// return = KW_RETURN expr?
+bool Parser::MatchedReturn(ParseNode& node) {
     if (CurrentToken().type != TokenType::KW_return) {
         return false;
     }
@@ -702,6 +703,7 @@ bool IsCompoundAssignment(const TokenType op) {
            || op == TokenType::Op_ModAssign;
 }
 
+// assign = ID '=' expr
 bool Parser::MatchedAssignment(ParseNode& node) {
     if (CurrentToken().type != TokenType::Identifier) {
         return false;
