@@ -582,7 +582,7 @@ bool Parser::MatchedParameterList(ParseNode& node) {
     SkipCurrentToken();
 
     // empty arg list
-    if (PeekNextToken().type == TokenType::Op_ParenRight) {
+    if (CurrentToken().type == TokenType::Op_ParenRight) {
         SkipCurrentToken();
         return true;
     }
@@ -634,7 +634,7 @@ bool Parser::MatchedReturn(ParseNode& node) {
     }
     SkipCurrentToken();
 
-    auto& ret_stmt = node.NewBranch(Rule::ReturnStatement);
+    auto& ret_stmt = node.NewBranch(Rule::Return);
 
     MatchedExpression(ret_stmt);
 

@@ -123,9 +123,7 @@ class FunctionDeclaration final : public Node {
     std::vector<NodePtr> parameters;
     NodePtr body;
 
-    // return type has to be a string because it might be unspecified
-    // in which case it's 'none'
-    std::string return_type;
+    std::string_view return_type;
 
 public:
     explicit FunctionDeclaration(const ParseNode& node);
@@ -147,6 +145,17 @@ public:
 
     SIGIL_NODISCARD std::string_view GetName() const;
     SIGIL_NODISCARD std::string_view GetType() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
+class Return final : public Node {
+    NodePtr expr;
+
+public:
+    explicit Return(const ParseNode& node);
+
+    SIGIL_NODISCARD const NodePtr& GetExpression() const;
 
     void Accept(Visitor& visitor) const override;
 };
@@ -384,6 +393,9 @@ void PropagateStatements(const ParseNode& node, SC* root) {
             switch (n->rule) {
             case FunctionDeclaration:
                 root->Add<class FunctionDeclaration>(*n);
+                break;
+            case Return:
+                root->Add<class Return>(*n);
                 break;
             case MutableDataDeclaration:
                 root->Add<class MutableDataDeclaration>(*n);

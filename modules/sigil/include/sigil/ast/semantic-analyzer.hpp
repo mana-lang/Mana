@@ -9,7 +9,6 @@
 #include <array>
 
 namespace sigil {
-//
 namespace ml = mana::literals;
 
 class SemanticAnalyzer final : public ast::Visitor {
@@ -35,11 +34,13 @@ class SemanticAnalyzer final : public ast::Visitor {
         ml::u8 scope_depth;
     };
 
-    using SymbolTable = std::unordered_map<std::string_view, Datum>;
-    using TypeTable   = std::unordered_map<std::string_view, TypeInfo>;
+    using SymbolTable   = std::unordered_map<std::string_view, Datum>;
+    using TypeTable     = std::unordered_map<std::string_view, TypeInfo>;
+    using FunctionTable = std::unordered_map<std::string_view, std::string_view>;
 
     SymbolTable symbols;
     TypeTable types;
+    FunctionTable functions;
 
     ml::u8 scope_depth;
     ml::u8 loop_depth;
@@ -59,13 +60,15 @@ public:
     void Visit(const ast::Artifact& artifact) override;
     void Visit(const ast::Scope& node) override;
 
-    void Visit(const ast::FunctionDeclaration& node) override {}
+    void Visit(const ast::FunctionDeclaration& node) override;
     void Visit(const ast::MutableDataDeclaration& node) override;
     void Visit(const ast::DataDeclaration& node) override;
 
-    void Visit(const ast::Parameter& node) override {}
+    void Visit(const ast::Parameter& node) override;
     void Visit(const ast::Identifier& node) override;
     void Visit(const ast::Assignment& node) override;
+
+    void Visit(const ast::Return& node) override {}
 
     void Visit(const ast::If& node) override;
 

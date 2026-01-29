@@ -405,8 +405,6 @@ FunctionDeclaration::FunctionDeclaration(const ParseNode& node) {
     }
     if (node.tokens.size() == 2) {
         return_type = FetchTokenText(node.tokens[1]);
-    } else {
-        return_type = "none";
     }
 
     body = std::make_shared<Scope>(*node.branches[1]);
@@ -450,6 +448,18 @@ std::string_view Parameter::GetType() const {
 }
 
 void Parameter::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+Return::Return(const ParseNode& node) {
+    expr = CreateExpression(*node.branches[0]);
+}
+
+const NodePtr& Return::GetExpression() const {
+    return expr;
+}
+
+void Return::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 

@@ -1,3 +1,5 @@
+#include <ranges>
+
 #include <sigil/ast/semantic-analyzer.hpp>
 #include <sigil/ast/keywords.hpp>
 #include <sigil/ast/syntax-tree.hpp>
@@ -6,6 +8,13 @@ namespace sigil {
 using namespace mana::literals;
 using namespace ast;
 using enum PrimitiveType;
+
+constexpr auto TB_ERROR    = "_TYPEBUFFER_ERROR_";
+constexpr auto ENTRY_POINT = "Main";
+
+bool IsEntryPoint(std::string_view name) {
+    return name == ENTRY_POINT;
+}
 
 bool IsSignedIntegral(std::string_view type) {
     return type == PrimitiveName(I8)
@@ -85,14 +94,21 @@ void SemanticAnalyzer::ExitScope() {
     --scope_depth;
 }
 
-constexpr auto TB_ERROR = "_TYPEBUFFER_ERROR_";
-
 void SemanticAnalyzer::Visit(const Artifact& artifact) {
     EnterScope();
     for (const auto& statement : artifact.GetChildren()) {
         statement->Accept(*this);
     }
     ExitScope();
+
+    const bool lacks_main = std::none_of(functions.begin(),
+                                         functions.end(),
+                                         [](const auto& kv) { return kv.first == ENTRY_POINT; }
+    );
+    if (lacks_main) {
+        Log->error("Program must contain an entry point function (Main)");
+        ++issue_counter;
+    }
 }
 
 void SemanticAnalyzer::Visit(const Scope& node) {
@@ -103,6 +119,42 @@ void SemanticAnalyzer::Visit(const Scope& node) {
     ExitScope();
 }
 
+void SemanticAnalyzer::Visit(const FunctionDeclaration& node) {
+    const auto name        = node.GetName();
+    const auto return_type = node.GetReturnType();
+
+    if (functions.contains(name)) {
+        Log->error("Redefinition of function '{}'", name);
+        ++issue_counter;
+    } else {
+        functions[name] = return_type;
+    }
+
+    const auto& params = node.GetParameters();
+    if (IsEntryPoint(name)) {
+        if (not params.empty()) {
+            Log->error("Entry point function cannot have parameters");
+            ++issue_counter;
+        }
+
+        if (return_type != PrimitiveName(None)) {
+            Log->error("Entry point function cannot have a return type");
+            ++issue_counter;
+        }
+    }
+
+    // function params belong to incoming scope
+    ++scope_depth;
+
+    // need to resolve params backwards to handle e.g. (x, y: i32)
+    for (const auto& param : std::views::reverse(params)) {
+        param->Accept(*this);
+    }
+    --scope_depth;
+
+    node.GetBody()->Accept(*this);
+}
+
 void SemanticAnalyzer::Visit(const MutableDataDeclaration& node) {
     HandleInitializer(node, true);
 }
@@ -111,9 +163,19 @@ void SemanticAnalyzer::Visit(const DataDeclaration& node) {
     HandleInitializer(node, false);
 }
 
+void SemanticAnalyzer::Visit(const Parameter& node) {
+    // params can be in the form of (a,b: i32)
+    // so while evaluating, if there is no type, we just assign the previous type
+    const auto type = node.GetType().empty() ? PopTypeBuffer() : node.GetType();
+    AddSymbol(node.GetName(), type, false);
+
+    // then we can queue whatever the latest type was for the next param, if needed
+    BufferType(type);
+}
+
 void SemanticAnalyzer::Visit(const Identifier& node) {
     const auto* symbol = GetSymbol(node.GetName());
-//
+
     if (symbol == nullptr) {
         Log->error("Undefined identifier '{}'", node.GetName());
         ++issue_counter;
