@@ -121,7 +121,7 @@ void SemanticAnalyzer::Visit(const Scope& node) {
 
 void SemanticAnalyzer::Visit(const FunctionDeclaration& node) {
     const auto name        = node.GetName();
-    const auto return_type = node.GetReturnType();
+    const auto return_type = node.GetReturnType().empty() ? PrimitiveName(None) : node.GetReturnType();
 
     if (functions.contains(name)) {
         Log->error("Redefinition of function '{}'", name);
@@ -147,7 +147,7 @@ void SemanticAnalyzer::Visit(const FunctionDeclaration& node) {
     ++scope_depth;
 
     // need to resolve params backwards to handle e.g. (x, y: i32)
-    for (const auto& param : std::views::reverse(params)) {
+    for (auto&& param : std::views::reverse(params)) {
         param->Accept(*this);
     }
     --scope_depth;
