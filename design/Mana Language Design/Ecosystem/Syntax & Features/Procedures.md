@@ -57,7 +57,7 @@ fn Subtract(a, b: f32) -> f32 {
 	return a - b
 }
 
-fn PrintIf(b: bool) -> none {
+fn PrintIf(b: bool) {
 	if not b {
 		return false // error
 	}
