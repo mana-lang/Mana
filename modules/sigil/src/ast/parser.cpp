@@ -508,105 +508,6 @@ bool Parser::MatchedLoopBody(ParseNode& node) {
     return true;
 }
 
-// fn_decl = KW_FN ID param_list ret_type? scope
-bool Parser::MatchedFunctionDeclaration(ParseNode& node) {
-    if (CurrentToken().type != TokenType::KW_fn) {
-        return false;
-    }
-    SkipCurrentToken();
-
-    auto& fn_decl = node.NewBranch(Rule::FunctionDeclaration);
-
-    // fn a
-    if (not Expect(CurrentToken().type == TokenType::Identifier, fn_decl, "Expected function name")) {
-        return true;
-    }
-    AddCycledTokenTo(fn_decl);
-
-    // fn a(b: i32, c, d: f64)
-    if (not Expect(MatchedParameterList(fn_decl), fn_decl, "Expected parameter list")) {
-        return true;
-    }
-
-    // fn a() -> i32
-    if (CurrentToken().type == TokenType::Op_ReturnType) {
-        SkipCurrentToken();
-
-        Expect(PeekNextToken().type == TokenType::Identifier, fn_decl, "Expected return type");
-        AddCycledTokenTo(fn_decl);
-    }
-
-    // fn a() {}
-    Expect(MatchedScope(fn_decl), fn_decl, "Expected function body");
-    return true;
-}
-
-// param_list = '(' (param (',' param)*)? ')'
-bool Parser::MatchedParameterList(ParseNode& node) {
-    if (CurrentToken().type != TokenType::Op_ParenLeft) {
-        return false;
-    }
-
-    auto& param_list = node.NewBranch(Rule::ParameterList);
-
-    // fn x()
-    if (PeekNextToken().type == TokenType::Op_ParenRight) {
-        SkipTokens(2);
-        return true;
-    }
-
-    // param = ID (':' ID)?
-    const auto handle_param = [&param_list, this]() {
-        if (CurrentToken().type != TokenType::Identifier) {
-            return false;
-        }
-
-        auto& param = param_list.NewBranch(Rule::Parameter);
-        AddCycledTokenTo(param);
-        if (CurrentToken().type != TokenType::Op_Colon) {
-            return true;
-        }
-        SkipCurrentToken();
-
-        if (not Expect(CurrentToken().type == TokenType::Identifier, param, "Expected type")) {
-            return true;
-        }
-        AddCycledTokenTo(param);
-        return true;
-    };
-
-    // handle first parameter
-    if (not Expect(handle_param(), param_list, "Expected parameter")) {
-        return true;
-    }
-
-    // handle rest
-    while (CurrentToken().type == TokenType::Op_Comma) {
-        SkipCurrentToken();
-        if (not Expect(handle_param(), param_list, "Expected parameter")) {
-            return true;
-        }
-    }
-
-    Expect(CurrentToken().type == TokenType::Op_ParenRight, param_list, "Expected closing parenthesis");
-
-    return true;
-}
-
-// return = KW_RETURN expr?
-bool Parser::MatchedReturn(ParseNode& node) {
-    if (CurrentToken().type != TokenType::KW_return) {
-        return false;
-    }
-    SkipCurrentToken();
-
-    auto& ret_stmt = node.NewBranch(Rule::ReturnStatement);
-
-    MatchedExpression(ret_stmt);
-
-    return true;
-}
-
 bool IsPrimitiveKeyword(const TokenType token) {
     switch (token) {
         using enum TokenType;
@@ -634,6 +535,111 @@ bool IsPrimitiveKeyword(const TokenType token) {
     }
 }
 
+bool IsType(const TokenType token) {
+    return IsPrimitiveKeyword(token) || token == TokenType::Identifier;
+}
+
+// fn_decl = KW_FN ID param_list ret_type? scope
+bool Parser::MatchedFunctionDeclaration(ParseNode& node) {
+    if (CurrentToken().type != TokenType::KW_fn) {
+        return false;
+    }
+    SkipCurrentToken();
+
+    auto& fn_decl = node.NewBranch(Rule::FunctionDeclaration);
+
+    // fn A
+    if (not Expect(CurrentToken().type == TokenType::Identifier, fn_decl, "Expected function name")) {
+        return true;
+    }
+    AddCycledTokenTo(fn_decl);
+
+    // fn A(b: i32, c, d: f64)
+    if (not Expect(MatchedParameterList(fn_decl), fn_decl, "Expected parameter list")) {
+        return true;
+    }
+
+    // fn A() -> i32
+    if (CurrentToken().type == TokenType::Op_ReturnType) {
+        SkipCurrentToken();
+
+        Expect(IsType(CurrentToken().type), fn_decl, "Expected return type");
+        AddCycledTokenTo(fn_decl);
+    }
+
+    // fn A() {}
+    Expect(MatchedScope(fn_decl), fn_decl, "Expected function body");
+    return true;
+}
+
+// param_list = '(' (param (',' param)*)? ')'
+bool Parser::MatchedParameterList(ParseNode& node) {
+    if (CurrentToken().type != TokenType::Op_ParenLeft) {
+        return false;
+    }
+
+    auto& param_list = node.NewBranch(Rule::ParameterList);
+    SkipCurrentToken();
+
+    // empty arg list
+    if (PeekNextToken().type == TokenType::Op_ParenRight) {
+        SkipCurrentToken();
+        return true;
+    }
+
+    // param = ID (':' ID)?
+    const auto handle_param = [&param_list, this]() {
+        if (CurrentToken().type != TokenType::Identifier) {
+            return false;
+        }
+
+        auto& param = param_list.NewBranch(Rule::Parameter);
+        AddCycledTokenTo(param);
+        if (CurrentToken().type != TokenType::Op_Colon) {
+            return true;
+        }
+        SkipCurrentToken();
+
+        if (not Expect(IsType(CurrentToken().type), param, "Expected type")) {
+            return true;
+        }
+        AddCycledTokenTo(param);
+        return true;
+    };
+
+    // handle first parameter
+    if (not Expect(handle_param(), param_list, "Expected parameter")) {
+        return true;
+    }
+
+    // handle rest
+    while (CurrentToken().type == TokenType::Op_Comma) {
+        SkipCurrentToken();
+        if (not Expect(handle_param(), param_list, "Expected parameter")) {
+            return true;
+        }
+    }
+
+    if (Expect(CurrentToken().type == TokenType::Op_ParenRight, param_list, "Expected closing parenthesis")) {
+        SkipCurrentToken();
+    }
+
+    return true;
+}
+
+// return = KW_RETURN expr?
+bool Parser::MatchedReturn(ParseNode& node) {
+    if (CurrentToken().type != TokenType::KW_return) {
+        return false;
+    }
+    SkipCurrentToken();
+
+    auto& ret_stmt = node.NewBranch(Rule::ReturnStatement);
+
+    MatchedExpression(ret_stmt);
+
+    return true;
+}
 
 // data_decl = KW_MUT? KW_DATA ID (':' ID)? ('=' expr)?
 bool Parser::MatchedDataDeclaration(ParseNode& node) {
@@ -664,7 +670,7 @@ bool Parser::MatchedDataDeclaration(ParseNode& node) {
     if (is_annotated) {
         AddCycledTokenTo(decl);
 
-        if (Expect(IsPrimitiveKeyword(CurrentToken().type) || CurrentToken().type == TokenType::Identifier,
+        if (Expect(IsType(CurrentToken().type),
                    decl,
                    "Expected type"
         )) {

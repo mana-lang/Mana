@@ -118,6 +118,39 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
+class FunctionDeclaration final : public Node {
+    std::string_view name;
+    std::vector<NodePtr> parameters;
+    NodePtr body;
+
+    // return type has to be a string because it might be unspecified
+    // in which case it's 'none'
+    std::string return_type;
+
+public:
+    explicit FunctionDeclaration(const ParseNode& node);
+
+    SIGIL_NODISCARD std::string_view GetName() const;
+    SIGIL_NODISCARD const std::vector<NodePtr>& GetParameters() const;
+    SIGIL_NODISCARD const NodePtr& GetBody() const;
+    SIGIL_NODISCARD std::string_view GetReturnType() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
+class Parameter final : public Node {
+    std::string_view name;
+    std::string_view type;
+
+public:
+    explicit Parameter(const ParseNode& node);
+
+    SIGIL_NODISCARD std::string_view GetName() const;
+    SIGIL_NODISCARD std::string_view GetType() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
 class Assignment final : public Node {
     std::string_view identifier;
     std::string_view op;
@@ -349,6 +382,9 @@ void PropagateStatements(const ParseNode& node, SC* root) {
             using enum Rule;
 
             switch (n->rule) {
+            case FunctionDeclaration:
+                root->Add<class FunctionDeclaration>(*n);
+                break;
             case MutableDataDeclaration:
                 root->Add<class MutableDataDeclaration>(*n);
                 break;

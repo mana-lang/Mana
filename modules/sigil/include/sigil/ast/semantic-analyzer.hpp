@@ -59,8 +59,11 @@ public:
     void Visit(const ast::Artifact& artifact) override;
     void Visit(const ast::Scope& node) override;
 
+    void Visit(const ast::FunctionDeclaration& node) override {}
     void Visit(const ast::MutableDataDeclaration& node) override;
     void Visit(const ast::DataDeclaration& node) override;
+
+    void Visit(const ast::Parameter& node) override {}
     void Visit(const ast::Identifier& node) override;
     void Visit(const ast::Assignment& node) override;
 
