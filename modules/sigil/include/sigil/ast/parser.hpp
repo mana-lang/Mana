@@ -76,6 +76,7 @@ private:
     bool Expect(bool condition, ParseNode& node, std::string_view error_message) const;
 
     // Matchers
+    bool MatchedDeclaration(ParseNode& node);
     bool MatchedStatement(ParseNode& node);
 
     bool MatchedScope(ParseNode& node);

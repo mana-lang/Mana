@@ -5,6 +5,8 @@
 
 #include <mana/vm/opcode.hpp>
 
+#include <magic_enum/magic_enum.hpp>
+
 #include <algorithm>
 #include <ranges>
 

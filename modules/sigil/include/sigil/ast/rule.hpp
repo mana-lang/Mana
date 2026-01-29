@@ -11,11 +11,16 @@ enum class Rule : ml::u8 {
 
     Artifact,
 
+    Declaration,
+
+    ParameterList,
+    Parameter,
+    FunctionDeclaration,
+
+    DataDeclaration,
+    MutableDataDeclaration,
+
     Statement,
-
-    Scope,
-
-    Identifier,
 
     If,
     IfTail,
@@ -31,26 +36,25 @@ enum class Rule : ml::u8 {
 
     LoopControl,
 
-    FunctionDeclaration,
-    ParameterList,
-    Parameter,
     Return,
 
-    DataDeclaration,
-    MutableDataDeclaration,
     Assignment,
     Expression,
+
+    Scope,
+
+    Identifier,
+
+    Logical,
+    Equality,
+    Comparison,
+    Term,
+    Factor,
+    Unary,
 
     Grouping,
     Literal,
     ArrayLiteral,
     ElemList,
-
-    Unary,
-    Factor,
-    Term,
-    Comparison,
-    Equality,
-    Logical,
 };
 } // namespace sigil::ast

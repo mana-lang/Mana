@@ -1,8 +1,8 @@
 #include <ranges>
 
-#include <sigil/ast/syntax-tree.hpp>
 #include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/source-file.hpp>
+#include <sigil/ast/syntax-tree.hpp>
 #include <sigil/ast/visitor.hpp>
 #include <sigil/core/logger.hpp>
 
@@ -104,43 +104,154 @@ NodePtr CreateExpression(const ParseNode& node) {
     }
 }
 
+Artifact::Artifact(const std::string_view name, const ParseNode& node)
+    : name(name) {
+    for (auto& decl : node.branches) {
+        switch (decl->rule) {
+            using enum Rule;
+        case FunctionDeclaration:
+            declarations.emplace_back(std::make_shared<class FunctionDeclaration>(*decl));
+            break;
+        case DataDeclaration:
+            declarations.emplace_back(std::make_shared<class DataDeclaration>(*decl));
+            break;
+        case MutableDataDeclaration:
+            declarations.emplace_back(std::make_shared<class MutableDataDeclaration>(*decl));
+            break;
+        default:
+            Log->error("Expected declaration");
+            break;
+        }
+    }
+}
+
 /// Artifact
 auto Artifact::GetName() const -> std::string_view {
     return name;
 }
 
 auto Artifact::GetChildren() const -> const std::vector<NodePtr>& {
-    return statements;
+    return declarations;
 }
 
 void Artifact::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
-/// Identifier
-Identifier::Identifier(const ParseNode& node)
-    : name(FetchTokenText(node.tokens[0])) {}
+/// FunctionDeclaration
+FunctionDeclaration::FunctionDeclaration(const ParseNode& node) {
+    name = FetchTokenText(node.tokens[0]);
 
-std::string_view Identifier::GetName() const {
+    std::string_view param_type;
+    for (const auto& param : std::views::reverse(node.branches[0]->branches)) {
+        if (param->tokens.size() == 2) {
+            param_type = FetchTokenText(param->tokens[1]);
+        }
+
+        parameters.emplace_back(FetchTokenText(param->tokens[0]), param_type);
+    }
+
+    if (node.tokens.size() == 2) {
+        return_type = FetchTokenText(node.tokens[1]);
+    }
+
+    body = std::make_shared<Scope>(*node.branches[1]);
+}
+
+std::string_view FunctionDeclaration::GetName() const {
     return name;
 }
 
-void Identifier::Accept(Visitor& visitor) const {
+const std::vector<Parameter>& FunctionDeclaration::GetParameters() const {
+    return parameters;
+}
+
+const NodePtr& FunctionDeclaration::GetBody() const {
+    return body;
+}
+
+std::string_view FunctionDeclaration::GetReturnType() const {
+    return return_type;
+}
+
+void FunctionDeclaration::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
-/// Scope
-Scope::Scope(const ParseNode& node) {
-    PropagateStatements(node, this);
+/// Binding
+Initializer::Initializer(const ParseNode& node)
+    : initializer {nullptr} {
+    const auto& tokens = node.tokens;
+
+    // data keyword is irrelevant to AST
+    for (const auto& token : tokens) {
+        if (token.type == TokenType::Identifier) {
+            name = FetchTokenText(token);
+            break;
+        }
+    }
+
+    for (int i = 0; i < tokens.size(); ++i) {
+        if (tokens[i].type == TokenType::Op_Colon) {
+            // AST input is assumed to be correct, so we don't need to bounds check
+            type = FetchTokenText(tokens[i + 1]);
+            break;
+        }
+    }
+
+    if (not node.branches.empty()) {
+        initializer = CreateExpression(*node.branches[0]);
+    }
 }
 
-void Scope::Accept(Visitor& visitor) const {
+std::string_view Initializer::GetName() const {
+    return name;
+}
+
+std::string_view Initializer::GetTypeName() const {
+    return type;
+}
+
+const NodePtr& Initializer::GetInitializer() const {
+    return initializer;
+}
+
+bool Initializer::HasTypeAnnotation() const {
+    return not type.empty();
+}
+
+void Initializer::Accept(Visitor& visitor) const {
+    Log->warn("Binding should never be visited directly");
+}
+
+/// DataDeclaration
+DataDeclaration::DataDeclaration(const ParseNode& node)
+    : Initializer {node} {}
+
+void DataDeclaration::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
-const std::vector<NodePtr>& Scope::GetStatements() const {
-    return statements;
+/// MutableDataDeclaration
+MutableDataDeclaration::MutableDataDeclaration(const ParseNode& node)
+    : Initializer {node} {}
+
+void MutableDataDeclaration::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
 }
+
+/// Statement
+Statement::Statement(NodePtr&& node)
+    : child(std::move(node)) {}
+
+const NodePtr& Statement::GetChild() const {
+    return child;
+}
+
+void Statement::Accept(Visitor& visitor) const {
+    child->Accept(visitor); // forward the visitor, statements don't do anything on their own
+}
+
 
 /// If
 If::If(const ParseNode& node) {
@@ -213,7 +324,6 @@ LoopIfPost::LoopIfPost(const ParseNode& node)
     : condition {CreateExpression(*node.branches[1])},
       body {std::make_shared<Scope>(*node.branches[0])} {}
 
-
 const NodePtr& LoopIfPost::GetCondition() const {
     return condition;
 }
@@ -251,12 +361,12 @@ const NodePtr& LoopRange::GetDestination() const {
     return destination;
 }
 
-std::string_view LoopRange::GetCounterName() const {
-    return counter;
-}
-
 const NodePtr& LoopRange::GetBody() const {
     return body;
+}
+
+std::string_view LoopRange::GetCounterName() const {
+    return counter;
 }
 
 void LoopRange::Accept(Visitor& visitor) const {
@@ -336,108 +446,6 @@ void Skip::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
-/// Binding
-Initializer::Initializer(const ParseNode& node)
-    : initializer {nullptr} {
-    const auto& tokens = node.tokens;
-
-    // data keyword is irrelevant to AST
-    for (const auto& token : tokens) {
-        if (token.type == TokenType::Identifier) {
-            name = FetchTokenText(token);
-            break;
-        }
-    }
-
-    for (int i = 0; i < tokens.size(); ++i) {
-        if (tokens[i].type == TokenType::Op_Colon) {
-            // AST input is assumed to be correct, so we don't need to bounds check
-            type = FetchTokenText(tokens[i + 1]);
-            break;
-        }
-    }
-
-    if (not node.branches.empty()) {
-        initializer = CreateExpression(*node.branches[0]);
-    }
-}
-
-std::string_view Initializer::GetName() const {
-    return name;
-}
-
-std::string_view Initializer::GetTypeName() const {
-    return type;
-}
-
-const NodePtr& Initializer::GetInitializer() const {
-    return initializer;
-}
-
-bool Initializer::HasTypeAnnotation() const {
-    return not type.empty();
-}
-
-void Initializer::Accept(Visitor& visitor) const {
-    Log->warn("Binding should never be visited directly");
-}
-
-/// MutableDataDeclaration
-MutableDataDeclaration::MutableDataDeclaration(const ParseNode& node)
-    : Initializer {node} {}
-
-void MutableDataDeclaration::Accept(Visitor& visitor) const {
-    visitor.Visit(*this);
-}
-
-/// DataDeclaration
-DataDeclaration::DataDeclaration(const ParseNode& node)
-    : Initializer {node} {}
-
-void DataDeclaration::Accept(Visitor& visitor) const {
-    visitor.Visit(*this);
-}
-
-/// FunctionDeclaration
-FunctionDeclaration::FunctionDeclaration(const ParseNode& node) {
-    name = FetchTokenText(node.tokens[0]);
-
-    std::string_view param_type;
-    for (const auto& param : std::views::reverse(node.branches[0]->branches)) {
-        if (param->tokens.size() == 2) {
-            param_type = FetchTokenText(param->tokens[1]);
-        }
-
-        parameters.emplace_back(FetchTokenText(param->tokens[0]), param_type);
-    }
-
-    if (node.tokens.size() == 2) {
-        return_type = FetchTokenText(node.tokens[1]);
-    }
-
-    body = std::make_shared<Scope>(*node.branches[1]);
-}
-
-std::string_view FunctionDeclaration::GetName() const {
-    return name;
-}
-
-const std::vector<Parameter>& FunctionDeclaration::GetParameters() const {
-    return parameters;
-}
-
-const NodePtr& FunctionDeclaration::GetBody() const {
-    return body;
-}
-
-std::string_view FunctionDeclaration::GetReturnType() const {
-    return return_type;
-}
-
-void FunctionDeclaration::Accept(Visitor& visitor) const {
-    visitor.Visit(*this);
-}
-
 Return::Return(const ParseNode& node) {
     expr = CreateExpression(*node.branches[0]);
 }
@@ -473,16 +481,128 @@ void Assignment::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
-/// Statement
-Statement::Statement(NodePtr&& node)
-    : child(std::move(node)) {}
+/// Scope
+Scope::Scope(const ParseNode& node) {
+    for (const auto& scope : node.branches) {
+        for (const auto& stmt : scope->branches) {
+            using enum Rule;
 
-const NodePtr& Statement::GetChild() const {
-    return child;
+            switch (stmt->rule) {
+            case Return:
+                AddStatement<class Return>(*stmt);
+                break;
+            case If:
+                AddStatement<class If>(*stmt);
+                break;
+            case Loop:
+                AddStatement<class Loop>(*stmt);
+                break;
+            case LoopIf:
+                AddStatement<class LoopIf>(*stmt);
+                break;
+            case LoopIfPost:
+                AddStatement<class LoopIfPost>(*stmt);
+                break;
+            case LoopRange:
+                if (stmt->tokens[0].type == TokenType::KW_mut) {
+                    // mut token is useless past this point
+                    stmt->tokens[0] = stmt->tokens[1];
+                    stmt->tokens.pop_back();
+                    AddStatement<LoopRangeMutable>(*stmt);
+                    break;
+                }
+                AddStatement<class LoopRange>(*stmt);
+                break;
+            case LoopFixed:
+                AddStatement<class LoopFixed>(*stmt);
+                break;
+            case LoopControl:
+                if (stmt->tokens[0].type == TokenType::KW_break) {
+                    AddStatement<Break>(*stmt);
+                    break;
+                }
+                if (stmt->tokens[0].type == TokenType::KW_skip) {
+                    AddStatement<Skip>(*stmt);
+                    break;
+                }
+                Log->error("Unexpected loop control statement. Token was '{}'",
+                           magic_enum::enum_name(stmt->tokens[0].type)
+                );
+                break;
+            default:
+                if (auto expr = CreateExpression(*stmt)) {
+                    AddStatement(std::move(expr));
+                } else {
+                    Log->error("Expected statement");
+                }
+                break;
+            }
+        }
+    }
 }
 
-void Statement::Accept(Visitor& visitor) const {
-    child->Accept(visitor); // forward the visitor, statements don't do anything on their own
+void Scope::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+const std::vector<NodePtr>& Scope::GetStatements() const {
+    return statements;
+}
+
+/// Identifier
+Identifier::Identifier(const ParseNode& node)
+    : name(FetchTokenText(node.tokens[0])) {}
+
+std::string_view Identifier::GetName() const {
+    return name;
+}
+
+void Identifier::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+BinaryExpr::BinaryExpr(const ParseNode& node)
+    : BinaryExpr(node, 1) {}
+
+BinaryExpr::BinaryExpr(const std::string_view op, const ParseNode& left, const ParseNode& right)
+    : op(op),
+      left(CreateExpression(left)),
+      right(CreateExpression(right)) {}
+
+std::string_view BinaryExpr::GetOp() const {
+    return op;
+}
+
+auto BinaryExpr::GetLeft() const -> const Node& {
+    return *left;
+}
+
+auto BinaryExpr::GetRight() const -> const Node& {
+    return *right;
+}
+
+void BinaryExpr::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
+/// BinaryExpr
+BinaryExpr::BinaryExpr(const ParseNode& binary_node, const i64 depth) {
+    const auto& tokens   = binary_node.tokens;
+    const auto& branches = binary_node.branches;
+
+    if (tokens.size() <= depth) {
+        // we're in the leaf node
+        left  = CreateExpression(*branches[0]);
+        right = CreateExpression(*branches[1]);
+        op    = FetchTokenText(tokens[0]);
+        return;
+    }
+    // we're in a parent node
+
+    //                                  can't call make_shared cause private
+    left  = std::shared_ptr<BinaryExpr>(new BinaryExpr(binary_node, depth + 1));
+    right = CreateExpression(*branches[branches.size() - depth]);
+    op    = FetchTokenText(tokens[tokens.size() - depth]);
 }
 
 /// ArrayLiteral
@@ -501,6 +621,18 @@ ArrayLiteral::ArrayLiteral(const ParseNode& node)
          const auto& elem : elem_list.branches) {
         values.emplace_back(std::move(ProcessValue(*elem)));
     }
+}
+
+const std::vector<NodePtr>& ArrayLiteral::GetValues() const {
+    return values;
+}
+
+mana::PrimitiveType ArrayLiteral::GetType() const {
+    return type;
+}
+
+void ArrayLiteral::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
 }
 
 NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
@@ -571,62 +703,6 @@ NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
         Log->error("Unexpected rule in elem list");
         return nullptr;
     }
-}
-
-const std::vector<NodePtr>& ArrayLiteral::GetValues() const {
-    return values;
-}
-
-mana::PrimitiveType ArrayLiteral::GetType() const {
-    return type;
-}
-
-void ArrayLiteral::Accept(Visitor& visitor) const {
-    visitor.Visit(*this);
-}
-
-/// BinaryExpr
-BinaryExpr::BinaryExpr(const ParseNode& binary_node, const i64 depth) {
-    const auto& tokens   = binary_node.tokens;
-    const auto& branches = binary_node.branches;
-
-    if (tokens.size() <= depth) {
-        // we're in the leaf node
-        left  = CreateExpression(*branches[0]);
-        right = CreateExpression(*branches[1]);
-        op    = FetchTokenText(tokens[0]);
-        return;
-    }
-    // we're in a parent node
-
-    //                                  can't call make_shared cause private
-    left  = std::shared_ptr<BinaryExpr>(new BinaryExpr(binary_node, depth + 1));
-    right = CreateExpression(*branches[branches.size() - depth]);
-    op    = FetchTokenText(tokens[tokens.size() - depth]);
-}
-
-BinaryExpr::BinaryExpr(const ParseNode& node)
-    : BinaryExpr(node, 1) {}
-
-BinaryExpr::BinaryExpr(const std::string_view op, const ParseNode& left, const ParseNode& right)
-    : op(op),
-      left(CreateExpression(left)),
-      right(CreateExpression(right)) {}
-
-std::string_view BinaryExpr::GetOp() const {
-    return op;
-}
-
-auto BinaryExpr::GetLeft() const -> const Node& {
-    return *left;
-}
-
-auto BinaryExpr::GetRight() const -> const Node& {
-    return *right;
-}
-
-void BinaryExpr::Accept(Visitor& visitor) const {
-    visitor.Visit(*this);
 }
 
 SIGIL_NODISCARD bool IsNumber(const TokenType token) {

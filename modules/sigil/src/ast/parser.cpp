@@ -214,7 +214,7 @@ bool Parser::ProgressedParseTree(ParseNode& node) {
         return true;
     }
 
-    return MatchedStatement(node);
+    return MatchedDeclaration(node);
 }
 
 void Parser::ConstructAST(const ParseNode& node) {
@@ -230,9 +230,7 @@ void Parser::ConstructAST(const ParseNode& node) {
         return;
     }
 
-    syntax_tree = std::make_unique<Artifact>(Source().Name());
-
-    PropagateStatements(node, syntax_tree.get());
+    syntax_tree = std::make_unique<Artifact>(Source().Name(), node);
 }
 
 bool Parser::Expect(const bool condition,
@@ -247,12 +245,28 @@ bool Parser::Expect(const bool condition,
     return true;
 }
 
-// stmt = fn_decl | if_stmt | loop | (ret_stmt | loop_ctl | decl | assign | expr) TERMINATOR
+bool Parser::MatchedDeclaration(ParseNode& node) {
+    auto& decl = node.NewBranch(Rule::Declaration);
+
+    const bool is_declaration = MatchedDataDeclaration(decl)
+                                || MatchedFunctionDeclaration(decl);
+
+    if (not is_declaration) {
+        if (decl.branches.empty()) {
+            // if decl has branches, there may be a Rule::Mistake, so we only pop on dead match
+            node.PopBranch();
+        }
+    }
+    return is_declaration;
+}
+
+// stmt = decl | if_block | loop
+//      | (ret_stmt | loop_control | assign | expr) TERMINATOR
 bool Parser::MatchedStatement(ParseNode& node) {
     auto& stmt = node.NewBranch(Rule::Statement);
 
     // block statements aren't terminated since they have a scope, so we exit early on match
-    if (MatchedFunctionDeclaration(stmt)
+    if (MatchedDeclaration(stmt)
         || MatchedIfBlock(stmt)
         || MatchedLoop(stmt)) {
         return true;
@@ -260,13 +274,11 @@ bool Parser::MatchedStatement(ParseNode& node) {
 
     const bool is_statement = MatchedReturn(stmt)
                               || MatchedLoopControl(stmt)
-                              || MatchedDataDeclaration(stmt)
                               || MatchedAssignment(stmt)
                               || MatchedExpression(stmt);
 
     if (not is_statement) {
         if (stmt.branches.empty()) {
-            // if stmt has branches, there may be a Rule::Mistake, so we only pop on dead match
             node.PopBranch();
         }
         return false;
@@ -697,6 +709,9 @@ bool Parser::MatchedDataDeclaration(ParseNode& node) {
            decl,
            "Expected expression"
     );
+
+    Expect(CurrentToken().type == TokenType::Terminator, decl, "Expected terminator at end of declaration");
+    SkipCurrentToken();
 
     return true;
 }
