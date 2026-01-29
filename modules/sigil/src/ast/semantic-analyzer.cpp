@@ -121,7 +121,9 @@ void SemanticAnalyzer::Visit(const Scope& node) {
 
 void SemanticAnalyzer::Visit(const FunctionDeclaration& node) {
     const auto name        = node.GetName();
-    const auto return_type = node.GetReturnType().empty() ? PrimitiveName(None) : node.GetReturnType();
+    const auto return_type = node.GetReturnType().empty()
+                                 ? PrimitiveName(None)
+                                 : node.GetReturnType();
 
     if (functions.contains(name)) {
         Log->error("Redefinition of function '{}'", name);
@@ -147,8 +149,16 @@ void SemanticAnalyzer::Visit(const FunctionDeclaration& node) {
     ++scope_depth;
 
     // need to resolve params backwards to handle e.g. (x, y: i32)
-    for (auto&& param : std::views::reverse(params)) {
-        param->Accept(*this);
+    for (const auto& param : params) {
+        if (param.type.empty()) {
+            Log->error("Parameter '{}' has no type annotation", param.name);
+            ++issue_counter;
+
+            AddSymbol(param.name, PrimitiveName(None), false);
+            continue;
+        }
+
+        AddSymbol(param.name, param.type, false);
     }
     --scope_depth;
 
@@ -161,16 +171,6 @@ void SemanticAnalyzer::Visit(const MutableDataDeclaration& node) {
 
 void SemanticAnalyzer::Visit(const DataDeclaration& node) {
     HandleInitializer(node, false);
-}
-
-void SemanticAnalyzer::Visit(const Parameter& node) {
-    // params can be in the form of (a,b: i32)
-    // so while evaluating, if there is no type, we just assign the previous type
-    const auto type = node.GetType().empty() ? PopTypeBuffer() : node.GetType();
-    AddSymbol(node.GetName(), type, false);
-
-    // then we can queue whatever the latest type was for the next param, if needed
-    BufferType(type);
 }
 
 void SemanticAnalyzer::Visit(const Identifier& node) {

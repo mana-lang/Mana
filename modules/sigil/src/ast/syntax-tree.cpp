@@ -1,3 +1,5 @@
+#include <ranges>
+
 #include <sigil/ast/syntax-tree.hpp>
 #include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/source-file.hpp>
@@ -400,9 +402,15 @@ void DataDeclaration::Accept(Visitor& visitor) const {
 FunctionDeclaration::FunctionDeclaration(const ParseNode& node) {
     name = FetchTokenText(node.tokens[0]);
 
-    for (const auto& param : node.branches[0]->branches) {
-        parameters.emplace_back(std::make_shared<Parameter>(*param));
+    std::string_view param_type;
+    for (const auto& param : std::views::reverse(node.branches[0]->branches)) {
+        if (param->tokens.size() == 2) {
+            param_type = FetchTokenText(param->tokens[1]);
+        }
+
+        parameters.emplace_back(FetchTokenText(param->tokens[0]), param_type);
     }
+
     if (node.tokens.size() == 2) {
         return_type = FetchTokenText(node.tokens[1]);
     }
@@ -414,7 +422,7 @@ std::string_view FunctionDeclaration::GetName() const {
     return name;
 }
 
-const std::vector<NodePtr>& FunctionDeclaration::GetParameters() const {
+const std::vector<Parameter>& FunctionDeclaration::GetParameters() const {
     return parameters;
 }
 
@@ -427,27 +435,6 @@ std::string_view FunctionDeclaration::GetReturnType() const {
 }
 
 void FunctionDeclaration::Accept(Visitor& visitor) const {
-    visitor.Visit(*this);
-}
-
-/// Parameter
-Parameter::Parameter(const ParseNode& node) {
-    name = FetchTokenText(node.tokens[0]);
-
-    if (node.tokens.size() == 2) {
-        type = FetchTokenText(node.tokens[1]);
-    }
-}
-
-std::string_view Parameter::GetName() const {
-    return name;
-}
-
-std::string_view Parameter::GetType() const {
-    return type;
-}
-
-void Parameter::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 

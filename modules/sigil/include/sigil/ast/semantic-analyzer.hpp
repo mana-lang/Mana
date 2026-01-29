@@ -64,7 +64,6 @@ public:
     void Visit(const ast::MutableDataDeclaration& node) override;
     void Visit(const ast::DataDeclaration& node) override;
 
-    void Visit(const ast::Parameter& node) override;
     void Visit(const ast::Identifier& node) override;
     void Visit(const ast::Assignment& node) override;
 

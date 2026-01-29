@@ -20,7 +20,6 @@ public:
     virtual void Visit(const class MutableDataDeclaration& node) = 0;
     virtual void Visit(const class DataDeclaration& node) = 0;
 
-    virtual void Visit(const class Parameter& node) = 0;
     virtual void Visit(const class Identifier& node) = 0;
     virtual void Visit(const class Assignment& node) = 0;
 

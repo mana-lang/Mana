@@ -118,9 +118,14 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
+struct Parameter {
+    std::string_view name;
+    std::string_view type;
+};
+
 class FunctionDeclaration final : public Node {
     std::string_view name;
-    std::vector<NodePtr> parameters;
+    std::vector<Parameter> parameters;
     NodePtr body;
 
     std::string_view return_type;
@@ -129,22 +134,9 @@ public:
     explicit FunctionDeclaration(const ParseNode& node);
 
     SIGIL_NODISCARD std::string_view GetName() const;
-    SIGIL_NODISCARD const std::vector<NodePtr>& GetParameters() const;
+    SIGIL_NODISCARD const std::vector<Parameter>& GetParameters() const;
     SIGIL_NODISCARD const NodePtr& GetBody() const;
     SIGIL_NODISCARD std::string_view GetReturnType() const;
-
-    void Accept(Visitor& visitor) const override;
-};
-
-class Parameter final : public Node {
-    std::string_view name;
-    std::string_view type;
-
-public:
-    explicit Parameter(const ParseNode& node);
-
-    SIGIL_NODISCARD std::string_view GetName() const;
-    SIGIL_NODISCARD std::string_view GetType() const;
 
     void Accept(Visitor& visitor) const override;
 };
