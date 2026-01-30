@@ -15,16 +15,19 @@ using namespace mana::literals;
 Parser::Parser(TokenStream&& tokens)
     : tokens {std::move(tokens)},
       cursor {},
-      parse_tree {Rule::Undefined} {}
+      parse_tree {Rule::Undefined},
+      issue_counter {0} {}
 
 Parser::Parser(const TokenStream& tokens)
     : tokens {tokens},
       cursor {},
-      parse_tree {Rule::Undefined} {}
+      parse_tree {Rule::Undefined},
+      issue_counter {0} {}
 
 Parser::Parser()
     : cursor {},
-      parse_tree {Rule::Undefined} {}
+      parse_tree {Rule::Undefined},
+      issue_counter {0} {}
 
 void Parser::AcquireTokens(const TokenStream& tks) {
     tokens = tks;
