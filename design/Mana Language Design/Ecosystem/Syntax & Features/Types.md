@@ -54,10 +54,10 @@ none
 	- You may specify `none` as the return type of a function, which will be the same as specifying no return type. This prevents the function from returning any value.
 	- You may *not* return `none` from a function.
 - Mutable Data
-	- You may assign `none` to a mutable datum during initialization, and that will leave it uninitialized. 
-	- You may *not* annotate a datum with type `none`, even if you assign it `none`
-	- You may *not* assign `none` to an un-annotated datum.
-	- You may *not* assign `none` to an immutable datum, even if annotated.
+	- You may assign `none` to a mutable binding during initialization, and that will leave it *uninitialized*. 
+	- You may *not* annotate a binding with type `none`, even if you assign it `none`
+	- You may *not* assign `none` to an un-annotated binding.
+	- You may *not* assign `none` to an immutable binding, even if annotated.
 - Pattern Matching
 	- You may have *one* match arm that matches to `none`
 	- This arm represents not having matched anything.
