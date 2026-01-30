@@ -305,13 +305,13 @@ By specializing an operator, you are describing to Mana how a certain type inter
 You can specialize operators in the *interface block* of any given type. Because operators are the "source" of invocability in Mana, they do not contain the `fn` keyword in their declaration. Instead they bind directly to a *parenthesized-list* expression and have an optional return type. 
 ```rust
 type Vec2 {
-	a: f32
-	b: f32
+	x: f32
+	y: f32
 }
 
 interface for type Vec2 {
 	operator + => (other: &Vec2) -> Vec2 {
-		return Vec2 {.a + other.a, .b + other.b}
+		return Vec2 {.x + other.x, .y + other.y}
 	}
 }
 

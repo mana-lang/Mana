@@ -72,16 +72,26 @@ int CompileFrom(const CompileSettings& compile_settings) {
             }
         }
 
+        if (const auto issues = parser.IssueCount();
+            issues > 0) {
+            Log->error("Compilation failed with {} issue{}",
+                       issues,
+                       issues > 1 ? "s" : ""
+            );
+            return Exit(ExitCode::SemanticError);
+        }
+
         {
             ScopedTimer analysis_timer(time_analysis);
             parser.AST()->Accept(analyzer);
         }
 
-        if (analyzer.IssueCount() > 0) {
+        if (const auto issues = analyzer.IssueCount();
+            issues > 0) {
             Log->critical("Aborting");
             Log->error("Compilation failed with {} issue{}",
-                       analyzer.IssueCount(),
-                       analyzer.IssueCount() > 1 ? "s" : ""
+                       issues,
+                       issues > 1 ? "s" : ""
             );
 
             parser.PrintParseTree();

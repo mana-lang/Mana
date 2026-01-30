@@ -2,10 +2,12 @@ fn Simple(x: i32, y, z: f64) -> i32 {
     data a = 12
     data b = a * 2
 
-    return 22.6
+    return b * 4
 }
 
 fn Main() {
     data a = 12
     data b = a * 2
 }
+
+

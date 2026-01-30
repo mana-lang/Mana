@@ -18,8 +18,8 @@ class Parser {
     ParseNode parse_tree;
 
     std::unique_ptr<ast::Artifact> syntax_tree;
+    ml::i32 issue_counter;
 
-private:
 public:
     explicit Parser(TokenStream&& tokens);
     explicit Parser(const TokenStream& tokens);
@@ -33,6 +33,8 @@ public:
     SIGIL_NODISCARD const ParseNode& ViewParseTree() const;
     SIGIL_NODISCARD const TokenStream& ViewTokenStream() const;
     SIGIL_NODISCARD ast::Node* AST() const;
+
+    SIGIL_NODISCARD ml::i32 IssueCount() const;
 
     void PrintParseTree() const;
     void EmitParseTree(std::string_view file_name) const;
@@ -73,7 +75,7 @@ private:
     /// @param node       Parse node to mark as `Rule::Mistake` on failure.
     /// @param error_message  Diagnostic message describing the expected syntax.
     /// @return `true` if the condition holds; `false` otherwise.
-    bool Expect(bool condition, ParseNode& node, std::string_view error_message) const;
+    bool Expect(bool condition, ParseNode& node, std::string_view error_message);
 
     // Matchers
     bool MatchedDeclaration(ParseNode& node);
