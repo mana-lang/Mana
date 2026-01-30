@@ -95,10 +95,10 @@ void SemanticAnalyzer::Visit(const Artifact& artifact) {
     }
 }
 
+// EnterScope should be called before this visiting this node,
+// as certain things may fall outside of a scope body but still belong to it
+// such as function parameters or loop bindings
 void SemanticAnalyzer::Visit(const Scope& node) {
-    // Enterscope should be called before this visiting this node,
-    // as certain things may fall outside of a scope body but still belong to it
-    // such as parameters or loop bindings
     for (const auto& statement : node.GetStatements()) {
         statement->Accept(*this);
     }
@@ -133,7 +133,6 @@ void SemanticAnalyzer::Visit(const FunctionDeclaration& node) {
     }
 
     auto& function = EnterFunction(function_name);
-
     for (const auto& param : params) {
         if (param.type.empty()) {
             Log->error("Parameter '{}' has no type annotation", param.name);
@@ -188,6 +187,19 @@ void SemanticAnalyzer::Visit(const Assignment& node) {
     const auto expr_type = PopTypeBuffer();
     if (symbol != nullptr && not TypesMatch(expr_type, symbol->type)) {
         Log->error("Type mismatch: expected '{}', got '{}'", symbol->type, expr_type);
+        ++issue_counter;
+    }
+}
+
+void SemanticAnalyzer::Visit(const Return& node) {
+    node.GetExpression()->Accept(*this);
+
+    const auto type = PopTypeBuffer();
+    if (not TypesMatch(CurrentFunction().return_type, type)) {
+        Log->error("Type mismatch: Attempted to return '{1}' out of function with return type '{0}'",
+                   CurrentFunction().return_type,
+                   type
+        );
         ++issue_counter;
     }
 }
