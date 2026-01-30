@@ -176,10 +176,10 @@ void SemanticAnalyzer::Visit(const Assignment& node) {
     const auto* symbol    = GetSymbol(identifier);
 
     if (symbol == nullptr) {
-        Log->error("Attempt to assign to undefined datum '{}'", identifier);
+        Log->error("Attempt to assign to undefined name '{}'", identifier);
         ++issue_counter;
-    } else if (not symbol->is_mutable) {
-        Log->error("Attempt to assign to immutable datum '{}'", identifier);
+    } else if (symbol->mutability != Mutability::Mutable) {
+        Log->error("Attempt to assign to immutable binding '{}'", identifier);
         ++issue_counter;
     }
 
@@ -342,6 +342,10 @@ SemanticAnalyzer::FunctionTable& SemanticAnalyzer::GetFnTable() {
     return types[PrimitiveName(Fn)].functions;
 }
 
+const SemanticAnalyzer::FunctionTable& SemanticAnalyzer::GetFnTable() const {
+    return types.at(PrimitiveName(Fn)).functions;
+}
+
 SemanticAnalyzer::Function& SemanticAnalyzer::EnterFunction(std::string_view name) {
     function_stack.push_back(name);
     auto& new_fn = GetFnTable()[name];
@@ -358,6 +362,10 @@ std::string_view SemanticAnalyzer::CurrentFunctionName() const {
 
 SemanticAnalyzer::Function& SemanticAnalyzer::CurrentFunction() {
     return GetFnTable()[CurrentFunctionName()];
+}
+
+const SemanticAnalyzer::Function& SemanticAnalyzer::CurrentFunction() const {
+    return GetFnTable().at(CurrentFunctionName());
 }
 
 std::string_view SemanticAnalyzer::PopTypeBuffer() {
@@ -378,25 +386,48 @@ bool SemanticAnalyzer::TypesMatch(const std::string_view lhs, const std::string_
 }
 
 void SemanticAnalyzer::AddSymbol(std::string_view name, std::string_view type, bool is_mutable) {
-    if (symbols.contains(name)) {
-        Log->error("Redefinition of '{}'", name);
+    const auto redef_error = [this](const std::string_view n) {
+        Log->error("Redefinition of '{}'", n);
         ++issue_counter;
+    };
+
+    if (globals.contains(name)) {
+        redef_error(name);
         return;
     }
 
-    symbols[name] = {type, scope_depth, is_mutable};
+    // we don't have constants yet
+    const auto mutability = is_mutable ? Mutability::Mutable : Mutability::Immutable;
+
+    if (current_scope == GLOBAL_SCOPE) {
+        globals[name] = {type, current_scope, mutability};
+        return;
+    }
+
+    auto& locals = CurrentFunction().locals;
+    if (locals.contains(name)) {
+        redef_error(name);
+        return;
+    }
+
+    locals[name] = {type, current_scope, mutability};
 }
 
 const SemanticAnalyzer::Symbol* SemanticAnalyzer::GetSymbol(std::string_view name) const {
-    if (GetFnTable())
-        if (globals.contains(name)) {
-            return &globals.at(name);
-        }
+    if (globals.contains(name)) {
+        return &globals.at(name);
+    }
 
+    if (current_scope != GLOBAL_SCOPE) {
+        const auto& locals = CurrentFunction().locals;
+        if (locals.contains(name)) {
+            return &locals.at(name);
+        }
+    }
     return nullptr;
 }
 
-void SemanticAnalyzer::HandleInitializer(const Initializer& node, bool is_mutable) {
+void SemanticAnalyzer::HandleInitializer(const Initializer& node, const bool is_mutable) {
     // evaluate expr first
     const auto& init    = node.GetInitializer();
     const bool has_init = init != nullptr;
@@ -421,11 +452,12 @@ void SemanticAnalyzer::HandleInitializer(const Initializer& node, bool is_mutabl
     AddSymbol(node.GetName(), annotation_type, is_mutable);
 }
 
-void SemanticAnalyzer::HandleRangedLoop(const LoopRange& node, bool is_mutable) {
+void SemanticAnalyzer::HandleRangedLoop(const LoopRange& node, const bool is_mutable) {
     ++loop_depth;
 
+    EnterScope();
+
     // counter is mandatory in ranged loop
-    ++scope_depth;
     AddSymbol(node.GetCounterName(), PrimitiveName(I64), is_mutable);
 
     const bool has_origin = node.GetOrigin() != nullptr;
@@ -446,8 +478,6 @@ void SemanticAnalyzer::HandleRangedLoop(const LoopRange& node, bool is_mutable) 
     if (not IsSignedIntegral(start_type) || not IsSignedIntegral(end_type)) {
         Log->warn("Using unsigned integers in ranges is bug-prone. Prefer signed integers instead");
     }
-
-    --scope_depth; // the range segment is part of the loop's scope
 
     node.GetBody()->Accept(*this);
 

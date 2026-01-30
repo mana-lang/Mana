@@ -75,7 +75,9 @@ class SemanticAnalyzer final : public ast::Visitor {
     std::vector<std::string_view> function_stack;
 
     ml::i32 issue_counter;
+
     ml::u8 current_scope;
+    ml::u8 loop_depth;
 
     // this gives the analyzer some awareness of the most recently resolved type
     // the buffer only holds one type at a time
@@ -123,10 +125,13 @@ public:
 private:
     void RegisterPrimitives();
     FunctionTable& GetFnTable();
+    const FunctionTable& GetFnTable() const;
 
     Function& EnterFunction(std::string_view name);
     std::string_view CurrentFunctionName() const;
+
     Function& CurrentFunction();
+    const Function& CurrentFunction() const;
 
     void EnterScope();
     void ExitScope();
