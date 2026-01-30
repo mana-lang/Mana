@@ -69,6 +69,10 @@ auto Parser::AST() const -> Node* {
     return syntax_tree.get();
 }
 
+ml::i32 Parser::IssueCount() const {
+    return issue_counter;
+}
+
 void Parser::PrintParseTree() const {
     Log->debug("Parse tree for artifact '{}'\n\n{}",
                Source().Name(),
@@ -222,11 +226,13 @@ void Parser::ConstructAST(const ParseNode& node) {
         Log->error("Top-level p-tree node was not 'Artifact' but {}",
                    magic_enum::enum_name(node.rule)
         );
+        ++issue_counter;
         return;
     }
 
     if (node.IsLeaf()) {
         Log->error("Empty module, no AST can be constructed");
+        ++issue_counter;
         return;
     }
 
@@ -237,10 +243,11 @@ void Parser::ConstructAST(const ParseNode& node) {
 bool Parser::Expect(const bool condition,
                     ParseNode& node,
                     const std::string_view error_message
-) const {
+) {
     if (not condition) {
         Log->error("Line {} -> {}", CurrentToken().line, error_message);
         node.rule = Rule::Mistake;
+        ++issue_counter;
         return false;
     }
     return true;

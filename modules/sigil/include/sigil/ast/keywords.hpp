@@ -15,10 +15,11 @@ enum class PrimitiveType : ml::u8 {
     F32, F64,
     Char, String,
     Byte, Bool,
+    Fn,
     None,
 };
 
-inline constexpr ml::u8 NUM_PRIMITIVES = 17;
+inline constexpr ml::u8 NUM_PRIMITIVES = 18;
 
 inline constexpr std::array<std::string_view, NUM_PRIMITIVES> PRIMITIVES = {
     "i8",
@@ -39,6 +40,7 @@ inline constexpr std::array<std::string_view, NUM_PRIMITIVES> PRIMITIVES = {
     "string",
     "byte",
     "bool",
+    "fn",
 
     "none"
 };
@@ -74,10 +76,11 @@ inline const KeywordMap KEYWORDS = {
 
     {PrimitiveName(PrimitiveType::Byte),      TokenType::KW_byte       },
     {PrimitiveName(PrimitiveType::Bool),      TokenType::KW_bool       },
+    {PrimitiveName(PrimitiveType::Fn),        TokenType::KW_fn         },
+
     {PrimitiveName(PrimitiveType::None),      TokenType::Lit_none      },
 
     {"data",      TokenType::KW_data       },
-    {"fn",        TokenType::KW_fn         },
     {"mut",       TokenType::KW_mut        },
     {"const",     TokenType::KW_const      },
 

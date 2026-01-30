@@ -4,20 +4,18 @@
 
 #include <mana/literals.hpp>
 
-#include <unordered_map>
+#include <emhash/emhash8.hpp>
+
 #include <string_view>
-#include <array>
+#include <string>
+#include <vector>
 
 namespace sigil {
 namespace ml = mana::literals;
 
-class SemanticAnalyzer final : public ast::Visitor {
-    struct Datum {
-        std::string_view type;
-        ml::u8 scope_depth;
-        bool is_mutable;
-    };
+constexpr auto GLOBAL_SCOPE = 0;
 
+class SemanticAnalyzer final : public ast::Visitor {
     // in bits
     enum class TypeSize : ml::u8 {
         None       = 0,
@@ -29,23 +27,55 @@ class SemanticAnalyzer final : public ast::Visitor {
         Arbitrary = 0xFF
     };
 
-    struct TypeInfo {
-        TypeSize size;
-        ml::u8 scope_depth;
+    enum class Mutability : ml::u8 {
+        Immutable,
+        Mutable,
+        Const,
     };
 
-    using SymbolTable   = std::unordered_map<std::string_view, Datum>;
-    using TypeTable     = std::unordered_map<std::string_view, TypeInfo>;
-    using FunctionTable = std::unordered_map<std::string_view, std::string_view>;
+    struct Symbol {
+        std::string_view type;
+        ml::u8 scope          = GLOBAL_SCOPE;
+        Mutability mutability = Mutability::Const;
 
-    SymbolTable symbols;
+        Symbol(std::string_view type, ml::u8 scope, Mutability mutability)
+            : type {type},
+              scope {scope},
+              mutability {mutability} {}
+
+        Symbol() = default;
+    };
+
+    using SymbolTable = emhash8::HashMap<std::string_view, Symbol>;
+
+    struct Function {
+        SymbolTable locals;
+        std::string_view return_type;
+        ml::u8 scope = GLOBAL_SCOPE;
+    };
+
+    using FunctionTable = emhash8::HashMap<std::string_view, Function>;
+
+    struct TypeInfo {
+        FunctionTable functions;
+
+        TypeSize size = TypeSize::None;
+
+        explicit TypeInfo(TypeSize size)
+            : size {size} {}
+
+        TypeInfo() = default;
+    };
+
+    using TypeTable = emhash8::HashMap<std::string_view, TypeInfo>;
+
+    SymbolTable globals;
     TypeTable types;
-    FunctionTable functions;
 
-    ml::u8 scope_depth;
-    ml::u8 loop_depth;
+    std::vector<std::string_view> function_stack;
 
     ml::i32 issue_counter;
+    ml::u8 current_scope;
 
     // this gives the analyzer some awareness of the most recently resolved type
     // the buffer only holds one type at a time
@@ -91,6 +121,13 @@ public:
     void Visit(const ast::Literal<bool>& literal) override;
 
 private:
+    void RegisterPrimitives();
+    FunctionTable& GetFnTable();
+
+    Function& EnterFunction(std::string_view name);
+    std::string_view CurrentFunctionName() const;
+    Function& CurrentFunction();
+
     void EnterScope();
     void ExitScope();
 
@@ -100,7 +137,7 @@ private:
     bool TypesMatch(std::string_view lhs, std::string_view rhs) const;
 
     void AddSymbol(std::string_view name, std::string_view type, bool is_mutable);
-    const Datum* GetSymbol(std::string_view name) const;
+    const Symbol* GetSymbol(std::string_view name) const;
 
     void HandleInitializer(const ast::Initializer& node, bool is_mutable);
 
