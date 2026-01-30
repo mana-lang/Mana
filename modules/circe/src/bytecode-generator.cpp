@@ -23,12 +23,24 @@ ByteCode BytecodeGenerator::Bytecode() const {
 }
 
 void BytecodeGenerator::Visit(const Artifact& artifact) {
-    for (const auto& statement : artifact.GetChildren()) {
-        statement->Accept(*this);
+    // for (const auto& statement : artifact.GetChildren()) {
+    //     statement->Accept(*this);
+    //
+    //     // prevent dangling register references
+    //     ClearRegBuffer();
+    // }
 
-        // prevent dangling register references
-        ClearRegBuffer();
+    // Find Main and only compile its body
+    for (const auto& decl : artifact.GetChildren()) {
+        // Check if this is a FunctionDeclaration named "Main"
+        if (const auto* fn = dynamic_cast<const FunctionDeclaration*>(decl.get())) {
+            if (fn->GetName() == "Main") {
+                fn->GetBody()->Accept(*this);
+                break;
+            }
+        }
     }
+
     bytecode.Write(Op::Halt);
 }
 
