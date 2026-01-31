@@ -5,15 +5,15 @@
 #include <sigil/ast/lexer.hpp>
 #include <sigil/ast/parser.hpp>
 #include <sigil/ast/syntax-tree.hpp>
+#include <sigil/ast/semantic-analyzer.hpp>
 
-#include <mana/vm/bytecode.hpp>
-
-#include <filesystem>
-#include <fstream>
+#include <hexe/bytecode.hpp>
 
 #include <mana/exit-codes.hpp>
 
-#include <sigil/ast/semantic-analyzer.hpp>
+
+#include <filesystem>
+#include <fstream>
 
 using namespace mana::literals;
 using namespace circe;

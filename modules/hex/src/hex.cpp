@@ -6,7 +6,7 @@
 #include <array>
 
 namespace hex {
-using namespace mana::vm;
+using namespace hexe;
 
 static constexpr std::size_t BASE_REG_SIZE = 256;
 

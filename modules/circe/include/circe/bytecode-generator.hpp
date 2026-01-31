@@ -4,7 +4,7 @@
 #include <sigil/ast/visitor.hpp>
 
 #include <mana/literals.hpp>
-#include <mana/vm/bytecode.hpp>
+#include <hexe/bytecode.hpp>
 
 
 namespace sigil {
@@ -13,7 +13,6 @@ class SemanticAnalyzer;
 
 namespace circe {
 using namespace mana::literals;
-namespace mv = mana::vm;
 namespace ast = sigil::ast;
 
 using Register = u16;
@@ -56,12 +55,12 @@ class BytecodeGenerator final : public ast::Visitor {
 
     std::vector<LoopContext> loop_stack;
 
-    mv::ByteCode bytecode;
+    hexe::ByteCode bytecode;
 
 public:
     BytecodeGenerator();
 
-    CIRCE_NODISCARD mv::ByteCode Bytecode() const;
+    CIRCE_NODISCARD hexe::ByteCode Bytecode() const;
 
     void ObtainSemanticAnalysisInfo(const sigil::SemanticAnalyzer& analyzer);
 
@@ -99,9 +98,9 @@ public:
     void Visit(const ast::Literal<bool>& literal) override;
 
 private:
-    bool IsConditionalJumpOp(mv::Op op) const;
+    bool IsConditionalJumpOp(hexe::Op op) const;
     void JumpBackwards(i64 target_index);
-    void JumpBackwardsConditional(mv::Op op, Register condition_register, i64 target_index);
+    void JumpBackwardsConditional(hexe::Op op, Register condition_register, i64 target_index);
     void PatchJumpForward(i64 target_index);
     void PatchJumpBackward(i64 target_index);
     void PatchJumpForwardConditional(i64 target_index);
@@ -141,7 +140,7 @@ private:
     void HandleLoopControl(bool is_break, const ast::NodePtr& condition);
     void HandleDeclaration(const ast::Initializer& node, bool is_mutable);
 
-    template <mv::ValuePrimitive VP>
+    template <hexe::ValuePrimitive VP>
     void CreateLiteral(const ast::Literal<VP>& literal) {
         const auto index = bytecode.AddConstant(literal.Get());
         if (constants.contains(index)) {
@@ -149,7 +148,7 @@ private:
             return;
         }
         const auto reg = AllocateRegister();
-        bytecode.Write(mv::Op::LoadConstant, {reg, index});
+        bytecode.Write(hexe::Op::LoadConstant, {reg, index});
 
         constants[index] = {reg, scope_depth};
 

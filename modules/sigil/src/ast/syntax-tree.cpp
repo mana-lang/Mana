@@ -6,7 +6,7 @@
 #include <sigil/ast/visitor.hpp>
 #include <sigil/core/logger.hpp>
 
-#include <mana/vm/primitive-type.hpp>
+#include <hexe/primitive-type.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
@@ -46,7 +46,7 @@ auto MakeNoneLiteral() {
 
 struct LiteralData {
     NodePtr value;
-    mana::PrimitiveType type;
+    hexe::PrimitiveType type;
 };
 
 LiteralData MakeLiteral(const Token& token) {
@@ -55,23 +55,23 @@ LiteralData MakeLiteral(const Token& token) {
 
     case Lit_true:
     case Lit_false:
-        return {MakeLiteral<bool>(token), mana::PrimitiveType::Bool};
+        return {MakeLiteral<bool>(token), hexe::PrimitiveType::Bool};
 
     case Lit_Int:
-        return {MakeLiteral<i64>(token), mana::PrimitiveType::Int64};
+        return {MakeLiteral<i64>(token), hexe::PrimitiveType::Int64};
 
     case Lit_Float:
-        return {MakeLiteral<f64>(token), mana::PrimitiveType::Float64};
+        return {MakeLiteral<f64>(token), hexe::PrimitiveType::Float64};
 
     case Lit_none:
-        return {MakeNoneLiteral(), mana::PrimitiveType::None};
+        return {MakeNoneLiteral(), hexe::PrimitiveType::None};
 
     default:
         break;
     }
 
     Log->error("Unexpected token for literal");
-    return {nullptr, mana::PrimitiveType::Invalid};
+    return {nullptr, hexe::PrimitiveType::Invalid};
 }
 
 /// Artifact
@@ -564,7 +564,7 @@ BinaryExpr::BinaryExpr(const ParseNode& binary_node, const i64 depth) {
 
 /// ArrayLiteral
 ArrayLiteral::ArrayLiteral(const ParseNode& node)
-    : type(mana::PrimitiveType::Invalid) {
+    : type(hexe::PrimitiveType::Invalid) {
     // []
     if (node.branches.empty()) {
         return;
@@ -584,7 +584,7 @@ const std::vector<NodePtr>& ArrayLiteral::GetValues() const {
     return values;
 }
 
-mana::PrimitiveType ArrayLiteral::GetType() const {
+hexe::PrimitiveType ArrayLiteral::GetType() const {
     return type;
 }
 
@@ -618,7 +618,7 @@ NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
     {
         const auto literal = MakeLiteral(elem.tokens[0]);
 
-        if (literal.type == mana::PrimitiveType::Invalid) {
+        if (literal.type == hexe::PrimitiveType::Invalid) {
             Log->error(
                 "ArrayLiteral attempted to add invalid value '{}'",
                 FetchTokenText(elem.tokens[0])
@@ -630,7 +630,7 @@ NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
         // elem_list so we start in Invalid, assign the type based on the first, and
         // any type changes past that raise an error
         if (literal.type != type) {
-            if (type == mana::PrimitiveType::Invalid) {
+            if (type == hexe::PrimitiveType::Invalid) {
                 type = literal.type;
             } else {
                 Log->warn(

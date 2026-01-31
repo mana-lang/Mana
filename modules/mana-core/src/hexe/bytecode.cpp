@@ -1,8 +1,8 @@
-#include <mana/vm/bytecode.hpp>
+#include <hexe/bytecode.hpp>
 
 #include <stdexcept>
 
-namespace mana::vm {
+namespace hexe {
 IndexRange::IndexRange(const i64 init_offset, const i64 range)
     : start(init_offset),
       end(init_offset + range) {
@@ -186,4 +186,4 @@ void ByteCode::CheckConstantPoolSize() const {
         throw std::runtime_error("Bytecode constant pool exceeded maximum size");
     }
 }
-} // namespace mana::vm
+} // namespace mana::hexe

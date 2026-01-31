@@ -1,13 +1,14 @@
 #pragma once
 
-#include <mana/vm/primitive-type.hpp>
+#include <hexe/primitive-type.hpp>
 #include <mana/literals.hpp>
 
 #include <array>
 #include <vector>
 
-namespace mana::vm {
-using namespace literals;
+namespace hexe {
+using namespace mana;
+using namespace mana::literals;
 
 inline PrimitiveType GetManaTypeFrom(i64) {
     return Int64;
@@ -184,4 +185,4 @@ private:
         BDispatchB,
     };
 };
-} // namespace mana::vm
+} // namespace hexe

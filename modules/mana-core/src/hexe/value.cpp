@@ -1,12 +1,12 @@
 #include <cmath>
 
-#include <mana/vm/value.hpp>
+#include <hexe/value.hpp>
 
 #include <stdexcept>
 #include <cstring>
 #include <utility>
 
-namespace mana::vm {
+namespace hexe {
 #ifdef __GNUC__
 #    define FUNCSTR std::string(__PRETTY_FUNCTION__)
 #else
@@ -489,4 +489,4 @@ bool Value::BDispatchF(const Data* val) {
 bool Value::BDispatchB(const Data* val) {
     return val->as_bool;
 }
-} // namespace mana::vm
+} // namespace hexe

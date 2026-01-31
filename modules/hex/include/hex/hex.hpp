@@ -1,11 +1,10 @@
 #pragma once
 
 #include <mana/literals.hpp>
-#include <mana/vm/bytecode.hpp>
+#include <hexe/bytecode.hpp>
 
 namespace hex {
 namespace ml = mana::literals;
-namespace mvm = mana::vm;
 
 enum class InterpretResult {
     OK,
@@ -16,11 +15,11 @@ enum class InterpretResult {
 class Hex {
     ml::u8* ip {nullptr};
 
-    std::vector<mvm::Value> registers;
+    std::vector<hexe::Value> registers;
 
 public:
     Hex();
 
-    InterpretResult Execute(mvm::ByteCode* next_slice);
+    InterpretResult Execute(hexe::ByteCode* next_slice);
 };
 } // namespace hex

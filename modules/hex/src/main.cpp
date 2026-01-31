@@ -3,7 +3,7 @@
 #include <hex/core/logger.hpp>
 #include <hex/hex.hpp>
 
-#include <mana/vm/bytecode.hpp>
+#include <hexe/bytecode.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
@@ -11,6 +11,7 @@
 #include <fstream>
 
 using namespace hex;
+using namespace mana;
 
 void Execute(const std::filesystem::path& exe_path) {
     namespace chrono = std::chrono;
@@ -31,13 +32,13 @@ void Execute(const std::filesystem::path& exe_path) {
     in_file.read(reinterpret_cast<char*>(raw.data()), file_size);
 
     const auto start_deser = chrono::high_resolution_clock::now();
-    mana::vm::ByteCode in_slice;
-    in_slice.Deserialize(raw);
+    hexe::ByteCode bytecode;
+    bytecode.Deserialize(raw);
     const auto end_deser = chrono::high_resolution_clock::now();
 
     Log->debug("--- Reading executable '{}' ---", exe_path.filename().c_str());
     Log->debug("");
-    PrintBytecode(in_slice);
+    PrintBytecode(bytecode);
     Log->debug("");
 
     Log->debug("Executing...\n");
@@ -45,7 +46,7 @@ void Execute(const std::filesystem::path& exe_path) {
     Log->set_pattern("%v");
 
     const auto start_interp  = chrono::high_resolution_clock::now();
-    const auto interp_result = vm.Execute(&in_slice);
+    const auto interp_result = vm.Execute(&bytecode);
     const auto end_interp    = chrono::high_resolution_clock::now();
 
     const auto result = magic_enum::enum_name(interp_result);
@@ -76,6 +77,8 @@ int main(const int argc, char** argv) {
     if (cli.ShouldExit()) {
         return result;
     }
+
+    Log->debug("Hexe Bytecode Format Version: {}\n", hexe::Version);
 
     const std::string_view hexe_name = cli.HexeName();
     if (hexe_name.empty()) {

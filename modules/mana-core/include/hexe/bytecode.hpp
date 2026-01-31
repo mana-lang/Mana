@@ -1,16 +1,18 @@
 #pragma once
 
 #include <mana/literals.hpp>
-#include <mana/vm/opcode.hpp>
-#include <mana/vm/value.hpp>
+#include <hexe/opcode.hpp>
+#include <hexe/value.hpp>
 
 #include <cstdlib>
+#include <format>
 #include <limits>
-#include <stdexcept>
 #include <vector>
 
-namespace mana::vm {
-using namespace literals;
+#include <spdlog/fmt/compile.h>
+
+namespace hexe {
+using namespace mana::literals;
 
 struct IndexRange {
     i64 start, end;
@@ -19,8 +21,44 @@ struct IndexRange {
     IndexRange() = delete;
 };
 
-static constexpr auto BYTECODE_INSTRUCTION_MAX = std::numeric_limits<i64>::max();
+static constexpr auto BYTECODE_INSTRUCTION_MAX = std::numeric_limits<i32>::max();
 static constexpr auto BYTECODE_CONSTANT_MAX    = std::numeric_limits<u16>::max();
+
+
+namespace header {
+static constexpr u64 MAGIC = 0x45584548414e414d; // do not ever change this
+
+static constexpr u16 VERSION_MAJOR = 0;
+static constexpr u16 VERSION_MINOR = 1;
+static constexpr u16 VERSION_PATCH = 0;
+}
+
+using namespace fmt::literals;
+constexpr std::string Version = fmt::format("{}.{}.{}"_cf,
+                                            header::VERSION_MAJOR,
+                                            header::VERSION_MINOR,
+                                            header::VERSION_PATCH
+);
+
+
+// @formatter:off
+struct Header {
+    u64 magic;          // fixed value
+
+    u32 code_size;      // size of instruction section in bytes
+
+    u32 entry_point;    // byte offset to entry function (Main)
+
+    u32 checksum;       // CRC32 of everything after header
+    u16 version_major;  // bytecode format version
+    u16 version_minor;
+    u16 version_patch;
+
+    u16 constant_size;  // size of constant pool in bytes
+};
+// @formatter:on
+
+// total size: 24 bytes
 
 class ByteCode {
     std::vector<u8> instructions;
@@ -94,4 +132,4 @@ private:
     void CheckInstructionSize() const;
     void CheckConstantPoolSize() const;
 };
-} // namespace mana::vm
+} // namespace hexe
