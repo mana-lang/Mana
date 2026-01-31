@@ -17,6 +17,8 @@ void Execute(const std::filesystem::path& exe_path) {
     namespace chrono = std::chrono;
     using namespace std::chrono_literals;
 
+    Log->debug("Hexe Bytecode Format Version: {}\n", hexe::Version);
+
     const auto start_file = chrono::high_resolution_clock::now();
 
     std::ifstream in_file(exe_path, std::ios::binary);
@@ -77,8 +79,6 @@ int main(const int argc, char** argv) {
     if (cli.ShouldExit()) {
         return result;
     }
-
-    Log->debug("Hexe Bytecode Format Version: {}\n", hexe::Version);
 
     const std::string_view hexe_name = cli.HexeName();
     if (hexe_name.empty()) {
