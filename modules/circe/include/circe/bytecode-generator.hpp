@@ -6,15 +6,21 @@
 #include <mana/literals.hpp>
 #include <mana/vm/bytecode.hpp>
 
+
+namespace sigil {
+class SemanticAnalyzer;
+}
+
 namespace circe {
-namespace ml = mana::literals;
+using namespace mana::literals;
 namespace mv = mana::vm;
 namespace ast = sigil::ast;
 
-using Register = ml::u16;
+using Register = u16;
+
 
 class BytecodeGenerator final : public ast::Visitor {
-    using ScopeDepth = ml::u8;
+    using ScopeDepth = u8;
 
     struct Symbol {
         Register register_index;
@@ -27,7 +33,7 @@ class BytecodeGenerator final : public ast::Visitor {
     };
 
     struct JumpInstruction {
-        ml::i64 jump_index;
+        i64 jump_index;
         bool is_conditional;
     };
 
@@ -37,12 +43,12 @@ class BytecodeGenerator final : public ast::Visitor {
     };
 
     using SymbolTable   = std::unordered_map<std::string_view, Symbol>;
-    using ConstantTable = std::unordered_map<ml::u16, Constant>;
+    using ConstantTable = std::unordered_map<u16, Constant>;
 
     SymbolTable symbols;
     ConstantTable constants;
 
-    ml::u16 total_registers;
+    u16 total_registers;
     ScopeDepth scope_depth;
 
     std::vector<Register> reg_buffer;
@@ -56,6 +62,8 @@ public:
     BytecodeGenerator();
 
     CIRCE_NODISCARD mv::ByteCode Bytecode() const;
+
+    void ObtainSemanticAnalysisInfo(const sigil::SemanticAnalyzer& analyzer);
 
     void Visit(const ast::Artifact& artifact) override;
     void Visit(const ast::Scope& node) override;
@@ -85,20 +93,20 @@ public:
     void Visit(const ast::BinaryExpr& node) override;
     void Visit(const ast::ArrayLiteral& array) override;
 
-    void Visit(const ast::Literal<ml::f64>& literal) override;
-    void Visit(const ast::Literal<ml::i64>& literal) override;
+    void Visit(const ast::Literal<f64>& literal) override;
+    void Visit(const ast::Literal<i64>& literal) override;
     void Visit(const ast::Literal<void>& node) override;
     void Visit(const ast::Literal<bool>& literal) override;
 
 private:
     bool IsConditionalJumpOp(mv::Op op) const;
-    void JumpBackwards(ml::i64 target_index);
-    void JumpBackwardsConditional(mv::Op op, Register condition_register, ml::i64 target_index);
-    void PatchJumpForward(ml::i64 target_index);
-    void PatchJumpBackward(ml::i64 target_index);
-    void PatchJumpForwardConditional(ml::i64 target_index);
-    void PatchJumpBackwardConditional(ml::i64 target_index);
-    Register CalcJump(ml::i64 target_index, bool is_forward, bool is_conditional) const;
+    void JumpBackwards(i64 target_index);
+    void JumpBackwardsConditional(mv::Op op, Register condition_register, i64 target_index);
+    void PatchJumpForward(i64 target_index);
+    void PatchJumpBackward(i64 target_index);
+    void PatchJumpForwardConditional(i64 target_index);
+    void PatchJumpBackwardConditional(i64 target_index);
+    Register CalcJump(i64 target_index, bool is_forward, bool is_conditional) const;
 
     Register AllocateRegister();
     void FreeRegister(Register reg);

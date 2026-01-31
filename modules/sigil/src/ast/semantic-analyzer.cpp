@@ -48,6 +48,14 @@ ml::i32 SemanticAnalyzer::IssueCount() const {
     return issue_counter;
 }
 
+const SemanticAnalyzer::SymbolTable& SemanticAnalyzer::Globals() const {
+    return globals;
+}
+
+const SemanticAnalyzer::TypeTable& SemanticAnalyzer::Types() const {
+    return types;
+}
+
 void SemanticAnalyzer::EnterScope() {
     ++current_scope;
 }

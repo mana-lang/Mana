@@ -2,6 +2,7 @@
 #include <circe/bytecode-generator.hpp>
 
 #include <sigil/ast/keywords.hpp>
+#include <sigil/ast/semantic-analyzer.hpp>
 
 #include <mana/vm/opcode.hpp>
 
@@ -22,6 +23,11 @@ ByteCode BytecodeGenerator::Bytecode() const {
     return bytecode;
 }
 
+void BytecodeGenerator::ObtainSemanticAnalysisInfo(const sigil::SemanticAnalyzer& analyzer) {
+    const auto& globals = analyzer.Globals();
+    const auto& types   = analyzer.Types();
+}
+
 void BytecodeGenerator::Visit(const Artifact& artifact) {
     // for (const auto& statement : artifact.GetChildren()) {
     //     statement->Accept(*this);
@@ -30,9 +36,7 @@ void BytecodeGenerator::Visit(const Artifact& artifact) {
     //     ClearRegBuffer();
     // }
 
-    // Find Main and only compile its body
     for (const auto& decl : artifact.GetChildren()) {
-        // Check if this is a FunctionDeclaration named "Main"
         if (const auto* fn = dynamic_cast<const FunctionDeclaration*>(decl.get())) {
             if (fn->GetName() == "Main") {
                 fn->GetBody()->Accept(*this);

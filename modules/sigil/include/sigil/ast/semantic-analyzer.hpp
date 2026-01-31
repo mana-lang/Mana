@@ -7,88 +7,91 @@
 #include <emhash/emhash8.hpp>
 
 #include <string_view>
-#include <string>
 #include <vector>
 
 namespace sigil {
-namespace ml = mana::literals;
+using namespace mana::literals;
 
 constexpr auto GLOBAL_SCOPE = 0;
 
+// in bits
+enum class TypeSize : u8 {
+    None       = 0,
+    Byte       = 8,
+    Word       = 16,
+    DoubleWord = 32,
+    QuadWord   = 64,
+
+    Arbitrary = 0xFF
+};
+
+enum class Mutability : u8 {
+    Immutable,
+    Mutable,
+    Const,
+};
+
+struct Symbol {
+    std::string_view type;
+    u8 scope              = GLOBAL_SCOPE;
+    Mutability mutability = Mutability::Const;
+
+    Symbol(std::string_view type, u8 scope, Mutability mutability)
+        : type {type},
+          scope {scope},
+          mutability {mutability} {}
+
+    Symbol() = default;
+};
+
+using SymbolTable = emhash8::HashMap<std::string_view, Symbol>;
+
+struct Function {
+    SymbolTable locals;
+    std::string_view return_type;
+    u8 scope = GLOBAL_SCOPE;
+};
+
+using FunctionTable = emhash8::HashMap<std::string_view, Function>;
+
+struct TypeInfo {
+    FunctionTable functions;
+
+    TypeSize size = TypeSize::None;
+
+    explicit TypeInfo(TypeSize size)
+        : size {size} {}
+
+    TypeInfo() = default;
+};
+
+using TypeTable = emhash8::HashMap<std::string_view, TypeInfo>;
+
 class SemanticAnalyzer final : public ast::Visitor {
-    // in bits
-    enum class TypeSize : ml::u8 {
-        None       = 0,
-        Byte       = 8,
-        Word       = 16,
-        DoubleWord = 32,
-        QuadWord   = 64,
-
-        Arbitrary = 0xFF
-    };
-
-    enum class Mutability : ml::u8 {
-        Immutable,
-        Mutable,
-        Const,
-    };
-
-    struct Symbol {
-        std::string_view type;
-        ml::u8 scope          = GLOBAL_SCOPE;
-        Mutability mutability = Mutability::Const;
-
-        Symbol(std::string_view type, ml::u8 scope, Mutability mutability)
-            : type {type},
-              scope {scope},
-              mutability {mutability} {}
-
-        Symbol() = default;
-    };
-
-    using SymbolTable = emhash8::HashMap<std::string_view, Symbol>;
-
-    struct Function {
-        SymbolTable locals;
-        std::string_view return_type;
-        ml::u8 scope = GLOBAL_SCOPE;
-    };
-
-    using FunctionTable = emhash8::HashMap<std::string_view, Function>;
-
-    struct TypeInfo {
-        FunctionTable functions;
-
-        TypeSize size = TypeSize::None;
-
-        explicit TypeInfo(TypeSize size)
-            : size {size} {}
-
-        TypeInfo() = default;
-    };
-
-    using TypeTable = emhash8::HashMap<std::string_view, TypeInfo>;
-
     SymbolTable globals;
     TypeTable types;
 
     std::vector<std::string_view> function_stack;
-
-    ml::i32 issue_counter;
-
-    ml::u8 current_scope;
-    ml::u8 loop_depth;
 
     // this gives the analyzer some awareness of the most recently resolved type
     // the buffer only holds one type at a time
     // reading from it expires the type
     std::array<std::string_view, 2> type_buffer;
 
+    i32 issue_counter;
+
+    u8 current_scope;
+    u8 loop_depth;
+
 public:
     SemanticAnalyzer();
 
-    SIGIL_NODISCARD ml::i32 IssueCount() const;
+    SIGIL_NODISCARD i32 IssueCount() const;
 
+    SIGIL_NODISCARD const SymbolTable& Globals() const;
+    SIGIL_NODISCARD const TypeTable& Types() const;
+
+public:
     void Visit(const ast::Artifact& artifact) override;
     void Visit(const ast::Scope& node) override;
 
@@ -117,8 +120,8 @@ public:
     void Visit(const ast::BinaryExpr& node) override;
     void Visit(const ast::ArrayLiteral& array) override;
 
-    void Visit(const ast::Literal<ml::f64>& literal) override;
-    void Visit(const ast::Literal<ml::i64>& literal) override;
+    void Visit(const ast::Literal<f64>& literal) override;
+    void Visit(const ast::Literal<i64>& literal) override;
     void Visit(const ast::Literal<void>& node) override;
     void Visit(const ast::Literal<bool>& literal) override;
 
