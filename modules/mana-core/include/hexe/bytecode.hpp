@@ -25,40 +25,38 @@ static constexpr auto BYTECODE_INSTRUCTION_MAX = std::numeric_limits<i32>::max()
 static constexpr auto BYTECODE_CONSTANT_MAX    = std::numeric_limits<u16>::max();
 
 
-namespace header {
-static constexpr u64 MAGIC = 0x45584548414e414d; // do not ever change this
-
-static constexpr u16 VERSION_MAJOR = 0;
-static constexpr u16 VERSION_MINOR = 1;
-static constexpr u16 VERSION_PATCH = 0;
-}
-
 using namespace fmt::literals;
-constexpr std::string Version = fmt::format("{}.{}.{}"_cf,
-                                            header::VERSION_MAJOR,
-                                            header::VERSION_MINOR,
-                                            header::VERSION_PATCH
-);
-
 
 // @formatter:off
-struct Header {
-    u64 magic;          // fixed value
+class Header {
+    static constexpr u64 MAGIC = 0x45584548414e414d; // do not ever change this
 
-    u32 code_size;      // size of instruction section in bytes
+    static constexpr u8 VERSION_MAJOR  = 0;
+    static constexpr u8 VERSION_MINOR  = 1;
+    static constexpr u16 VERSION_PATCH = 0;
+public:
+    u64 magic;            // fixed value
+    u32 checksum;         // CRC32 of everything after header
 
-    u32 entry_point;    // byte offset to entry function (Main)
+    u32 entry_point;      // byte offset to entry function (Main)
 
-    u32 checksum;       // CRC32 of everything after header
-    u16 version_major;  // bytecode format version
-    u16 version_minor;
+    u32 code_size;        // size of instruction section in bytes
+    u16 constant_size;    // size of constant pool in bytes
+
+    u8 version_major;     // bytecode format version
+    u8 version_minor;
     u16 version_patch;
 
-    u16 constant_size;  // size of constant pool in bytes
+    u16 PADDING_COMPAT;   // 6 bytes of padding reserved for forward compatibility
+    u32 PADDING_COMPAT_;
+
+    static constexpr std::string Version = fmt::format("{}.{}.{}"_cf,
+                                                   VERSION_MAJOR,
+                                                   VERSION_MINOR,
+                                                   VERSION_PATCH
+    );
 };
 // @formatter:on
-
-// total size: 24 bytes
 
 class ByteCode {
     std::vector<u8> instructions;

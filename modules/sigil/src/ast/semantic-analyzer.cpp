@@ -113,6 +113,7 @@ void SemanticAnalyzer::Visit(const Scope& node) {
     ExitScope();
 }
 
+
 void SemanticAnalyzer::Visit(const FunctionDeclaration& node) {
     const auto function_name = node.GetName();
     const auto return_type   = node.GetReturnType().empty()
