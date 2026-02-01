@@ -58,6 +58,8 @@ public:
                                                    VERSION_MINOR,
                                                    VERSION_PATCH
     );
+
+    bool operator==(const Header& other) const;
 };
 // @formatter:on
 
@@ -126,6 +128,8 @@ public:
     }
 
 private:
+    Header DeserializeHeader(const std::vector<u8>& header_bytes);
+
     MANA_NODISCARD std::vector<u8> SerializeCode() const;
     MANA_NODISCARD std::vector<u8> SerializeConstants() const;
     MANA_NODISCARD std::vector<u8> SerializeHeader(const std::vector<u8>& code) const;

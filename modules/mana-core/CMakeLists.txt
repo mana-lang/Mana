@@ -8,6 +8,7 @@ set(MANA_SOURCES
 
         src/hexe/bytecode.cpp
         src/hexe/value.cpp
+        src/hexe/logger.cpp
 )
 
 set(MANA_INCLUDES

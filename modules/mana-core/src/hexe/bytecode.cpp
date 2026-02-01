@@ -1,8 +1,11 @@
 #include <hexe/bytecode.hpp>
+#include <hexe/logger.hpp>
 
 #include <crc/CRC.h>
 
 #include <stdexcept>
+
+constexpr auto HEADER_DESERIALIZE_ERROR = 727;
 
 namespace hexe {
 IndexRange::IndexRange(const i64 init_offset, const i64 range)
@@ -67,7 +70,8 @@ const std::vector<Value>& ByteCode::Constants() const {
 
 std::vector<u8> ByteCode::Serialize() const {
     if (instructions.empty() && constant_pool.empty()) {
-        throw std::runtime_error("Attempted to serialize with no bytecode available");
+        Log->error("Attempted to serialize empty Bytecode instance.");
+        return {};
     }
 
     const auto code = SerializeCode();
@@ -81,10 +85,10 @@ std::vector<u8> ByteCode::Serialize() const {
 }
 
 std::vector<u8> ByteCode::SerializeCode() const {
-    const auto const_bytes = SerializeConstants();
+    const auto constants_bytes = SerializeConstants();
     const std::vector inst_bytes(instructions.begin(), instructions.end());
 
-    std::vector<u8> code = const_bytes;
+    std::vector<u8> code = constants_bytes;
     code.insert(code.end(), inst_bytes.begin(), inst_bytes.end());
 
     return code;
@@ -95,13 +99,7 @@ std::vector<u8> ByteCode::SerializeConstants() const {
 
     CheckConstantPoolSize();
 
-    // serialize all values, including array indices
-    const u64 constant_bytes_count = ConstantPoolBytesCount();
-    out.reserve(constant_bytes_count);
-    for (i64 i = 0; i < sizeof(constant_bytes_count); ++i) {
-        out.push_back((constant_bytes_count >> i * 8) & 0xFF);
-    }
-
+    out.reserve(ConstantPoolBytesCount());
     for (const auto& value : constant_pool) {
         out.push_back(static_cast<u8>(value.type));
 
@@ -190,23 +188,106 @@ u32 ByteCode::ConstantCount() const {
     return out;
 }
 
+bool Header::operator==(const Header& other) const {
+    if (checksum != other.checksum) {
+        Log->error("Header checksum mismatch -- {} | Other: {}",
+                   checksum,
+                   other.checksum
+        );
+        return false;
+    }
+
+    if (code_size != other.code_size) {
+        Log->error("Bytecode size mismatch -- {} | Other: {}",
+                   code_size,
+                   other.code_size
+        );
+        return false;
+    }
+
+    if (entry_point != other.entry_point) {
+        Log->error("Bytecode entry point mismatch -- {} | Other: {}",
+                   entry_point,
+                   other.entry_point
+        );
+        return false;
+    }
+
+    return true;
+}
+
+Header ByteCode::DeserializeHeader(const std::vector<u8>& header_bytes) {
+    auto header = Header {};
+    i64 offset  = 0;
+
+    const auto deserialize_header = [&header_bytes, &offset]<typename T>(T& value) {
+        std::array<u8, sizeof(T)> bc_array {};
+        const i64 target = sizeof(value) + offset;
+        for (i64 up = offset, down = bc_array.size() - 1;
+             up < target;
+             ++up, --down
+        ) {
+            bc_array[down] = header_bytes[up];
+        }
+        value  = std::bit_cast<T>(bc_array);
+        offset += sizeof(value);
+    };
+
+    deserialize_header(header.magic);
+    if (header.magic != Header::MAGIC) {
+        Log->error("Header corrupted.");
+        header.magic = HEADER_DESERIALIZE_ERROR;
+        return header;
+    }
+
+    deserialize_header(header.entry_point);
+    deserialize_header(header.code_size);
+    deserialize_header(header.constant_size);
+    deserialize_header(header.checksum);
+    deserialize_header(header.version_major);
+    deserialize_header(header.version_minor);
+    deserialize_header(header.version_patch);
+
+    // padding can just be copied 1:1
+    for (i64 p = 0, h = offset; h < sizeof(Header); ++h, ++p) {
+        header.PADDING_COMPAT_[p] = header_bytes[h];
+    }
+
+    if (header.version_major != Header::VERSION_MAJOR
+        || header.version_minor != Header::VERSION_MINOR
+        || header.version_patch != Header::VERSION_PATCH) {
+        Log->error("Header version mismatch -- Hexe v{} | Other: Hexe v{}.{}.{}",
+                   Header::Version,
+                   header.version_major,
+                   header.version_minor,
+                   header.version_patch
+        );
+        header.magic = HEADER_DESERIALIZE_ERROR;
+    }
+
+    return header;
+}
+
 bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
     if (bytes.empty()) {
+        Log->error("Attempted to deserialize empty sequence.");
         return false;
     }
 
     constant_pool.clear();
+    instructions.clear();
 
-    // bytes taken up by value-count slot in the constant pool
-    std::array<u8, sizeof(u64)> count_bytes {};
-    for (i64 i = 0; i < count_bytes.size(); ++i) {
-        count_bytes[i] = bytes[i];
+    const auto control_header = CreateHeader(bytes);
+
+    const auto header = DeserializeHeader({bytes.begin(), bytes.begin() + sizeof(Header)});
+    if (header.magic == HEADER_DESERIALIZE_ERROR) {
+        Log->error("Failed to deserialize Hexe header.");
+        return false;
     }
 
     const IndexRange pool_range {
-        sizeof(count_bytes),
-        // start from end of pool count
-        std::bit_cast<i64>(count_bytes),
+        sizeof(Header),
+        header.constant_size,
     };
 
     std::array<u8, sizeof(Value::Data)> value_bytes {};
