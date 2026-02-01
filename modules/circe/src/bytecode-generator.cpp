@@ -37,12 +37,7 @@ void BytecodeGenerator::Visit(const Artifact& artifact) {
     // }
 
     for (const auto& decl : artifact.GetChildren()) {
-        if (const auto* fn = dynamic_cast<const FunctionDeclaration*>(decl.get())) {
-            if (fn->GetName() == "Main") {
-                fn->GetBody()->Accept(*this);
-                break;
-            }
-        }
+        decl->Accept(*this);
     }
 
     bytecode.Write(Op::Halt);
@@ -57,6 +52,17 @@ void BytecodeGenerator::Visit(const Scope& node) {
     }
 
     ExitScope();
+}
+
+void BytecodeGenerator::Visit(const FunctionDeclaration& node) {
+    const auto& name   = node.GetName();
+    const auto& params = node.GetParameters();
+    const auto& body   = node.GetBody();
+
+    if (name == "Main") {
+        bytecode.SetEntryPoint();
+    }
+    body->Accept(*this);
 }
 
 void BytecodeGenerator::Visit(const MutableDataDeclaration& node) {

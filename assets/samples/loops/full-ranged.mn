@@ -1,3 +1,9 @@
+fn Blah() {
+    data x = 1
+    data y = 2
+    data z = 3
+}
+
 fn Main() {
     mut data a = 0
     mut data b = 0

@@ -21,7 +21,7 @@ Hex::Hex() {
 }
 
 InterpretResult Hex::Execute(ByteCode* bytecode) {
-    ip = bytecode->Instructions().data();
+    ip = bytecode->EntryPoint();
 
     const auto* constants = bytecode->Constants().data();
 
@@ -85,8 +85,6 @@ InterpretResult Hex::Execute(ByteCode* bytecode) {
     // we do no bounds checking whatsoever in release
 #   define DISPATCH() goto *dispatch_table[*ip++]
 #endif
-
-
     // Start VM
     DISPATCH();
 

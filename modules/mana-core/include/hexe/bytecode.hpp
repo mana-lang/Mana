@@ -11,6 +11,10 @@
 
 #include <spdlog/fmt/compile.h>
 
+namespace hex {
+class Hex;
+}
+
 namespace hexe {
 using namespace mana::literals;
 
@@ -64,9 +68,10 @@ public:
 // @formatter:on
 
 class ByteCode {
-    // Header header;
     std::vector<u8> instructions;
     std::vector<Value> constant_pool;
+
+    i64 entry_point;
 
 public:
     ByteCode();
@@ -76,6 +81,10 @@ public:
 
     // returns opcode's index
     i64 Write(Op opcode, std::initializer_list<u16> payloads);
+
+    // sets the program entry point to be the next instruction's index
+    void SetEntryPoint();
+    MANA_NODISCARD i64 EntryPointValue() const;
 
     // Modifies a payload for the given opcode
     // This function exists to amend instruction payloads,
@@ -128,7 +137,7 @@ public:
     }
 
 private:
-    MANA_NODISCARD Header DeserializeHeader(const std::vector<u8>& header_bytes);
+    MANA_NODISCARD Header DeserializeHeader(const std::vector<u8>& header_bytes) const;
     MANA_NODISCARD u32 Checksum(const void* ptr, usize size) const;
 
     MANA_NODISCARD std::vector<u8> SerializeCode() const;
@@ -136,6 +145,9 @@ private:
     MANA_NODISCARD std::vector<u8> SerializeHeader(const std::vector<u8>& code) const;
 
     MANA_NODISCARD Header CreateHeader(const std::vector<u8>& code) const;
+
+    friend class hex::Hex;
+    MANA_NODISCARD u8* EntryPoint();
 
     void CheckInstructionSize() const;
     void CheckConstantPoolSize() const;

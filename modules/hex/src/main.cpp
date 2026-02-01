@@ -38,6 +38,8 @@ void Execute(const std::filesystem::path& hexe_path) {
     bytecode.Deserialize(raw);
     const auto end_deser = chrono::high_resolution_clock::now();
 
+    Log->debug("Entry point: {}", bytecode.EntryPointValue());
+
     Log->debug("--- Reading executable '{}' ---", hexe_path.filename().c_str());
     Log->debug("");
     PrintBytecode(bytecode);

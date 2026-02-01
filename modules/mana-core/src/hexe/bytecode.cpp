@@ -5,6 +5,7 @@
 
 #include <stdexcept>
 
+
 constexpr auto HEADER_DESERIALIZE_ERROR = 727;
 
 namespace hexe {
@@ -37,6 +38,18 @@ i64 ByteCode::Write(const Op opcode, const std::initializer_list<u16> payloads) 
 
     CheckInstructionSize();
     return index;
+}
+
+void ByteCode::SetEntryPoint() {
+    entry_point = instructions.size();
+}
+
+i64 ByteCode::EntryPointValue() const {
+    return entry_point;
+}
+
+u8* ByteCode::EntryPoint() {
+    return instructions.data() + entry_point;
 }
 
 // does not perform bounds checking
@@ -151,7 +164,7 @@ std::vector<u8> ByteCode::SerializeHeader(const std::vector<u8>& code) const {
 Header ByteCode::CreateHeader(const std::vector<u8>& code) const {
     Header header {
         .magic         = Header::MAGIC,
-        .entry_point   = 0xFFFFFFFFFFFFFFFF,
+        .entry_point   = static_cast<u64>(entry_point),
         .code_size     = instructions.size(),
         .constant_size = ConstantPoolBytesCount(),
         .checksum      = Checksum(code.data(), code.size()),
@@ -187,7 +200,7 @@ u32 ByteCode::ConstantCount() const {
     return out;
 }
 
-Header ByteCode::DeserializeHeader(const std::vector<u8>& header_bytes) {
+Header ByteCode::DeserializeHeader(const std::vector<u8>& header_bytes) const {
     i64 offset = 0;
 
     const auto deserialize_header = [&header_bytes, &offset]<typename T>(T& value) {
@@ -307,6 +320,12 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
     }
 
     instructions.insert(instructions.begin(), bytes.begin() + pool_range.end, bytes.end());
+
+    if (header.entry_point >= instructions.size()) {
+        Log->error("Entry point index out of bounds.");
+        return false;
+    }
+    entry_point = header.entry_point;
 
     return true;
 }
