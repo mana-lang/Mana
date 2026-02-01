@@ -29,13 +29,6 @@ void BytecodeGenerator::ObtainSemanticAnalysisInfo(const sigil::SemanticAnalyzer
 }
 
 void BytecodeGenerator::Visit(const Artifact& artifact) {
-    // for (const auto& statement : artifact.GetChildren()) {
-    //     statement->Accept(*this);
-    //
-    //     // prevent dangling register references
-    //     ClearRegBuffer();
-    // }
-
     for (const auto& decl : artifact.GetChildren()) {
         decl->Accept(*this);
     }
@@ -59,9 +52,19 @@ void BytecodeGenerator::Visit(const FunctionDeclaration& node) {
     const auto& params = node.GetParameters();
     const auto& body   = node.GetBody();
 
+    functions[name].address = bytecode.InstructionCount();
+
+    ++scope_depth;
+    for (const auto& param : params) {
+        const auto reg = AllocateRegister();
+        AddSymbol(param.name, reg);
+    }
+    --scope_depth;
+
     if (name == "Main") {
         bytecode.SetEntryPoint();
     }
+
     body->Accept(*this);
 }
 

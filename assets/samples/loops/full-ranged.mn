@@ -1,6 +1,4 @@
-fn Blah() {
-    data x = 1
-    data y = 2
+fn Blah(x, y: i64) {
     data z = 3
 }
 

@@ -6,6 +6,8 @@
 #include <mana/literals.hpp>
 #include <hexe/bytecode.hpp>
 
+#include <emhash/emhash8.hpp>
+
 
 namespace sigil {
 class SemanticAnalyzer;
@@ -40,12 +42,18 @@ class BytecodeGenerator final : public ast::Visitor {
         std::vector<JumpInstruction> pending_breaks;
         std::vector<JumpInstruction> pending_skips;
     };
+ struct Function {
+        std::string_view return_type;
+        i64 address = -1;
+    };
 
-    using SymbolTable   = std::unordered_map<std::string_view, Symbol>;
-    using ConstantTable = std::unordered_map<u16, Constant>;
+    using SymbolTable   = emhash8::HashMap<std::string_view, Symbol>;
+    using ConstantTable = emhash8::HashMap<u16, Constant>;
+    using FunctionTable = emhash8::HashMap<std::string_view, Function>;
 
     SymbolTable symbols;
     ConstantTable constants;
+    FunctionTable functions;
 
     u16 total_registers;
     ScopeDepth scope_depth;
