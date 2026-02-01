@@ -41,6 +41,8 @@ struct Value {
 
     using LengthType = u32;
 
+    static constexpr auto SIZE = sizeof(Data) + sizeof(LengthType) + sizeof(PrimitiveType);
+
     Value(i64 i);
     Value(u64 u);
     Value(f64 f);

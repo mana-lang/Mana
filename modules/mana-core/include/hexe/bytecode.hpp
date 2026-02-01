@@ -128,7 +128,8 @@ public:
     }
 
 private:
-    Header DeserializeHeader(const std::vector<u8>& header_bytes);
+    MANA_NODISCARD Header DeserializeHeader(const std::vector<u8>& header_bytes);
+    MANA_NODISCARD u32 Checksum(const void* ptr, usize size) const;
 
     MANA_NODISCARD std::vector<u8> SerializeCode() const;
     MANA_NODISCARD std::vector<u8> SerializeConstants() const;

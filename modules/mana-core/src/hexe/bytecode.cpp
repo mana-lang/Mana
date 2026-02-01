@@ -155,7 +155,7 @@ Header ByteCode::CreateHeader(const std::vector<u8>& code) const {
         .entry_point   = 0xFFFFFFFFFFFFFFFF,
         .code_size     = instructions.size(),
         .constant_size = ConstantPoolBytesCount(),
-        .checksum      = CRC::Calculate(code.data(), code.size(), CRC::CRC_32()),
+        .checksum      = Checksum(code.data(), code.size()),
         .version_major = Header::VERSION_MAJOR,
         .version_minor = Header::VERSION_MINOR,
         .version_patch = Header::VERSION_PATCH,
@@ -190,7 +190,7 @@ u32 ByteCode::ConstantCount() const {
 
 bool Header::operator==(const Header& other) const {
     if (checksum != other.checksum) {
-        Log->error("Header checksum mismatch -- {} | Other: {}",
+        Log->error("",
                    checksum,
                    other.checksum
         );
@@ -217,22 +217,25 @@ bool Header::operator==(const Header& other) const {
 }
 
 Header ByteCode::DeserializeHeader(const std::vector<u8>& header_bytes) {
-    auto header = Header {};
-    i64 offset  = 0;
+    i64 offset = 0;
 
     const auto deserialize_header = [&header_bytes, &offset]<typename T>(T& value) {
-        std::array<u8, sizeof(T)> bc_array {};
+        std::array<u8, sizeof(T)> field_bytes {};
         const i64 target = sizeof(value) + offset;
-        for (i64 up = offset, down = bc_array.size() - 1;
+        for (i64 up = offset, down = field_bytes.size() - 1;
              up < target;
              ++up, --down
         ) {
-            bc_array[down] = header_bytes[up];
+            field_bytes[down] = header_bytes[up];
         }
-        value  = std::bit_cast<T>(bc_array);
+
+        value  = std::bit_cast<T>(field_bytes);
         offset += sizeof(value);
     };
 
+    auto header = Header {};
+
+    // if the magic number is off, there's no point deserializing the rest
     deserialize_header(header.magic);
     if (header.magic != Header::MAGIC) {
         Log->error("Header corrupted.");
@@ -268,6 +271,10 @@ Header ByteCode::DeserializeHeader(const std::vector<u8>& header_bytes) {
     return header;
 }
 
+u32 ByteCode::Checksum(const void* ptr, usize size) const {
+    return CRC::Calculate(ptr, size, CRC::CRC_32());
+}
+
 bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
     if (bytes.empty()) {
         Log->error("Attempted to deserialize empty sequence.");
@@ -277,13 +284,25 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
     constant_pool.clear();
     instructions.clear();
 
-    const auto control_header = CreateHeader(bytes);
-
+    // validate header
     const auto header = DeserializeHeader({bytes.begin(), bytes.begin() + sizeof(Header)});
     if (header.magic == HEADER_DESERIALIZE_ERROR) {
         Log->error("Failed to deserialize Hexe header.");
         return false;
     }
+
+    const auto control_checksum = Checksum(bytes.data() + sizeof(Header),
+                                           bytes.size() - sizeof(Header)
+    );
+    if (control_checksum != header.checksum) {
+        Log->error("Checksum mismatch -- {} | Expected: {}", control_checksum, header.checksum);
+        Log->critical("Hexe bytecode file was likely corrupted.");
+        return false;
+    }
+
+    // actual deserialization section
+    instructions.reserve(header.code_size);
+    constant_pool.reserve(header.constant_size / Value::SIZE);
 
     const IndexRange pool_range {
         sizeof(Header),
@@ -293,6 +312,7 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
     std::array<u8, sizeof(Value::Data)> value_bytes {};
     std::array<u8, sizeof(Value::LengthType)> length_bytes {};
 
+    // constant pool first
     for (i64 offset = pool_range.start; offset < pool_range.end;) {
         const auto type = static_cast<PrimitiveType>(bytes[offset]);
 
@@ -301,7 +321,8 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
             length_bytes[i] = bytes[i + offset];
         }
         const auto length = std::bit_cast<Value::LengthType>(length_bytes);
-        offset            += sizeof(Value::LengthType);
+
+        offset += sizeof(Value::LengthType);
 
         auto value = Value {type, length};
         for (u32 i = 0; i < length; ++i) {
@@ -320,9 +341,10 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
 }
 
 void ByteCode::CheckInstructionSize() const {
+    /// TODO: ideally we handle this in such a way that we don't need to crash
+    /// also i hate exceptions
+    /// but also, there's zero chance this should ever happen
     if (instructions.size() >= BYTECODE_INSTRUCTION_MAX) {
-        /// TODO: ideally we handle this in such a way that we don't need to crash
-        /// also i hate exceptions
         throw std::runtime_error("Bytecode instruction limit exceeded");
     }
 }
