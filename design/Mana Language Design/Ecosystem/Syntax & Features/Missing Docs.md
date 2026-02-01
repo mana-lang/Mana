@@ -53,7 +53,7 @@ What the exact definition of "iterator" is in Mana remains to be seen. I know th
 
 
 ##### Type conversions
-This one is thankfully (hopefully) not that complex. It is simply on hold until the type system is solid. For the time being, native conversions are automatically done between integral primitives.
+This one is thankfully (hopefully) not that complex. It is simply on hold until the type system is solid. For the time being, native conversions are automatically done between integral primitives. The syntax will likely look like `TypeName(x)`, e.g. `i32(foo)`
 
 
 ##### Type Aliasing
