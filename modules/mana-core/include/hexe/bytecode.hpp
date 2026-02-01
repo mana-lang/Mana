@@ -21,7 +21,7 @@ struct IndexRange {
     IndexRange() = delete;
 };
 
-static constexpr auto BYTECODE_INSTRUCTION_MAX = std::numeric_limits<i32>::max();
+static constexpr auto BYTECODE_INSTRUCTION_MAX = std::numeric_limits<i64>::max();
 static constexpr auto BYTECODE_CONSTANT_MAX    = std::numeric_limits<u16>::max();
 
 
@@ -29,26 +29,29 @@ using namespace fmt::literals;
 
 // @formatter:off
 class Header {
+    friend class ByteCode;
+
     static constexpr u64 MAGIC = 0x45584548414e414d; // do not ever change this
 
     static constexpr u8 VERSION_MAJOR  = 0;
     static constexpr u8 VERSION_MINOR  = 1;
     static constexpr u16 VERSION_PATCH = 0;
+
+
 public:
-    u64 magic;            // fixed value
-    u32 checksum;         // CRC32 of everything after header
+    u64 magic;             // fixed value
 
-    u32 entry_point;      // byte offset to entry function (Main)
+    u64 entry_point;       // byte offset to entry function (Main)
+    u64 code_size;         // size of instruction section in bytes
+    u32 constant_size;     // size of constant pool in bytes
 
-    u32 code_size;        // size of instruction section in bytes
-    u16 constant_size;    // size of constant pool in bytes
+    u32 checksum;          // CRC32 of everything after header
 
-    u8 version_major;     // bytecode format version
+    u8 version_major;      // bytecode format version
     u8 version_minor;
     u16 version_patch;
 
-    u16 PADDING_COMPAT;   // 6 bytes of padding reserved for forward compatibility
-    u32 PADDING_COMPAT_;
+    u8 PADDING_COMPAT_[28]; // extra space reserved for forward compatibility
 
     static constexpr std::string Version = fmt::format("{}.{}.{}"_cf,
                                                    VERSION_MAJOR,
@@ -59,10 +62,13 @@ public:
 // @formatter:on
 
 class ByteCode {
+    // Header header;
     std::vector<u8> instructions;
     std::vector<Value> constant_pool;
 
 public:
+    ByteCode();
+
     // returns opcode's index
     i64 Write(Op opcode);
 
@@ -84,22 +90,20 @@ public:
 
     MANA_NODISCARD const std::vector<Value>& Constants() const;
 
-    // serializes Hex bytecode to a vector of unsigned char (bytes)
-    // for now, the sequence is:
-    // - constant pool size in bytes (u64) -> 8
-    // - constant pool
-    // --- where (size in bytes) elem:
-    // ----- (1) type
-    // ----- (4) length
-    // ----- (8 * length) value(s)
-    // - instructions (u16)
-    // ---- must keep in mind Push instructions jump to 2-byte indices
-    // ---- constant pool has a max size of 65535 (u16-max)
+    // serializes Hex bytecode to a vector of unsigned char (bytes) in the Hexe format
+    // the sequence is:
+    // - Hexe Header (64 bytes)
+    // - Constant Pool (size specified by Hexe Header)
+    // - Instructions (2 bytes each, total specified by Hexe Header)
     MANA_NODISCARD std::vector<u8> Serialize() const;
+    MANA_NODISCARD std::vector<u8> SerializeCode() const;
     MANA_NODISCARD std::vector<u8> SerializeConstants() const;
+    MANA_NODISCARD std::vector<u8> SerializeHeader(const std::vector<u8>& code) const;
 
-    MANA_NODISCARD u64 ConstantPoolBytesCount() const;
-    MANA_NODISCARD u64 ConstantCount() const;
+    MANA_NODISCARD Header CreateHeader(const std::vector<u8>& code) const;
+
+    MANA_NODISCARD u32 ConstantPoolBytesCount() const;
+    MANA_NODISCARD u32 ConstantCount() const;
 
     // this function assumes correct input
     bool Deserialize(const std::vector<u8>& bytes);

@@ -1,5 +1,7 @@
 #include <hexe/bytecode.hpp>
 
+#include <crc/CRC.h>
+
 #include <stdexcept>
 
 namespace hexe {
@@ -10,6 +12,8 @@ IndexRange::IndexRange(const i64 init_offset, const i64 range)
         throw std::runtime_error("IndexRange was out of bounds");
     }
 }
+
+ByteCode::ByteCode() {}
 
 i64 ByteCode::Write(Op opcode) {
     instructions.push_back(static_cast<u8>(opcode));
@@ -63,14 +67,27 @@ const std::vector<Value>& ByteCode::Constants() const {
 
 std::vector<u8> ByteCode::Serialize() const {
     if (instructions.empty() && constant_pool.empty()) {
-        return {};
+        throw std::runtime_error("Attempted to serialize with no bytecode available");
     }
 
-    std::vector<u8> out = SerializeConstants();
+    const auto code = SerializeCode();
 
-    out.insert(out.end(), instructions.begin(), instructions.end());
+    std::vector<u8> hexecutable = SerializeHeader(code);
+    hexecutable.reserve(code.size());
 
-    return out;
+    hexecutable.insert(hexecutable.end(), code.begin(), code.end());
+
+    return hexecutable;
+}
+
+std::vector<u8> ByteCode::SerializeCode() const {
+    const auto const_bytes = SerializeConstants();
+    const std::vector inst_bytes(instructions.begin(), instructions.end());
+
+    std::vector<u8> code = const_bytes;
+    code.insert(code.end(), inst_bytes.begin(), inst_bytes.end());
+
+    return code;
 }
 
 std::vector<u8> ByteCode::SerializeConstants() const {
@@ -80,6 +97,7 @@ std::vector<u8> ByteCode::SerializeConstants() const {
 
     // serialize all values, including array indices
     const u64 constant_bytes_count = ConstantPoolBytesCount();
+    out.reserve(constant_bytes_count);
     for (i64 i = 0; i < sizeof(constant_bytes_count); ++i) {
         out.push_back((constant_bytes_count >> i * 8) & 0xFF);
     }
@@ -104,8 +122,55 @@ std::vector<u8> ByteCode::SerializeConstants() const {
     return out;
 }
 
-u64 ByteCode::ConstantPoolBytesCount() const {
-    u64 out = 0;
+std::vector<u8> ByteCode::SerializeHeader(const std::vector<u8>& code) const {
+    const Header header = CreateHeader(code);
+
+    std::vector<u8> header_bytes;
+    header_bytes.reserve(sizeof(Header));
+
+    // little endian, so we have to do it like this
+    const auto serialize = [&header_bytes, &header]([[maybe_unused]] const auto& value) {
+        const i64 size = header_bytes.size();
+        for (i64 i = sizeof(value) + size - 1;
+             i >= size; --i) {
+            // treat header as array, offset into it byte by byte
+            header_bytes.push_back((reinterpret_cast<const u8*>(&header)[i]) & 0xFF);
+        }
+    };
+
+    serialize(header.magic);
+    serialize(header.entry_point);
+    serialize(header.code_size);
+    serialize(header.constant_size);
+    serialize(header.checksum);
+    serialize(header.version_major);
+    serialize(header.version_minor);
+    serialize(header.version_patch);
+    serialize(header.PADDING_COMPAT_);
+
+    return header_bytes;
+}
+
+Header ByteCode::CreateHeader(const std::vector<u8>& code) const {
+    Header header {
+        .magic         = Header::MAGIC,
+        .entry_point   = 0xFFFFFFFFFFFFFFFF,
+        .code_size     = instructions.size(),
+        .constant_size = ConstantPoolBytesCount(),
+        .checksum      = CRC::Calculate(code.data(), code.size(), CRC::CRC_32()),
+        .version_major = Header::VERSION_MAJOR,
+        .version_minor = Header::VERSION_MINOR,
+        .version_patch = Header::VERSION_PATCH,
+    };
+
+    // padding should be all 1's, safer than uninitialized
+    std::memset(header.PADDING_COMPAT_, 0xFF, sizeof(header.PADDING_COMPAT_));
+
+    return header;
+}
+
+u32 ByteCode::ConstantPoolBytesCount() const {
+    u32 out = 0;
 
     for (const auto& value : constant_pool) {
         out += value.length * sizeof(Value::Data); // num elements
@@ -117,8 +182,8 @@ u64 ByteCode::ConstantPoolBytesCount() const {
 
 // TODO: I think this is not right lol
 // unfortunately, we need to figure out arrays in Hex before we can address this
-u64 ByteCode::ConstantCount() const {
-    u64 out = 0;
+u32 ByteCode::ConstantCount() const {
+    u32 out = 0;
     for (const auto& value : constant_pool) {
         out += value.length;
     }
