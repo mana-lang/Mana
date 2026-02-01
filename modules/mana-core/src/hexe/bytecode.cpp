@@ -125,14 +125,13 @@ std::vector<u8> ByteCode::SerializeHeader(const std::vector<u8>& code) const {
 
     std::vector<u8> header_bytes;
     header_bytes.reserve(sizeof(Header));
-
-    // little endian, so we have to do it like this
     const auto serialize = [&header_bytes, &header]([[maybe_unused]] const auto& value) {
         const i64 size = header_bytes.size();
+
+        // treat header as byte array so we can iterate through it with proper endianness
         for (i64 i = sizeof(value) + size - 1;
              i >= size; --i) {
-            // treat header as array, offset into it byte by byte
-            header_bytes.push_back((reinterpret_cast<const u8*>(&header)[i]) & 0xFF);
+            header_bytes.push_back(reinterpret_cast<const u8*>(&header)[i]);
         }
     };
 
@@ -186,34 +185,6 @@ u32 ByteCode::ConstantCount() const {
         out += value.length;
     }
     return out;
-}
-
-bool Header::operator==(const Header& other) const {
-    if (checksum != other.checksum) {
-        Log->error("",
-                   checksum,
-                   other.checksum
-        );
-        return false;
-    }
-
-    if (code_size != other.code_size) {
-        Log->error("Bytecode size mismatch -- {} | Other: {}",
-                   code_size,
-                   other.code_size
-        );
-        return false;
-    }
-
-    if (entry_point != other.entry_point) {
-        Log->error("Bytecode entry point mismatch -- {} | Other: {}",
-                   entry_point,
-                   other.entry_point
-        );
-        return false;
-    }
-
-    return true;
 }
 
 Header ByteCode::DeserializeHeader(const std::vector<u8>& header_bytes) {
