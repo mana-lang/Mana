@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../literals.hpp"
+#include <mana/literals.hpp>
 
-namespace mana::vm {
-using namespace literals;
+namespace hexe {
+using namespace mana::literals;
 
 constexpr u8 BASE_REGISTERS = 128;
 constexpr u8 CJMP_OP_BYTES  = 5;
@@ -36,4 +36,4 @@ enum class Op : u8 {
     JumpWhenTrue,  // Op Reg Offset   -> if Reg { ip += Offset }
     JumpWhenFalse, // etc.
 };
-} // namespace mana::vm
+} // namespace mana::hexe

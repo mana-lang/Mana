@@ -3,6 +3,7 @@
 #include <sigil/core/logger.hpp>
 
 #include <magic_enum/magic_enum.hpp>
+#include <spdlog/sinks/basic_file_sink.h>
 
 #include <cctype>
 #include <fstream>

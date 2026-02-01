@@ -1,13 +1,14 @@
 #pragma once
 
-#include <mana/vm/primitive-type.hpp>
+#include <hexe/primitive-type.hpp>
 #include <mana/literals.hpp>
 
 #include <array>
 #include <vector>
 
-namespace mana::vm {
-using namespace literals;
+namespace hexe {
+using namespace mana;
+using namespace mana::literals;
 
 inline PrimitiveType GetManaTypeFrom(i64) {
     return Int64;
@@ -39,6 +40,8 @@ struct Value {
     };
 
     using LengthType = u32;
+
+    static constexpr auto SIZE = sizeof(Data) + sizeof(LengthType) + sizeof(PrimitiveType);
 
     Value(i64 i);
     Value(u64 u);
@@ -184,4 +187,4 @@ private:
         BDispatchB,
     };
 };
-} // namespace mana::vm
+} // namespace hexe

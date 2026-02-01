@@ -48,6 +48,14 @@ ml::i32 SemanticAnalyzer::IssueCount() const {
     return issue_counter;
 }
 
+const SymbolTable& SemanticAnalyzer::Globals() const {
+    return globals;
+}
+
+const TypeTable& SemanticAnalyzer::Types() const {
+    return types;
+}
+
 void SemanticAnalyzer::EnterScope() {
     ++current_scope;
 }
@@ -104,6 +112,7 @@ void SemanticAnalyzer::Visit(const Scope& node) {
     }
     ExitScope();
 }
+
 
 void SemanticAnalyzer::Visit(const FunctionDeclaration& node) {
     const auto function_name = node.GetName();
@@ -350,15 +359,15 @@ void SemanticAnalyzer::RegisterPrimitives() {
     types[PrimitiveName(None)] = TypeInfo {TypeSize::None};
 }
 
-SemanticAnalyzer::FunctionTable& SemanticAnalyzer::GetFnTable() {
+FunctionTable& SemanticAnalyzer::GetFnTable() {
     return types[PrimitiveName(Fn)].functions;
 }
 
-const SemanticAnalyzer::FunctionTable& SemanticAnalyzer::GetFnTable() const {
+const FunctionTable& SemanticAnalyzer::GetFnTable() const {
     return types.at(PrimitiveName(Fn)).functions;
 }
 
-SemanticAnalyzer::Function& SemanticAnalyzer::EnterFunction(std::string_view name) {
+Function& SemanticAnalyzer::EnterFunction(std::string_view name) {
     function_stack.push_back(name);
     auto& new_fn = GetFnTable()[name];
 
@@ -372,11 +381,11 @@ std::string_view SemanticAnalyzer::CurrentFunctionName() const {
     return function_stack.back();
 }
 
-SemanticAnalyzer::Function& SemanticAnalyzer::CurrentFunction() {
+Function& SemanticAnalyzer::CurrentFunction() {
     return GetFnTable()[CurrentFunctionName()];
 }
 
-const SemanticAnalyzer::Function& SemanticAnalyzer::CurrentFunction() const {
+const Function& SemanticAnalyzer::CurrentFunction() const {
     return GetFnTable().at(CurrentFunctionName());
 }
 
@@ -425,7 +434,7 @@ void SemanticAnalyzer::AddSymbol(std::string_view name, std::string_view type, b
     locals[name] = {type, current_scope, mutability};
 }
 
-const SemanticAnalyzer::Symbol* SemanticAnalyzer::GetSymbol(std::string_view name) const {
+const Symbol* SemanticAnalyzer::GetSymbol(std::string_view name) const {
     if (globals.contains(name)) {
         return &globals.at(name);
     }

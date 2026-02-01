@@ -7,7 +7,7 @@
 #include <sigil/ast/visitor.hpp>
 
 #include <mana/literals.hpp>
-#include <mana/vm/primitive-type.hpp>
+#include <hexe/primitive-type.hpp>
 
 #include <memory>
 #include <vector>
@@ -351,13 +351,13 @@ public:
 
 class ArrayLiteral final : public Node {
     std::vector<NodePtr> values;
-    mana::PrimitiveType type;
+    hexe::PrimitiveType type;
 
 public:
     explicit ArrayLiteral(const ParseNode& node);
 
     SIGIL_NODISCARD const std::vector<NodePtr>& GetValues() const;
-    SIGIL_NODISCARD mana::PrimitiveType GetType() const;
+    SIGIL_NODISCARD hexe::PrimitiveType GetType() const;
 
     void Accept(Visitor& visitor) const override;
 

@@ -1,10 +1,17 @@
 #include <hex/core/disassembly.hpp>
 #include <hex/core/logger.hpp>
 
+#include <hexe/bytecode.hpp>
+#include <hexe/primitive-type.hpp>
+
+#include <mana/literals.hpp>
+
+
 #include <magic_enum/magic_enum.hpp>
 
 namespace hex {
-using namespace mana::vm;
+using namespace hexe;
+using namespace mana::literals;
 
 /**
  * @brief Reads a 16-bit little-endian payload from the bytecode.
@@ -53,19 +60,19 @@ void PrintBytecode(const ByteCode& s) {
             };
 
             switch (val.GetType()) {
-            case mana::PrimitiveType::Float64:
+            case Float64:
                 log_val(val.AsFloat());
                 break;
-            case mana::PrimitiveType::Int64:
+            case Int64:
                 log_val(val.AsInt());
                 break;
-            case mana::PrimitiveType::Uint64:
+            case Uint64:
                 log_val(val.AsUint());
                 break;
-            case mana::PrimitiveType::Bool:
+            case Bool:
                 log_val(val.AsBool());
                 break;
-            case mana::PrimitiveType::None:
+            case None:
                 log_val("none");
                 break;
             default:

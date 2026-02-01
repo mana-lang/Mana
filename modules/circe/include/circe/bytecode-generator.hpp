@@ -4,17 +4,22 @@
 #include <sigil/ast/visitor.hpp>
 
 #include <mana/literals.hpp>
-#include <mana/vm/bytecode.hpp>
+#include <hexe/bytecode.hpp>
+
+
+namespace sigil {
+class SemanticAnalyzer;
+}
 
 namespace circe {
-namespace ml = mana::literals;
-namespace mv = mana::vm;
+using namespace mana::literals;
 namespace ast = sigil::ast;
 
-using Register = ml::u16;
+using Register = u16;
+
 
 class BytecodeGenerator final : public ast::Visitor {
-    using ScopeDepth = ml::u8;
+    using ScopeDepth = u8;
 
     struct Symbol {
         Register register_index;
@@ -27,7 +32,7 @@ class BytecodeGenerator final : public ast::Visitor {
     };
 
     struct JumpInstruction {
-        ml::i64 jump_index;
+        i64 jump_index;
         bool is_conditional;
     };
 
@@ -37,12 +42,12 @@ class BytecodeGenerator final : public ast::Visitor {
     };
 
     using SymbolTable   = std::unordered_map<std::string_view, Symbol>;
-    using ConstantTable = std::unordered_map<ml::u16, Constant>;
+    using ConstantTable = std::unordered_map<u16, Constant>;
 
     SymbolTable symbols;
     ConstantTable constants;
 
-    ml::u16 total_registers;
+    u16 total_registers;
     ScopeDepth scope_depth;
 
     std::vector<Register> reg_buffer;
@@ -50,12 +55,14 @@ class BytecodeGenerator final : public ast::Visitor {
 
     std::vector<LoopContext> loop_stack;
 
-    mv::ByteCode bytecode;
+    hexe::ByteCode bytecode;
 
 public:
     BytecodeGenerator();
 
-    CIRCE_NODISCARD mv::ByteCode Bytecode() const;
+    CIRCE_NODISCARD hexe::ByteCode Bytecode() const;
+
+    void ObtainSemanticAnalysisInfo(const sigil::SemanticAnalyzer& analyzer);
 
     void Visit(const ast::Artifact& artifact) override;
     void Visit(const ast::Scope& node) override;
@@ -85,20 +92,20 @@ public:
     void Visit(const ast::BinaryExpr& node) override;
     void Visit(const ast::ArrayLiteral& array) override;
 
-    void Visit(const ast::Literal<ml::f64>& literal) override;
-    void Visit(const ast::Literal<ml::i64>& literal) override;
+    void Visit(const ast::Literal<f64>& literal) override;
+    void Visit(const ast::Literal<i64>& literal) override;
     void Visit(const ast::Literal<void>& node) override;
     void Visit(const ast::Literal<bool>& literal) override;
 
 private:
-    bool IsConditionalJumpOp(mv::Op op) const;
-    void JumpBackwards(ml::i64 target_index);
-    void JumpBackwardsConditional(mv::Op op, Register condition_register, ml::i64 target_index);
-    void PatchJumpForward(ml::i64 target_index);
-    void PatchJumpBackward(ml::i64 target_index);
-    void PatchJumpForwardConditional(ml::i64 target_index);
-    void PatchJumpBackwardConditional(ml::i64 target_index);
-    Register CalcJump(ml::i64 target_index, bool is_forward, bool is_conditional) const;
+    bool IsConditionalJumpOp(hexe::Op op) const;
+    void JumpBackwards(i64 target_index);
+    void JumpBackwardsConditional(hexe::Op op, Register condition_register, i64 target_index);
+    void PatchJumpForward(i64 target_index);
+    void PatchJumpBackward(i64 target_index);
+    void PatchJumpForwardConditional(i64 target_index);
+    void PatchJumpBackwardConditional(i64 target_index);
+    Register CalcJump(i64 target_index, bool is_forward, bool is_conditional) const;
 
     Register AllocateRegister();
     void FreeRegister(Register reg);
@@ -133,7 +140,7 @@ private:
     void HandleLoopControl(bool is_break, const ast::NodePtr& condition);
     void HandleDeclaration(const ast::Initializer& node, bool is_mutable);
 
-    template <mv::ValuePrimitive VP>
+    template <hexe::ValuePrimitive VP>
     void CreateLiteral(const ast::Literal<VP>& literal) {
         const auto index = bytecode.AddConstant(literal.Get());
         if (constants.contains(index)) {
@@ -141,7 +148,7 @@ private:
             return;
         }
         const auto reg = AllocateRegister();
-        bytecode.Write(mv::Op::LoadConstant, {reg, index});
+        bytecode.Write(hexe::Op::LoadConstant, {reg, index});
 
         constants[index] = {reg, scope_depth};
 

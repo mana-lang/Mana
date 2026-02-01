@@ -3,7 +3,7 @@
 #include <hex/core/logger.hpp>
 #include <hex/hex.hpp>
 
-#include <mana/vm/bytecode.hpp>
+#include <hexe/bytecode.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
@@ -11,16 +11,19 @@
 #include <fstream>
 
 using namespace hex;
+using namespace mana;
 
-void Execute(const std::filesystem::path& exe_path) {
+void Execute(const std::filesystem::path& hexe_path) {
     namespace chrono = std::chrono;
     using namespace std::chrono_literals;
 
+    Log->debug("Hexe Bytecode Format Version: {}\n", hexe::Header::Version);
+
     const auto start_file = chrono::high_resolution_clock::now();
 
-    std::ifstream in_file(exe_path, std::ios::binary);
+    std::ifstream in_file(hexe_path, std::ios::binary);
     if (not in_file) {
-        Log->error("Failed to read file '{}'", exe_path.c_str());
+        Log->error("Failed to read file '{}'", hexe_path.c_str());
         return;
     }
     in_file.seekg(0, std::ios::end);
@@ -31,13 +34,13 @@ void Execute(const std::filesystem::path& exe_path) {
     in_file.read(reinterpret_cast<char*>(raw.data()), file_size);
 
     const auto start_deser = chrono::high_resolution_clock::now();
-    mana::vm::ByteCode in_slice;
-    in_slice.Deserialize(raw);
+    hexe::ByteCode bytecode;
+    bytecode.Deserialize(raw);
     const auto end_deser = chrono::high_resolution_clock::now();
 
-    Log->debug("--- Reading executable '{}' ---", exe_path.filename().c_str());
+    Log->debug("--- Reading executable '{}' ---", hexe_path.filename().c_str());
     Log->debug("");
-    PrintBytecode(in_slice);
+    PrintBytecode(bytecode);
     Log->debug("");
 
     Log->debug("Executing...\n");
@@ -45,7 +48,7 @@ void Execute(const std::filesystem::path& exe_path) {
     Log->set_pattern("%v");
 
     const auto start_interp  = chrono::high_resolution_clock::now();
-    const auto interp_result = vm.Execute(&in_slice);
+    const auto interp_result = vm.Execute(&bytecode);
     const auto end_interp    = chrono::high_resolution_clock::now();
 
     const auto result = magic_enum::enum_name(interp_result);

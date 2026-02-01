@@ -2,8 +2,10 @@
 
 #include <mana/literals.hpp>
 
-namespace mana {
-enum PrimitiveType : literals::u8 {
+namespace hexe {
+using namespace mana::literals;
+
+enum PrimitiveType : u8 {
     Int64,
     Uint64,
     Float64,
@@ -16,8 +18,6 @@ enum PrimitiveType : literals::u8 {
 
 template <typename F>
 auto DispatchPrimitive(PrimitiveType type, F&& f) {
-    using namespace literals;
-
     switch (type) {
     case Int64:
         return f.template operator()<i64>();
@@ -31,4 +31,4 @@ auto DispatchPrimitive(PrimitiveType type, F&& f) {
         return f.template operator()<void>();
     }
 }
-} // namespace mana
+} // namespace hexe

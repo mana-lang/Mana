@@ -1,9 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include <mana/vm/bytecode.hpp>
-#include <mana/vm/value.hpp>
+#include <mana/hexe/bytecode.hpp>
+#include <mana/hexe/value.hpp>
 
-using namespace mana::vm;
+using namespace mana::hexe;
 using namespace mana::literals;
 
 TEST_CASE("Slices") {
