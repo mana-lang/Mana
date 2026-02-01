@@ -96,11 +96,6 @@ public:
     // - Constant Pool (size specified by Hexe Header)
     // - Instructions (2 bytes each, total specified by Hexe Header)
     MANA_NODISCARD std::vector<u8> Serialize() const;
-    MANA_NODISCARD std::vector<u8> SerializeCode() const;
-    MANA_NODISCARD std::vector<u8> SerializeConstants() const;
-    MANA_NODISCARD std::vector<u8> SerializeHeader(const std::vector<u8>& code) const;
-
-    MANA_NODISCARD Header CreateHeader(const std::vector<u8>& code) const;
 
     MANA_NODISCARD u32 ConstantPoolBytesCount() const;
     MANA_NODISCARD u32 ConstantCount() const;
@@ -131,6 +126,12 @@ public:
     }
 
 private:
+    MANA_NODISCARD std::vector<u8> SerializeCode() const;
+    MANA_NODISCARD std::vector<u8> SerializeConstants() const;
+    MANA_NODISCARD std::vector<u8> SerializeHeader(const std::vector<u8>& code) const;
+
+    MANA_NODISCARD Header CreateHeader(const std::vector<u8>& code) const;
+
     void CheckInstructionSize() const;
     void CheckConstantPoolSize() const;
 };
