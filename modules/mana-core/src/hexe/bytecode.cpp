@@ -17,8 +17,6 @@ IndexRange::IndexRange(const i64 init_offset, const i64 range)
     }
 }
 
-ByteCode::ByteCode() {}
-
 i64 ByteCode::Write(Op opcode) {
     instructions.push_back(static_cast<u8>(opcode));
 

@@ -74,8 +74,6 @@ class ByteCode {
     i64 entry_point;
 
 public:
-    ByteCode();
-
     // returns opcode's index
     i64 Write(Op opcode);
 
@@ -95,7 +93,6 @@ public:
     MANA_NODISCARD i64 BackIndex() const;
 
     MANA_NODISCARD const std::vector<u8>& Instructions() const;
-    MANA_NODISCARD std::vector<u8>& Instructions();
 
     MANA_NODISCARD i64 InstructionCount() const;
 
@@ -146,10 +143,11 @@ private:
 
     MANA_NODISCARD Header CreateHeader(const std::vector<u8>& code) const;
 
-    friend class hex::Hex;
-    MANA_NODISCARD u8* EntryPoint();
-
     void CheckInstructionSize() const;
     void CheckConstantPoolSize() const;
+
+    friend class hex::Hex;
+    MANA_NODISCARD u8* EntryPoint();
+    MANA_NODISCARD std::vector<u8>& Instructions();
 };
 } // namespace hexe
