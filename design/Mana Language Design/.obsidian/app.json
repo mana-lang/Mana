@@ -6,11 +6,11 @@
   "strictLineBreaks": false,
   "showIndentGuide": false,
   "pdfExportSettings": {
-    "includeName": true,
-    "pageSize": "Letter",
+    "includeName": false,
+    "pageSize": "Tabloid",
     "landscape": false,
     "margin": "0",
-    "downscalePercent": 100
+    "downscalePercent": 50
   },
   "showInlineTitle": false,
   "alwaysUpdateLinks": true,
