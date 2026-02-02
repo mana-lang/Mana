@@ -261,7 +261,7 @@ bool Parser::MatchedDeclaration(ParseNode& node) {
 }
 
 // stmt = decl | if_block | loop
-//      | (ret_stmt | loop_control | assign | expr) TERMINATOR
+//      | (return | loop_control | assign | expr) TERMINATOR
 bool Parser::MatchedStatement(ParseNode& node) {
     // these statements aren't terminated since they have a scope, so we exit early on match
     if (MatchedDeclaration(node)
@@ -648,6 +648,35 @@ bool Parser::MatchedReturn(ParseNode& node) {
     return true;
 }
 
+// invocation = ID '(' (expr (',' expr)*)? ')'
+bool Parser::MatchedInvocation(ParseNode& node) {
+    if (CurrentToken().type != TokenType::Identifier || PeekNextToken().type != TokenType::Op_ParenLeft) {
+        return false;
+    }
+
+    auto& invocation = node.NewBranch(Rule::Invocation);
+    AddCycledTokenTo(invocation); // id
+    SkipCurrentToken();           // '('
+
+    if (CurrentToken().type == TokenType::Op_ParenRight) {
+        SkipCurrentToken();
+        return true; // simple invocation without params
+    }
+
+    while (MatchedExpression(invocation)) {
+        if (CurrentToken().type != TokenType::Op_Comma) {
+            break;
+        }
+        SkipCurrentToken();
+    }
+
+    if (Expect(CurrentToken().type == TokenType::Op_ParenRight, invocation, "Expected ')'")) {
+        SkipCurrentToken();
+    }
+
+    return true;
+}
+
 // data_decl = KW_MUT? KW_DATA ID (':' ID)? ('=' expr)?
 bool Parser::MatchedDataDeclaration(ParseNode& node) {
     const bool matched_keywords = CurrentToken().type == TokenType::KW_data
@@ -868,8 +897,12 @@ bool IsLiteral(const TokenType token) {
     }
 }
 
-// primary  = grouping | array_literal | literal | ID
+// primary  = invocation | grouping | array_literal | literal | ID
 bool Parser::MatchedPrimary(ParseNode& node) {
+    if (MatchedInvocation(node)) {
+        return true;
+    }
+
     if (MatchedGrouping(node)) {
         return true;
     }

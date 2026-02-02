@@ -12,8 +12,9 @@ static constexpr std::size_t BASE_REG_SIZE = 256;
 
 // payloads are little endian
 #define READ_PAYLOAD (static_cast<u16>(*ip | *(ip + 1) << 8))
-
 #define NEXT_PAYLOAD (ip += 2, (static_cast<u16>(*(ip - 2) | *(ip - 1) << 8)))
+
+#define CALL_TARGET (static_cast<u32>(*ip | *(ip + 1) << 8 | *(ip + 2) << 16 | *(ip + 3) << 24))
 #define REG(idx) registers[idx]
 
 Hex::Hex() {
@@ -21,9 +22,9 @@ Hex::Hex() {
 }
 
 InterpretResult Hex::Execute(ByteCode* bytecode) {
-    ip = bytecode->EntryPoint();
-
-    const auto* constants = bytecode->Constants().data();
+    ip                          = bytecode->EntryPoint();
+    auto* const code            = bytecode->Instructions().data();
+    const auto* const constants = bytecode->Constants().data();
 
     // this is for computed goto
     // it's important to note this list's order is rigid
@@ -50,6 +51,7 @@ InterpretResult Hex::Execute(ByteCode* bytecode) {
         &&jmp,
         &&jmp_true,
         &&jmp_false,
+        &&call,
     };
 
 #ifdef HEX_DEBUG
@@ -95,11 +97,8 @@ err:
     return InterpretResult::CompileError;
 
 ret: {
-        u16 reg = NEXT_PAYLOAD;
-#ifdef HEX_DEBUG
-        Log->debug("");
-        Log->debug("[ret: {} <- R{}]", REG(reg).AsFloat(), reg);
-#endif
+        ip = call_stack.back();
+        call_stack.pop_back();
 
         DISPATCH();
     }
@@ -281,6 +280,13 @@ jmp_false: {
 
         // this just inverts the output
         ip += dist * ((REG(reg).AsBool() - 1) * -1);
+
+        DISPATCH();
+    }
+call: {
+        const u32 target = CALL_TARGET;
+        call_stack.push_back(ip + 4);
+        ip = code + target;
 
         DISPATCH();
     }

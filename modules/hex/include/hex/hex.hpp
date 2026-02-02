@@ -15,6 +15,7 @@ enum class InterpretResult {
 class Hex {
     ml::u8* ip {nullptr};
 
+    std::vector<ml::u8*> call_stack;
     std::vector<hexe::Value> registers;
 
 public:

@@ -39,15 +39,16 @@ void PrintBytecode(const ByteCode& s) {
         switch (op) {
             using enum Op;
         case Halt:
+        case Return:
         case Err:
             Log->debug("{:04} | {}", offset, name);
             break;
 
-        case Return: {
-            const u16 reg = read();
-            Log->debug("{:04} | {} R{}", offset, name, reg);
-            break;
-        }
+        // case Return: {
+        //     // const u16 reg = read();
+        //     Log->debug("{:04} | {}", offset, name);
+        //     break;
+        // }
 
 
         case LoadConstant: {
@@ -122,6 +123,15 @@ void PrintBytecode(const ByteCode& s) {
             const i16 dist = static_cast<i16>(read());
             // Offset + Opcode (1) + Reg (2) + Destination (2)
             Log->debug("{:04} | {} R{} => {:04}", offset, name, reg, offset + 5 + dist);
+            break;
+        }
+
+        case Call: {
+            const u32 addr = static_cast<u32>(code[i + 1] | (code[i + 2] << 8) | (code[i + 3] << 16) | (
+                                                  code[i + 4] << 24));
+
+            Log->debug("{:04} | {} => {:08X}", offset, name, addr);
+            i += 4;
             break;
         }
 

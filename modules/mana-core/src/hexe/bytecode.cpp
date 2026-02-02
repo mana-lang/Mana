@@ -12,7 +12,7 @@ namespace hexe {
 IndexRange::IndexRange(const i64 init_offset, const i64 range)
     : start(init_offset),
       end(init_offset + range) {
-    if (range < init_offset) {
+    if (end < start) {
         throw std::runtime_error("IndexRange was out of bounds");
     }
 }
@@ -38,8 +38,20 @@ i64 ByteCode::Write(const Op opcode, const std::initializer_list<u16> payloads) 
     return index;
 }
 
-void ByteCode::SetEntryPoint() {
-    entry_point = instructions.size();
+i64 ByteCode::WriteCall(u32 payload) {
+    instructions.push_back(static_cast<u8>(Op::Call));
+
+    for (int i = 0; i < sizeof(u32); ++i) {
+        instructions.push_back(payload & 0xFF);
+        payload >>= 8;
+    }
+
+    CheckInstructionSize();
+    return instructions.size() - sizeof(u32);
+}
+
+void ByteCode::SetEntryPoint(i64 address) {
+    entry_point = address;
 }
 
 i64 ByteCode::EntryPointValue() const {
@@ -50,10 +62,22 @@ u8* ByteCode::EntryPoint() {
     return instructions.data() + entry_point;
 }
 
-// does not perform bounds checking
 void ByteCode::Patch(const i64 instruction_index, const u16 new_value, const u8 payload_offset) {
-    // add 1 to skip past instruction
+    // add 1 to skip past patched op instruction
     const i64 payload = 1 + instruction_index + payload_offset * 2;
+
+    if (payload + 1 >= instructions.size()) {
+        Log->critical("Internal Compiler Error");
+        Log->error(
+            "Attempted to patch instruction at nonexistent index {} "
+            "with payload requiring access to {}. Instruction size: {}",
+            instruction_index,
+            payload + 1,
+            instructions.size()
+        );
+
+        return;
+    }
 
     instructions[payload]     = new_value & 0xFF;
     instructions[payload + 1] = (new_value >> 8) & 0xFF;

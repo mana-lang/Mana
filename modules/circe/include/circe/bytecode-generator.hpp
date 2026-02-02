@@ -42,9 +42,10 @@ class BytecodeGenerator final : public ast::Visitor {
         std::vector<JumpInstruction> pending_breaks;
         std::vector<JumpInstruction> pending_skips;
     };
- struct Function {
+
+    struct Function {
         std::string_view return_type;
-        i64 address = -1;
+        u32 address = -1;
     };
 
     using SymbolTable   = emhash8::HashMap<std::string_view, Symbol>;
@@ -62,6 +63,7 @@ class BytecodeGenerator final : public ast::Visitor {
     std::vector<Register> free_regs;
 
     std::vector<LoopContext> loop_stack;
+    std::vector<std::string_view> function_stack;
 
     hexe::ByteCode bytecode;
 
@@ -83,6 +85,7 @@ public:
     void Visit(const ast::Assignment& node) override;
 
     void Visit(const ast::Return& node) override {}
+    void Visit(const ast::Invocation& node) override;
 
     void Visit(const ast::If& node) override;
 
@@ -108,6 +111,7 @@ public:
 private:
     bool IsConditionalJumpOp(hexe::Op op) const;
     void JumpBackwards(i64 target_index);
+    void JumpForward(i64 target_index);
     void JumpBackwardsConditional(hexe::Op op, Register condition_register, i64 target_index);
     void PatchJumpForward(i64 target_index);
     void PatchJumpBackward(i64 target_index);
@@ -146,7 +150,7 @@ private:
     void HandlePendingBreaks();
 
     void HandleLoopControl(bool is_break, const ast::NodePtr& condition);
-    void HandleDeclaration(const ast::Initializer& node, bool is_mutable);
+    void HandleDataBinding(const ast::Initializer& node, bool is_mutable);
 
     template <hexe::ValuePrimitive VP>
     void CreateLiteral(const ast::Literal<VP>& literal) {

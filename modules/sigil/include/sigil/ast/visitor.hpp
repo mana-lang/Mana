@@ -24,6 +24,7 @@ public:
     virtual void Visit(const class Assignment& node) = 0;
 
     virtual void Visit(const class Return& node) = 0;
+    virtual void Visit(const class Invocation& node) = 0;
 
     virtual void Visit(const class If& node) = 0;
 

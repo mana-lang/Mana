@@ -134,6 +134,26 @@ void FunctionDeclaration::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
+Invocation::Invocation(const ParseNode& node) {
+    identifier = FetchTokenText(node.tokens[0]);
+
+    for (const auto& arg : node.branches) {
+        arguments.emplace_back(CreateExpression(*arg));
+    }
+}
+
+std::string_view Invocation::GetIdentifier() const {
+    return identifier;
+}
+
+const std::vector<NodePtr>& Invocation::GetArguments() const {
+    return arguments;
+}
+
+void Invocation::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
 /// Binding
 Initializer::Initializer(const ParseNode& node)
     : initializer {nullptr} {
@@ -445,6 +465,9 @@ Scope::Scope(const ParseNode& node) {
         switch (stmt->rule) {
         case Return:
             AddStatement<class Return>(*stmt);
+            break;
+        case Invocation:
+            AddStatement<class Invocation>(*stmt);
             break;
         case If:
             AddStatement<class If>(*stmt);

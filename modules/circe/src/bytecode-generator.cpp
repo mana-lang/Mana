@@ -52,7 +52,8 @@ void BytecodeGenerator::Visit(const FunctionDeclaration& node) {
     const auto& params = node.GetParameters();
     const auto& body   = node.GetBody();
 
-    functions[name].address = bytecode.InstructionCount();
+    auto& fn   = functions[name];
+    fn.address = bytecode.InstructionCount();
 
     ++scope_depth;
     for (const auto& param : params) {
@@ -61,19 +62,23 @@ void BytecodeGenerator::Visit(const FunctionDeclaration& node) {
     }
     --scope_depth;
 
-    if (name == "Main") {
-        bytecode.SetEntryPoint();
-    }
-
+    function_stack.push_back(name);
     body->Accept(*this);
+    function_stack.pop_back();
+
+    if (sigil::IsEntryPoint(name)) {
+        bytecode.SetEntryPoint(fn.address);
+    } else {
+        bytecode.Write(Op::Return);
+    }
 }
 
 void BytecodeGenerator::Visit(const MutableDataDeclaration& node) {
-    HandleDeclaration(node, true);
+    HandleDataBinding(node, true);
 }
 
 void BytecodeGenerator::Visit(const DataDeclaration& node) {
-    HandleDeclaration(node, false);
+    HandleDataBinding(node, false);
 }
 
 void BytecodeGenerator::Visit(const Identifier& node) {
@@ -122,6 +127,22 @@ void BytecodeGenerator::Visit(const Assignment& node) {
     }
 
     FreeRegister(rhs);
+}
+
+void BytecodeGenerator::Visit(const Invocation& node) {
+    for (const auto& arg : node.GetArguments()) {
+        arg->Accept(*this);
+    }
+
+    const auto target = node.GetIdentifier();
+    const auto addr   = functions[target].address;
+
+    if (addr == bytecode.InstructionCount()) {
+        Log->error("Internal Compiler Error: Invocation jumps to call site '{}'", target);
+        return;
+    }
+
+    bytecode.WriteCall(addr);
 }
 
 void BytecodeGenerator::Visit(const If& node) {
@@ -497,6 +518,10 @@ void BytecodeGenerator::JumpBackwards(i64 target_index) {
     bytecode.Write(Op::Jump, {CalcJump(target_index, false, false)});
 }
 
+void BytecodeGenerator::JumpForward(i64 target_index) {
+    bytecode.Write(Op::Jump, {CalcJump(target_index, true, false)});
+}
+
 void BytecodeGenerator::JumpBackwardsConditional(const Op op, Register condition_register, i64 target_index) {
     if (not IsConditionalJumpOp(op)) {
         Log->error("Internal Compiler Error: JumpBackwardsConditional called on non-jump op '{}'",
@@ -761,7 +786,7 @@ void BytecodeGenerator::HandleLoopControl(bool is_break, const NodePtr& conditio
     buffer.emplace_back(jump_index, has_condition);
 }
 
-void BytecodeGenerator::HandleDeclaration(const Initializer& node, bool is_mutable) {
+void BytecodeGenerator::HandleDataBinding(const Initializer& node, bool is_mutable) {
     const auto name = node.GetName();
 
     Register datum;

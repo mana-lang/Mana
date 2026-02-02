@@ -1,6 +1,6 @@
 
 ##### List of Mana operators
-Not all of these operators may be overloaded.
+Not all of these operators may be specialized.
 
 - `!`
 	- Logical NOT
@@ -56,7 +56,7 @@ Not all of these operators may be overloaded.
 - `()`
 	- Parameter List
 		- `fn (a: i32, b: bool)`
-	- Invocation Argument List
+	- Invocation/Call
 		- `foo(a, b)`
 	- Parenthesized Expression (Grouping)
 		- `(a + b) / c`

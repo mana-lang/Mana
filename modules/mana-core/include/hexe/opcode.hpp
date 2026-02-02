@@ -35,5 +35,7 @@ enum class Op : u8 {
     Jump,          // Op Offset       -> Jump by Offset
     JumpWhenTrue,  // Op Reg Offset   -> if Reg { ip += Offset }
     JumpWhenFalse, // etc.
+
+    Call, // Op Addr(4 bytes) -> Jump to function at address
 };
 } // namespace mana::hexe

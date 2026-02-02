@@ -9,6 +9,11 @@
 namespace sigil {
 namespace ml = mana::literals;
 
+constexpr auto ENTRY_POINT = "Main";
+inline bool IsEntryPoint(const std::string_view name) {
+    return name == ENTRY_POINT;
+}
+
 enum class PrimitiveType : ml::u8 {
     I8, I16, I32, I64, Isize,
     U8, U16, U32, U64, Usize,

@@ -66,6 +66,19 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
+class Invocation final : public Node {
+    std::string_view identifier;
+    std::vector<NodePtr> arguments;
+
+public:
+    explicit Invocation(const ParseNode& node);
+
+    SIGIL_NODISCARD std::string_view GetIdentifier() const;
+    SIGIL_NODISCARD const std::vector<NodePtr>& GetArguments() const;
+
+    void Accept(Visitor& visitor) const override;
+};
+
 class Initializer : public Node {
     std::string_view name;
     std::string_view type;

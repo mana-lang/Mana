@@ -1,0 +1,11 @@
+fn Woah() {
+    data x = true
+}
+
+fn Main() {
+    data a = 95
+
+    Woah()
+
+    data x = 27.8
+}

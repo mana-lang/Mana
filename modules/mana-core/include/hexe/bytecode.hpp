@@ -80,8 +80,11 @@ public:
     // returns opcode's index
     i64 Write(Op opcode, std::initializer_list<u16> payloads);
 
+    // returns opcode's index
+    i64 WriteCall(u32 payload);
+
     // sets the program entry point to be the next instruction's index
-    void SetEntryPoint();
+    void SetEntryPoint(i64 address);
     MANA_NODISCARD i64 EntryPointValue() const;
 
     // Modifies a payload for the given opcode

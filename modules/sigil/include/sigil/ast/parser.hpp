@@ -96,6 +96,8 @@ private:
     bool MatchedParameterList(ParseNode& node);
     bool MatchedReturn(ParseNode& node);
 
+    bool MatchedInvocation(ParseNode& node);
+
     bool MatchedDataDeclaration(ParseNode& node);
     bool MatchedAssignment(ParseNode& node);
 

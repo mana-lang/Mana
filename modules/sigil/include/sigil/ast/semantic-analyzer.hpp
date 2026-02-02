@@ -103,6 +103,7 @@ public:
     void Visit(const ast::Assignment& node) override;
 
     void Visit(const ast::Return& node) override;
+    void Visit(const ast::Invocation& node) override;
 
     void Visit(const ast::If& node) override;
 

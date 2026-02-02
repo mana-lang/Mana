@@ -22,6 +22,8 @@ enum class Rule : ml::u8 {
 
     Statement,
 
+    Invocation,
+
     If,
     IfTail,
 

@@ -1,8 +1,8 @@
-#include <ranges>
-
 #include <sigil/ast/semantic-analyzer.hpp>
 #include <sigil/ast/keywords.hpp>
 #include <sigil/ast/syntax-tree.hpp>
+
+#include <ranges>
 
 namespace sigil {
 using namespace mana::literals;
@@ -10,11 +10,6 @@ using namespace ast;
 using enum PrimitiveType;
 
 constexpr auto TB_ERROR    = "_TYPEBUFFER_ERROR_";
-constexpr auto ENTRY_POINT = "Main";
-
-bool IsEntryPoint(std::string_view name) {
-    return name == ENTRY_POINT;
-}
 
 bool IsSignedIntegral(std::string_view type) {
     return type == PrimitiveName(I8)
@@ -210,6 +205,20 @@ void SemanticAnalyzer::Visit(const Return& node) {
                    type
         );
         ++issue_counter;
+    }
+}
+
+void SemanticAnalyzer::Visit(const Invocation& node) {
+    const auto& functions = GetFnTable();
+    const auto name       = node.GetIdentifier();
+
+    if (not functions.contains(name)) {
+        Log->error("Undefined identifier: No invocator exists with name '{}'", name);
+        ++issue_counter;
+    }
+
+    for (const auto& arg : node.GetArguments()) {
+        arg->Accept(*this);
     }
 }
 

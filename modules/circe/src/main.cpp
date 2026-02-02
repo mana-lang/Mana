@@ -78,7 +78,7 @@ int CompileFrom(const CompileSettings& compile_settings) {
                        issues,
                        issues > 1 ? "s" : ""
             );
-            return Exit(ExitCode::SemanticError);
+            return Exit(ExitCode::SyntaxError);
         }
 
         {

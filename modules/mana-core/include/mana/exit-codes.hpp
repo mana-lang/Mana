@@ -11,6 +11,7 @@ enum class ExitCode {
 
     LexerError,
     ParserError,
+    SyntaxError,
     SemanticError,
 
     OutputOpenError,
