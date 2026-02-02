@@ -19,7 +19,6 @@ namespace ast = sigil::ast;
 
 using Register = u16;
 
-
 class BytecodeGenerator final : public ast::Visitor {
     using ScopeDepth = u8;
 
@@ -159,6 +158,7 @@ private:
             reg_buffer.push_back(constants[index].register_index);
             return;
         }
+
         const auto reg = AllocateRegister();
         bytecode.Write(hexe::Op::LoadConstant, {reg, index});
 

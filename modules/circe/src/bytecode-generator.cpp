@@ -621,7 +621,6 @@ bool BytecodeGenerator::RegisterIsOwned(Register reg) {
     return false;
 }
 
-// TODO: investigate constant registers being overridden
 Register BytecodeGenerator::PopRegBuffer() {
     if (reg_buffer.empty()) {
         Log->error("Internal Compiler Error: Register stack underflow");
@@ -659,20 +658,20 @@ void BytecodeGenerator::ExitScope() {
 
     // constants can "go out of scope" too,
     // albeit for different reasons
-    std::vector<u16> deleted_constants;
-    deleted_constants.reserve(constants.size());
-
-    for (const auto index : std::views::keys(constants)) {
-        if (constants[index].scope_depth == scope_depth) {
-            deleted_constants.push_back(index);
-        }
-    }
-
-    for (const auto& index : deleted_constants) {
-        const auto reg = constants[index].register_index;
-        constants.erase(index);
-        FreeRegister(reg);
-    }
+    // std::vector<u16> deleted_constants;
+    // deleted_constants.reserve(constants.size());
+    //
+    // for (const auto index : std::views::keys(constants)) {
+    //     if (constants[index].scope_depth == scope_depth) {
+    //         deleted_constants.push_back(index);
+    //     }
+    // }
+    //
+    // for (const auto& index : deleted_constants) {
+    //     const auto reg = constants[index].register_index;
+    //     constants.erase(index);
+    //     FreeRegister(reg);
+    // }
 
     --scope_depth;
 }
@@ -796,9 +795,22 @@ void BytecodeGenerator::HandleDataBinding(const Initializer& node, bool is_mutab
 
         // may be an identifier or constant
         const auto src = PopRegBuffer();
-        datum          = AllocateRegister();
-        bytecode.Write(Op::Move, {datum, src});
 
+        // if we're immutable, we can skip the extra move instruction
+        // this becomes an alias to the constant's register
+        // we can't outlive a constant anyway
+        if (not is_mutable) {
+            for (const auto [reg, a] : std::views::values(constants)) {
+                if (reg == src) {
+                    datum = reg;
+                    AddSymbol(name, datum);
+                    return;
+                }
+            }
+        }
+
+        datum = AllocateRegister();
+        bytecode.Write(Op::Move, {datum, src});
         FreeRegister(src);
     } else {
         datum = AllocateRegister();
