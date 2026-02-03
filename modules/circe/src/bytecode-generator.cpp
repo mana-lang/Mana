@@ -17,15 +17,23 @@ using namespace sigil::ast;
 
 BytecodeGenerator::BytecodeGenerator()
     : total_registers {},
-      scope_depth {} {}
+      scope_depth {},
+      bytecode {} {}
 
 ByteCode BytecodeGenerator::Bytecode() const {
     return bytecode;
 }
 
 void BytecodeGenerator::ObtainSemanticAnalysisInfo(const sigil::SemanticAnalyzer& analyzer) {
-    const auto& globals = analyzer.Globals();
-    const auto& types   = analyzer.Types();
+    for (const auto name : analyzer.Globals() | std::views::keys) {
+        AddSymbol(name, AllocateRegister());
+    }
+
+    for (const auto& info : analyzer.Types() | std::views::values) {
+        for (const auto& [name, func] : info.functions) {
+            functions[name].return_type = func.return_type;
+        }
+    }
 }
 
 void BytecodeGenerator::Visit(const Artifact& artifact) {

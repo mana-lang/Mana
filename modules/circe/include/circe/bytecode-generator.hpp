@@ -47,8 +47,8 @@ class BytecodeGenerator final : public ast::Visitor {
         u32 address = -1;
     };
 
-    using SymbolTable   = emhash8::HashMap<std::string_view, Symbol>;
     using ConstantTable = emhash8::HashMap<u16, Constant>;
+    using SymbolTable   = emhash8::HashMap<std::string_view, Symbol>;
     using FunctionTable = emhash8::HashMap<std::string_view, Function>;
 
     SymbolTable symbols;

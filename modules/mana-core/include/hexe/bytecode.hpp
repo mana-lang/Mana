@@ -1,10 +1,10 @@
 #pragma once
 
-#include <mana/literals.hpp>
 #include <hexe/opcode.hpp>
 #include <hexe/value.hpp>
 
-#include <cstdlib>
+#include <mana/literals.hpp>
+
 #include <format>
 #include <limits>
 #include <vector>
@@ -28,6 +28,8 @@ struct IndexRange {
 static constexpr auto BYTECODE_INSTRUCTION_MAX = std::numeric_limits<i64>::max();
 static constexpr auto BYTECODE_CONSTANT_MAX    = std::numeric_limits<u16>::max();
 
+static constexpr auto REGISTER_RETURN = 0;
+static constexpr auto REGISTER_TOTAL  = 256;
 
 using namespace fmt::literals;
 
