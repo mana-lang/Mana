@@ -10,6 +10,8 @@
 
 #include <magic_enum/magic_enum.hpp>
 
+#include <sigil/ast/keywords.hpp>
+
 #include <spdlog/fmt/bundled/chrono.h>
 
 namespace sigil::ast {
@@ -46,7 +48,7 @@ auto MakeNoneLiteral() {
 
 struct LiteralData {
     NodePtr value;
-    hexe::PrimitiveType type;
+    hexe::PrimitiveValueType type;
 };
 
 LiteralData MakeLiteral(const Token& token) {
@@ -55,23 +57,23 @@ LiteralData MakeLiteral(const Token& token) {
 
     case Lit_true:
     case Lit_false:
-        return {MakeLiteral<bool>(token), hexe::PrimitiveType::Bool};
+        return {MakeLiteral<bool>(token), hexe::PrimitiveValueType::Bool};
 
     case Lit_Int:
-        return {MakeLiteral<i64>(token), hexe::PrimitiveType::Int64};
+        return {MakeLiteral<i64>(token), hexe::PrimitiveValueType::Int64};
 
     case Lit_Float:
-        return {MakeLiteral<f64>(token), hexe::PrimitiveType::Float64};
+        return {MakeLiteral<f64>(token), hexe::PrimitiveValueType::Float64};
 
     case Lit_none:
-        return {MakeNoneLiteral(), hexe::PrimitiveType::None};
+        return {MakeNoneLiteral(), hexe::PrimitiveValueType::None};
 
     default:
         break;
     }
 
     Log->error("Unexpected token for literal");
-    return {nullptr, hexe::PrimitiveType::Invalid};
+    return {nullptr, hexe::PrimitiveValueType::Invalid};
 }
 
 /// Artifact
@@ -109,6 +111,8 @@ FunctionDeclaration::FunctionDeclaration(const ParseNode& node) {
 
     if (node.tokens.size() == 2) {
         return_type = FetchTokenText(node.tokens[1]);
+    } else {
+        return_type = PrimitiveName(PrimitiveType::None);
     }
 
     body = std::make_shared<Scope>(*node.branches[1]);
@@ -422,7 +426,16 @@ void Skip::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
+/// Return
 Return::Return(const ParseNode& node) {
+    // TODO: verify this
+    if (node.branches.empty()
+        || (node.branches[0]->rule == Rule::Identifier && FetchTokenText(node.branches[0]->tokens[0]) == PrimitiveName(
+                PrimitiveType::None
+            ))) {
+        // it's either 'return' or 'return none' which are identical
+        return;
+    }
     expr = CreateExpression(*node.branches[0]);
 }
 
@@ -587,7 +600,7 @@ BinaryExpr::BinaryExpr(const ParseNode& binary_node, const i64 depth) {
 
 /// ArrayLiteral
 ArrayLiteral::ArrayLiteral(const ParseNode& node)
-    : type(hexe::PrimitiveType::Invalid) {
+    : type(hexe::PrimitiveValueType::Invalid) {
     // []
     if (node.branches.empty()) {
         return;
@@ -607,7 +620,7 @@ const std::vector<NodePtr>& ArrayLiteral::GetValues() const {
     return values;
 }
 
-hexe::PrimitiveType ArrayLiteral::GetType() const {
+hexe::PrimitiveValueType ArrayLiteral::GetType() const {
     return type;
 }
 
@@ -641,7 +654,7 @@ NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
     {
         const auto literal = MakeLiteral(elem.tokens[0]);
 
-        if (literal.type == hexe::PrimitiveType::Invalid) {
+        if (literal.type == hexe::PrimitiveValueType::Invalid) {
             Log->error(
                 "ArrayLiteral attempted to add invalid value '{}'",
                 FetchTokenText(elem.tokens[0])
@@ -653,7 +666,7 @@ NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
         // elem_list so we start in Invalid, assign the type based on the first, and
         // any type changes past that raise an error
         if (literal.type != type) {
-            if (type == hexe::PrimitiveType::Invalid) {
+            if (type == hexe::PrimitiveValueType::Invalid) {
                 type = literal.type;
             } else {
                 Log->warn(

@@ -17,10 +17,12 @@ IndexRange::IndexRange(const i64 init_offset, const i64 range)
     }
 }
 
-i64 ByteCode::Write(Op opcode) {
+i64 ByteCode::Write(const Op opcode) {
     instructions.push_back(static_cast<u8>(opcode));
 
     CheckInstructionSize();
+
+    latest_opcode = opcode;
     return instructions.size() - 1;
 }
 
@@ -35,6 +37,7 @@ i64 ByteCode::Write(const Op opcode, const std::initializer_list<u16> payloads) 
     }
 
     CheckInstructionSize();
+ latest_opcode = opcode;
     return index;
 }
 
@@ -47,7 +50,13 @@ i64 ByteCode::WriteCall(u32 payload) {
     }
 
     CheckInstructionSize();
+
+    latest_opcode = Op::Call;
     return instructions.size() - sizeof(u32);
+}
+
+Op ByteCode::LatestOpcode() const {
+    return latest_opcode;
 }
 
 void ByteCode::SetEntryPoint(i64 address) {
@@ -95,7 +104,7 @@ std::vector<u8>& ByteCode::Instructions() {
     return instructions;
 }
 
-i64 ByteCode::InstructionCount() const {
+i64 ByteCode::CurrentAddress() const {
     return static_cast<i64>(instructions.size());
 }
 
@@ -320,9 +329,9 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
 
     // constant pool first
     for (i64 offset = pool_range.start; offset < pool_range.end;) {
-        const auto type = static_cast<PrimitiveType>(bytes[offset]);
+        const auto type = static_cast<PrimitiveValueType>(bytes[offset]);
 
-        offset += sizeof(PrimitiveType);
+        offset += sizeof(PrimitiveValueType);
         for (i64 i = 0; i < length_bytes.size(); ++i) {
             length_bytes[i] = bytes[i + offset];
         }

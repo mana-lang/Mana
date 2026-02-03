@@ -10,19 +10,19 @@ namespace hexe {
 using namespace mana;
 using namespace mana::literals;
 
-inline PrimitiveType GetManaTypeFrom(i64) {
+inline PrimitiveValueType GetManaTypeFrom(i64) {
     return Int64;
 }
 
-inline PrimitiveType GetManaTypeFrom(f64) {
+inline PrimitiveValueType GetManaTypeFrom(f64) {
     return Float64;
 }
 
-inline PrimitiveType GetManaTypeFrom(u64) {
+inline PrimitiveValueType GetManaTypeFrom(u64) {
     return Uint64;
 }
 
-inline PrimitiveType GetManaTypeFrom(bool) {
+inline PrimitiveValueType GetManaTypeFrom(bool) {
     return Bool;
 }
 
@@ -41,7 +41,7 @@ struct Value {
 
     using LengthType = u32;
 
-    static constexpr auto SIZE = sizeof(Data) + sizeof(LengthType) + sizeof(PrimitiveType);
+    static constexpr auto SIZE = sizeof(Data) + sizeof(LengthType) + sizeof(PrimitiveValueType);
 
     Value(i64 i);
     Value(u64 u);
@@ -56,7 +56,7 @@ struct Value {
     MANA_NODISCARD LengthType Length() const;
     MANA_NODISCARD u64 BitCasted(u32 at) const;
 
-    MANA_NODISCARD PrimitiveType GetType() const;
+    MANA_NODISCARD PrimitiveValueType GetType() const;
 
     MANA_NODISCARD f64 AsFloat() const;
     MANA_NODISCARD i64 AsInt() const;
@@ -135,7 +135,7 @@ private:
     LengthType length;
     u8 type;
 
-    Value(PrimitiveType t, LengthType l);
+    Value(PrimitiveValueType t, LengthType l);
 
     void WriteValueBytes(const std::array<unsigned char, 8>& bytes, u32 index) const;
 

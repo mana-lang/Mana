@@ -100,6 +100,7 @@ int CompileFrom(const CompileSettings& compile_settings) {
 
         {
             ScopedTimer codegen_timer(time_codegen);
+            codegen.ObtainSemanticAnalysisInfo(analyzer);
             parser.AST()->Accept(codegen);
         }
 

@@ -2,7 +2,7 @@ fn Woah() {
     mut data a = 0
     mut data b = 0
 
-    loop 5..47 => i {
+    loop 5 => i {
         a += 1
         b = i
     }
@@ -14,7 +14,7 @@ fn Woah() {
 fn Main() {
     data a = 95
 
-    // Woah()
+    Woah()
 
     data x = 27.8
 }

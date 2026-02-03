@@ -15,6 +15,14 @@ using namespace hexe;
 #define CALL_TARGET (static_cast<u32>(*ip | *(ip + 1) << 8 | *(ip + 2) << 16 | *(ip + 3) << 24))
 #define REG(idx) registers[idx]
 
+/// --- Note ---
+/// The reason we don't do bounds checks in Release builds is because they shouldn't be necessary.
+///
+/// Programs which would send Hex out-of-bounds would be malformed,
+/// meaning there is either an internal issue with Hex, or Circe is emitting incorrect bytecode.
+/// These issues should never reach users. Users expect speed from Hex.
+/// The safety of executing Hexe code is therefore determined by Circe's codegen, and Hex' stability.
+/// As Hex' VM loop is relatively simple, we afford ourselves to keep safety checks to Debug builds.
 InterpretResult Hex::Execute(ByteCode* bytecode) {
     ip                          = bytecode->EntryPoint();
     auto* const code_start      = bytecode->Instructions().data();
@@ -92,6 +100,9 @@ err:
     return InterpretResult::CompileError;
 
 ret_val: {
+        REG(REGISTER_RETURN) = NEXT_PAYLOAD;
+        ip                   = call_stack[current_function--].ret_addr;
+
         DISPATCH();
     }
 

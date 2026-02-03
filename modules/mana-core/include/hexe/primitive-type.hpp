@@ -5,7 +5,7 @@
 namespace hexe {
 using namespace mana::literals;
 
-enum PrimitiveType : u8 {
+enum PrimitiveValueType : u8 {
     Int64,
     Uint64,
     Float64,
@@ -17,7 +17,7 @@ enum PrimitiveType : u8 {
 };
 
 template <typename F>
-auto DispatchPrimitive(PrimitiveType type, F&& f) {
+auto DispatchPrimitive(PrimitiveValueType type, F&& f) {
     switch (type) {
     case Int64:
         return f.template operator()<i64>();

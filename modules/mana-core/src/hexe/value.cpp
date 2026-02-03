@@ -50,7 +50,7 @@ Value::LengthType Value::Length() const {
     return length;
 }
 
-Value::Value(const PrimitiveType t, const LengthType l)
+Value::Value(const PrimitiveValueType t, const LengthType l)
     : length(l),
       type(static_cast<u8>(t)) {
     if (length == 0 || type == Invalid) {
@@ -102,8 +102,8 @@ u64 Value::BitCasted(const u32 at) const {
     }
 }
 
-PrimitiveType Value::GetType() const {
-    return static_cast<PrimitiveType>(type);
+PrimitiveValueType Value::GetType() const {
+    return static_cast<PrimitiveValueType>(type);
 }
 
 void Value::WriteValueBytes(const std::array<u8, sizeof(Data)>& bytes,

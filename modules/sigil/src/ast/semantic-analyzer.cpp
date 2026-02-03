@@ -9,7 +9,7 @@ using namespace mana::literals;
 using namespace ast;
 using enum PrimitiveType;
 
-constexpr auto TB_ERROR    = "_TYPEBUFFER_ERROR_";
+constexpr auto TB_ERROR = "_TYPEBUFFER_ERROR_";
 
 bool IsSignedIntegral(std::string_view type) {
     return type == PrimitiveName(I8)
@@ -111,9 +111,7 @@ void SemanticAnalyzer::Visit(const Scope& node) {
 
 void SemanticAnalyzer::Visit(const FunctionDeclaration& node) {
     const auto function_name = node.GetName();
-    const auto return_type   = node.GetReturnType().empty()
-                                 ? PrimitiveName(None)
-                                 : node.GetReturnType();
+    const auto return_type   = node.GetReturnType();
 
     auto& functions = GetFnTable();
     if (functions.contains(function_name)) {

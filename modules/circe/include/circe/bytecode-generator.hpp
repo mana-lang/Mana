@@ -44,7 +44,7 @@ class BytecodeGenerator final : public ast::Visitor {
 
     struct Function {
         std::string_view return_type;
-        u32 address = -1;
+        i64 address = -1;
     };
 
     using ConstantTable = emhash8::HashMap<u16, Constant>;
@@ -83,7 +83,7 @@ public:
     void Visit(const ast::Identifier& node) override;
     void Visit(const ast::Assignment& node) override;
 
-    void Visit(const ast::Return& node) override {}
+    void Visit(const ast::Return& node) override;
     void Visit(const ast::Invocation& node) override;
 
     void Visit(const ast::If& node) override;
@@ -127,6 +127,9 @@ private:
 
     Register PopRegBuffer();
     void ClearRegBuffer();
+
+    const Function& CurrentFunction() const;
+    Function& CurrentFunction();
 
     void EnterScope();
     void ExitScope();

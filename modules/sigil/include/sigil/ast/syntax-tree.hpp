@@ -53,7 +53,7 @@ class FunctionDeclaration final : public Node {
     std::vector<Parameter> parameters;
     NodePtr body;
 
-    std::string_view return_type;
+    std::string return_type;
 
 public:
     explicit FunctionDeclaration(const ParseNode& node);
@@ -364,13 +364,13 @@ public:
 
 class ArrayLiteral final : public Node {
     std::vector<NodePtr> values;
-    hexe::PrimitiveType type;
+    hexe::PrimitiveValueType type;
 
 public:
     explicit ArrayLiteral(const ParseNode& node);
 
     SIGIL_NODISCARD const std::vector<NodePtr>& GetValues() const;
-    SIGIL_NODISCARD hexe::PrimitiveType GetType() const;
+    SIGIL_NODISCARD hexe::PrimitiveValueType GetType() const;
 
     void Accept(Visitor& visitor) const override;
 

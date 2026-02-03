@@ -74,6 +74,7 @@ class ByteCode {
     std::vector<Value> constant_pool;
 
     i64 entry_point;
+    Op latest_opcode;
 
 public:
     // returns opcode's index
@@ -84,6 +85,8 @@ public:
 
     // returns opcode's index
     i64 WriteCall(u32 payload);
+
+    Op LatestOpcode() const;
 
     // sets the program entry point to be the next instruction's index
     void SetEntryPoint(i64 address);
@@ -99,7 +102,7 @@ public:
 
     MANA_NODISCARD const std::vector<u8>& Instructions() const;
 
-    MANA_NODISCARD i64 InstructionCount() const;
+    MANA_NODISCARD i64 CurrentAddress() const;
 
     MANA_NODISCARD const std::vector<Value>& Constants() const;
 

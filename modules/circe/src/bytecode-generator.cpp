@@ -60,8 +60,10 @@ void BytecodeGenerator::Visit(const FunctionDeclaration& node) {
     const auto& params = node.GetParameters();
     const auto& body   = node.GetBody();
 
-    auto& fn   = functions[name];
-    fn.address = bytecode.InstructionCount();
+    auto& fn = functions[name] = {
+                   .return_type = node.GetReturnType(),
+                   .address     = bytecode.CurrentAddress(),
+               };
 
     ++scope_depth;
     for (const auto& param : params) {
@@ -76,7 +78,12 @@ void BytecodeGenerator::Visit(const FunctionDeclaration& node) {
 
     if (sigil::IsEntryPoint(name)) {
         bytecode.SetEntryPoint(fn.address);
-    } else {
+        return;
+    }
+
+    // insert ret op if the user hasn't, for none-functions
+    using enum sigil::PrimitiveType;
+    if (fn.return_type == PrimitiveName(None) && bytecode.LatestOpcode() != Op::Return) {
         bytecode.Write(Op::Return);
     }
 }
@@ -137,6 +144,19 @@ void BytecodeGenerator::Visit(const Assignment& node) {
     FreeRegister(rhs);
 }
 
+void BytecodeGenerator::Visit(const Return& node) {
+    const auto& return_expr = node.GetExpression();
+    if (return_expr != nullptr) {
+        return_expr->Accept(*this);
+        const auto ret_reg = PopRegBuffer();
+
+        bytecode.Write(Op::ReturnValue, {ret_reg});
+        FreeRegister(ret_reg);
+    } else {
+        bytecode.Write(Op::Return);
+    }
+}
+
 void BytecodeGenerator::Visit(const Invocation& node) {
     for (const auto& arg : node.GetArguments()) {
         arg->Accept(*this);
@@ -145,7 +165,7 @@ void BytecodeGenerator::Visit(const Invocation& node) {
     const auto target = node.GetIdentifier();
     const auto addr   = functions[target].address;
 
-    if (addr == bytecode.InstructionCount()) {
+    if (addr == bytecode.CurrentAddress()) {
         Log->error("Internal Compiler Error: Invocation jumps to call site '{}'", target);
         return;
     }
@@ -176,7 +196,7 @@ void BytecodeGenerator::Visit(const If& node) {
 void BytecodeGenerator::Visit(const Loop& node) {
     EnterLoop();
 
-    const i64 start_addr = bytecode.InstructionCount();
+    const i64 start_addr = bytecode.CurrentAddress();
 
     node.GetBody()->Accept(*this);
 
@@ -196,7 +216,7 @@ void BytecodeGenerator::Visit(const Loop& node) {
 void BytecodeGenerator::Visit(const LoopIf& node) {
     EnterLoop();
 
-    const i64 start_addr = bytecode.InstructionCount();
+    const i64 start_addr = bytecode.CurrentAddress();
 
     node.GetCondition()->Accept(*this);
     const auto condition = PopRegBuffer();
@@ -220,7 +240,7 @@ void BytecodeGenerator::Visit(const LoopIf& node) {
 void BytecodeGenerator::Visit(const LoopIfPost& node) {
     EnterLoop();
 
-    const i64 start_addr = bytecode.InstructionCount();
+    const i64 start_addr = bytecode.CurrentAddress();
 
     node.GetBody()->Accept(*this);
 
@@ -250,7 +270,7 @@ void BytecodeGenerator::Visit(const LoopRange& node) {
     const auto cond = AllocateRegister();
 
     // loop starts here
-    const i64 start_addr = bytecode.InstructionCount();
+    const i64 start_addr = bytecode.CurrentAddress();
 
     bytecode.Write(Op::Equals, {cond, range.counter, range.end});
     const i64 exit = bytecode.Write(Op::JumpWhenTrue, {cond, SENTINEL});
@@ -284,7 +304,7 @@ void BytecodeGenerator::Visit(const LoopRangeMutable& node) {
     const auto cond = AllocateRegister();
 
     // loop starts here
-    const i64 start_addr = bytecode.InstructionCount();
+    const i64 start_addr = bytecode.CurrentAddress();
 
     // for mutable loop counters, we can't just compare to equals
     // so we do something slightly more involved
@@ -333,7 +353,7 @@ void BytecodeGenerator::Visit(const LoopFixed& node) {
     const auto target = PopRegBuffer();
     --scope_depth;
 
-    const i64 start_addr = bytecode.InstructionCount();
+    const i64 start_addr = bytecode.CurrentAddress();
 
     // while the parser tries to guard against negative counts, they may be undetectable at compile time
     // in that case, the loop would end immediately
@@ -567,8 +587,8 @@ Register BytecodeGenerator::CalcJump(const i64 target_index, bool is_forward, bo
     const auto jump_bytes = is_conditional ? CJMP_OP_BYTES : JMP_OP_BYTES;
 
     const i64 jump_distance = is_forward
-                                  ? bytecode.InstructionCount() - (target_index + jump_bytes)
-                                  : target_index - (bytecode.InstructionCount() + jump_bytes);
+                                  ? bytecode.CurrentAddress() - (target_index + jump_bytes)
+                                  : target_index - (bytecode.CurrentAddress() + jump_bytes);
 
     if (not JumpIsWithinBounds(jump_distance)) {
         Log->error("Internal Compiler Error: Jump distance out of bounds");
@@ -644,6 +664,14 @@ Register BytecodeGenerator::PopRegBuffer() {
 void BytecodeGenerator::ClearRegBuffer() {
     FreeRegisters(reg_buffer);
     reg_buffer.clear();
+}
+
+const BytecodeGenerator::Function& BytecodeGenerator::CurrentFunction() const {
+    return functions.at(function_stack.back());
+}
+
+BytecodeGenerator::Function& BytecodeGenerator::CurrentFunction() {
+    return functions.at(function_stack.back());
 }
 
 void BytecodeGenerator::EnterScope() {
