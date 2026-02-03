@@ -16,8 +16,8 @@ using namespace hexe;
 using namespace sigil::ast;
 
 BytecodeGenerator::BytecodeGenerator()
-    : total_registers {},
-      scope_depth {},
+    : total_registers {1},
+      scope_depth {0},
       bytecode {} {}
 
 ByteCode BytecodeGenerator::Bytecode() const {
@@ -163,14 +163,15 @@ void BytecodeGenerator::Visit(const Invocation& node) {
     }
 
     const auto target = node.GetIdentifier();
-    const auto addr   = functions[target].address;
+    const auto& fn    = functions[target];
 
-    if (addr == bytecode.CurrentAddress()) {
-        Log->error("Internal Compiler Error: Invocation jumps to call site '{}'", target);
+    if (fn.address == bytecode.CurrentAddress()) {
+        Log->error("Internal Compiler Error: Invocation {} jumps to call site '{}'", target, fn.address);
         return;
     }
 
-    bytecode.WriteCall(addr);
+    bytecode.WriteCall(fn.address);
+    reg_buffer.push_back(REGISTER_RETURN); // functions always return something
 }
 
 void BytecodeGenerator::Visit(const If& node) {

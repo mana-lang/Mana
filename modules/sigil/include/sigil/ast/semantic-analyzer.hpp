@@ -149,6 +149,7 @@ private:
     const Symbol* GetSymbol(std::string_view name) const;
 
     void HandleInitializer(const ast::Initializer& node, bool is_mutable);
+    void PreventAssignmentWithNone(std::string_view type);
 
     void HandleRangedLoop(const ast::LoopRange& node, bool is_mutable);
 };

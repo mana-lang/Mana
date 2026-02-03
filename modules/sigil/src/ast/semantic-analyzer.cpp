@@ -191,6 +191,7 @@ void SemanticAnalyzer::Visit(const Assignment& node) {
         Log->error("Type mismatch: expected '{}', got '{}'", symbol->type, expr_type);
         ++issue_counter;
     }
+    PreventAssignmentWithNone(expr_type);
 }
 
 void SemanticAnalyzer::Visit(const Return& node) {
@@ -213,6 +214,8 @@ void SemanticAnalyzer::Visit(const Invocation& node) {
     if (not functions.contains(name)) {
         Log->error("Undefined identifier: No invocator exists with name '{}'", name);
         ++issue_counter;
+    } else {
+        BufferType(functions.at(name).return_type);
     }
 
     for (const auto& arg : node.GetArguments()) {
@@ -477,7 +480,20 @@ void SemanticAnalyzer::HandleInitializer(const Initializer& node, const bool is_
         ++issue_counter;
     }
 
+    PreventAssignmentWithNone(initializer_type);
+
     AddSymbol(node.GetName(), annotation_type, is_mutable);
+}
+
+// temporary, until we can elide every binding containing 'none'
+void SemanticAnalyzer::PreventAssignmentWithNone(const std::string_view type) {
+    if (type == PrimitiveName(None)) {
+        Log->error("Cannot initialize binding of type '{}'. "
+                   "This feature is planned for future versions of Mana.",
+                   type
+        );
+        ++issue_counter;
+    }
 }
 
 void SemanticAnalyzer::HandleRangedLoop(const LoopRange& node, const bool is_mutable) {

@@ -731,6 +731,8 @@ NodePtr CreateExpression(const ParseNode& node) {
     const auto& token = node.tokens.empty() ? Token {} : node.tokens[0];
 
     switch (node.rule) {
+    case Invocation:
+        return std::make_shared<class Invocation>(node);
     case Assignment:
         return std::make_shared<class Assignment>(node);
     case Grouping:

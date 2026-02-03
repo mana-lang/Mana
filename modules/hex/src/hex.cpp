@@ -100,7 +100,8 @@ err:
     return InterpretResult::CompileError;
 
 ret_val: {
-        REG(REGISTER_RETURN) = NEXT_PAYLOAD;
+        const u16 return_reg = NEXT_PAYLOAD;
+        REG(REGISTER_RETURN) = REG(return_reg);
         ip                   = call_stack[current_function--].ret_addr;
 
         DISPATCH();
