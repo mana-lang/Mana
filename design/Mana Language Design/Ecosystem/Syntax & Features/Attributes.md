@@ -6,6 +6,9 @@ An attribute is defined by an `@` symbol followed by a *bracketed-list* of (opti
 
 Below is a list of valid Attributes:
 
+- *NoInit*
+	- Usage: *After* *mutable* data declaration
+	- Effect: Data will be left uninitialized
 - *Pure*
 	- Usage: *Before* function declaration
 	- Effect: Raises compile error if a function has any (potential) side effects

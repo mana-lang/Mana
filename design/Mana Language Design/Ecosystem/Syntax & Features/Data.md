@@ -146,13 +146,13 @@ fn main() {
 > z: 0
 
 ##### Uninitialized Data
-Unassigned data declarations are zeroed by default in **Mana**. To leave it uninitialized, you must do so explicitly with the `none` keyword.
+Unassigned data declarations are zeroed by default in **Mana**. To leave it uninitialized, you must do so explicitly with the `@[NoInit]` attribute.
 ```kotlin  
 import std.fmt
 
 fn main() {
 	// data will be uninitialized.
-    data x: bool = none
+    mut data x: bool = @[NoInit]
     
     // using it is either a compile error, or undefined behaviour
     fmt.Print(x) 
@@ -161,7 +161,7 @@ fn main() {
 >[!danger] Error
 >Data `x` was not initialized, but an attempt was made to read from it
 
-Note: In the above example, `x` can never be initialized, because it's not `mut`.
+This attribute can *only* be used with *mutable* data declarations. Immutable data bindings *cannot* be left uninitialized, as they would be permanently unusable.
  
 ##### Constants
 Compile-time constants are created with the `const` keyword.

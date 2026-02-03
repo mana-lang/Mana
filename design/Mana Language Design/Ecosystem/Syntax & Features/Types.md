@@ -43,24 +43,35 @@ byte
 	// offers an interface over the [u8] type
 string
 
-	// unit type/non-type
+	// unit type
 none
 ```
 
 
 ##### None
-`none` is a special keyword which is both a type and a value, but represents no-type and no-value. What this means is:
+`none` is a special keyword which is both a type and a value, but represents the *absence* of a value. In essence, `none`  is a value of type `none`. 
+
+What this means is:
 - Functions
-	- You may specify `none` as the return type of a function, which will be the same as specifying no return type. This prevents the function from returning any value.
-	- You may *not* return `none` from a function.
-- Mutable Data
-	- You may assign `none` to a mutable binding during initialization, and that will leave it *uninitialized*. 
-	- You may *not* annotate a binding with type `none`, even if you assign it `none`
-	- You may *not* assign `none` to an un-annotated binding.
-	- You may *not* assign `none` to an immutable binding, even if annotated.
+	- You may specify `none` as the return type of a function, which will be the same as specifying no return type. 
+	- A function with return type `none` can *only* return `none`.
+	- The following two statements are equivalent:
+		- `return`
+		- `return none`
+	- By default, operators for composite types are empty functions which return `none`.
+		- While this means that for two bindings `a, b` of a type `T`, the operation `a + b` *would* compile (the result of that expression is `none`, the compiler *may* warn for such expressions, and can be configured not to.
+- Data
+	- You may assign `none` to a binding during initialization, and that will deduce its type to be `none`.  
+		- You may annotate a binding with type `none`, which will default its value to `none`
+		- This means the following statements are all equivalent:
+			- `data x = none`
+			- `data x: none`
+			- `data x: none = none`
+	- Data of type `none` cannot meaningfully be used in any expressions.
+	- Data of type `none` can be represented with 0 bits of information.
 - Pattern Matching
 	- You may have *one* match arm that matches to `none`
-	- This arm represents not having matched anything.
+	- This arm represents not having matched anything. When all other matches fail, a `match` block will match to `none`.
 
 In short, `none` is the way with which you describe the *absence* of things in Mana.
 
