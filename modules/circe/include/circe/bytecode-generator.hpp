@@ -1,5 +1,7 @@
 #pragma once
 
+#include <circe/register.hpp>
+
 #include <sigil/ast/syntax-tree.hpp>
 #include <sigil/ast/visitor.hpp>
 
@@ -7,7 +9,6 @@
 #include <hexe/bytecode.hpp>
 
 #include <emhash/emhash8.hpp>
-
 
 namespace sigil {
 class SemanticAnalyzer;
@@ -17,19 +18,17 @@ namespace circe {
 using namespace mana::literals;
 namespace ast = sigil::ast;
 
-using Register = u16;
-
 class BytecodeGenerator final : public ast::Visitor {
-    using ScopeDepth = u8;
+    using ScopeID = u8;
 
     struct Symbol {
         Register register_index;
-        ScopeDepth scope_depth;
+        ScopeID scope;
     };
 
     struct Constant {
         Register register_index;
-        ScopeDepth scope_depth;
+        ScopeID scope;
     };
 
     struct JumpInstruction {
@@ -45,21 +44,21 @@ class BytecodeGenerator final : public ast::Visitor {
     struct Function {
         std::string_view return_type;
         i64 address = -1;
+        RegisterFrame registers;
     };
 
     using ConstantTable = emhash8::HashMap<u16, Constant>;
     using SymbolTable   = emhash8::HashMap<std::string_view, Symbol>;
     using FunctionTable = emhash8::HashMap<std::string_view, Function>;
 
+    ScopeID scope;
+
     SymbolTable symbols;
     ConstantTable constants;
     FunctionTable functions;
 
-    u16 total_registers;
-    ScopeDepth scope_depth;
-
-    std::vector<Register> reg_buffer;
-    std::vector<Register> free_regs;
+    RegisterFrame global_registers;
+    std::vector<Register> register_buffer;
 
     std::vector<LoopContext> loop_stack;
     std::vector<std::string_view> function_stack;
@@ -118,18 +117,13 @@ private:
     void PatchJumpBackwardConditional(i64 target_index);
     Register CalcJump(i64 target_index, bool is_forward, bool is_conditional) const;
 
-    Register AllocateRegister();
-    void FreeRegister(Register reg);
-    void FreeRegisters(std::initializer_list<Register> regs);
-    void FreeRegisters(const std::vector<Register>& regs);
-
-    bool RegisterIsOwned(Register reg);
+    CIRCE_NODISCARD RegisterFrame& Registers();
 
     Register PopRegBuffer();
-    void ClearRegBuffer();
 
     const Function& CurrentFunction() const;
     Function& CurrentFunction();
+    std::string_view CurrentFunctionName() const;
 
     void EnterScope();
     void ExitScope();
@@ -152,22 +146,23 @@ private:
     void HandlePendingBreaks();
 
     void HandleLoopControl(bool is_break, const ast::NodePtr& condition);
-    void HandleDataBinding(const ast::Initializer& node, bool is_mutable);
+    void HandleInitializer(const ast::Initializer& node, bool is_mutable);
 
     template <hexe::ValuePrimitive VP>
     void CreateLiteral(const ast::Literal<VP>& literal) {
         const auto index = bytecode.AddConstant(literal.Get());
         if (constants.contains(index)) {
-            reg_buffer.push_back(constants[index].register_index);
+            register_buffer.push_back(constants[index].register_index);
             return;
         }
 
-        const auto reg = AllocateRegister();
+        const auto reg = Registers().Allocate();
         bytecode.Write(hexe::Op::LoadConstant, {reg, index});
 
-        constants[index] = {reg, scope_depth};
+        constants[index] = {reg, scope};
 
-        reg_buffer.push_back(reg);
+        Registers().Lock(reg);
+        register_buffer.push_back(reg);
     }
 };
 } // namespace circe

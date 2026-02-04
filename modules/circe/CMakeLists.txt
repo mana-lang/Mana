@@ -6,6 +6,7 @@ enable_testing()
 set(CIRCE_SOURCES
         src/main.cpp
         src/bytecode-generator.cpp
+        src/register.cpp
 
         src/core/logger.cpp
         src/core/cli.cpp

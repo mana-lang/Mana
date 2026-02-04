@@ -9,12 +9,15 @@ constexpr u8 BASE_REGISTERS = 128;
 constexpr u8 CJMP_OP_BYTES  = 5;
 constexpr u8 JMP_OP_BYTES   = 3;
 
+constexpr u8 CALL_BYTES = 6;
+
+// @formatter:off
 enum class Op : u8 {
     Halt,
     Err,
     Return,
 
-    ReturnValue,  // Op Src       -> Place value in special return register
+    ReturnValue,  // Op Src       -> Place value in return register
     LoadConstant, // Op Reg Const -> Reg = Constants[Const]
     Move,         // Op Dst Src   -> Dst = Src
     Add,          // Op Dst L R   -> Dst = L + R
@@ -37,6 +40,11 @@ enum class Op : u8 {
     JumpWhenTrue,  // Op Reg Offset   -> if Reg { ip += Offset }
     JumpWhenFalse, // etc.
 
-    Call, // Op Addr(4 bytes) -> Jump to function at address
+    Call,          // Op RF CR Addr -> Register Frame (1 byte)
+                   //               -> Call Register (1 byte)
+                   //               -> Destination Address (4 bytes)
+                   //               -> Record register frame, allocate call register, then jump to function at address.
+                   //               -> Upon returning, retval is copied into call register and frame is returned to previous position
 };
-} // namespace mana::hexe
+// @formatter:on
+} // namespace hexe

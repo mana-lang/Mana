@@ -13,7 +13,8 @@ using namespace hexe;
 #define NEXT_PAYLOAD (ip += 2, (static_cast<u16>(*(ip - 2) | *(ip - 1) << 8)))
 
 #define CALL_TARGET (static_cast<u32>(*ip | *(ip + 1) << 8 | *(ip + 2) << 16 | *(ip + 3) << 24))
-#define REG(idx) registers[idx]
+#define REG(idx) registers[frame_offset + (idx)]
+#define REG_ABS(idx) registers[(idx)]
 
 /// --- Note ---
 /// The reason we don't do bounds checks in Release builds is because they shouldn't be necessary.
@@ -91,6 +92,9 @@ InterpretResult Hex::Execute(ByteCode* bytecode) {
 #   define DISPATCH() goto *dispatch_table[*ip++]
 #endif
     // Start VM
+
+    call_stack[++current_function].reg_frame = bytecode->MainRegisterFrame();
+    call_stack[current_function].ret_addr    = nullptr; // main doesn't return to anything.
     DISPATCH();
 
 halt:
@@ -100,16 +104,16 @@ err:
     return InterpretResult::CompileError;
 
 ret_val: {
-        const u16 return_reg = NEXT_PAYLOAD;
-        REG(REGISTER_RETURN) = REG(return_reg);
-        ip                   = call_stack[current_function--].ret_addr;
+        const u16 return_register = NEXT_PAYLOAD;
+        REG_ABS(call_register)    = REG(return_register);
 
-        DISPATCH();
+        // fallthrough
     }
 
 ret: {
         ip = call_stack[current_function--].ret_addr;
 
+        frame_offset -= call_stack[current_function].reg_frame;
         DISPATCH();
     }
 
@@ -119,7 +123,7 @@ load_constant: {
         REG(dst) = constants[idx];
 
 #ifdef HEX_DEBUG
-        Log->debug("  R{} <- {} (const #{})", dst, ValueToString(REG(dst)), idx);
+        Log->debug("  R{} <- {} (const #{})", dst + frame_offset, ValueToString(REG(dst)), idx);
 #endif
         DISPATCH();
     }
@@ -129,7 +133,7 @@ move: {
         REG(dst) = REG(src);
 
 #ifdef HEX_DEBUG
-        Log->debug("  R{} <- R{} ({})", dst, src, ValueToString(REG(dst)));
+        Log->debug("  R{} <- R{} ({})", dst + frame_offset, src + frame_offset, ValueToString(REG(dst)));
 #endif
 
         DISPATCH();
@@ -144,10 +148,10 @@ move: {
     std::string lhs_orig = ValueToString(REG(lhs));   \
     REG(dst) = REG(lhs) op REG(rhs);                  \
     Log->debug("  R{} ({}) = R{} ({}) {} R{} ({})",   \
-               dst, ValueToString(REG(dst)),          \
-               lhs, lhs_orig,                         \
+               dst + frame_offset, ValueToString(REG(dst)),          \
+               lhs + frame_offset, lhs_orig,                         \
                #op,                                   \
-               rhs, ValueToString(REG(rhs)));         \
+               rhs + frame_offset, ValueToString(REG(rhs)));         \
     }
 #else
 #define BINARY_OP(op)       \
@@ -188,7 +192,12 @@ negate: {
         REG(dst) = -REG(src);
 
 #ifdef HEX_DEBUG
-        Log->debug("  R{} ({}) = -R{} ({})", dst, ValueToString(REG(dst)), src, ValueToString(REG(src)));
+        Log->debug("  R{} ({}) = -R{} ({})",
+                   dst + frame_offset,
+                   ValueToString(REG(dst)),
+                   src + frame_offset,
+                   ValueToString(REG(src))
+        );
 #endif
 
         DISPATCH();
@@ -200,7 +209,12 @@ bool_not: {
         REG(dst) = !REG(src);
 
 #ifdef HEX_DEBUG
-        Log->debug("  R{} ({}) = !R{} ({})", dst, ValueToString(REG(dst)), src, ValueToString(REG(src)));
+        Log->debug("  R{} ({}) = !R{} ({})",
+                   dst + frame_offset,
+                   ValueToString(REG(dst)),
+                   src + frame_offset,
+                   ValueToString(REG(src))
+        );
 #endif
 
         DISPATCH();
@@ -261,7 +275,7 @@ jmp_true: {
         const auto target = ip - bytecode->Instructions().data() + dist;
         Log->debug("  Jump ==> [{:04}] R{} ({}) => {}",
                    target,
-                   reg,
+                   reg + frame_offset,
                    ValueToString(REG(reg)),
                    taken ? "TAKEN" : "SKIP"
         );
@@ -282,7 +296,7 @@ jmp_false: {
         const auto target = ip - bytecode->Instructions().data() + dist;
         Log->debug("  Jump ==> [{:04}] R{} ({}) => {}",
                    target,
-                   reg,
+                   reg + frame_offset,
                    ValueToString(REG(reg)),
                    taken ? "TAKEN" : "SKIPPED"
         );
@@ -294,10 +308,19 @@ jmp_false: {
         DISPATCH();
     }
 call: {
-        const u32 target                        = CALL_TARGET;
-        call_stack[++current_function].ret_addr = ip + 4;
-        ip                                      = code_start + target;
+        // extend register base by previous function's window
+        frame_offset += call_stack[current_function].reg_frame;
 
+        // then setup the next stack frame
+        call_stack[++current_function].ret_addr = ip + CALL_BYTES;
+        call_stack[current_function].reg_frame  = *ip;
+
+        call_register = *(ip + 1);
+
+        // then call
+        ip    += 2;
+        u32 t = CALL_TARGET;
+        ip    = code_start + t;
         DISPATCH();
     }
 

@@ -37,34 +37,49 @@ i64 ByteCode::Write(const Op opcode, const std::initializer_list<u16> payloads) 
     }
 
     CheckInstructionSize();
- latest_opcode = opcode;
+    latest_opcode = opcode;
+
     return index;
 }
 
-i64 ByteCode::WriteCall(u32 payload) {
+i64 ByteCode::WriteCall(u32 address, u8 register_frame, u8 call_register) {
     instructions.push_back(static_cast<u8>(Op::Call));
+    instructions.push_back(register_frame);
+    instructions.push_back(call_register);
 
     for (int i = 0; i < sizeof(u32); ++i) {
-        instructions.push_back(payload & 0xFF);
-        payload >>= 8;
+        instructions.push_back(address & 0xFF);
+        address >>= 8;
     }
 
     CheckInstructionSize();
-
     latest_opcode = Op::Call;
-    return instructions.size() - sizeof(u32);
+
+    constexpr auto offset = sizeof(address)
+                            + sizeof(register_frame)
+                            + sizeof(call_register);
+
+    return instructions.size() - offset;
 }
 
 Op ByteCode::LatestOpcode() const {
     return latest_opcode;
 }
 
-void ByteCode::SetEntryPoint(i64 address) {
+void ByteCode::SetEntryPoint(const i64 address) {
     entry_point = address;
 }
 
 i64 ByteCode::EntryPointValue() const {
     return entry_point;
+}
+
+void ByteCode::SetMainRegisterFrame(const u16 window) {
+    main_frame = window;
+}
+
+u16 ByteCode::MainRegisterFrame() const {
+    return main_frame;
 }
 
 u8* ByteCode::EntryPoint() {
@@ -187,6 +202,7 @@ std::vector<u8> ByteCode::SerializeHeader(const std::vector<u8>& code) const {
     serialize(header.version_major);
     serialize(header.version_minor);
     serialize(header.version_patch);
+    serialize(header.main_frame);
     serialize(header.PADDING_COMPAT_);
 
     return header_bytes;
@@ -202,6 +218,7 @@ Header ByteCode::CreateHeader(const std::vector<u8>& code) const {
         .version_major = Header::VERSION_MAJOR,
         .version_minor = Header::VERSION_MINOR,
         .version_patch = Header::VERSION_PATCH,
+        .main_frame    = main_frame,
     };
 
     // padding should be all 1's, safer than uninitialized
@@ -265,6 +282,7 @@ Header ByteCode::DeserializeHeader(const std::vector<u8>& header_bytes) const {
     deserialize_header(header.version_major);
     deserialize_header(header.version_minor);
     deserialize_header(header.version_patch);
+    deserialize_header(header.main_frame);
 
     // padding can just be copied 1:1
     for (i64 p = 0, h = offset; h < sizeof(Header); ++h, ++p) {
@@ -356,7 +374,9 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
         Log->error("Entry point index out of bounds.");
         return false;
     }
+
     entry_point = header.entry_point;
+    main_frame  = header.main_frame;
 
     return true;
 }

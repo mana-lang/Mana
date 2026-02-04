@@ -18,15 +18,17 @@ enum class InterpretResult {
 
 struct StackFrame {
     ml::u8* ret_addr;
-    ml::u8 starting_register;
+    ml::u8 reg_frame;
 };
 
 class Hex {
-    ml::u8* ip {nullptr};
-    ml::i16 current_function {-1};
+    std::array<hexe::Value, hexe::REGISTER_TOTAL> registers = {};
+    std::array<StackFrame, CALL_STACK_SIZE> call_stack      = {};
 
-    std::array<hexe::Value, hexe::REGISTER_TOTAL> registers {};
-    std::array<StackFrame, CALL_STACK_SIZE> call_stack {};
+    ml::u8* ip               = nullptr;
+    ml::i64 frame_offset     = 0;
+    ml::i16 current_function = -1;
+    ml::u8 call_register     = 0;
 
 public:
     InterpretResult Execute(hexe::ByteCode* next_slice);

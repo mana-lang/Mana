@@ -1,7 +1,3 @@
-fn Blah(x, y: i64) {
-    data z = 3
-}
-
 fn Main() {
     mut data a = 0
     mut data b = 0

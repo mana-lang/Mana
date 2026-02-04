@@ -160,3 +160,39 @@ type Foo {
 ```
 > [!note]
 `[Locked]` data is restricted to only be modifiable by interface functions. However, **Mana** allows anywhere to create an associated function for a type. `[Locked]` is merely an indicator that a type member *shouldn't* freely be modified, for some reason or another.
+
+
+- Audio:
+	- Music
+	- SFX
+- IO:
+	- Config file (settings)
+	- Save files (replays?)
+	- User input (rebindable, stored in config file)
+- Game States:
+	- Main Menu
+	- Game
+	- Run Over
+	- Game Over
+	- Game End
+- Player 
+	- Resources
+		- Lives
+		- Bombs
+		- Graze
+		- Score
+		- Element?
+	- Mechanics
+		- Move (4-way)
+		- Shoot
+		- Bomb
+		- Skill
+- Boss
+	- Multiple Phases
+	- Movement
+- System
+	- Collision Detection
+	- Object Hierarchy
+	- Simple Trig Library
+	- Item Drops & Pickups
+	- Scoring

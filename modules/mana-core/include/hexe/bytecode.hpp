@@ -57,7 +57,9 @@ public:
     u8 version_minor;
     u16 version_patch;
 
-    u8 PADDING_COMPAT_[28]; // extra space reserved for forward compatibility
+    u16 main_frame;        // register window for global scope + main
+
+    u8 PADDING_COMPAT_[26]; // extra space reserved for forward compatibility
 
     static constexpr std::string Version = fmt::format("{}.{}.{}"_cf,
                                                    VERSION_MAJOR,
@@ -69,11 +71,18 @@ public:
 };
 // @formatter:on
 
+struct FunctionEntry {
+    i64 address;
+    u16 register_count;
+};
+
 class ByteCode {
     std::vector<u8> instructions;
     std::vector<Value> constant_pool;
 
     i64 entry_point;
+    u16 main_frame;
+
     Op latest_opcode;
 
 public:
@@ -84,13 +93,16 @@ public:
     i64 Write(Op opcode, std::initializer_list<u16> payloads);
 
     // returns opcode's index
-    i64 WriteCall(u32 payload);
+    i64 WriteCall(u32 address, u8 register_frame, u8 call_register);
 
     Op LatestOpcode() const;
 
     // sets the program entry point to be the next instruction's index
     void SetEntryPoint(i64 address);
     MANA_NODISCARD i64 EntryPointValue() const;
+
+    void SetMainRegisterFrame(u16 window);
+    MANA_NODISCARD u16 MainRegisterFrame() const;
 
     // Modifies a payload for the given opcode
     // This function exists to amend instruction payloads,

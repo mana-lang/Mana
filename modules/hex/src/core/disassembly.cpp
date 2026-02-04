@@ -41,12 +41,12 @@ void PrintBytecode(const ByteCode& s) {
         case Halt:
         case Err:
         case Return:
-            Log->debug("{:04} | {}", offset, name);
+            Log->debug("{:04} | {}\n", offset, name);
             break;
 
         case ReturnValue: {
             const u16 reg = read();
-            Log->debug("{:04} | {} R{}", offset, name, reg);
+            Log->debug("{:04} | {} R{}\n", offset, name, reg);
             break;
         }
 
@@ -127,11 +127,13 @@ void PrintBytecode(const ByteCode& s) {
         }
 
         case Call: {
-            const u32 addr = static_cast<u32>(code[i + 1] | (code[i + 2] << 8) | (code[i + 3] << 16) | (
-                                                  code[i + 4] << 24));
+            const u8 reg_frame  = code[i + 1];
+            const u8 return_reg = code[i + 2];
+            const u32 addr      = static_cast<u32>(code[i + 3] | (code[i + 4] << 8) | (code[i + 5] << 16) | (
+                                                  code[i + 6] << 24));
 
-            Log->debug("{:04} | {} => {:08X}", offset, name, addr);
-            i += 4;
+            Log->debug("{:04} | {} (RegW{} | Ret: R{}) ==> {:04X}", offset, name, reg_frame, return_reg, addr);
+            i += CALL_BYTES;
             break;
         }
 

@@ -1,24 +1,26 @@
-// fn Woah() {
-//     mut data a = 0
-//     mut data b = 0
+fn Heck() -> i32 {
+    return 5
+}
 
-//     loop 5 => i {
-//         a += 1
-//         b = i
-//     }
+fn Woah() {
+    mut data a = 0
+    mut data b = 0
 
-//     data c = a
-//     data d = b
-// }
+    data h = Heck()
 
-fn Heck() -> f32 {
-    return 27.8
+    loop h => i {
+        a += 1
+        b = i
+    }
+
+    data c = a
+    data d = b
 }
 
 fn Main() {
     data a = 95
 
-    // Woah()
+    Woah()
 
     data x = Heck()
 }
