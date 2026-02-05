@@ -41,19 +41,19 @@ void BytecodeGenerator::Visit(const Artifact& artifact) {
         decl->Accept(*this);
     }
 
-    for (const auto& [name, index] : pending_calls) {
+    for (const auto& [index, name] : pending_calls) {
         if (not functions.contains(name)) {
             Log->error("Internal Compiler Error: Attempted to call non-existent function '{}'", name);
             continue;
         }
 
-        const auto addr = functions.at(name).address;
-        if (addr < 0) {
+        const auto address = functions.at(name).address;
+        if (address < 0) {
             Log->error("Internal Compiler Error: Attempted to call unresolved function '{}'", name);
             continue;
         }
 
-        bytecode.PatchCall(index, addr);
+        bytecode.PatchCall(index, address);
     }
 
     bytecode.SetMainRegisterFrame(global_registers.Total());
@@ -84,7 +84,7 @@ void BytecodeGenerator::Visit(const FunctionDeclaration& node) {
 
     ++scope;
     for (const auto& param : params) {
-        const auto reg = global_registers.Allocate();
+        const auto reg = fn.registers.Allocate();
         AddSymbol(param.name, reg);
     }
     --scope;
@@ -101,7 +101,6 @@ void BytecodeGenerator::Visit(const FunctionDeclaration& node) {
         bytecode.Write(Op::Halt);
         return;
     }
-
     // functions that return nothing return automatically at the end of their scope
     using enum sigil::PrimitiveType;
     if (fn.return_type == PrimitiveName(None) && bytecode.LatestOpcode() != Op::Return) {
@@ -191,14 +190,16 @@ void BytecodeGenerator::Visit(const Invocation& node) {
 
     const auto target = node.GetIdentifier();
 
-    auto& fn = functions[target];
+    const auto& fn = functions[target];
 
     if (fn.address == bytecode.CurrentAddress()) {
         Log->error("Internal Compiler Error: Invocation {} jumps to call site '{}'", target, fn.address);
         return;
     }
+
     if (fn.address < 0) {
-        pending_calls[target] = bytecode.WriteCall(SENTINEL_32, Registers().Total());
+        const auto index     = bytecode.WriteCall(SENTINEL_32, Registers().Total());
+        pending_calls[index] = target;
     } else {
         bytecode.WriteCall(fn.address, Registers().Total());
     }

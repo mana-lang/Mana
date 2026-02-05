@@ -67,7 +67,7 @@ class BytecodeGenerator final : public ast::Visitor {
 
     std::vector<LoopContext> loop_stack;
     std::vector<std::string_view> function_stack;
-    emhash8::HashMap<std::string_view, i64> pending_calls;
+    emhash8::HashMap<i64, std::string_view> pending_calls;
 
     hexe::ByteCode bytecode;
 
