@@ -40,13 +40,13 @@ void PrintBytecode(const ByteCode& s) {
             using enum Op;
         case Halt:
         case Err: {
-            Log->debug("{:04} | {}", offset, name);
+            Log->debug("{:08X} | {}", offset, name);
             break;
         }
 
         case Return: {
             const u16 reg = read();
-            Log->debug("{:04} | {} R{}\n", offset, name, reg);
+            Log->debug("{:08X} | {} R{}\n", offset, name, reg);
             break;
         }
 
@@ -56,7 +56,7 @@ void PrintBytecode(const ByteCode& s) {
             const auto& val = s.Constants()[idx];
 
             const auto log_val = [&](auto v) {
-                Log->debug("{:04} | {} R{} <- {} [pool index: {}]", offset, name, reg, v, idx);
+                Log->debug("{:08X} | {} R{} <- {} [pool index: {}]", offset, name, reg, v, idx);
             };
 
             switch (val.GetType()) {
@@ -87,7 +87,7 @@ void PrintBytecode(const ByteCode& s) {
         case Not: {
             const u16 dst = read();
             const u16 src = read();
-            Log->debug("{:04} | {} R{}, R{}", offset, name, dst, src);
+            Log->debug("{:08X} | {} R{}, R{}", offset, name, dst, src);
             break;
         }
 
@@ -105,14 +105,14 @@ void PrintBytecode(const ByteCode& s) {
             const u16 dst = read();
             const u16 lhs = read();
             const u16 rhs = read();
-            Log->debug("{:04} | {} R{}, R{}, R{}", offset, name, dst, lhs, rhs);
+            Log->debug("{:08X} | {} R{}, R{}, R{}", offset, name, dst, lhs, rhs);
             break;
         }
 
         case Jump: {
             const i16 dist = static_cast<i16>(read());
             // Offset + Opcode (1) + Payload (2) + Distance
-            Log->debug("{:04} | {} => {:04}", offset, name, offset + 3 + dist);
+            Log->debug("{:08X} | {} => {:08X}", offset, name, offset + 3 + dist);
             break;
         }
 
@@ -121,7 +121,7 @@ void PrintBytecode(const ByteCode& s) {
             const u16 reg  = read();
             const i16 dist = static_cast<i16>(read());
             // Offset + Opcode (1) + Reg (2) + Destination (2)
-            Log->debug("{:04} | {} R{} => {:04}", offset, name, reg, offset + 5 + dist);
+            Log->debug("{:08X} | {} R{} => {:08X}", offset, name, reg, offset + 5 + dist);
             break;
         }
 
@@ -130,13 +130,13 @@ void PrintBytecode(const ByteCode& s) {
             const u32 addr     = static_cast<u32>(code[i + 2] | (code[i + 3] << 8) | (code[i + 4] << 16) | (
                                                   code[i + 5] << 24));
 
-            Log->debug("{:04} | {} (Frame: {}) ==> {:04X}", offset, name, reg_frame, addr);
+            Log->debug("{:08X} | {} (Frame: {}) ==> {:08X}", offset, name, reg_frame, addr);
             i += CALL_BYTES;
             break;
         }
 
         default:
-            Log->debug("{:04} | ??? ({})", offset, static_cast<u8>(op));
+            Log->debug("{:08X} | ??? ({})", offset, static_cast<u8>(op));
             break;
         }
     }

@@ -87,7 +87,7 @@ void BytecodeGenerator::Visit(const FunctionDeclaration& node) {
     // insert ret op if the user hasn't, for none-functions
     using enum sigil::PrimitiveType;
     if (fn.return_type == PrimitiveName(None) && bytecode.LatestOpcode() != Op::Return) {
-        bytecode.Write(Op::Return);
+        bytecode.Write(Op::Return, {REGISTER_RETURN});
     }
 }
 
