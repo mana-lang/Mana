@@ -36,7 +36,6 @@ InterpretResult Hex::Execute(ByteCode* bytecode) {
         &&halt,
         &&err,
         &&ret,
-        &&ret_val,
         &&load_constant,
         &&move,
         &&add,
@@ -103,12 +102,9 @@ halt:
 err:
     return InterpretResult::CompileError;
 
-ret_val: {
-        RETURN_REGISTER = REG(NEXT_PAYLOAD);
-    } // fallthrough
-
 ret: {
-        frame_offset -= call_stack[current_function].reg_frame;
+        RETURN_REGISTER = REG(NEXT_PAYLOAD);
+        frame_offset    -= call_stack[current_function].reg_frame;
 
         ip = call_stack[current_function--].ret_addr;
         DISPATCH();

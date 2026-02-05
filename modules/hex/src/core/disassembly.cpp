@@ -39,17 +39,16 @@ void PrintBytecode(const ByteCode& s) {
         switch (op) {
             using enum Op;
         case Halt:
-        case Err:
-        case Return:
-            Log->debug("{:04} | {}\n", offset, name);
+        case Err: {
+            Log->debug("{:04} | {}", offset, name);
             break;
+        }
 
-        case ReturnValue: {
+        case Return: {
             const u16 reg = read();
             Log->debug("{:04} | {} R{}\n", offset, name, reg);
             break;
         }
-
 
         case LoadConstant: {
             const u16 reg   = read();

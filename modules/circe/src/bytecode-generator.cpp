@@ -156,13 +156,13 @@ void BytecodeGenerator::Visit(const Return& node) {
     const auto& return_expr = node.GetExpression();
     if (return_expr != nullptr) {
         return_expr->Accept(*this);
-
         const auto return_value = PopRegBuffer();
-        bytecode.Write(Op::ReturnValue, {return_value});
 
+        bytecode.Write(Op::Return, {return_value});
         Registers().Free(return_value);
     } else {
-        bytecode.Write(Op::Return);
+        // functions that return 'none' just don't affect the return register at all
+        bytecode.Write(Op::Return, {REGISTER_RETURN});
     }
 }
 

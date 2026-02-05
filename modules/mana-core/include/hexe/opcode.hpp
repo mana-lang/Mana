@@ -15,19 +15,20 @@ constexpr u8 CALL_BYTES = 5;
 enum class Op : u8 {
     Halt,
     Err,
-    Return,
 
-    ReturnValue,  // Op Src       -> Place value in return register
-    LoadConstant, // Op Reg Const -> Reg = Constants[Const]
-    Move,         // Op Dst Src   -> Dst = Src
-    Add,          // Op Dst L R   -> Dst = L + R
-    Sub,          // etc.
+    Return,        // Op Src       -> Place value in return register
+    LoadConstant,  // Op Reg Const -> Reg = Constants[Const]
+    Move,          // Op Dst Src   -> Dst = Src
+
+    Add,           // Op Dst L R   -> Dst = L + R
+    Sub,           // etc.
     Div,
     Mul,
     Mod,
 
     Negate,        // Op Dst Src   -> Dst = -Src
     Not,           // Op Dst Src   -> Dst = !Src
+
     Cmp_Greater,   // Op Dst L R   -> Dst = L > R
     Cmp_GreaterEq, // etc.
     Cmp_Lesser,
