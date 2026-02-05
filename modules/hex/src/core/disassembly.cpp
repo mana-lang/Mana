@@ -127,12 +127,11 @@ void PrintBytecode(const ByteCode& s) {
         }
 
         case Call: {
-            const u8 reg_frame  = code[i + 1];
-            const u8 return_reg = code[i + 2];
-            const u32 addr      = static_cast<u32>(code[i + 3] | (code[i + 4] << 8) | (code[i + 5] << 16) | (
-                                                  code[i + 6] << 24));
+            const u8 reg_frame = code[i + 1];
+            const u32 addr     = static_cast<u32>(code[i + 2] | (code[i + 3] << 8) | (code[i + 4] << 16) | (
+                                                  code[i + 5] << 24));
 
-            Log->debug("{:04} | {} (RegW{} | Ret: R{}) ==> {:04X}", offset, name, reg_frame, return_reg, addr);
+            Log->debug("{:04} | {} (Frame: {}) ==> {:04X}", offset, name, reg_frame, addr);
             i += CALL_BYTES;
             break;
         }

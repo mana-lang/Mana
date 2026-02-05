@@ -1,15 +1,17 @@
 fn Heck() -> i32 {
+    return 2000000000
+}
+
+fn Penis() -> i8 {
     return 5
 }
 
 fn Woah() {
-    mut data a = 0
+    mut data a: i64 = 0
     mut data b = 0
 
-    data h = Heck()
-
-    loop h => i {
-        a += 1
+    loop Heck() => i {
+        a += Penis()
         b = i
     }
 

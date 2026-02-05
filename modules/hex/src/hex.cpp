@@ -14,7 +14,7 @@ using namespace hexe;
 
 #define CALL_TARGET (static_cast<u32>(*ip | *(ip + 1) << 8 | *(ip + 2) << 16 | *(ip + 3) << 24))
 #define REG(idx) registers[frame_offset + (idx)]
-#define REG_ABS(idx) registers[(idx)]
+#define RETURN_REGISTER registers[REGISTER_RETURN]
 
 /// --- Note ---
 /// The reason we don't do bounds checks in Release builds is because they shouldn't be necessary.
@@ -104,16 +104,13 @@ err:
     return InterpretResult::CompileError;
 
 ret_val: {
-        const u16 return_register = NEXT_PAYLOAD;
-        REG_ABS(call_register)    = REG(return_register);
-
-        // fallthrough
-    }
+        RETURN_REGISTER = REG(NEXT_PAYLOAD);
+    } // fallthrough
 
 ret: {
-        ip = call_stack[current_function--].ret_addr;
-
         frame_offset -= call_stack[current_function].reg_frame;
+
+        ip = call_stack[current_function--].ret_addr;
         DISPATCH();
     }
 
@@ -308,17 +305,14 @@ jmp_false: {
         DISPATCH();
     }
 call: {
-        // extend register base by previous function's window
-        frame_offset += call_stack[current_function].reg_frame;
+        frame_offset += *ip;
 
         // then setup the next stack frame
         call_stack[++current_function].ret_addr = ip + CALL_BYTES;
         call_stack[current_function].reg_frame  = *ip;
 
-        call_register = *(ip + 1);
-
         // then call
-        ip    += 2;
+        ++ip;
         u32 t = CALL_TARGET;
         ip    = code_start + t;
         DISPATCH();

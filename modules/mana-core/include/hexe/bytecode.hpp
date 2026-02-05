@@ -29,7 +29,7 @@ static constexpr auto BYTECODE_INSTRUCTION_MAX = std::numeric_limits<i64>::max()
 static constexpr auto BYTECODE_CONSTANT_MAX    = std::numeric_limits<u16>::max();
 
 static constexpr auto REGISTER_RETURN = 0;
-static constexpr auto REGISTER_TOTAL  = 256;
+static constexpr auto REGISTER_TOTAL  = 1024;
 
 using namespace fmt::literals;
 
@@ -93,7 +93,7 @@ public:
     i64 Write(Op opcode, std::initializer_list<u16> payloads);
 
     // returns opcode's index
-    i64 WriteCall(u32 address, u8 register_frame, u8 call_register);
+    i64 WriteCall(u32 address, u8 register_frame);
 
     Op LatestOpcode() const;
 

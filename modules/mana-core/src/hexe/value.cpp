@@ -136,7 +136,7 @@ void Value::WriteValueBytes(const std::array<u8, sizeof(Data)>& bytes,
 #else
 #    define CHECK_BOUNDS_CGT()         \
         if (not(type < choice.size())) \
-            throw std::runtime_error("Out of bounds Computed Goto access");
+            throw std::runtime_error("Attempted operation with invalid Value");
 #endif
 
 #define CASE_INT      type_int

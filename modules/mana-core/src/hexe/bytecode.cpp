@@ -42,10 +42,9 @@ i64 ByteCode::Write(const Op opcode, const std::initializer_list<u16> payloads) 
     return index;
 }
 
-i64 ByteCode::WriteCall(u32 address, u8 register_frame, u8 call_register) {
+i64 ByteCode::WriteCall(u32 address, u8 register_frame) {
     instructions.push_back(static_cast<u8>(Op::Call));
     instructions.push_back(register_frame);
-    instructions.push_back(call_register);
 
     for (int i = 0; i < sizeof(u32); ++i) {
         instructions.push_back(address & 0xFF);
@@ -56,8 +55,7 @@ i64 ByteCode::WriteCall(u32 address, u8 register_frame, u8 call_register) {
     latest_opcode = Op::Call;
 
     constexpr auto offset = sizeof(address)
-                            + sizeof(register_frame)
-                            + sizeof(call_register);
+                            + sizeof(register_frame);
 
     return instructions.size() - offset;
 }

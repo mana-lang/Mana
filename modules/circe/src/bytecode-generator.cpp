@@ -41,7 +41,7 @@ void BytecodeGenerator::Visit(const Artifact& artifact) {
         decl->Accept(*this);
     }
 
-    bytecode.SetMainRegisterFrame(global_registers.Total() + functions.at(sigil::ENTRY_POINT).registers.Total());
+    bytecode.SetMainRegisterFrame(global_registers.Total());
     bytecode.Write(Op::Halt);
 }
 
@@ -179,13 +179,9 @@ void BytecodeGenerator::Visit(const Invocation& node) {
         return;
     }
 
-    const auto call_register = Registers().Allocate();
 
-    bytecode.WriteCall(fn.address,
-                       fn.registers.Total(),
-                       call_register
-    );
-    register_buffer.push_back(call_register); // functions always return something
+    bytecode.WriteCall(fn.address, Registers().Total());
+    register_buffer.push_back(REGISTER_RETURN); // functions always return something
 }
 
 void BytecodeGenerator::Visit(const If& node) {

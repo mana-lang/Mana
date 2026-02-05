@@ -18,7 +18,7 @@ enum class InterpretResult {
 
 struct StackFrame {
     ml::u8* ret_addr;
-    ml::u8 reg_frame;
+    ml::i64 reg_frame;
 };
 
 class Hex {
@@ -27,8 +27,7 @@ class Hex {
 
     ml::u8* ip               = nullptr;
     ml::i64 frame_offset     = 0;
-    ml::i16 current_function = -1;
-    ml::u8 call_register     = 0;
+    ml::i64 current_function = -1;
 
 public:
     InterpretResult Execute(hexe::ByteCode* next_slice);
