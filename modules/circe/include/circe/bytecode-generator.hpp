@@ -47,6 +47,11 @@ class BytecodeGenerator final : public ast::Visitor {
         RegisterFrame registers;
     };
 
+    struct Call {
+        std::string_view function;
+        i64 instruction_index;
+    };
+
     using ConstantTable = emhash8::HashMap<u16, Constant>;
     using SymbolTable   = emhash8::HashMap<std::string_view, Symbol>;
     using FunctionTable = emhash8::HashMap<std::string_view, Function>;
@@ -62,6 +67,7 @@ class BytecodeGenerator final : public ast::Visitor {
 
     std::vector<LoopContext> loop_stack;
     std::vector<std::string_view> function_stack;
+    emhash8::HashMap<std::string_view, i64> pending_calls;
 
     hexe::ByteCode bytecode;
 
@@ -124,6 +130,8 @@ private:
     const Function& CurrentFunction() const;
     Function& CurrentFunction();
     std::string_view CurrentFunctionName() const;
+
+    void ReturnNone();
 
     void EnterScope();
     void ExitScope();

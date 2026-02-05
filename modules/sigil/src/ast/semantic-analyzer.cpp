@@ -82,6 +82,8 @@ void SemanticAnalyzer::ExitScope() {
 }
 
 void SemanticAnalyzer::Visit(const Artifact& artifact) {
+    RegisterFunctionDeclarations(artifact);
+
     for (const auto& declaration : artifact.GetChildren()) {
         declaration->Accept(*this);
     }
@@ -110,42 +112,10 @@ void SemanticAnalyzer::Visit(const Scope& node) {
 
 
 void SemanticAnalyzer::Visit(const FunctionDeclaration& node) {
-    const auto function_name = node.GetName();
-    const auto return_type   = node.GetReturnType();
+    auto& function = EnterFunction(node.GetName());
 
-    auto& functions = GetFnTable();
-    if (functions.contains(function_name)) {
-        Log->error("Redefinition of function '{}'", function_name);
-        ++issue_counter;
-    } else {
-        functions[function_name].return_type = return_type;
-    }
-
-    const auto& params = node.GetParameters();
-    if (IsEntryPoint(function_name)) {
-        if (not params.empty()) {
-            Log->error("Entry point function cannot have parameters");
-            ++issue_counter;
-        }
-
-        if (return_type != PrimitiveName(None)) {
-            Log->error("Entry point function cannot have a return type");
-            ++issue_counter;
-        }
-    }
-
-    auto& function = EnterFunction(function_name);
-    for (const auto& param : params) {
-        if (param.type.empty()) {
-            Log->error("Parameter '{}' has no type annotation", param.name);
-            ++issue_counter;
-        }
-
-        function.locals[param.name] = {
-            param.type.empty() ? PrimitiveName(None) : param.type,
-            function.scope,
-            Mutability::Immutable
-        };
+    for (const auto& param : node.GetParameters()) {
+        function.locals[param.name] = {function.scope, Mutability::Immutable};
     }
 
     node.GetBody()->Accept(*this);
@@ -338,6 +308,49 @@ void SemanticAnalyzer::Visit(const Literal<void>&) {
 
 void SemanticAnalyzer::Visit(const Literal<bool>&) {
     BufferType(PrimitiveName(Bool));
+}
+
+void SemanticAnalyzer::RegisterFunctionDeclarations(const Artifact& artifact) {
+    // not the biggest fan of dynamic_cast, but a whole other visitor just to collect
+    // function declarations would be some otherworldly level of premature optimization
+    for (const auto& declaration : artifact.GetChildren()) {
+        if (const auto* fn_decl = dynamic_cast<const FunctionDeclaration*>(declaration.get())) {
+            const auto name = fn_decl->GetName();
+
+            auto& functions = GetFnTable();
+            if (functions.contains(name)) {
+                Log->error("Redefinition of function '{}'", name);
+                ++issue_counter;
+                continue;
+            }
+
+            auto& fn           = functions[name];
+            const auto& params = fn_decl->GetParameters();
+            fn.return_type     = fn_decl->GetReturnType();
+
+            if (IsEntryPoint(name)) {
+                if (not params.empty()) {
+                    Log->error("Entry point function cannot have parameters");
+                    ++issue_counter;
+                }
+
+                if (fn.return_type != PrimitiveName(None)) {
+                    Log->error("Entry point function cannot have a return type");
+                    ++issue_counter;
+                }
+            }
+
+            // handle param types only, for invocation arity checks
+            for (const auto& param : params) {
+                if (param.type.empty()) {
+                    Log->error("Parameter '{}' has no type annotation", param.name);
+                    ++issue_counter;
+                }
+
+                fn.locals[param.name] = param.type;
+            }
+        }
+    }
 }
 
 void SemanticAnalyzer::RegisterPrimitives() {

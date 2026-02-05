@@ -41,6 +41,13 @@ struct Symbol {
           scope {scope},
           mutability {mutability} {}
 
+    Symbol(u8 scope, Mutability mutability)
+        : scope {scope},
+          mutability {mutability} {}
+
+    Symbol(std::string_view type)
+        : Symbol(type, -1, Mutability::Const) {}
+
     Symbol() = default;
 };
 
@@ -127,6 +134,8 @@ public:
     void Visit(const ast::Literal<bool>& literal) override;
 
 private:
+    void RegisterFunctionDeclarations(const ast::Artifact& artifact);
+
     void RegisterPrimitives();
     FunctionTable& GetFnTable();
     const FunctionTable& GetFnTable() const;

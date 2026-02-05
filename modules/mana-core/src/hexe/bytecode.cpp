@@ -7,6 +7,7 @@
 
 
 constexpr auto HEADER_DESERIALIZE_ERROR = 727;
+constexpr auto BYTE_BITS                = 8;
 
 namespace hexe {
 IndexRange::IndexRange(const i64 init_offset, const i64 range)
@@ -43,21 +44,20 @@ i64 ByteCode::Write(const Op opcode, const std::initializer_list<u16> payloads) 
 }
 
 i64 ByteCode::WriteCall(u32 address, u8 register_frame) {
+    const auto index = instructions.size();
+
     instructions.push_back(static_cast<u8>(Op::Call));
     instructions.push_back(register_frame);
 
     for (int i = 0; i < sizeof(u32); ++i) {
         instructions.push_back(address & 0xFF);
-        address >>= 8;
+        address >>= BYTE_BITS;
     }
 
     CheckInstructionSize();
     latest_opcode = Op::Call;
 
-    constexpr auto offset = sizeof(address)
-                            + sizeof(register_frame);
-
-    return instructions.size() - offset;
+    return index;
 }
 
 Op ByteCode::LatestOpcode() const {
@@ -102,7 +102,23 @@ void ByteCode::Patch(const i64 instruction_index, const u16 new_value, const u8 
     }
 
     instructions[payload]     = new_value & 0xFF;
-    instructions[payload + 1] = (new_value >> 8) & 0xFF;
+    instructions[payload + 1] = (new_value >> BYTE_BITS) & 0xFF;
+}
+
+void ByteCode::PatchCall(const i64 instruction_index, u32 new_address) {
+    if (instruction_index + CALL_BYTES >= instructions.size()) {
+        Log->critical("Internal Compiler Error");
+        Log->error("Erroneous attempt to patch call instruction at index '{}'", instruction_index);
+        Log->error("With payload: {}", new_address);
+        return;
+    }
+
+    const auto payload = instruction_index + 2;
+
+    for (int i = 0; i < sizeof(u32); ++i) {
+        instructions[payload + i] = new_address & 0xFF;
+        new_address               >>= BYTE_BITS;
+    }
 }
 
 i64 ByteCode::BackIndex() const {
@@ -161,7 +177,7 @@ std::vector<u8> ByteCode::SerializeConstants() const {
         out.push_back(static_cast<u8>(value.type));
 
         for (i64 i = 0; i < sizeof(value.length); ++i) {
-            out.push_back((value.length >> i * 8) & 0xFF);
+            out.push_back((value.length >> i * BYTE_BITS) & 0xFF);
         }
 
         // need to serialize each value separately
@@ -169,7 +185,7 @@ std::vector<u8> ByteCode::SerializeConstants() const {
             const auto serializable = value.BitCasted(i);
 
             for (i64 k = 0; k < sizeof(serializable); ++k) {
-                out.emplace_back((serializable >> k * 8) & 0xFF);
+                out.emplace_back((serializable >> k * BYTE_BITS) & 0xFF);
             }
         }
     }

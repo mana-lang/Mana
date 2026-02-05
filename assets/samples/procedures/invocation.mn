@@ -2,8 +2,12 @@ fn Heck() -> i32 {
     return 2000000000
 }
 
-fn Penis() -> i8 {
-    return 5
+fn Main() {
+    data a = 95
+
+    Woah()
+
+    data x = Heck()
 }
 
 fn Woah() {
@@ -11,7 +15,7 @@ fn Woah() {
     mut data b = 0
 
     loop Heck() => i {
-        a += Penis()
+        a += Sheesh()
         b = i
     }
 
@@ -19,10 +23,6 @@ fn Woah() {
     data d = b
 }
 
-fn Main() {
-    data a = 95
-
-    Woah()
-
-    data x = Heck()
+fn Sheesh() -> i8 {
+    return 5
 }

@@ -110,6 +110,9 @@ public:
     // not the payload itself
     void Patch(i64 instruction_index, u16 new_value, u8 payload_offset = 0);
 
+    // Same as Patch, but specifically for Call instructions
+    void PatchCall(i64 instruction_index, u32 new_address);
+
     MANA_NODISCARD i64 BackIndex() const;
 
     MANA_NODISCARD const std::vector<u8>& Instructions() const;

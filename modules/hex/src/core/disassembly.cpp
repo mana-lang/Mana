@@ -40,7 +40,7 @@ void PrintBytecode(const ByteCode& s) {
             using enum Op;
         case Halt:
         case Err: {
-            Log->debug("{:08X} | {}", offset, name);
+            Log->debug("{:08X} | {}\n", offset, name);
             break;
         }
 

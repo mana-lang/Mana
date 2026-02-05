@@ -41,8 +41,22 @@ void BytecodeGenerator::Visit(const Artifact& artifact) {
         decl->Accept(*this);
     }
 
+    for (const auto& [name, index] : pending_calls) {
+        if (not functions.contains(name)) {
+            Log->error("Internal Compiler Error: Attempted to call non-existent function '{}'", name);
+            continue;
+        }
+
+        const auto addr = functions.at(name).address;
+        if (addr < 0) {
+            Log->error("Internal Compiler Error: Attempted to call unresolved function '{}'", name);
+            continue;
+        }
+
+        bytecode.PatchCall(index, addr);
+    }
+
     bytecode.SetMainRegisterFrame(global_registers.Total());
-    bytecode.Write(Op::Halt);
 }
 
 void BytecodeGenerator::Visit(const Scope& node) {
@@ -79,15 +93,19 @@ void BytecodeGenerator::Visit(const FunctionDeclaration& node) {
     body->Accept(*this);
     function_stack.pop_back();
 
+
     if (sigil::IsEntryPoint(name)) {
         bytecode.SetEntryPoint(fn.address);
+
+        // main doesn't return; it halts
+        bytecode.Write(Op::Halt);
         return;
     }
 
-    // insert ret op if the user hasn't, for none-functions
+    // functions that return nothing return automatically at the end of their scope
     using enum sigil::PrimitiveType;
     if (fn.return_type == PrimitiveName(None) && bytecode.LatestOpcode() != Op::Return) {
-        bytecode.Write(Op::Return, {REGISTER_RETURN});
+        ReturnNone();
     }
 }
 
@@ -161,8 +179,8 @@ void BytecodeGenerator::Visit(const Return& node) {
         bytecode.Write(Op::Return, {return_value});
         Registers().Free(return_value);
     } else {
-        // functions that return 'none' just don't affect the return register at all
-        bytecode.Write(Op::Return, {REGISTER_RETURN});
+        // functions that return 'none' don't affect the return register at all
+        ReturnNone();
     }
 }
 
@@ -172,15 +190,19 @@ void BytecodeGenerator::Visit(const Invocation& node) {
     }
 
     const auto target = node.GetIdentifier();
-    auto& fn          = functions[target];
+
+    auto& fn = functions[target];
 
     if (fn.address == bytecode.CurrentAddress()) {
         Log->error("Internal Compiler Error: Invocation {} jumps to call site '{}'", target, fn.address);
         return;
     }
+    if (fn.address < 0) {
+        pending_calls[target] = bytecode.WriteCall(SENTINEL_32, Registers().Total());
+    } else {
+        bytecode.WriteCall(fn.address, Registers().Total());
+    }
 
-
-    bytecode.WriteCall(fn.address, Registers().Total());
     register_buffer.push_back(REGISTER_RETURN); // functions always return something
 }
 
@@ -631,6 +653,10 @@ std::string_view BytecodeGenerator::CurrentFunctionName() const {
     return function_stack.back();
 }
 
+void BytecodeGenerator::ReturnNone() {
+    bytecode.Write(Op::Return, {REGISTER_RETURN});
+}
+
 void BytecodeGenerator::EnterScope() {
     ++scope;
 }
@@ -660,7 +686,9 @@ void BytecodeGenerator::ExitLoop() {
     loop_stack.pop_back();
 }
 
-void BytecodeGenerator::AddSymbol(const std::string_view name, Register index) {
+void BytecodeGenerator::AddSymbol(const std::string_view name, const Register index) {
+    // as it stands, duplicate symbol names across different functions get clobbered
+    // but this isn't a big deal because the BCG only operates function-locally anyway
     symbols[name] = {index, scope};
 }
 
