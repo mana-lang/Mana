@@ -12,8 +12,6 @@
 namespace sigil {
 using namespace mana::literals;
 
-constexpr auto GLOBAL_SCOPE = 0;
-
 // in bits
 enum class TypeSize : u8 {
     None       = 0,
@@ -31,22 +29,25 @@ enum class Mutability : u8 {
     Const,
 };
 
+using ScopeID = i8;
+
+constexpr ScopeID GLOBAL_SCOPE = 0;
+
 struct Symbol {
     std::string_view type;
-    u8 scope              = GLOBAL_SCOPE;
+    ScopeID scope         = GLOBAL_SCOPE;
     Mutability mutability = Mutability::Const;
+    bool is_param         = false;
 
-    Symbol(std::string_view type, u8 scope, Mutability mutability)
+    Symbol(std::string_view type, ScopeID scope, Mutability mutability)
         : type {type},
           scope {scope},
           mutability {mutability} {}
 
-    Symbol(u8 scope, Mutability mutability)
-        : scope {scope},
-          mutability {mutability} {}
-
-    Symbol(std::string_view type)
-        : Symbol(type, -1, Mutability::Const) {}
+    Symbol(std::string_view type, bool is_param)
+        : type {type},
+          scope {-1},
+          is_param {is_param} {}
 
     Symbol() = default;
 };
@@ -56,7 +57,8 @@ using SymbolTable = emhash8::HashMap<std::string_view, Symbol>;
 struct Function {
     SymbolTable locals;
     std::string_view return_type;
-    u8 scope = GLOBAL_SCOPE;
+    ScopeID scope  = GLOBAL_SCOPE;
+    u8 param_count = 0;
 };
 
 using FunctionTable = emhash8::HashMap<std::string_view, Function>;
@@ -87,7 +89,7 @@ class SemanticAnalyzer final : public ast::Visitor {
 
     i32 issue_counter;
 
-    u8 current_scope;
+    ScopeID current_scope;
     u8 loop_depth;
 
 public:
@@ -134,27 +136,23 @@ public:
     void Visit(const ast::Literal<bool>& literal) override;
 
 private:
-    void RegisterFunctionDeclarations(const ast::Artifact& artifact);
+    void RecordFunctionDeclarations(const ast::Artifact& artifact);
 
     void RegisterPrimitives();
     FunctionTable& GetFnTable();
     const FunctionTable& GetFnTable() const;
 
-    Function& EnterFunction(std::string_view name);
     std::string_view CurrentFunctionName() const;
 
     Function& CurrentFunction();
     const Function& CurrentFunction() const;
-
-    void EnterScope();
-    void ExitScope();
 
     std::string_view PopTypeBuffer();
     void BufferType(std::string_view type_name);
 
     bool TypesMatch(std::string_view lhs, std::string_view rhs) const;
 
-    void AddSymbol(std::string_view name, std::string_view type, bool is_mutable);
+    void AddSymbol(std::string_view name, std::string_view type, bool is_mutable, ScopeID scope);
     const Symbol* GetSymbol(std::string_view name) const;
 
     void HandleInitializer(const ast::Initializer& node, bool is_mutable);

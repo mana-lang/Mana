@@ -26,10 +26,6 @@ class BytecodeGenerator final : public ast::Visitor {
         ScopeID scope;
     };
 
-    struct Constant {
-        Register register_index;
-        ScopeID scope;
-    };
 
     struct JumpInstruction {
         i64 jump_index;
@@ -52,14 +48,12 @@ class BytecodeGenerator final : public ast::Visitor {
         i64 instruction_index;
     };
 
-    using ConstantTable = emhash8::HashMap<u16, Constant>;
     using SymbolTable   = emhash8::HashMap<std::string_view, Symbol>;
     using FunctionTable = emhash8::HashMap<std::string_view, Function>;
 
     ScopeID scope;
 
     SymbolTable symbols;
-    ConstantTable constants;
     FunctionTable functions;
 
     RegisterFrame global_registers;
@@ -131,6 +125,8 @@ private:
     Function& CurrentFunction();
     std::string_view CurrentFunctionName() const;
 
+    void HandleInvocationArguments(std::span<const ast::NodePtr> args, std::span<const Register> param_regs);
+
     void ReturnNone();
 
     void EnterScope();
@@ -159,15 +155,9 @@ private:
     template <hexe::ValuePrimitive VP>
     void CreateLiteral(const ast::Literal<VP>& literal) {
         const auto index = bytecode.AddConstant(literal.Get());
-        if (constants.contains(index)) {
-            register_buffer.push_back(constants[index].register_index);
-            return;
-        }
 
         const auto reg = Registers().Allocate();
         bytecode.Write(hexe::Op::LoadConstant, {reg, index});
-
-        constants[index] = {reg, scope};
 
         Registers().Lock(reg);
         register_buffer.push_back(reg);

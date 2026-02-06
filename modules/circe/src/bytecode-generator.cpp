@@ -30,8 +30,11 @@ void BytecodeGenerator::ObtainSemanticAnalysisInfo(const sigil::SemanticAnalyzer
     }
 
     for (const auto& info : analyzer.Types() | std::views::values) {
-        for (const auto& [name, func] : info.functions) {
-            functions[name].return_type = func.return_type;
+        for (const auto& [name, in_func] : info.functions) {
+            auto& fn = functions[name];
+
+            fn.return_type = in_func.return_type;
+            fn.registers.Reserve(in_func.locals.size());
         }
     }
 }
@@ -77,15 +80,17 @@ void BytecodeGenerator::Visit(const FunctionDeclaration& node) {
     const auto& params = node.GetParameters();
     const auto& body   = node.GetBody();
 
-    auto& fn = functions[name] = {
-                   .return_type = node.GetReturnType(),
-                   .address     = bytecode.CurrentAddress(),
-               };
+    auto& fn = functions[name];
+
+    fn.return_type = node.GetReturnType();
+    fn.address     = bytecode.CurrentAddress();
 
     ++scope;
-    for (const auto& param : params) {
-        const auto reg = fn.registers.Allocate();
-        AddSymbol(param.name, reg);
+    {
+        const auto param_regs = fn.registers.ViewLocked();
+        for (i64 i = 0; i < params.size(); ++i) {
+            AddSymbol(params[i].name, param_regs[i]);
+        }
     }
     --scope;
 
@@ -184,13 +189,10 @@ void BytecodeGenerator::Visit(const Return& node) {
 }
 
 void BytecodeGenerator::Visit(const Invocation& node) {
-    for (const auto& arg : node.GetArguments()) {
-        arg->Accept(*this);
-    }
-
     const auto target = node.GetIdentifier();
+    const auto& fn    = functions[target];
 
-    const auto& fn = functions[target];
+    HandleInvocationArguments(node.GetArguments(), fn.registers.ViewLocked());
 
     if (fn.address == bytecode.CurrentAddress()) {
         Log->error("Internal Compiler Error: Invocation {} jumps to call site '{}'", target, fn.address);
@@ -654,6 +656,23 @@ std::string_view BytecodeGenerator::CurrentFunctionName() const {
     return function_stack.back();
 }
 
+void BytecodeGenerator::HandleInvocationArguments(std::span<const NodePtr> args, std::span<const Register> param_regs) {
+    std::vector<Register> arg_regs;
+    arg_regs.reserve(args.size());
+
+    for (const auto& arg : args) {
+        arg->Accept(*this);
+        arg_regs.push_back(PopRegBuffer());
+    }
+
+    for (i64 i = 0; i < arg_regs.size(); ++i) {
+        const u8 dst = param_regs[i] + Registers().Total();
+        bytecode.Write(Op::Move, {dst, arg_regs[i]});
+    }
+
+    Registers().Free(arg_regs);
+}
+
 void BytecodeGenerator::ReturnNone() {
     bytecode.Write(Op::Return, {REGISTER_RETURN});
 }
@@ -800,19 +819,6 @@ void BytecodeGenerator::HandleInitializer(const Initializer& node, bool is_mutab
 
         // may be an identifier or constant
         const auto src = PopRegBuffer();
-
-        // if we're immutable, we can skip the extra move instruction
-        // this becomes an alias to the constant's register
-        // we can't outlive a constant anyway
-        if (not is_mutable) {
-            for (const auto [reg, a] : std::views::values(constants)) {
-                if (reg == src) {
-                    datum = reg;
-                    AddSymbol(name, datum);
-                    return;
-                }
-            }
-        }
 
         datum = Registers().Allocate();
         bytecode.Write(Op::Move, {datum, src});

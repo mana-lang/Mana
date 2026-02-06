@@ -109,6 +109,9 @@ FunctionDeclaration::FunctionDeclaration(const ParseNode& node) {
         parameters.emplace_back(FetchTokenText(param->tokens[0]), param_type);
     }
 
+    // fix the order after handling type propagation
+    std::ranges::reverse(parameters);
+
     if (node.tokens.size() == 2) {
         return_type = FetchTokenText(node.tokens[1]);
     } else {
@@ -122,7 +125,7 @@ std::string_view FunctionDeclaration::GetName() const {
     return name;
 }
 
-const std::vector<Parameter>& FunctionDeclaration::GetParameters() const {
+std::span<const Parameter> FunctionDeclaration::GetParameters() const {
     return parameters;
 }
 

@@ -103,8 +103,15 @@ err:
     return InterpretResult::CompileError;
 
 ret: {
+#ifdef HEX_DEBUG
+        const auto src  = NEXT_PAYLOAD;
+        RETURN_REGISTER = REG(src);
+
+        Log->debug("  <- R{} ({})", src + frame_offset, ValueToString(RETURN_REGISTER));
+#else
         RETURN_REGISTER = REG(NEXT_PAYLOAD);
-        frame_offset    -= call_stack[current_function].reg_frame;
+#endif
+        frame_offset -= call_stack[current_function].reg_frame;
 
         ip = call_stack[current_function--].ret_addr;
         DISPATCH();
