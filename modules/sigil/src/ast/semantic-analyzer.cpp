@@ -60,20 +60,20 @@ void SemanticAnalyzer::ExitScope() {
         Log->error("Internal Compiler Error: Attempted to exit global scope");
         return;
     }
-    auto& symbols = CurrentFunction().locals;
-
-    std::vector<std::string_view> to_remove;
-    to_remove.reserve(symbols.size());
-
-    for (const auto& [name, symbol] : symbols) {
-        if (symbol.scope == current_scope) {
-            to_remove.push_back(name);
-        }
-    }
-
-    for (const auto& name : to_remove) {
-        symbols.erase(name);
-    }
+    // auto& symbols = CurrentFunction().locals;
+    //
+    // std::vector<std::string_view> to_remove;
+    // to_remove.reserve(symbols.size());
+    //
+    // for (const auto& [name, symbol] : symbols) {
+    //     if (symbol.scope == current_scope) {
+    //         to_remove.push_back(name);
+    //     }
+    // }
+    //
+    // for (const auto& name : to_remove) {
+    //     symbols.erase(name);
+    // }
 
     if (current_scope == CurrentFunction().scope) {
         function_stack.pop_back();
@@ -115,7 +115,10 @@ void SemanticAnalyzer::Visit(const FunctionDeclaration& node) {
     auto& function = EnterFunction(node.GetName());
 
     for (const auto& param : node.GetParameters()) {
-        function.locals[param.name] = {function.scope, Mutability::Immutable};
+        auto& pl = function.locals[param.name];
+
+        pl.scope      = function.scope;
+        pl.mutability = Mutability::Immutable;
     }
 
     node.GetBody()->Accept(*this);
@@ -166,8 +169,8 @@ void SemanticAnalyzer::Visit(const Assignment& node) {
 
 void SemanticAnalyzer::Visit(const Return& node) {
     node.GetExpression()->Accept(*this);
-
     const auto type = PopTypeBuffer();
+
     if (not TypesMatch(CurrentFunction().return_type, type)) {
         Log->error("Type mismatch: Attempted to return '{1}' out of function with return type '{0}'",
                    CurrentFunction().return_type,
@@ -184,13 +187,29 @@ void SemanticAnalyzer::Visit(const Invocation& node) {
     if (not functions.contains(name)) {
         Log->error("Undefined identifier: No invocator exists with name '{}'", name);
         ++issue_counter;
-    } else {
-        BufferType(functions.at(name).return_type);
+        return;
     }
 
-    for (const auto& arg : node.GetArguments()) {
-        arg->Accept(*this);
+    const auto& fn   = functions.at(name);
+    const auto& args = node.GetArguments();
+    // what an ungly way to do this
+    i64 i = 0;
+    for (const auto& local : fn.locals | std::views::values) {
+        if (not local.is_param) {
+            continue;
+        }
+
+        args[i]->Accept(*this);
+        ++i;
+
+        const auto arg_type = PopTypeBuffer();
+        if (not TypesMatch(arg_type, local.type)) {
+            Log->error("Type mismatch: expected '{}', got '{}'", local.type, arg_type);
+            ++issue_counter;
+        }
     }
+
+    BufferType(fn.return_type);
 }
 
 void SemanticAnalyzer::Visit(const If& node) {
@@ -347,7 +366,8 @@ void SemanticAnalyzer::RegisterFunctionDeclarations(const Artifact& artifact) {
                     ++issue_counter;
                 }
 
-                fn.locals[param.name] = param.type;
+                fn.locals[param.name] = {param.type, true};
+                ++fn.param_count;
             }
         }
     }

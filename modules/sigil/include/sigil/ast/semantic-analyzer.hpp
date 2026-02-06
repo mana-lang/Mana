@@ -33,20 +33,19 @@ enum class Mutability : u8 {
 
 struct Symbol {
     std::string_view type;
-    u8 scope              = GLOBAL_SCOPE;
+    i16 scope             = GLOBAL_SCOPE;
     Mutability mutability = Mutability::Const;
+    bool is_param         = false;
 
     Symbol(std::string_view type, u8 scope, Mutability mutability)
         : type {type},
           scope {scope},
           mutability {mutability} {}
 
-    Symbol(u8 scope, Mutability mutability)
-        : scope {scope},
-          mutability {mutability} {}
-
-    Symbol(std::string_view type)
-        : Symbol(type, -1, Mutability::Const) {}
+    Symbol(std::string_view type, bool is_param)
+        : type {type},
+          scope {-1},
+          is_param {is_param} {}
 
     Symbol() = default;
 };
@@ -56,7 +55,8 @@ using SymbolTable = emhash8::HashMap<std::string_view, Symbol>;
 struct Function {
     SymbolTable locals;
     std::string_view return_type;
-    u8 scope = GLOBAL_SCOPE;
+    u8 scope       = GLOBAL_SCOPE;
+    u8 param_count = 0;
 };
 
 using FunctionTable = emhash8::HashMap<std::string_view, Function>;

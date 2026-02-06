@@ -128,6 +128,8 @@ fn Blep() {
 ##### Entry Point
 A standalone Mana program will always start execution from the special `Main` function. Other functions may still be called from outside Mana, e.g. when using Mana for scripting; however, *Main* is the typical place for execution to begin and end.
 
+In the future, there are considerations to have an `@[Entry]` attribute instead.
+
 ##### Inline
 Functions *may* be annotated with the `@[Inline]` *attribute* to declare the function *inlined*. 
 

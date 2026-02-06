@@ -44,7 +44,6 @@ void Execute(const std::filesystem::path& hexe_path) {
     Log->debug("--- Reading executable '{}' ---", hexe_path.filename().c_str());
     Log->debug("");
     PrintBytecode(bytecode);
-    Log->debug("");
 
     Log->debug("Executing...\n");
     Hex vm;

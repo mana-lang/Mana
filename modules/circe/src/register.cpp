@@ -17,6 +17,25 @@ Register RegisterFrame::Allocate() {
     return slot;
 }
 
+std::span<const Register> RegisterFrame::ViewLocked() const {
+    if (lock_index < 0) {
+        return {};
+    }
+
+    if (lock_index >= tracked.size()) {
+        Log->error("Internal Compiler Error: Lock index out of bounds");
+        return {};
+    }
+
+    return std::span(tracked.data(), lock_index + 1);
+}
+
+void RegisterFrame::Reserve(u16 count) {
+    for (u16 i = 0; i < count; ++i) {
+        Lock(Allocate());
+    }
+}
+
 void RegisterFrame::Free(const Register reg) {
     for (const auto r : tracked) {
         if (r == reg) {
