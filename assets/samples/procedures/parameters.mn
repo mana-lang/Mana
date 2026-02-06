@@ -1,9 +1,25 @@
-fn Add(a, b: i32) -> i32 {
+fn Summate(count: i64) -> i64 {
+    mut data a = 0
+
+    loop count => i {
+        a += i
+    }
+
+    return a
+}
+
+fn Add(a, b: i64) -> i64 {
     return a + b
 }
 
-fn Main() {
-    data x = Add(5, 12)
+fn SquareIf(a: i64, b: bool) -> i64 {
+    if b {
+        return a * a
+    }
 
-    data y = x * 3
+    return a
+}
+
+fn Main() {
+    data sum_of = Summate(Add(SquareIf(3, true), 17))
 }

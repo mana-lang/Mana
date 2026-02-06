@@ -59,7 +59,7 @@ public:
     explicit FunctionDeclaration(const ParseNode& node);
 
     SIGIL_NODISCARD std::string_view GetName() const;
-    SIGIL_NODISCARD const std::vector<Parameter>& GetParameters() const;
+    SIGIL_NODISCARD std::span<const Parameter> GetParameters() const;
     SIGIL_NODISCARD const NodePtr& GetBody() const;
     SIGIL_NODISCARD std::string_view GetReturnType() const;
 

@@ -51,38 +51,8 @@ const TypeTable& SemanticAnalyzer::Types() const {
     return types;
 }
 
-void SemanticAnalyzer::EnterScope() {
-    ++current_scope;
-}
-
-void SemanticAnalyzer::ExitScope() {
-    if (current_scope == GLOBAL_SCOPE) {
-        Log->error("Internal Compiler Error: Attempted to exit global scope");
-        return;
-    }
-    // auto& symbols = CurrentFunction().locals;
-    //
-    // std::vector<std::string_view> to_remove;
-    // to_remove.reserve(symbols.size());
-    //
-    // for (const auto& [name, symbol] : symbols) {
-    //     if (symbol.scope == current_scope) {
-    //         to_remove.push_back(name);
-    //     }
-    // }
-    //
-    // for (const auto& name : to_remove) {
-    //     symbols.erase(name);
-    // }
-
-    if (current_scope == CurrentFunction().scope) {
-        function_stack.pop_back();
-    }
-    --current_scope;
-}
-
 void SemanticAnalyzer::Visit(const Artifact& artifact) {
-    RegisterFunctionDeclarations(artifact);
+    RecordFunctionDeclarations(artifact);
 
     for (const auto& declaration : artifact.GetChildren()) {
         declaration->Accept(*this);
@@ -100,25 +70,37 @@ void SemanticAnalyzer::Visit(const Artifact& artifact) {
     }
 }
 
-// EnterScope should be called before this visiting this node,
-// as certain things may fall outside of a scope body but still belong to it
-// such as function parameters or loop bindings
 void SemanticAnalyzer::Visit(const Scope& node) {
+    ++current_scope;
+
     for (const auto& statement : node.GetStatements()) {
         statement->Accept(*this);
     }
-    ExitScope();
+
+    if (current_scope == CurrentFunction().scope) {
+        function_stack.pop_back();
+    }
+
+    if (current_scope == GLOBAL_SCOPE) {
+        Log->error("Internal Compiler Error: Attempted to exit global scope");
+        return;
+    }
+    --current_scope;
 }
 
 
 void SemanticAnalyzer::Visit(const FunctionDeclaration& node) {
-    auto& function = EnterFunction(node.GetName());
+    const auto name = node.GetName();
+    function_stack.push_back(name);
+
+    auto& function = GetFnTable()[name];
+    function.scope = current_scope + 1;
 
     for (const auto& param : node.GetParameters()) {
-        auto& pl = function.locals[param.name];
+        auto& local = function.locals[param.name];
 
-        pl.scope      = function.scope;
-        pl.mutability = Mutability::Immutable;
+        local.scope      = function.scope;
+        local.mutability = Mutability::Immutable;
     }
 
     node.GetBody()->Accept(*this);
@@ -161,7 +143,7 @@ void SemanticAnalyzer::Visit(const Assignment& node) {
 
     const auto expr_type = PopTypeBuffer();
     if (symbol != nullptr && not TypesMatch(expr_type, symbol->type)) {
-        Log->error("Type mismatch: expected '{}', got '{}'", symbol->type, expr_type);
+        Log->error("Assignment type mismatch: expected '{}', got '{}'", symbol->type, expr_type);
         ++issue_counter;
     }
     PreventAssignmentWithNone(expr_type);
@@ -172,7 +154,7 @@ void SemanticAnalyzer::Visit(const Return& node) {
     const auto type = PopTypeBuffer();
 
     if (not TypesMatch(CurrentFunction().return_type, type)) {
-        Log->error("Type mismatch: Attempted to return '{1}' out of function with return type '{0}'",
+        Log->error("Return type mismatch: Attempted to return '{1}' out of function with return type '{0}'",
                    CurrentFunction().return_type,
                    type
         );
@@ -192,7 +174,17 @@ void SemanticAnalyzer::Visit(const Invocation& node) {
 
     const auto& fn   = functions.at(name);
     const auto& args = node.GetArguments();
-    // what an ungly way to do this
+
+    if (fn.param_count != args.size()) {
+        Log->error("Function '{}' expects {} arguments, but {} were provided", name, fn.param_count, args.size());
+        ++issue_counter;
+
+        // still wanna buffer the function's type so errors don't propagate to silly places
+        BufferType(fn.return_type);
+        return;
+    }
+
+    // params are recorded in reverse order to resolve their types in comma sequences e.g. 'a, b: T'
     i64 i = 0;
     for (const auto& local : fn.locals | std::views::values) {
         if (not local.is_param) {
@@ -204,7 +196,7 @@ void SemanticAnalyzer::Visit(const Invocation& node) {
 
         const auto arg_type = PopTypeBuffer();
         if (not TypesMatch(arg_type, local.type)) {
-            Log->error("Type mismatch: expected '{}', got '{}'", local.type, arg_type);
+            Log->error("Argument type mismatch: expected '{}', got '{}'", local.type, arg_type);
             ++issue_counter;
         }
     }
@@ -329,7 +321,7 @@ void SemanticAnalyzer::Visit(const Literal<bool>&) {
     BufferType(PrimitiveName(Bool));
 }
 
-void SemanticAnalyzer::RegisterFunctionDeclarations(const Artifact& artifact) {
+void SemanticAnalyzer::RecordFunctionDeclarations(const Artifact& artifact) {
     // not the biggest fan of dynamic_cast, but a whole other visitor just to collect
     // function declarations would be some otherworldly level of premature optimization
     for (const auto& declaration : artifact.GetChildren()) {
@@ -410,16 +402,6 @@ const FunctionTable& SemanticAnalyzer::GetFnTable() const {
     return types.at(PrimitiveName(Fn)).functions;
 }
 
-Function& SemanticAnalyzer::EnterFunction(std::string_view name) {
-    function_stack.push_back(name);
-    auto& new_fn = GetFnTable()[name];
-
-    EnterScope();
-
-    new_fn.scope = current_scope;
-    return new_fn;
-}
-
 std::string_view SemanticAnalyzer::CurrentFunctionName() const {
     return function_stack.back();
 }
@@ -449,7 +431,11 @@ bool SemanticAnalyzer::TypesMatch(const std::string_view lhs, const std::string_
            || (IsFloatPrimitive(lhs) && IsFloatPrimitive(rhs));
 }
 
-void SemanticAnalyzer::AddSymbol(std::string_view name, std::string_view type, bool is_mutable) {
+void SemanticAnalyzer::AddSymbol(const std::string_view name,
+                                 const std::string_view type,
+                                 const bool is_mutable,
+                                 const ScopeID scope
+) {
     const auto redef_error = [this](const std::string_view n) {
         Log->error("Redefinition of '{}'", n);
         ++issue_counter;
@@ -463,8 +449,8 @@ void SemanticAnalyzer::AddSymbol(std::string_view name, std::string_view type, b
     // we don't have constants yet
     const auto mutability = is_mutable ? Mutability::Mutable : Mutability::Immutable;
 
-    if (current_scope == GLOBAL_SCOPE) {
-        globals[name] = {type, current_scope, mutability};
+    if (scope == GLOBAL_SCOPE) {
+        globals[name] = {type, scope, mutability};
         return;
     }
 
@@ -474,7 +460,7 @@ void SemanticAnalyzer::AddSymbol(std::string_view name, std::string_view type, b
         return;
     }
 
-    locals[name] = {type, current_scope, mutability};
+    locals[name] = {type, scope, mutability};
 }
 
 const Symbol* SemanticAnalyzer::GetSymbol(std::string_view name) const {
@@ -509,13 +495,13 @@ void SemanticAnalyzer::HandleInitializer(const Initializer& node, const bool is_
     }
 
     if (has_init && not TypesMatch(initializer_type, annotation_type)) {
-        Log->error("Type mismatch: expected '{}', got '{}'", annotation_type, initializer_type);
+        Log->error("Initializer: Type mismatch: expected '{}', got '{}'", annotation_type, initializer_type);
         ++issue_counter;
     }
 
     PreventAssignmentWithNone(initializer_type);
 
-    AddSymbol(node.GetName(), annotation_type, is_mutable);
+    AddSymbol(node.GetName(), annotation_type, is_mutable, current_scope);
 }
 
 // temporary, until we can elide every binding containing 'none'
@@ -532,10 +518,8 @@ void SemanticAnalyzer::PreventAssignmentWithNone(const std::string_view type) {
 void SemanticAnalyzer::HandleRangedLoop(const LoopRange& node, const bool is_mutable) {
     ++loop_depth;
 
-    EnterScope();
-
     // counter is mandatory in ranged loop
-    AddSymbol(node.GetCounterName(), PrimitiveName(I64), is_mutable);
+    AddSymbol(node.GetCounterName(), PrimitiveName(I64), is_mutable, current_scope + 1);
 
     const bool has_origin = node.GetOrigin() != nullptr;
     if (has_origin) {
