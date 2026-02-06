@@ -29,7 +29,10 @@ public:
     bool Tokenize(const std::filesystem::path& file_path);
     void Reset();
 
+    SIGIL_NODISCARD ml::usize TokenCount() const;
+
     SIGIL_NODISCARD std::vector<Token>&& RelinquishTokens();
+    SIGIL_NODISCARD const std::vector<Token>& Tokens() const;
 
 private:
     void TokenizeLine();

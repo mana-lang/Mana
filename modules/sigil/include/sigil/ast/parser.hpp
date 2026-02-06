@@ -18,23 +18,23 @@ class Parser {
     ParseNode parse_tree;
 
     std::unique_ptr<ast::Artifact> syntax_tree;
-
-private:
-    enum class RangeExprResult : ml::u8 {
-        MatchedExpr,
-        MatchedRange,
-        NoMatch
-    };
+    ml::i32 issue_counter;
 
 public:
-    explicit Parser(const TokenStream&& tokens);
+    explicit Parser(TokenStream&& tokens);
     explicit Parser(const TokenStream& tokens);
+
+    Parser();
+    void AcquireTokens(const TokenStream& tks);
+    void AcquireTokens(TokenStream&& tks);
 
     SIGIL_NODISCARD bool Parse();
 
     SIGIL_NODISCARD const ParseNode& ViewParseTree() const;
     SIGIL_NODISCARD const TokenStream& ViewTokenStream() const;
-    SIGIL_NODISCARD ast::Node* ViewAST() const;
+    SIGIL_NODISCARD ast::Node* AST() const;
+
+    SIGIL_NODISCARD ml::i32 IssueCount() const;
 
     void PrintParseTree() const;
     void EmitParseTree(std::string_view file_name) const;
@@ -59,6 +59,9 @@ private:
     void AddCurrentTokenTo(ParseNode& node) const;
     void AddCycledTokenTo(ParseNode& node);
 
+    void SkipCurrentToken();
+    void SkipTokens(ml::i32 count);
+
     bool ProgressedParseTree(ParseNode& node);
 
     void ConstructAST(const ParseNode& node);
@@ -72,9 +75,10 @@ private:
     /// @param node       Parse node to mark as `Rule::Mistake` on failure.
     /// @param error_message  Diagnostic message describing the expected syntax.
     /// @return `true` if the condition holds; `false` otherwise.
-    bool Expect(bool condition, ParseNode& node, std::string_view error_message) const;
+    bool Expect(bool condition, ParseNode& node, std::string_view error_message);
 
     // Matchers
+    bool MatchedDeclaration(ParseNode& node);
     bool MatchedStatement(ParseNode& node);
 
     bool MatchedScope(ParseNode& node);
@@ -87,7 +91,12 @@ private:
 
     bool MatchedLoop(ParseNode& node);
     bool MatchedLoopBody(ParseNode& node);
-    RangeExprResult MatchedRangeExpr(ParseNode& node);
+
+    bool MatchedFunctionDeclaration(ParseNode& node);
+    bool MatchedParameterList(ParseNode& node);
+    bool MatchedReturn(ParseNode& node);
+
+    bool MatchedInvocation(ParseNode& node);
 
     bool MatchedDataDeclaration(ParseNode& node);
     bool MatchedAssignment(ParseNode& node);

@@ -28,7 +28,8 @@ fn main() {
 > `mut data four: f32 = two + two`
 
 ##### Mutability
-To make data mutable, it must be annotated with the `mut` keyword. A mutable data binding is effectively a variable.
+To make data mutable, it must be annotated with the `mut` keyword. 
+A mutable data binding is essentially a variable.
 ```kotlin
 import std.fmt
     
@@ -40,6 +41,25 @@ fn main() {
 ```
 >[!tip] Output
 >Catch-22
+
+##### Binding
+The *binding operator* `=>` in a data declaration allows you to perform inline logic without affecting the datum's mutability.
+```kotlin
+data x: i32 => {
+	// 'x' binds to this scope
+	// within this scope, 'x' is assignable
+	RunSomeFunc()
+	DoSomeTest()
+	x = FetchResult()
+}
+```
+Because data is defaulted unless otherwise specified in Mana, you can perform arithmetic on a datum before it's been assigned, by knowing its default initial value.
+
+For primitives, the default values are `0` and `false`.
+
+For composite types, they are either the default values of *all* fields, or the values specified in the type's interface.
+
+For enumerated types, the default value is the first enumeration.
 
 ##### Assignment Deduction
 **Mana** makes certain assumptions about data when it's assigned to other data.
@@ -126,13 +146,13 @@ fn main() {
 > z: 0
 
 ##### Uninitialized Data
-Unassigned data declarations are zeroed by default in **Mana**. To leave it uninitialized, you must do so explicitly with the `none` keyword.
+Unassigned data declarations are zeroed by default in **Mana**. To leave it uninitialized, you must do so explicitly with the `@[NoInit]` attribute.
 ```kotlin  
 import std.fmt
 
 fn main() {
 	// data will be uninitialized.
-    data x: bool = none
+    mut data x: bool = @[NoInit]
     
     // using it is either a compile error, or undefined behaviour
     fmt.Print(x) 
@@ -141,9 +161,9 @@ fn main() {
 >[!danger] Error
 >Data `x` was not initialized, but an attempt was made to read from it
 
-Note: In the above example, `x` can never be initialized, because it's not `mut`.
+This attribute can *only* be used with *mutable* data declarations. Immutable data bindings *cannot* be left uninitialized, as they would be permanently unusable.
  
- ##### Constants
+##### Constants
 Compile-time constants are created with the `const` keyword.
 They *must* have their type annotated, and cannot be unassigned.
 

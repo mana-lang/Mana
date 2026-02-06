@@ -1,0 +1,2 @@
+data x = 12
+data y: i32 = 22

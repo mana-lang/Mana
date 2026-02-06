@@ -3,13 +3,16 @@
 namespace mana {
 enum class ExitCode {
     Success,
-    UnknownCriticalError,
+
+    UnknownCriticalError = -100,
 
     NoFileProvided,
     FileNotFound,
 
     LexerError,
     ParserError,
+    SyntaxError,
+    SemanticError,
 
     OutputOpenError,
     OutputWriteError,

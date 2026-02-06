@@ -33,7 +33,7 @@ fn
 ```
 
 
-Besides the primitive types, **Mana** also has some special type-related keywords.
+Besides the primitive types, Mana also has some special type-related keywords.
 ```C#
 	// same as u8, except when handling text
 	// [byte] is interpreted differently from [u8]
@@ -43,16 +43,42 @@ byte
 	// offers an interface over the [u8] type
 string
 
-	// unit type/non-type
-	// data of this type may not be declared
-	// and functions can not return this type
+	// unit type
 none
 ```
-Attempting to create data of type `none` will result in a compile error. Setting a function's return type to `none` indicates it *may not* return any value; it would be equivalent to a `void` function in *C*.
-##### Custom Types
-You may also create your own types in **Mana**. You do so using the `type` keyword.
 
-A user-defined type block consists of the type keyword and the type's name, followed by a block of *type members* or *fields*, each with their own type specified.
+
+##### None
+`none` is a special keyword which is both a type and a value, but represents the *absence* of a value. In essence, `none`  is a value of type `none`. 
+
+What this means is:
+- Functions
+	- You may specify `none` as the return type of a function, which will be the same as specifying no return type. 
+	- A function with return type `none` can *only* return `none`.
+	- The following two statements are equivalent:
+		- `return`
+		- `return none`
+	- By default, operators for composite types are empty functions which return `none`.
+		- While this means that for two bindings `a, b` of a type `T`, the operation `a + b` *would* compile (the result of that expression is `none`, the compiler *may* warn for such expressions, and can be configured not to.
+- Data
+	- You may assign `none` to a binding during initialization, and that will deduce its type to be `none`.  
+		- You may annotate a binding with type `none`, which will default its value to `none`
+		- This means the following statements are all equivalent:
+			- `data x = none`
+			- `data x: none`
+			- `data x: none = none`
+	- Data of type `none` cannot meaningfully be used in any expressions.
+	- Data of type `none` can be represented with 0 bits of information.
+- Pattern Matching
+	- You may have *one* match arm that matches to `none`
+	- This arm represents not having matched anything. When all other matches fail, a `match` block will match to `none`.
+
+In short, `none` is the way with which you describe the *absence* of things in Mana.
+
+##### Composite Types
+Composite types can be created using the `type` keyword.
+
+A **Composite Type** block consists of the type keyword and the type's name, followed by a block of *fields* (*type members*), each with their own type annotated.
 ```rust
 type Foo {
 	a: i32
@@ -60,28 +86,34 @@ type Foo {
 	c: string
 }
 ```
-
-Data of this type is declared as normal, and its members' data *must* be initialized individually in one of two ways:
 ```kotlin
 // implicit
 data foo = Foo {102, 43.3, "hello"}
 
 // explicit
 data bar = Foo {.b = 43.3
-				.a = 102
-				.c = "hello"}
+				.c = "hello"} // 'a' will be 0
 ```
 
-For *implicit* initialization, the data members *must* be initialized in the *same* order they were declared in their type declaration, and *all* data members *must* be initialized.
+For *implicit* initialization, the fields *must* be initialized in the *same* order they were declared in their type declaration, and *all* data members *must* be initialized.
 
-*Explicit* initialization does *not* have these requirements. Any members left uninitialized in an explicit initializer will be *zeroed*.
+*Explicit* initialization does *not* have these requirements. Any fields left uninitialized in an explicit initializer will be *defaulted*.
 
 Typically, it is preferable to use *explicit* initialization.
 
-Both types of initialization are done via a *list*, which means they may either be separated by commas, or by newlines.
+Both types of initialization are done via a *braced-list*, which means they may either be separated by commas, or by newlines.
+
+If there is no *braced-list* in the declaration, *all* members are defaulted.
+```kotlin
+data bax = Foo
+```
+In this example:
+- `a` will be `0`
+- `b` will be `0.0`
+- `c` will be `""`
 
 ##### Default Values
-You *may* declare a *default value* for a *type member*. Type members with default values will use their default value instead of their zero-value when omitted from an explicit initializer.
+You *may* declare a *default value* for a field. Type members with default values will use their default value instead of their zero-value when omitted from an explicit initializer.
 ```rust
 type Foo {
 	a: i32
@@ -90,11 +122,11 @@ type Foo {
 }
 ```
 ```kotlin
-data foo = Foo {.a = 102, .c = "hello"}
+data foo = Foo {.a = 102, .c = "hello"} // 'b' will be 32.99
 ```
 
 ##### Locking Mutable Data
-Mutable data may be annotated with the `@[Locked]` attribute to indicate that anything from an outer scope is not allowed to write to it. This is particularly useful inside custom types.
+Fields may be annotated with the `@[Locked]` attribute to indicate that *only* mutable associated functions may modify them.
 
 **Mana** does *not* have the concept of granular private access specifiers for individual type members. However, sometimes you want a value which may be modified by an interface function, but not by anything else. In these scenarios, you would want to use `@[Locked]`.
 ```rust
@@ -126,6 +158,41 @@ type Foo {
 	c: string
 }
 ```
-
 > [!note]
 `[Locked]` data is restricted to only be modifiable by interface functions. However, **Mana** allows anywhere to create an associated function for a type. `[Locked]` is merely an indicator that a type member *shouldn't* freely be modified, for some reason or another.
+
+
+- Audio:
+	- Music
+	- SFX
+- IO:
+	- Config file (settings)
+	- Save files (replays?)
+	- User input (rebindable, stored in config file)
+- Game States:
+	- Main Menu
+	- Game
+	- Run Over
+	- Game Over
+	- Game End
+- Player 
+	- Resources
+		- Lives
+		- Bombs
+		- Graze
+		- Score
+		- Element?
+	- Mechanics
+		- Move (4-way)
+		- Shoot
+		- Bomb
+		- Skill
+- Boss
+	- Multiple Phases
+	- Movement
+- System
+	- Collision Detection
+	- Object Hierarchy
+	- Simple Trig Library
+	- Item Drops & Pickups
+	- Scoring

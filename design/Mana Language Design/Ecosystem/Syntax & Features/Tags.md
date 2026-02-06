@@ -44,7 +44,7 @@ struct Entity {
 // the 'Tag' type must be specified when using tag values
 data janet = Entity {
 	.tag = Tag.Entity.Enemy.Zombie
-	.bark = "I thought zombies became stupid. This sucks."
+	.bark = "I thought zombies were mindless. This sucks."
 	.health = -100
 }
 
@@ -97,4 +97,10 @@ Normally, Tags belonging to a foreign Artifact must be accessed via the scope re
 
 `SomeArtifact::Tag.Status.Burning`
 
-One may expose
+One may expose these tags by importing that artifact's tags explicitly:
+
+```kotlin
+import SomeArtifact::Tag
+```
+
+This has to be done *explicitly*, even if you've done a wildcard `import SomeArtifact::*`

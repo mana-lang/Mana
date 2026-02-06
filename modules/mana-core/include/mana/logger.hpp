@@ -7,8 +7,6 @@
 
 #include <memory>
 
-#include "../../../../.build/release/_deps/spdlog-src/include/spdlog/sinks/basic_file_sink.h"
-
 namespace mana {
 enum class LogLevel : literals::u8 {
     Trace,

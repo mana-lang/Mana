@@ -13,52 +13,58 @@ KW_RETURN = "return" ;
 KW_LOOP      = "loop"  ;
 KW_SKIP      = "skip"  ;
 KW_BREAK     = "break" ;
-OP_RANGE_INC = "~"     ;
-OP_RANGE_EXC = ".."    ;
-OP_TARGET    = "=>"    ;
+OP_RANGE     = ".."    ;
+OP_BINDING   = "=>"    ;
+
+KW_FN     = "fn" ;
+OP_RETURN = "->" ;
 
 TERMINATOR = "\n" | ";";
 
-  (* rules *)
-artifact = stmt* EOF ;
+(* parse rules *)
+artifact = decl* EOF ;
 
-stmt   = if_block 
+decl = fn_decl
+     | data_decl TERMINATOR
+     ;
+
+stmt   = decl
+       | if_block 
        | loop 
-       | (loop_control | data_decl | assign | expr) TERMINATOR ;
+       | (return | loop_control | assign | expr) TERMINATOR ;
 
+scope  = '{' stmt* '}' ;
 
-if_condition = KW_IF expr
+fn_decl = KW_FN ID param_list ret_type? scope   ;
+param_list = '(' (param (',' param)*)? ')'      ;
+param = ID type_spec?                           ;
+ret_type = OP_RETURN ID                         ;
+
+return = KW_RETURN expr? ;
+
+data_decl   = KW_MUT? KW_DATA ID type_spec? ('=' expr)? ;
+type_spec   = (':' ID) ;
+
+if_condition = KW_IF expr  ;
 
 if_block = if_condition scope if_tail? ;
-if_tail = KW_ELSE (if_block | scope) ;
+if_tail = KW_ELSE (if_block | scope)   ;
 
 loop = KW_LOOP (ID ':')? loop_body ;
 
-loop_body = scope if_condition?            (* infinite / post-conditional *)
-          | if_condition scope             (* conditional *)
-          | range_expr ID scope            (* ranged iteration *)
-          | fixed_expr ID? scope           (* fixed iteration, expr must evaluate to integer *)
+loop_body = scope (OP_BINDING if_condition)?                  (* infinite / post-conditional *)
+          | if_condition scope                                (* conditional *)
+          | expr scope                                        (* fixed *)
+          | expr (OP_RANGE expr)? OP_BINDING mut? ID scope    (* ranged *)   
           ;
 
-range_op = OP_RANGE_EXC | OP_RANGE_INC ;
+loop_control = (KW_SKIP | KW_BREAK) (OP_BINDING ID)? if_condition? ;
 
-fixed_expr = expr OP_RANGE_INC
-           | OP_RANGE_INC expr
-           | expr
-           ;
+assign = ID '=' expr   ;   
 
-range_expr = expr? range_op expr? ;
-
-loop_control = (KW_SKIP | KW_BREAK) (OP_TARGET ID)? if_condition? ;
-
-data_decl   = KW_MUT? KW_DATA ID ('=' expr)?    ;
-
-assign = ID '=' expr       
-
-scope  = "{" stmt* "}"
-
-return = KW_RETURN expr TERMINATOR ;
-
+(* Todo: still need to bake associativity into the grammar *)
+(* e.g. logical = equality | logical ('&&' | '||') equality *)
+(* also need to give AND higher precedence than OR *)
 expr       = logical                                  ;  
 logical    = equality ( ('&&' | '||') equality )*     ;
 equality   = comparison (  ('!=' | '==') comparison)* ;
@@ -68,12 +74,12 @@ factor     = unary ( ('/' | '*') unary )*             ;
 unary      = ('!' | '-') unary | primary              ;
 primary    = grouping | literal | array_literal | ID  ;
 
-grouping   = "(" expr ")" ;
+grouping   = '(' expr ')' ;
 literal    = number
            | string
-           | "true"
-           | "false"
-           | "none"
+           | 'true'
+           | 'false'
+           | 'none'
            ;
 
 array_literal = '[' elem_list? ']'   ;

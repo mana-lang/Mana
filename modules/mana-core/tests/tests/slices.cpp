@@ -1,14 +1,14 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include <mana/vm/slice.hpp>
-#include <mana/vm/value.hpp>
+#include <mana/hexe/bytecode.hpp>
+#include <mana/hexe/value.hpp>
 
-using namespace mana::vm;
+using namespace mana::hexe;
 using namespace mana::literals;
 
 TEST_CASE("Slices") {
     SECTION("Constant pool indexing") {
-        Slice s;
+        ByteCode s;
 
         u64 a = s.AddConstant(42);
         u64 b = s.AddConstant(3.5);
@@ -25,7 +25,7 @@ TEST_CASE("Slices") {
     }
 
     SECTION("Instruction sequencing") {
-        Slice s;
+        ByteCode s;
 
         // Each Push instruction references a Constant in the Constant Pool
         // Constant indices are encoded as 16-bit values, allowing up to 65535 constants
@@ -62,7 +62,7 @@ TEST_CASE("Slices") {
     }
 
     SECTION("Serialization") {
-        Slice s;
+        ByteCode s;
 
         s.Write(Op::Push, s.AddConstant(10));
         s.Write(Op::Push, s.AddConstant(20));
@@ -73,7 +73,7 @@ TEST_CASE("Slices") {
         REQUIRE_NOTHROW(bytes = s.Serialize());
         REQUIRE_FALSE(bytes.empty());
 
-        Slice d;
+        ByteCode d;
         REQUIRE_NOTHROW(d.Deserialize(bytes));
 
         REQUIRE(d.Constants().size() == s.Constants().size());
@@ -89,7 +89,7 @@ TEST_CASE("Slices") {
     }
 
     SECTION("Empty slices") {
-        Slice s;
+        ByteCode s;
 
         REQUIRE(s.Instructions().empty());
         REQUIRE(s.Constants().empty());
@@ -98,7 +98,7 @@ TEST_CASE("Slices") {
         REQUIRE_NOTHROW(bytes = s.Serialize());
         REQUIRE(bytes.empty());
 
-        Slice d;
+        ByteCode d;
         REQUIRE_NOTHROW(d.Deserialize(bytes));
 
         REQUIRE(d.Instructions().empty());

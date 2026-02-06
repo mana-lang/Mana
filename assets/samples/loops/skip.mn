@@ -1,0 +1,12 @@
+mut data a = 0
+mut data b = 0
+
+loop 20 {
+    a += 1
+
+    skip if a % 2 == 0
+    b += 1
+}
+
+data x = a
+data y = b

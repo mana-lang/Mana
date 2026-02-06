@@ -26,7 +26,7 @@ Circe can be invoked by Salem, Hex, or standalone.
 Circe's mascot is a magpie.
 
 ##### Sigil
-**Sigil** is the parsing front-end shared between **Salem** and **Circe**. 
+**Sigil** is the parsing front-end shared between **Salem** and **Circe**. It also performs semantic analysis on the AST, and its output can be used for anything, including communicating with Language Servers for editor support in various IDEs.
 
 
 ### Tools

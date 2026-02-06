@@ -1,0 +1,6 @@
+mut data a = 0
+loop 6 {
+    a += 1
+} 
+
+data b = a

@@ -1,0 +1,5 @@
+mut data x: i32
+mut data y = 57.7
+
+x = 97
+y = 82.4

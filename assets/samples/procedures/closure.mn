@@ -1,0 +1,12 @@
+
+
+data alloc_origin = fn(origin: &NodePtr) => |mut &bytecode, mut this| -> u16 {
+    if origin == none {
+        data reg = AllocateRegister()
+        .bytecode.Write(Op.LoadConstant, [reg, bytecode.AddConstant(0)])
+        return reg
+    }
+
+    origin.Accept(.this)
+    return PopRegBuffer()
+}

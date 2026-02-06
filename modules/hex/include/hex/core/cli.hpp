@@ -17,9 +17,8 @@ struct CommandLineSettings {
 
     i64 Populate();
 
-    HEX_NODISCARD bool ShouldSayHi() const;
-    HEX_NODISCARD bool ShouldGenTestfile() const;
-    HEX_NODISCARD auto ExecutableName() const -> std::string_view;
+    HEX_NODISCARD std::string_view HexeName() const;
+    HEX_NODISCARD bool ShouldExit();
 
 private:
     std::unique_ptr<CLI::App> cli;
@@ -29,6 +28,7 @@ private:
 
     bool say_hi;
     bool gen_testfile;
-    std::string executable;
+    std::string hexe_name;
+    bool should_exit {false};
 };
 } // namespace hex

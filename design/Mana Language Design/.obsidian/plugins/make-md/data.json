@@ -40,11 +40,11 @@
   "expandedSpaces": [
     "/",
     "//Ecosystem Overview",
-    "//Ecosystem",
     "//Tags",
     "//Ecosystem/Ecosystem/Syntax",
-    "//Ecosystem/Ecosystem/Syntax & Features",
-    "//_Assets"
+    "//Ecosystem",
+    "//Ecosystem/Ecosystem/Modules",
+    "//Ecosystem/Ecosystem/Syntax & Features"
   ],
   "expandFolderOnClick": true,
   "spacesFolder": "Tags",
@@ -84,8 +84,8 @@
   "selectedKit": "default",
   "actionMaxSteps": 100,
   "contextPagination": 25,
-  "skipFolderNames": [],
   "skipFolders": [],
+  "skipFolderNames": [],
   "enhancedLogs": false,
   "basics": false,
   "basicsSettings": {
@@ -218,5 +218,8 @@
   "notesPreview": false,
   "editStickerInSidebar": false,
   "overrideNativeMenu": true,
-  "onboardingCompleted": false
+  "onboardingCompleted": false,
+  "contextCreateUseModal": false,
+  "homepagePath": "",
+  "mobileMakeHeader": false
 }

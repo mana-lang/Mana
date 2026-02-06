@@ -1,0 +1,28 @@
+fn Heck() -> i32 {
+    return 2000000000
+}
+
+fn Main() {
+    data a = 95
+
+    Woah()
+
+    data x = Heck()
+}
+
+fn Woah() {
+    mut data a: i64 = 0
+    mut data b = 0
+
+    loop Heck() => i {
+        a += Sheesh()
+        b = i
+    }
+
+    data c = a
+    data d = b
+}
+
+fn Sheesh() -> i8 {
+    return 5
+}

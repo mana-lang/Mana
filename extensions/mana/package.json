@@ -1,0 +1,25 @@
+{
+  "name": "mana",
+  "displayName": "mana",
+  "description": "Syntax highlighting for the Mana language",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.108.1"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "mana",
+      "aliases": ["Mana", "mana"],
+      "extensions": [".mn",".mana"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "mana",
+      "scopeName": "source.mana",
+      "path": "./syntaxes/mana.tmLanguage.json"
+    }]
+  }
+}
