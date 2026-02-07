@@ -4,30 +4,34 @@
 #include <mana/literals.hpp>
 
 #include <array>
+#include <span>
+#include <string_view>
 #include <vector>
 
 namespace hexe {
 using namespace mana;
 using namespace mana::literals;
 
-inline PrimitiveValueType GetManaTypeFrom(i64) {
+inline ValueType GetValueTypeFrom(i64) {
     return Int64;
 }
 
-inline PrimitiveValueType GetManaTypeFrom(f64) {
+inline ValueType GetValueTypeFrom(f64) {
     return Float64;
 }
 
-inline PrimitiveValueType GetManaTypeFrom(u64) {
+inline ValueType GetValueTypeFrom(u64) {
     return Uint64;
 }
 
-inline PrimitiveValueType GetManaTypeFrom(bool) {
+inline ValueType GetValueTypeFrom(bool) {
     return Bool;
 }
 
 template <typename T>
-concept ValuePrimitive = std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>;
+concept ValuePrimitiveType = std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>;
+
+constexpr auto SEGMENT_SIZE = sizeof(i64);
 
 struct Value {
     friend class ByteCode;
@@ -36,32 +40,65 @@ struct Value {
         i64 as_i64;
         u64 as_u64;
         f64 as_f64;
+
         bool as_bool;
+        char as_string[SEGMENT_SIZE];
     };
 
-    using LengthType = u32;
+    using SizeType = i32;
 
-    static constexpr auto SIZE = sizeof(Data) + sizeof(LengthType) + sizeof(PrimitiveValueType);
+    static constexpr auto SIZE = sizeof(Data) + sizeof(SizeType) + sizeof(ValueType);
 
     Value(i64 i);
     Value(u64 u);
     Value(f64 f);
     Value(bool b);
 
+    Value(std::string_view s);
+
+    template <ValuePrimitiveType VT>
+    explicit Value(const std::span<VT> values)
+        : size(values.size()),
+          type(GetValueTypeFrom(VT {})) {
+        if (size == 0) {
+            data = nullptr;
+            return;
+        }
+
+        if (size == 1) {
+            data = new Data;
+        } else {
+            data = new Data[size];
+        }
+
+        for (u64 i = 0; i < size; ++i) {
+            if constexpr (std::is_same_v<VT, bool>) {
+                data[i].as_bool = values[i];
+            } else if constexpr (std::is_floating_point_v<VT>) {
+                data[i].as_f64 = static_cast<f64>(values[i]);
+            } else if constexpr (std::is_unsigned_v<VT>) {
+                data[i].as_u64 = static_cast<u64>(values[i]);
+            } else {
+                data[i].as_i64 = static_cast<i64>(values[i]);
+            }
+        }
+    }
+
     // These constructors exist only to redirect to their long/64-bit variants
     // To avoid having to be explicit when initializing Values
     Value(i32 i);
     Value(u32 u);
 
-    MANA_NODISCARD LengthType Length() const;
+    MANA_NODISCARD SizeType Length() const;
     MANA_NODISCARD u64 BitCasted(u32 at) const;
 
-    MANA_NODISCARD PrimitiveValueType GetType() const;
+    MANA_NODISCARD ValueType GetType() const;
 
     MANA_NODISCARD f64 AsFloat() const;
     MANA_NODISCARD i64 AsInt() const;
     MANA_NODISCARD u64 AsUint() const;
     MANA_NODISCARD bool AsBool() const;
+    MANA_NODISCARD std::string AsString() const;
 
     Value operator+(const Value& rhs) const;
     Value operator-(const Value& rhs) const;
@@ -90,7 +127,7 @@ struct Value {
 
     Value()
         : data {nullptr},
-          length(0),
+          size(0),
           type(Invalid) {}
 
     Value(const Value& other);
@@ -102,40 +139,13 @@ struct Value {
 
     ~Value();
 
-    template <ValuePrimitive VP>
-    explicit Value(const std::vector<VP>& values)
-        : length(values.size()),
-          type(GetManaTypeFrom(VP {})) {
-        if (length == 0) {
-            data = nullptr;
-            return;
-        }
-
-        if (length == 1) {
-            data = new Data;
-        } else {
-            data = new Data[length];
-        }
-
-        for (u64 i = 0; i < length; ++i) {
-            if constexpr (std::is_same_v<VP, bool>) {
-                data[i].as_bool = values[i];
-            } else if constexpr (std::is_floating_point_v<VP>) {
-                data[i].as_f64 = static_cast<f64>(values[i]);
-            } else if constexpr (std::is_unsigned_v<VP>) {
-                data[i].as_u64 = static_cast<u64>(values[i]);
-            } else {
-                data[i].as_i64 = static_cast<i64>(values[i]);
-            }
-        }
-    }
-
 private:
     Data* data;
-    LengthType length;
+    SizeType size;
+    u8 tail = 0;
     u8 type;
 
-    Value(PrimitiveValueType t, LengthType l);
+    Value(ValueType t, SizeType l);
 
     void WriteValueBytes(const std::array<unsigned char, 8>& bytes, u32 index) const;
 

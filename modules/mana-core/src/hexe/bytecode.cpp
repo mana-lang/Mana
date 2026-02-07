@@ -176,12 +176,12 @@ std::vector<u8> ByteCode::SerializeConstants() const {
     for (const auto& value : constant_pool) {
         out.push_back(static_cast<u8>(value.type));
 
-        for (i64 i = 0; i < sizeof(value.length); ++i) {
-            out.push_back((value.length >> i * BYTE_BITS) & 0xFF);
+        for (i64 i = 0; i < sizeof(value.size); ++i) {
+            out.push_back((value.size >> i * BYTE_BITS) & 0xFF);
         }
 
         // need to serialize each value separately
-        for (i64 i = 0; i < value.length; ++i) {
+        for (i64 i = 0; i < value.size; ++i) {
             const auto serializable = value.BitCasted(i);
 
             for (i64 k = 0; k < sizeof(serializable); ++k) {
@@ -245,9 +245,9 @@ u32 ByteCode::ConstantPoolBytesCount() const {
     u32 out = 0;
 
     for (const auto& value : constant_pool) {
-        out += value.length * sizeof(Value::Data); // num elements
+        out += value.size * sizeof(Value::Data); // num elements
         out += sizeof(value.type);
-        out += sizeof(value.length); // array length still has to be included
+        out += sizeof(value.size); // array length still has to be included
     }
     return out;
 }
@@ -257,7 +257,7 @@ u32 ByteCode::ConstantPoolBytesCount() const {
 u32 ByteCode::ConstantCount() const {
     u32 out = 0;
     for (const auto& value : constant_pool) {
-        out += value.length;
+        out += value.size;
     }
     return out;
 }
@@ -357,19 +357,19 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
     };
 
     std::array<u8, sizeof(Value::Data)> value_bytes {};
-    std::array<u8, sizeof(Value::LengthType)> length_bytes {};
+    std::array<u8, sizeof(Value::SizeType)> length_bytes {};
 
     // constant pool first
     for (i64 offset = pool_range.start; offset < pool_range.end;) {
-        const auto type = static_cast<PrimitiveValueType>(bytes[offset]);
+        const auto type = static_cast<ValueType>(bytes[offset]);
 
-        offset += sizeof(PrimitiveValueType);
+        offset += sizeof(ValueType);
         for (i64 i = 0; i < length_bytes.size(); ++i) {
             length_bytes[i] = bytes[i + offset];
         }
-        const auto length = std::bit_cast<Value::LengthType>(length_bytes);
+        const auto length = std::bit_cast<Value::SizeType>(length_bytes);
 
-        offset += sizeof(Value::LengthType);
+        offset += sizeof(Value::SizeType);
 
         auto value = Value {type, length};
         for (u32 i = 0; i < length; ++i) {

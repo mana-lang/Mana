@@ -364,13 +364,13 @@ public:
 
 class ArrayLiteral final : public Node {
     std::vector<NodePtr> values;
-    hexe::PrimitiveValueType type;
+    hexe::ValueType type;
 
 public:
     explicit ArrayLiteral(const ParseNode& node);
 
     SIGIL_NODISCARD const std::vector<NodePtr>& GetValues() const;
-    SIGIL_NODISCARD hexe::PrimitiveValueType GetType() const;
+    SIGIL_NODISCARD hexe::ValueType GetType() const;
 
     void Accept(Visitor& visitor) const override;
 

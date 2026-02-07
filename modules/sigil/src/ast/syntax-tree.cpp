@@ -48,7 +48,7 @@ auto MakeNoneLiteral() {
 
 struct LiteralData {
     NodePtr value;
-    hexe::PrimitiveValueType type;
+    hexe::ValueType type;
 };
 
 LiteralData MakeLiteral(const Token& token) {
@@ -57,23 +57,23 @@ LiteralData MakeLiteral(const Token& token) {
 
     case Lit_true:
     case Lit_false:
-        return {MakeLiteral<bool>(token), hexe::PrimitiveValueType::Bool};
+        return {MakeLiteral<bool>(token), hexe::ValueType::Bool};
 
     case Lit_Int:
-        return {MakeLiteral<i64>(token), hexe::PrimitiveValueType::Int64};
+        return {MakeLiteral<i64>(token), hexe::ValueType::Int64};
 
     case Lit_Float:
-        return {MakeLiteral<f64>(token), hexe::PrimitiveValueType::Float64};
+        return {MakeLiteral<f64>(token), hexe::ValueType::Float64};
 
     case Lit_none:
-        return {MakeNoneLiteral(), hexe::PrimitiveValueType::None};
+        return {MakeNoneLiteral(), hexe::ValueType::None};
 
     default:
         break;
     }
 
     Log->error("Unexpected token for literal");
-    return {nullptr, hexe::PrimitiveValueType::Invalid};
+    return {nullptr, hexe::ValueType::Invalid};
 }
 
 /// Artifact
@@ -603,7 +603,7 @@ BinaryExpr::BinaryExpr(const ParseNode& binary_node, const i64 depth) {
 
 /// ArrayLiteral
 ArrayLiteral::ArrayLiteral(const ParseNode& node)
-    : type(hexe::PrimitiveValueType::Invalid) {
+    : type(hexe::ValueType::Invalid) {
     // []
     if (node.branches.empty()) {
         return;
@@ -623,7 +623,7 @@ const std::vector<NodePtr>& ArrayLiteral::GetValues() const {
     return values;
 }
 
-hexe::PrimitiveValueType ArrayLiteral::GetType() const {
+hexe::ValueType ArrayLiteral::GetType() const {
     return type;
 }
 
@@ -657,7 +657,7 @@ NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
     {
         const auto literal = MakeLiteral(elem.tokens[0]);
 
-        if (literal.type == hexe::PrimitiveValueType::Invalid) {
+        if (literal.type == hexe::ValueType::Invalid) {
             Log->error(
                 "ArrayLiteral attempted to add invalid value '{}'",
                 FetchTokenText(elem.tokens[0])
@@ -669,7 +669,7 @@ NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
         // elem_list so we start in Invalid, assign the type based on the first, and
         // any type changes past that raise an error
         if (literal.type != type) {
-            if (type == hexe::PrimitiveValueType::Invalid) {
+            if (type == hexe::ValueType::Invalid) {
                 type = literal.type;
             } else {
                 Log->warn(

@@ -6,6 +6,10 @@
 #include <cstring>
 #include <utility>
 
+#include <hexe/logger.hpp>
+
+#include <magic_enum/magic_enum.hpp>
+
 namespace hexe {
 #ifdef __GNUC__
 #    define FUNCSTR std::string(__PRETTY_FUNCTION__)
@@ -20,25 +24,30 @@ namespace hexe {
         throw std::runtime_error(FUNCSTR + std::string(" -- Reached invalid code path"))
 #endif
 
+constexpr u8 AsByte(ValueType vt) {
+    return static_cast<u8>(vt);
+}
+
+
 Value::Value(const i64 i)
     : data(new Data {.as_i64 = i}),
-      length(1),
-      type(static_cast<u8>(Int64)) {}
+      size(1),
+      type(AsByte(Int64)) {}
 
 Value::Value(const u64 u)
     : data(new Data {.as_u64 = u}),
-      length(1),
-      type(static_cast<u8>(Uint64)) {}
+      size(1),
+      type(AsByte(Uint64)) {}
 
 Value::Value(const f64 f)
     : data(new Data {.as_f64 = f}),
-      length(1),
-      type(static_cast<u8>(Float64)) {}
+      size(1),
+      type(AsByte(Float64)) {}
 
 Value::Value(const bool b)
     : data(new Data {.as_bool = b}),
-      length(1),
-      type(static_cast<u8>(Bool)) {}
+      size(1),
+      type(AsByte(Bool)) {}
 
 Value::Value(const i32 i)
     : Value(i64 {i}) {}
@@ -46,22 +55,22 @@ Value::Value(const i32 i)
 Value::Value(const u32 u)
     : Value(u64 {u}) {}
 
-Value::LengthType Value::Length() const {
-    return length;
+Value::SizeType Value::Length() const {
+    return size;
 }
 
-Value::Value(const PrimitiveValueType t, const LengthType l)
-    : length(l),
-      type(static_cast<u8>(t)) {
-    if (length == 0 || type == Invalid) {
-        data   = nullptr;
-        type   = Invalid;
-        length = 0;
+Value::Value(const ValueType t, const SizeType l)
+    : size(l),
+      type(AsByte(t)) {
+    if (size == 0 || type == Invalid) {
+        data = nullptr;
+        type = Invalid;
+        size = 0;
         return;
     }
 
-    if (length > 1) {
-        data = new Data[length];
+    if (size > 1) {
+        data = new Data[size];
         return;
     }
 
@@ -80,7 +89,7 @@ Value::Value(const PrimitiveValueType t, const LengthType l)
         break;
     case None:
         data = nullptr;
-        length = 0;
+        size = 0;
         break;
     default:
         UNREACHABLE();
@@ -102,14 +111,14 @@ u64 Value::BitCasted(const u32 at) const {
     }
 }
 
-PrimitiveValueType Value::GetType() const {
-    return static_cast<PrimitiveValueType>(type);
+ValueType Value::GetType() const {
+    return static_cast<ValueType>(type);
 }
 
 void Value::WriteValueBytes(const std::array<u8, sizeof(Data)>& bytes,
                             const u32 index
 ) const {
-    if (index >= length) {
+    if (index >= size) {
         throw std::runtime_error("Value::WriteValueBytes: Out of bounds write");
     }
 
@@ -161,7 +170,7 @@ bool Value::operator==(const Value& other) const {
 
     // we don't have logic for comparing arrays quite yet
     // so [1,2,3] == [1,2,3] currently will just eval to false
-    if (length > 1 || other.length > 1) {
+    if (size > 1 || other.size > 1) {
         return false;
     }
 
@@ -195,37 +204,37 @@ CASE_BOOL:
 
 Value::Value(const Value& other)
     : data(nullptr),
-      length(other.length),
+      size(other.size),
       type(other.type) {
-    if (other.data == nullptr || length == 0) {
+    if (other.data == nullptr || size == 0) {
         return;
     }
 
-    if (length == 1) {
+    if (size == 1) {
         data = new Data(*other.data);
         return;
     }
 
-    data = new Data[length];
-    std::memcpy(data, other.data, length * sizeof(Data));
+    data = new Data[size];
+    std::memcpy(data, other.data, size * sizeof(Data));
 }
 
 Value::Value(Value&& other) noexcept
     : data(nullptr),
-      length(other.length),
+      size(other.size),
       type(other.type) {
-    if (other.data == nullptr || length == 0) {
-        other.length = 0;
-        other.type   = Invalid;
-        other.data   = nullptr;
+    if (other.data == nullptr || size == 0) {
+        other.size = 0;
+        other.type = Invalid;
+        other.data = nullptr;
         return;
     }
 
     data = other.data;
 
-    other.data   = nullptr;
-    other.length = 0;
-    other.type   = Invalid;
+    other.data = nullptr;
+    other.size = 0;
+    other.type = Invalid;
 }
 
 Value& Value::operator=(const Value& other) {
@@ -234,30 +243,30 @@ Value& Value::operator=(const Value& other) {
     }
 
     if (data != nullptr) {
-        if (length == 1) {
+        if (size == 1) {
             delete data;
         } else {
             delete[] data;
         }
     }
 
-    if (other.data == nullptr || other.length == 0) {
-        length = 0;
-        type   = Invalid;
-        data   = nullptr;
+    if (other.data == nullptr || other.size == 0) {
+        size = 0;
+        type = Invalid;
+        data = nullptr;
         return *this;
     }
 
-    length = other.length;
-    type   = other.type;
+    size = other.size;
+    type = other.type;
 
-    if (length == 1) {
+    if (size == 1) {
         data = new Data(*other.data);
         return *this;
     }
 
-    data = new Data[length];
-    std::memcpy(data, other.data, length * sizeof(Data));
+    data = new Data[size];
+    std::memcpy(data, other.data, size * sizeof(Data));
     return *this;
 }
 
@@ -267,27 +276,27 @@ Value& Value::operator=(Value&& other) noexcept {
     }
 
     if (data != nullptr) {
-        if (length == 1) {
+        if (size == 1) {
             delete data;
         } else {
             delete[] data;
         }
     }
 
-    if (other.data == nullptr || other.length == 0) {
-        length = 0;
-        type   = Invalid;
-        data   = nullptr;
+    if (other.data == nullptr || other.size == 0) {
+        size = 0;
+        type = Invalid;
+        data = nullptr;
         return *this;
     }
 
-    length = other.length;
-    type   = other.type;
-    data   = other.data;
+    size = other.size;
+    type = other.type;
+    data = other.data;
 
-    other.data   = nullptr;
-    other.length = 0;
-    other.type   = Invalid;
+    other.data = nullptr;
+    other.size = 0;
+    other.type = Invalid;
 
     return *this;
 }
@@ -298,7 +307,7 @@ Value::~Value() {
     }
 
 #ifdef MANA_DEBUG
-    if (length == 0) {
+    if (size == 0) {
         // not sure what to do here. Value isn't supposed to log things, but we shouldn't
         // throw in a destructor either. the intuition is to delete it just in case, but
         // that might be even more catastrophic so for now, we'll just consider this a crash scenario
@@ -307,13 +316,41 @@ Value::~Value() {
     }
 #endif
 
-    if (length == 1) {
+    if (size == 1) {
         delete data;
         return;
     }
 
-    if (length > 1) {
+    if (size > 1) {
         delete[] data;
+    }
+}
+
+i32 Rdiv(const i32 a, const i32 b) {
+    if (b == 0) {
+        throw std::runtime_error("Division by zero");
+    }
+
+    return (a + b - 1) / b;
+}
+
+Value::Value(const std::string_view s)
+    : data {nullptr},
+      size {(Rdiv(s.size(), SEGMENT_SIZE))},
+      type {String} {
+    if (size == 0) {
+        return;
+    }
+
+    const auto trim = s.size() % SEGMENT_SIZE;
+
+    tail = trim ? trim : SEGMENT_SIZE;
+    data = new Data[size];
+
+    // copy strings in 8 byte segments
+    for (auto i = 0; i < size; ++i) {
+        const auto segment = s.substr(i * SEGMENT_SIZE, SEGMENT_SIZE);
+        std::memcpy(&data[i], segment.data(), SEGMENT_SIZE);
     }
 }
 
@@ -420,6 +457,24 @@ u64 Value::AsUint() const {
 
 bool Value::AsBool() const {
     return dispatch_bool[type](data);
+}
+
+std::string Value::AsString() const {
+    if (type != String) {
+        Log->critical("Attempted to read value of type {} as string",
+                      magic_enum::enum_name(static_cast<ValueType>(type))
+        );
+        throw std::runtime_error("Value::AsString: Bad Call");
+    }
+
+    std::string output(size * SEGMENT_SIZE, '%');
+    for (auto i = 0; i < size; ++i) {
+        const auto offset = i * SEGMENT_SIZE;
+        std::memcpy(output.data() + offset, &data[i], SEGMENT_SIZE);
+    }
+    output.resize(output.size() - tail);
+
+    return output;
 }
 
 // Floats

@@ -152,7 +152,7 @@ private:
     void HandleLoopControl(bool is_break, const ast::NodePtr& condition);
     void HandleInitializer(const ast::Initializer& node, bool is_mutable);
 
-    template <hexe::ValuePrimitive VP>
+    template <hexe::ValuePrimitiveType VP>
     void CreateLiteral(const ast::Literal<VP>& literal) {
         const auto index = bytecode.AddConstant(literal.Get());
 

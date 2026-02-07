@@ -134,7 +134,7 @@ public:
     // this function assumes correct input
     bool Deserialize(const std::vector<u8>& bytes);
 
-    template <ValuePrimitive VP>
+    template <ValuePrimitiveType VP>
     u16 AddConstant(const VP value) {
         // only need to store unique constants
         for (i64 i = 0; i < constant_pool.size(); ++i) {
@@ -148,7 +148,7 @@ public:
         return constant_pool.size() - 1;
     }
 
-    template <ValuePrimitive CT>
+    template <ValuePrimitiveType CT>
     u16 AddArray(const std::vector<CT>& array) {
         constant_pool.push_back(Value {array});
 
