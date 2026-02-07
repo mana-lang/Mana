@@ -467,12 +467,17 @@ std::string Value::AsString() const {
         throw std::runtime_error("Value::AsString: Bad Call");
     }
 
-    std::string output(size * SEGMENT_SIZE, '%');
-    for (auto i = 0; i < size; ++i) {
-        const auto offset = i * SEGMENT_SIZE;
-        std::memcpy(output.data() + offset, &data[i], SEGMENT_SIZE);
-    }
-    output.resize(output.size() - tail);
+    std::string output;
+    output.resize_and_overwrite(size * SEGMENT_SIZE,
+                                [this](char* ptr, std::size_t len) {
+                                    for (auto i = 0; i < size; ++i) {
+                                        const auto offset = i * SEGMENT_SIZE;
+                                        std::memcpy(ptr + offset, &data[i], SEGMENT_SIZE);
+                                    }
+
+                                    return len - tail;
+                                }
+    );
 
     return output;
 }
