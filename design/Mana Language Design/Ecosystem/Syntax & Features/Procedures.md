@@ -68,7 +68,7 @@ fn Foo(a: i32, b: mut &string, c: [f64, 5]) -> mut &string
 ```
 
 ##### Polyfunctions
-Polyfunctions are *polymorphic functions*, meaning that there are two or more functions that share the same name, but have different argument lists -- and, if so, may have different return types as well.
+Polyfunctions are *polymorphic functions*, meaning that there are two or more functions that share the same name, but have different parameters -- and, if so, may have different return types as well.
 
 Each definition of a polyfunction is a *specialization* of that function.
 ```rust
@@ -409,11 +409,12 @@ Any specific `fn` signature may be aliased:
 ```kotlin
 type AddingFunction = fn(i32, i32) -> i32
 
-data Add: AddingFunction
+data Add = AddingFunction(a, b: i32) -> i32 { a + b }
 
 data x = Add(12, 34) // x == 46
 ```
 
+This is particularly useful when repeatedly storing the same kind of function signature in a field, or when passing around the same kind of function signature among functions.
 ##### Delegates
 - Type-safe (multicast) invocable references
 - May have an arbitrary number of invocables bound to them
@@ -436,7 +437,7 @@ An *inlined function* has two properties:
 ```rust
 @[Inline]
 fn Sqrt(x: f64) -> f64 {
-	return x * x
+	x * x
 }
 ```
 If a function *cannot* be inlined, the compiler *may* raise a *warning*. The function will then behave as normal.

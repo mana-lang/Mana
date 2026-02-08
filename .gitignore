@@ -21,6 +21,7 @@ out/
 .vs/
 .vscode/
 .idea/
+.build/
 .Build/
 .BuildFiles/
 *.user
