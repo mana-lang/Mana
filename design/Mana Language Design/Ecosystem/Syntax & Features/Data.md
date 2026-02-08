@@ -3,7 +3,7 @@
 ```kotlin
 import std.fmt
     
-fn main() {
+fn Main() {
     fmt.PrintLine(5 + 2)
     fmt.Print("Hello" + " world!\n")
     fmt.Print("I have {} oranges", 3)
@@ -15,25 +15,23 @@ fn main() {
 > I have 3 oranges
 
 ##### Declarations
-Data in **Mana** is *immutable* by default. Therefore, we don't refer to them as variables, but instead as *data bindings*, or just *data* for short. A singular data binding is called a *datum*. 
+Data in **Mana** is *immutable* by default. Therefore, the compiler does not refer to them as variables, but instead as *data bindings*, or just *bindings*.
 ```kotlin  
-fn main() {
+fn Main() {
     data two = 2
     data four = two + two 
     four += 1 // won't compile
 }
 ```
->[!danger] Error
->Datum `four` is not mutable. You can make it mutable by annotating its declaration:
-> `mut data four: f32 = two + two`
+>[!error] Error
+>Attempt to assign to immutable binding `four`
 
 ##### Mutability
-To make data mutable, it must be annotated with the `mut` keyword. 
-A mutable data binding is essentially a variable.
+To create a *mutable binding* in Mana, you must qualify a declaration with the `mut` keyword. 
 ```kotlin
 import std.fmt
     
-fn main() {
+fn Main() {
 	mut data number = 15
 	number += 7
 	fmt.Print("Catch-{number}")
@@ -41,6 +39,26 @@ fn main() {
 ```
 >[!tip] Output
 >Catch-22
+
+##### Default Initialization
+In the absence of an initializer, data will still be initialized with a default value.
+```kotlin
+data x: i32
+
+fmt.Print("{x}")
+```
+>[!tip] Output
+> 0
+- For *primitive* types, the default value is the result of conversion from `0` to the given type.
+- For *enumerated* types, the default value is the *first* enumeration.
+- *Composite* types will default each of their individual fields.
+
+You may only omit an initializer for a declaration including a type annotation.
+```kotlin
+data x
+```
+>[!error] Error
+> Binding `x` has neither an initializer nor an annotation.
 
 ##### Binding
 The *binding operator* `=>` in a data declaration allows you to perform inline logic without affecting the datum's mutability.
@@ -53,13 +71,15 @@ data x: i32 => {
 	x = FetchResult()
 }
 ```
-Because data is defaulted unless otherwise specified in Mana, you can perform arithmetic on a datum before it's been assigned, by knowing its default initial value.
+Because data is defaulted unless otherwise specified in Mana, you can perform operations on a datum before its first assignment, by knowing its default initial value.
 
-For primitives, the default values are `0` and `false`.
+Additionally, when a binding is applied to a block containing *exactly one* expression, that expression will be bound to the left-hand side of the binding operation.
+```kotlin
+data x: i32 => { 55 * 2 }
+data x: i32 = 55 * 2 // this is identical
+```
 
-For composite types, they are either the default values of *all* fields, or the values specified in the type's interface.
-
-For enumerated types, the default value is the first enumeration.
+While this isn't particularly useful for a simple assignment, it will be relevant when it comes to other language constructs, such as control flow and closures.
 
 ##### Assignment Deduction
 **Mana** makes certain assumptions about data when it's assigned to other data.
