@@ -1,4 +1,7 @@
-You may annotate declarations with Attributes to give them new properties or restrictions.
+##### Attribute Annotations
+You may annotate declarations with Attributes to give them new properties or restrictions, or to hint to the compiler about what you want it to do with that particular segment of code.
+
+Attributes exist for language features which do not quite justify a keyword. Mana strives to use as few keywords as possible, and attributes help reduce more niche or highly-specific keywords.
 
 An attribute is defined by an `@` symbol followed by a *bracketed-list* of (optional trailing) comma-separated Attribute names:
 
@@ -6,6 +9,11 @@ An attribute is defined by an `@` symbol followed by a *bracketed-list* of (opti
 
 Below is a list of valid Attributes:
 
+- *Hot*
+	- Usage: *Before* function declaration
+		- Effect: Function will be hot-reloadable through **Hex**
+	- Usage: *Before* module declaration *or* at the top of a file *without* a module declaration
+		- Effect: *All* functions within this module will have the `@[Hot]` attribute applied to them
 - *NoInit*
 	- Usage: *After* *mutable* data declaration
 	- Effect: Data will be left uninitialized
@@ -24,8 +32,11 @@ Below is a list of valid Attributes:
 		- If it cannot run at compile-time, it will instead replace the call with its contents, if possible
 		- If this is not possible, it remains a regular function call
 - *Discardable*
-	- Usage: *Before* a function with a return type
-	- Effect: Will provide a compiler warning if the return value of this function is not used
+	- Usage: *Before* a function with a return type that isn't `none`
+	- Effect: Discarding return values of this function will *not* raise a compile error.
+- *Discard*
+	- Usage: *Before* an invocation-expression
+	- Effect: Will suppress the "Return value unused" compile error
 - *Timer*
 	- Usage: *Inside* a scope block, from the moment you want to measure the execution of a block.
 	- Effect: Records the time at the moment of the attribute's declaration, and again when that scope is exited. The difference is stored in a configurable global `ScopedTimer` type.
