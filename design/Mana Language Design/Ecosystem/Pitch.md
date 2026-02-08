@@ -1,5 +1,5 @@
-| ![](_Assets/logo-text-white-bg.png) |
-|:--:|
+|                           ![](_Assets/logo-text-white-bg.png)                           |
+| :-------------------------------------------------------------------------------------: |
 | *A fast, safe, data-centric programming language<br>purpose-built for game development* |
 
 **Mana** empowers game developers by making it easy to write fast, modular, and reliable code, while still having all the flexibility of a high-level scripting language. 
