@@ -132,14 +132,16 @@ public:
 
     void Visit(const ast::Literal<f64>& literal) override;
     void Visit(const ast::Literal<i64>& literal) override;
-
     void Visit(const ast::Literal<bool>& literal) override;
-    void Visit(const ast::StringLiteral& node) override {}
+
+    void Visit(const ast::StringLiteral& string) override;
 
 private:
     void RecordFunctionDeclarations(const ast::Artifact& artifact);
 
     void RegisterPrimitives();
+    void RegisterBuiltins();
+
     FunctionTable& GetFnTable();
     const FunctionTable& GetFnTable() const;
 

@@ -317,6 +317,10 @@ void SemanticAnalyzer::Visit(const Literal<bool>&) {
     BufferType(PrimitiveName(Bool));
 }
 
+void SemanticAnalyzer::Visit(const StringLiteral& string) {
+    BufferType(PrimitiveName(String));
+}
+
 void SemanticAnalyzer::RecordFunctionDeclarations(const Artifact& artifact) {
     // not the biggest fan of dynamic_cast, but a whole other visitor just to collect
     // function declarations would be some otherworldly level of premature optimization
@@ -388,6 +392,13 @@ void SemanticAnalyzer::RegisterPrimitives() {
 
     types[PrimitiveName(Fn)]   = TypeInfo {TypeSize::QuadWord}; // same as ptr
     types[PrimitiveName(None)] = TypeInfo {TypeSize::None};
+}
+
+void SemanticAnalyzer::RegisterBuiltins() {
+    auto& fn = GetFnTable()["Print"];
+    fn.return_type = PrimitiveName(None);
+    fn.param_count = 1;
+    fn.locals["str"] = {PrimitiveName(String), true};
 }
 
 FunctionTable& SemanticAnalyzer::GetFnTable() {
