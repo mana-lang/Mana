@@ -47,15 +47,12 @@ void Execute(const std::filesystem::path& hexe_path) {
 
     Log->debug("Executing...\n");
     Hex vm;
-    Log->set_pattern("%v");
 
     const auto start_interp  = chrono::high_resolution_clock::now();
     const auto interp_result = vm.Execute(&bytecode);
     const auto end_interp    = chrono::high_resolution_clock::now();
 
     const auto result = magic_enum::enum_name(interp_result);
-    Log->debug("");
-    Log->set_pattern("%^<%n>%$ %v");
     Log->debug("Interpret Result: {}\n", result);
 
     const auto end_file = chrono::high_resolution_clock::now();

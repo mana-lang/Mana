@@ -37,6 +37,7 @@ SemanticAnalyzer::SemanticAnalyzer()
     : issue_counter {0},
       current_scope {GLOBAL_SCOPE} {
     RegisterPrimitives();
+    RegisterBuiltins();
 }
 
 ml::i32 SemanticAnalyzer::IssueCount() const {
