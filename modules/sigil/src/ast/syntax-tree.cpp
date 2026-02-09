@@ -25,6 +25,11 @@ auto MakeLiteral(const Token& token) {
 }
 
 template <>
+auto MakeLiteral<std::string>(const Token& token) {
+    return std::make_shared<StringLiteral>(FetchTokenText(token));
+}
+
+template <>
 auto MakeLiteral<bool>(const Token& token) {
     bool val = false;
     switch (token.type) {
@@ -40,10 +45,6 @@ auto MakeLiteral<bool>(const Token& token) {
     }
 
     return std::make_shared<Literal<bool>>(val);
-}
-
-auto MakeNoneLiteral() {
-    return std::make_shared<Literal<void>>();
 }
 
 struct LiteralData {
@@ -65,14 +66,18 @@ LiteralData MakeLiteral(const Token& token) {
     case Lit_Float:
         return {MakeLiteral<f64>(token), hexe::ValueType::Float64};
 
+    case Lit_String:
+        return {MakeLiteral<std::string>(token), hexe::ValueType::String};
+
     case Lit_none:
-        return {MakeNoneLiteral(), hexe::ValueType::None};
+        Log->error("Internal Compiler Error: Attempted to manifest 'none' literal");
+        return {nullptr, hexe::ValueType::None};
 
     default:
+        Log->error("Unexpected token for literal");
         break;
     }
 
-    Log->error("Unexpected token for literal");
     return {nullptr, hexe::ValueType::Invalid};
 }
 

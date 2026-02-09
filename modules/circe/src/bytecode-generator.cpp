@@ -558,8 +558,6 @@ void BytecodeGenerator::Visit(const Literal<i64>& literal) {
     CreateLiteral(literal);
 }
 
-void BytecodeGenerator::Visit(const Literal<void>& node) {}
-
 void BytecodeGenerator::Visit(const Literal<bool>& literal) {
     CreateLiteral(literal);
 }
