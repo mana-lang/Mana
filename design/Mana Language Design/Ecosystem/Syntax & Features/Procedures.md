@@ -55,7 +55,7 @@ fn PrintIf(b: bool) {
 	fmt.Print("Printing")
 }
 
-fn main() {
+fn Main() {
 	PrintIf(true)
 }
 ```
@@ -199,7 +199,9 @@ fn Main() {
 }
 ```
 
-By default, operators for composite types return `none`. To make them return something else, you have to specialize them.
+By default, *most* operators for composite types return `none` and take no parameters. To make them return something else, you have to specialize them.
+
+Comparison operators, however, check for equality among all fields.
 ```rust
 type Vec3 {
 	a: f32
@@ -210,7 +212,8 @@ type Vec3 {
 fn Main() {
 	data a = Vec3 {1, 2, 3}
 	data b = Vec3 {4, 5, 6}
-	data c = a + b
+	data c = a == b // c == false
+	data d = a + b
 }
 ```
 >[!danger] Error
@@ -326,7 +329,7 @@ data AddSix = fn(a: i32) -> i32 {
 
 This is the first thing that `fn` makes convenient for us. What this assignment is masking is the differentiation between the `fn` type and the `fn` value. Below is the same declaration, but without any type deduction:
 ```rust
-data AddSix: fn(i32) -> i32 = fn(a: i32) -> i32 => {
+data AddSix: fn(i32) -> i32 => fn(a: i32) -> i32 {
 	a + 6
 }
 ```
@@ -479,20 +482,20 @@ A pure function, in essence, is not allowed to have *side effects*. This means i
 
 Data local to the pure function's scope may be freely modified within that scope. It may *not* be transmitted beyond its bounds.
 
-Dynamic allocations within a pure function *must* be deallocated by the end of said function.
+Dynamic allocations within a pure function *must* be deallocated by the end of said function, *unless* this allocation is returned by the function, thus relinquishing ownership to the caller.
 
 Pure functions may *not* call functions which may result in auxiliary side effects.
 
 Failing to meet a pure function's requirements results in a *compile error*.
 ```rust
-@[Pure]            // OK -- immutable ref
-fn DotProduct(v1, v2: &Vec2) {
+@[Pure]           // OK -- immutable ref
+fn DotProduct(v1, v2: &Vec2) -> Vec2 {
 	v1.x * v2.x + v1.y * v2.y
 }
 
 // Pure often pairs well with Inline
 @[Pure, Inline]
-fn Sqrt(v: i32) {
+fn Sqrt(v: i32) -> i32 {
 	v * v
 }
 ```
