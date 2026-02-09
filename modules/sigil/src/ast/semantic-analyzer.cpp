@@ -395,9 +395,9 @@ void SemanticAnalyzer::RegisterPrimitives() {
 }
 
 void SemanticAnalyzer::RegisterBuiltins() {
-    auto& fn = GetFnTable()["Print"];
-    fn.return_type = PrimitiveName(None);
-    fn.param_count = 1;
+    auto& fn         = GetFnTable()["Print"];
+    fn.return_type   = PrimitiveName(None);
+    fn.param_count   = 1;
     fn.locals["str"] = {PrimitiveName(String), true};
 }
 

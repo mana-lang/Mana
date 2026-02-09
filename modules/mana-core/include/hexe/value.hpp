@@ -30,7 +30,10 @@ inline ValueType GetValueTypeFrom(bool) {
 }
 
 template <typename T>
-concept ValuePrimitiveType = std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>;
+concept ValuePrimitiveType = std::is_integral_v<T>
+                             || std::is_floating_point_v<T>
+                             || std::is_same_v<T, bool>
+                             || std::is_same_v<T, std::string_view>;
 
 struct Value {
     friend class ByteCode;

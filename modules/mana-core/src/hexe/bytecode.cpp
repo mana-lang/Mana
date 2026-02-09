@@ -395,6 +395,19 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
     return true;
 }
 
+u16 ByteCode::AddConstant(const std::string_view string) {
+    for (i64 i = 0; i < constant_pool.size(); ++i) {
+        if (constant_pool[i].type == static_cast<u8>(String)
+            && constant_pool[i].AsString() == string) {
+            return i;
+        }
+    }
+
+    constant_pool.push_back(string);
+    CheckConstantPoolSize();
+    return constant_pool.size() - 1;
+}
+
 void ByteCode::CheckInstructionSize() const {
     /// TODO: ideally we handle this in such a way that we don't need to crash
     /// also i hate exceptions

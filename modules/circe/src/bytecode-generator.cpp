@@ -189,19 +189,28 @@ void BytecodeGenerator::Visit(const Return& node) {
 }
 
 void BytecodeGenerator::Visit(const Invocation& node) {
-    const auto target = node.GetIdentifier();
-    const auto& fn    = functions[target];
+    const auto name = node.GetIdentifier();
+    const auto& fn  = functions[name];
+
+    // handle print
+    if (name == "Print") {
+        node.GetArguments().back()->Accept(*this);
+        bytecode.Write(Op::Print, {PopRegBuffer()});
+
+        register_buffer.push_back(REGISTER_RETURN);
+        return;
+    }
 
     HandleInvocationArguments(node.GetArguments(), fn.registers.ViewLocked());
 
     if (fn.address == bytecode.CurrentAddress()) {
-        Log->error("Internal Compiler Error: Invocation {} jumps to call site '{}'", target, fn.address);
+        Log->error("Internal Compiler Error: Invocation {} jumps to call site '{}'", name, fn.address);
         return;
     }
 
     if (fn.address < 0) {
         const auto index     = bytecode.WriteCall(SENTINEL_32, Registers().Total());
-        pending_calls[index] = target;
+        pending_calls[index] = name;
     } else {
         bytecode.WriteCall(fn.address, Registers().Total());
     }
@@ -550,16 +559,20 @@ void BytecodeGenerator::Visit(const ArrayLiteral& array) {
     std::unreachable();
 }
 
-void BytecodeGenerator::Visit(const Literal<f64>& literal) {
-    CreateLiteral(literal);
+void BytecodeGenerator::Visit(const Literal<f64>& float64) {
+    CreateLiteral(float64.Get());
 }
 
-void BytecodeGenerator::Visit(const Literal<i64>& literal) {
-    CreateLiteral(literal);
+void BytecodeGenerator::Visit(const Literal<i64>& int64) {
+    CreateLiteral(int64.Get());
 }
 
-void BytecodeGenerator::Visit(const Literal<bool>& literal) {
-    CreateLiteral(literal);
+void BytecodeGenerator::Visit(const Literal<bool>& boolean) {
+    CreateLiteral(boolean.Get());
+}
+
+void BytecodeGenerator::Visit(const StringLiteral& string) {
+    CreateLiteral(string.Get());
 }
 
 bool BytecodeGenerator::IsConditionalJumpOp(const Op op) const {
