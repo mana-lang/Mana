@@ -161,6 +161,11 @@ private:
     MANA_NODISCARD u32 Checksum(const void* ptr, usize size) const;
 
     MANA_NODISCARD std::vector<u8> SerializeCode() const;
+
+    // Constants are stored in a fixed sequence '(bytes) name':
+    // (1) value type
+    // (1) value tail
+    //
     MANA_NODISCARD std::vector<u8> SerializeConstants() const;
     MANA_NODISCARD std::vector<u8> SerializeHeader(const std::vector<u8>& code) const;
 

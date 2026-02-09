@@ -176,12 +176,12 @@ std::vector<u8> ByteCode::SerializeConstants() const {
     for (const auto& value : constant_pool) {
         out.push_back(static_cast<u8>(value.type));
 
-        for (i64 i = 0; i < sizeof(value.size); ++i) {
-            out.push_back((value.size >> i * BYTE_BITS) & 0xFF);
+        for (i64 i = 0; i < sizeof(Value::SizeType); ++i) {
+            out.push_back((value.size_bytes >> i * BYTE_BITS) & 0xFF);
         }
 
         // need to serialize each value separately
-        for (i64 i = 0; i < value.size; ++i) {
+        for (i64 i = 0; i < value.Length(); ++i) {
             const auto serializable = value.BitCasted(i);
 
             for (i64 k = 0; k < sizeof(serializable); ++k) {
@@ -245,9 +245,9 @@ u32 ByteCode::ConstantPoolBytesCount() const {
     u32 out = 0;
 
     for (const auto& value : constant_pool) {
-        out += value.size * sizeof(Value::Data); // num elements
+        out += value.Length() * sizeof(Value::Data);
         out += sizeof(value.type);
-        out += sizeof(value.size); // array length still has to be included
+        out += sizeof(Value::SizeType);
     }
     return out;
 }
@@ -257,7 +257,7 @@ u32 ByteCode::ConstantPoolBytesCount() const {
 u32 ByteCode::ConstantCount() const {
     u32 out = 0;
     for (const auto& value : constant_pool) {
-        out += value.size;
+        out += value.Length();
     }
     return out;
 }
@@ -349,7 +349,7 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
 
     // actual deserialization section
     instructions.reserve(header.code_size);
-    constant_pool.reserve(header.constant_size / Value::SIZE);
+    constant_pool.reserve(header.constant_size / Value::SIZE_RAW);
 
     const IndexRange pool_range {
         sizeof(Header),
@@ -372,7 +372,7 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
         offset += sizeof(Value::SizeType);
 
         auto value = Value {type, length};
-        for (u32 i = 0; i < length; ++i) {
+        for (u32 i = 0; i < value.Length(); ++i) {
             for (i64 k = 0; k < value_bytes.size(); ++k) {
                 value_bytes[k] = bytes[k + offset];
             }

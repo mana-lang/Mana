@@ -1,4 +1,4 @@
-data alloc_origin = fn(origin: &NodePtr) => mut &bytecode, mut this: outer -> u16 {
+data alloc_origin = fn(origin: &NodePtr) -> u16 => mut &bytecode, mut this: outer {
     if origin == none {
         data reg = outer.AllocateRegister()
         .bytecode.Write(Op.LoadConstant, [reg, bytecode.AddConstant(0)])
