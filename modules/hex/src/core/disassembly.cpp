@@ -44,6 +44,7 @@ void PrintBytecode(const ByteCode& s) {
             break;
         }
 
+        case Print:
         case Return: {
             const u16 reg = read();
             Log->debug("{:08X} | {} R{}\n", offset, name, reg);
@@ -71,6 +72,9 @@ void PrintBytecode(const ByteCode& s) {
                 break;
             case Bool:
                 log_val(val.AsBool());
+                break;
+            case String:
+                log_val(val.AsString());
                 break;
             case None:
                 log_val("none");

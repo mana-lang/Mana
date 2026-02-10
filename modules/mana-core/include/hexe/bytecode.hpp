@@ -134,6 +134,8 @@ public:
     // this function assumes correct input
     bool Deserialize(const std::vector<u8>& bytes);
 
+    u16 AddConstant(std::string_view string);
+
     template <ValuePrimitiveType VP>
     u16 AddConstant(const VP value) {
         // only need to store unique constants

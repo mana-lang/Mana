@@ -23,35 +23,49 @@ namespace hexe {
 throw std::runtime_error(FUNCSTR + std::string(" -- Reached invalid code path"))
 #endif
 
-constexpr u8 AsByte(ValueType vt) {
-    return static_cast<u8>(vt);
-}
-
 
 Value::Value(const i64 i)
     : data {new Data {.as_i64 = i}},
-      type(AsByte(Int64)) {}
+      type {Int64} {}
 
 Value::Value(const u64 u)
     : data {new Data {.as_u64 = u}},
-      type(AsByte(Uint64)) {}
+      type {Uint64} {}
 
 Value::Value(const f64 f)
     : data {new Data {.as_f64 = f}},
-      type(AsByte(Float64)) {}
+      type {Float64} {}
 
 Value::Value(const bool b)
     : data {new Data {.as_bool = b}},
-      type(AsByte(Bool)) {}
+      type {Bool} {}
+
+Value::Value(const std::string_view string)
+    : data {nullptr},
+      size_bytes {static_cast<SizeType>(string.size())},
+      type {String} {
+    if (size_bytes == 0) {
+        return;
+    }
+    const auto length = Length();
+
+    if (length == 1) {
+        data = new Data {};
+    } else {
+        data = new Data[length] {};
+    }
+
+    std::memcpy(data, string.data(), size_bytes);
+}
 
 Value::Value(const i32 i)
-    : Value(i64 {i}) {}
+    : Value {i64 {i}} {}
 
 Value::Value(const u32 u)
-    : Value(u64 {u}) {}
+    : Value {u64 {u}} {}
 
 Value::SizeType Value::Length() const {
-    //rounded division
+    // divide and round up
     return (size_bytes + sizeof(Data) - 1) / sizeof(Data);
 }
 
@@ -61,7 +75,7 @@ Value::SizeType Value::ByteLength() const {
 
 Value::Value(const ValueType vt, const SizeType size)
     : size_bytes {size},
-      type {AsByte(vt)} {
+      type {vt} {
     const auto length = Length();
     if (length == 0 || type == Invalid) {
         data       = nullptr;
@@ -70,7 +84,7 @@ Value::Value(const ValueType vt, const SizeType size)
     }
 
     if (length > 1) {
-        data = new Data[length];
+        data = new Data[length] {};
         return;
     }
 
@@ -88,7 +102,7 @@ Value::Value(const ValueType vt, const SizeType size)
         data = new Data {.as_bool = false};
         break;
     case String:
-        data = new Data {.as_string = ""};
+        data = new Data {.as_bytes = ""};
         break;
     case None:
         data = nullptr;
@@ -114,7 +128,7 @@ u64 Value::BitCasted(const u32 at) const {
     case Bool:
         return data[at].as_bool; // sobbing and weeping
     case String:
-        return std::bit_cast<u64>(data[at].as_string);
+        return std::bit_cast<u64>(data[at].as_bytes);
     default:
         UNREACHABLE();
     }
@@ -124,8 +138,8 @@ ValueType Value::GetType() const {
     return static_cast<ValueType>(type);
 }
 
-void Value::WriteValueBytes(const std::array<u8, sizeof(Data)>& bytes,
-                            const u32 index
+void Value::WriteBytesAt(const u32 index,
+                         const std::array<u8, sizeof(Data)>& bytes
 ) const {
     if (index >= Length()) {
         throw std::runtime_error("Value::WriteValueBytes: Out of bounds write");
@@ -215,9 +229,9 @@ CASE_BOOL:
 }
 
 Value::Value(const Value& other)
-    : data(nullptr),
-      size_bytes(other.size_bytes),
-      type(other.type) {
+    : data {nullptr},
+      size_bytes {other.size_bytes},
+      type {other.type} {
     if (other.data == nullptr || size_bytes == 0) {
         return;
     }
@@ -228,14 +242,14 @@ Value::Value(const Value& other)
         return;
     }
 
-    data = new Data[length];
+    data = new Data[length] {};
     std::memcpy(data, other.data, other.size_bytes);
 }
 
 Value::Value(Value&& other) noexcept
-    : data(nullptr),
-      size_bytes(other.size_bytes),
-      type(other.type) {
+    : data {nullptr},
+      size_bytes {other.size_bytes},
+      type {other.type} {
     if (other.data == nullptr || size_bytes == 0) {
         other.size_bytes = 0;
         other.type       = Invalid;
@@ -343,34 +357,6 @@ Value::~Value() {
     }
 }
 
-Value::Value(const std::string_view s)
-    : data {nullptr},
-      size_bytes {static_cast<SizeType>(s.size())},
-      type {String} {
-    if (size_bytes == 0) {
-        return;
-    }
-    const auto length = Length();
-
-    if (length == 1) {
-        data = new Data;
-    } else {
-        data = new Data[length];
-    }
-
-    // copy strings in 8 byte segments
-    const auto final_elem = (length - 1);
-    for (auto i = 0; i < final_elem; ++i) {
-        const auto segment = s.substr(i * sizeof(Data), sizeof(Data));
-        std::memcpy(&data[i], segment.data(), sizeof(Data));
-    }
-
-    const auto offset  = final_elem * sizeof(Data);
-    const auto tail    = size_bytes - offset;
-    const auto segment = s.substr(offset, tail);
-    std::memcpy(&data[final_elem], segment.data(), tail);
-}
-
 #define CGOTO_OPERATOR_BIN(ret, op)                   \
     ret Value::operator op(const Value& rhs) const {  \
         COMPUTED_GOTO();                              \
@@ -476,7 +462,7 @@ bool Value::AsBool() const {
     return dispatch_bool[type](data);
 }
 
-std::string Value::AsString() const {
+std::string_view Value::AsString() const {
     if (type != String) {
         Log->critical("Attempted to read value of type {} as string",
                       magic_enum::enum_name(static_cast<ValueType>(type))
@@ -484,23 +470,7 @@ std::string Value::AsString() const {
         throw std::runtime_error("Value::AsString: Bad Call");
     }
 
-    std::string output;
-
-    const auto length   = Length();
-    const auto capacity = length * sizeof(Data);
-    output.resize_and_overwrite(capacity,
-                                [this, length, capacity](char* ptr, std::size_t len) {
-                                    for (auto i = 0; i < length; ++i) {
-                                        const auto offset = i * sizeof(Data);
-                                        std::memcpy(ptr + offset, &data[i], sizeof(Data));
-                                    }
-
-                                    const auto tail = capacity - size_bytes;
-                                    return len - tail;
-                                }
-    );
-
-    return output;
+    return {reinterpret_cast<char*>(data), size_bytes};
 }
 
 // Floats

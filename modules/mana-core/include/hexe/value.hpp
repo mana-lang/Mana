@@ -30,7 +30,15 @@ inline ValueType GetValueTypeFrom(bool) {
 }
 
 template <typename T>
-concept ValuePrimitiveType = std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>;
+concept ValuePrimitiveType = std::is_integral_v<T>
+                             || std::is_floating_point_v<T>
+                             || std::is_same_v<T, bool>
+                             || std::is_same_v<T, std::string_view>;
+
+static constexpr u8 QWORD = 8;
+static constexpr u8 DWORD = 4;
+static constexpr u8 WORD  = 2;
+static constexpr u8 BYTE  = 1;
 
 struct Value {
     friend class ByteCode;
@@ -41,7 +49,7 @@ struct Value {
         f64 as_f64;
 
         bool as_bool;
-        char as_string[sizeof(i64)];
+        u8 as_bytes[QWORD];
     };
 
     using SizeType = u32;
@@ -51,12 +59,12 @@ struct Value {
     Value(f64 f);
     Value(bool b);
 
-    Value(std::string_view s);
+    Value(std::string_view string);
 
     template <ValuePrimitiveType VT>
     explicit Value(const std::span<VT> values)
-        : size_bytes(values.size() * sizeof(Data)),
-          type(GetValueTypeFrom(VT {})) {
+        : size_bytes {values.size() * sizeof(Data)},
+          type {GetValueTypeFrom(VT {})} {
         const auto length = Length();
 
         if (length == 0) {
@@ -99,7 +107,7 @@ struct Value {
     MANA_NODISCARD i64 AsInt() const;
     MANA_NODISCARD u64 AsUint() const;
     MANA_NODISCARD bool AsBool() const;
-    MANA_NODISCARD std::string AsString() const;
+    MANA_NODISCARD std::string_view AsString() const;
 
     Value operator+(const Value& rhs) const;
     Value operator-(const Value& rhs) const;
@@ -149,7 +157,7 @@ private:
 
     Value(ValueType vt, SizeType size);
 
-    void WriteValueBytes(const std::array<unsigned char, 8>& bytes, u32 index) const;
+    void WriteBytesAt(u32 index, const std::array<unsigned char, 8>& bytes) const;
 
     static i64 IDispatchI(const Data* val);
     static i64 IDispatchU(const Data* val);

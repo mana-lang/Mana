@@ -37,6 +37,7 @@ SemanticAnalyzer::SemanticAnalyzer()
     : issue_counter {0},
       current_scope {GLOBAL_SCOPE} {
     RegisterPrimitives();
+    RegisterBuiltins();
 }
 
 ml::i32 SemanticAnalyzer::IssueCount() const {
@@ -317,6 +318,10 @@ void SemanticAnalyzer::Visit(const Literal<bool>&) {
     BufferType(PrimitiveName(Bool));
 }
 
+void SemanticAnalyzer::Visit(const StringLiteral& string) {
+    BufferType(PrimitiveName(String));
+}
+
 void SemanticAnalyzer::RecordFunctionDeclarations(const Artifact& artifact) {
     // not the biggest fan of dynamic_cast, but a whole other visitor just to collect
     // function declarations would be some otherworldly level of premature optimization
@@ -390,6 +395,13 @@ void SemanticAnalyzer::RegisterPrimitives() {
     types[PrimitiveName(None)] = TypeInfo {TypeSize::None};
 }
 
+void SemanticAnalyzer::RegisterBuiltins() {
+    auto& fn         = GetFnTable()["Print"];
+    fn.return_type   = PrimitiveName(None);
+    fn.param_count   = 1;
+    fn.locals["str"] = {PrimitiveName(String), true};
+}
+
 FunctionTable& SemanticAnalyzer::GetFnTable() {
     return types[PrimitiveName(Fn)].functions;
 }
@@ -416,7 +428,7 @@ std::string_view SemanticAnalyzer::PopTypeBuffer() {
     return type_buffer[0];
 }
 
-void SemanticAnalyzer::BufferType(std::string_view type_name) {
+void SemanticAnalyzer::BufferType(const std::string_view type_name) {
     type_buffer[1] = type_name;
 }
 

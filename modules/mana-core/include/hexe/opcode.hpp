@@ -42,9 +42,11 @@ enum class Op : u8 {
     JumpWhenFalse, // etc.
 
     Call,          // Op RF Addr -> Register Frame (1 byte)
-                   //            -> Destination Address (4 bytes)
-                   //            -> Record register frame, then jump to function at address.
-                   //            -> Upon returning, retval is copied into designated return register and frame is returned to previous position
+                   //            == Destination Address (4 bytes)
+                   //            == Record register frame, then jump to function at address.
+                   //            == Upon returning, retval is copied into designated return register and frame is returned to previous position
+
+    Print,         // Op Src     -> Emits value at `Src` to stdout
 };
 // @formatter:on
 } // namespace hexe
