@@ -45,7 +45,7 @@ void Execute(const std::filesystem::path& hexe_path) {
     Log->debug("");
     PrintBytecode(bytecode);
 
-    Log->debug("Executing...\n");
+    Log->info("Executing...\n");
     Hex vm;
 
     const auto start_interp  = chrono::high_resolution_clock::now();
@@ -53,7 +53,7 @@ void Execute(const std::filesystem::path& hexe_path) {
     const auto end_interp    = chrono::high_resolution_clock::now();
 
     const auto result = magic_enum::enum_name(interp_result);
-    Log->debug("Interpret Result: {}\n", result);
+    Log->info("Interpret Result: {}\n", result);
 
     const auto end_file = chrono::high_resolution_clock::now();
 
@@ -63,7 +63,7 @@ void Execute(const std::filesystem::path& hexe_path) {
     elapsed_deser << chrono::duration_cast<chrono::microseconds>(end_deser - start_deser);
     elapsed_exec << chrono::duration_cast<chrono::microseconds>(end_interp - start_interp);
 
-    Log->debug(
+    Log->info(
         "Elapsed time:\nTotal: {}\nDeserialize: {}\nExecute: {}",
         elapsed_file.str(),
         elapsed_deser.str(),

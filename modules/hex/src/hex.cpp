@@ -100,7 +100,7 @@ InterpretResult Hex::Execute(ByteCode* bytecode) {
     DISPATCH();
 
 halt:
-    Log->debug("");
+    Log->info("");
     Log->set_pattern("%^<%n>%$ %v");
     return InterpretResult::OK;
 
