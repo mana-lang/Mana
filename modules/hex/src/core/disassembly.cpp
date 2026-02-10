@@ -73,6 +73,9 @@ void PrintBytecode(const ByteCode& s) {
             case Bool:
                 log_val(val.AsBool());
                 break;
+            case String:
+                log_val(val.AsString());
+                break;
             case None:
                 log_val("none");
                 break;

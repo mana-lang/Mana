@@ -1,3 +1,4 @@
 fn Main() {
-    Print("Hello world!")
+    Print("Hey!")
+    Print("I'm walkin' here!")
 }
