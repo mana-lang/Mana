@@ -84,7 +84,7 @@ Value::Value(const ValueType vt, const SizeType size)
     }
 
     if (length > 1) {
-        data = new Data[length];
+        data = new Data[length] {};
         return;
     }
 
@@ -242,7 +242,7 @@ Value::Value(const Value& other)
         return;
     }
 
-    data = new Data[length];
+    data = new Data[length] {};
     std::memcpy(data, other.data, other.size_bytes);
 }
 
