@@ -51,7 +51,7 @@ Value::Value(const u32 u)
     : Value(u64 {u}) {}
 
 Value::SizeType Value::Length() const {
-    //rounded division
+    // divide and round up
     return (size_bytes + sizeof(Data) - 1) / sizeof(Data);
 }
 
@@ -124,8 +124,8 @@ ValueType Value::GetType() const {
     return static_cast<ValueType>(type);
 }
 
-void Value::WriteValueBytes(const std::array<u8, sizeof(Data)>& bytes,
-                            const u32 index
+void Value::WriteBytesAt(const u32 index,
+                         const std::array<u8, sizeof(Data)>& bytes
 ) const {
     if (index >= Length()) {
         throw std::runtime_error("Value::WriteValueBytes: Out of bounds write");
@@ -353,22 +353,12 @@ Value::Value(const std::string_view s)
     const auto length = Length();
 
     if (length == 1) {
-        data = new Data;
+        data = new Data {};
     } else {
-        data = new Data[length];
+        data = new Data[length] {};
     }
 
-    // copy strings in 8 byte segments
-    const auto final_elem = (length - 1);
-    for (auto i = 0; i < final_elem; ++i) {
-        const auto segment = s.substr(i * sizeof(Data), sizeof(Data));
-        std::memcpy(&data[i], segment.data(), sizeof(Data));
-    }
-
-    const auto offset  = final_elem * sizeof(Data);
-    const auto tail    = size_bytes - offset;
-    const auto segment = s.substr(offset, tail);
-    std::memcpy(&data[final_elem], segment.data(), tail);
+    std::memcpy(data, s.data(), size_bytes);
 }
 
 #define CGOTO_OPERATOR_BIN(ret, op)                   \
@@ -476,7 +466,7 @@ bool Value::AsBool() const {
     return dispatch_bool[type](data);
 }
 
-std::string Value::AsString() const {
+std::string_view Value::AsString() const {
     if (type != String) {
         Log->critical("Attempted to read value of type {} as string",
                       magic_enum::enum_name(static_cast<ValueType>(type))
@@ -484,23 +474,7 @@ std::string Value::AsString() const {
         throw std::runtime_error("Value::AsString: Bad Call");
     }
 
-    std::string output;
-
-    const auto length   = Length();
-    const auto capacity = length * sizeof(Data);
-    output.resize_and_overwrite(capacity,
-                                [this, length, capacity](char* ptr, std::size_t len) {
-                                    for (auto i = 0; i < length; ++i) {
-                                        const auto offset = i * sizeof(Data);
-                                        std::memcpy(ptr + offset, &data[i], sizeof(Data));
-                                    }
-
-                                    const auto tail = capacity - size_bytes;
-                                    return len - tail;
-                                }
-    );
-
-    return output;
+    return {reinterpret_cast<char*>(data), size_bytes};
 }
 
 // Floats

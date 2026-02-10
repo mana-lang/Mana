@@ -376,7 +376,7 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
             for (i64 k = 0; k < value_bytes.size(); ++k) {
                 value_bytes[k] = bytes[k + offset];
             }
-            value.WriteValueBytes(value_bytes, i);
+            value.WriteBytesAt(i, value_bytes);
             offset += sizeof(Value::Data);
         }
         constant_pool.push_back(value);

@@ -102,7 +102,7 @@ struct Value {
     MANA_NODISCARD i64 AsInt() const;
     MANA_NODISCARD u64 AsUint() const;
     MANA_NODISCARD bool AsBool() const;
-    MANA_NODISCARD std::string AsString() const;
+    MANA_NODISCARD std::string_view AsString() const;
 
     Value operator+(const Value& rhs) const;
     Value operator-(const Value& rhs) const;
@@ -152,7 +152,7 @@ private:
 
     Value(ValueType vt, SizeType size);
 
-    void WriteValueBytes(const std::array<unsigned char, 8>& bytes, u32 index) const;
+    void WriteBytesAt(u32 index, const std::array<unsigned char, 8>& bytes) const;
 
     static i64 IDispatchI(const Data* val);
     static i64 IDispatchU(const Data* val);

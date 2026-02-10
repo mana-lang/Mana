@@ -428,7 +428,7 @@ std::string_view SemanticAnalyzer::PopTypeBuffer() {
     return type_buffer[0];
 }
 
-void SemanticAnalyzer::BufferType(std::string_view type_name) {
+void SemanticAnalyzer::BufferType(const std::string_view type_name) {
     type_buffer[1] = type_name;
 }
 
