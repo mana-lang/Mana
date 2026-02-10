@@ -2,10 +2,24 @@
 
 // this file contains macros for printing out certain Hex instructions mid-execution
 // since Mana has a Print builtin, these should generally be avoided, as it
-// drastically slows down execution. But it may help with debugging
+// drastically slows down execution. But it may help with debugging.
+
+// To use these, simply #define HEX_TRACE before including
+
+
+// dispatch
+#ifdef HEX_TRACE
+#   define TRACE_DISPATCH()                                                                    \
+    const auto offset = ip - bytecode->Instructions().data();                                  \
+        if (offset < bytecode->Instructions().size()) {                                        \
+            Log->debug("{:04} | {:<16}", offset, magic_enum::enum_name(static_cast<Op>(*ip))); \
+        }
+#else
+#   define TRACE_DISPATCH()
+#endif
 
 // return
-#ifdef HEX_DEBUG
+#ifdef HEX_TRACE
 #   define RETURN()                      \
         const auto src  = NEXT_PAYLOAD;  \
         RETURN_REGISTER = REG(src);      \
@@ -16,7 +30,7 @@
 
 
 // loadk
-#ifdef HEX_DEBUG
+#ifdef HEX_TRACE
 #   define LOADK()                 \
         u16 dst  = NEXT_PAYLOAD;   \
         u16 idx  = NEXT_PAYLOAD;   \
@@ -30,7 +44,7 @@
 
 
 // move
-#ifdef HEX_DEBUG
+#ifdef HEX_TRACE
 #   define MOVE()                 \
         u16 dst  = NEXT_PAYLOAD;  \
         u16 src  = NEXT_PAYLOAD;  \
@@ -44,7 +58,7 @@
 
 
 // binary_op
-#ifdef HEX_DEBUG
+#ifdef HEX_TRACE
 #   define BINARY_OP(op)                                      \
         {                                                     \
         u16 dst = NEXT_PAYLOAD;                               \
@@ -68,7 +82,7 @@
 
 
 // negate
-#ifdef HEX_DEBUG
+#ifdef HEX_TRACE
 #   define NEGATE()                          \
         u16 dst  = NEXT_PAYLOAD;             \
         u16 src  = NEXT_PAYLOAD;             \
@@ -87,7 +101,7 @@
 
 
 // bool_not
-#ifdef HEX_DEBUG
+#ifdef HEX_TRACE
 #   define BOOL_NOT()                         \
         u16 dst  = NEXT_PAYLOAD;              \
         u16 src  = NEXT_PAYLOAD;              \
@@ -106,7 +120,7 @@
 
 
 // jump
-#ifdef HEX_DEBUG
+#ifdef HEX_TRACE
 // jumps are stored as u16, but encoded as i16
 // so we need to convert them back here
 #   define JUMP()                                                         \
@@ -120,7 +134,7 @@
 
 
 // jump_true
-#ifdef HEX_DEBUG
+#ifdef HEX_TRACE
 #   define JUMP_TRUE()                                                      \
         const u16 target    = NEXT_PAYLOAD;                                 \
         const auto dist  = static_cast<i16>(NEXT_PAYLOAD);                  \
@@ -142,7 +156,7 @@
 
 
 // jump_false
-#ifdef HEX_DEBUG
+#ifdef HEX_TRACE
 // this just inverts the output
 #   define JUMP_FALSE()                                                 \
         u16 target       = NEXT_PAYLOAD;                                \

@@ -1,6 +1,7 @@
-#include <hex/core/logger.hpp>
 #include <hex/hex.hpp>
-#include <hex/core/debug.hpp>
+
+#include <hex/core/logger.hpp>
+#include <hex/core/vm_trace.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
@@ -15,6 +16,7 @@ using namespace hexe;
 #define NEXT_PAYLOAD (ip += 2, (static_cast<u16>(*(ip - 2) | *(ip - 1) << 8)))
 
 #define CALL_TARGET (static_cast<u32>(*ip | *(ip + 1) << 8 | *(ip + 2) << 16 | *(ip + 3) << 24))
+
 #define REG(idx) registers[frame_offset + (idx)]
 #define RETURN_REGISTER registers[REGISTER_RETURN]
 
@@ -27,8 +29,6 @@ using namespace hexe;
 /// The safety of executing Hexe code is therefore determined by Circe's codegen, and Hex' stability.
 /// As Hex' VM loop is relatively simple, we afford ourselves to keep safety checks to Debug builds.
 InterpretResult Hex::Execute(ByteCode* bytecode) {
-    Log->set_pattern("%v");
-
     ip                          = bytecode->EntryPoint();
     auto* const code_start      = bytecode->Instructions().data();
     const auto* const constants = bytecode->Constants().data();
@@ -64,17 +64,14 @@ InterpretResult Hex::Execute(ByteCode* bytecode) {
     };
 
 #ifdef HEX_DEBUG
+    constexpr auto dispatch_max = dispatch_table.size();
+
 #   define DISPATCH()                                                                          \
     {                                                                                          \
-        const auto offset = ip - bytecode->Instructions().data();                              \
-        if (offset < bytecode->Instructions().size()) {                                        \
-            Log->debug("{:04} | {:<16}", offset, magic_enum::enum_name(static_cast<Op>(*ip))); \
-        }                                                                                      \
+        TRACE_DISPATCH()                                                                       \
         auto  label = *ip < dispatch_max ? dispatch_table[*ip++] : &&err;                      \
         goto *label;                                                                           \
     }
-
-    constexpr auto dispatch_max = dispatch_table.size();
 #else
     // we do no bounds checking whatsoever in release
 #   define DISPATCH() goto *dispatch_table[*ip++]
@@ -190,9 +187,9 @@ jmp_false: {
     DISPATCH();
 
 call: {
+        // first setup the next stack frame
         frame_offset += *ip;
 
-        // then setup the next stack frame
         call_stack[++current_function].ret_addr = ip + CALL_BYTES;
         call_stack[current_function].reg_frame  = *ip;
 
