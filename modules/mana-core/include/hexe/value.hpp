@@ -35,6 +35,11 @@ concept ValuePrimitiveType = std::is_integral_v<T>
                              || std::is_same_v<T, bool>
                              || std::is_same_v<T, std::string_view>;
 
+static constexpr u8 QWORD = 8;
+static constexpr u8 DWORD = 4;
+static constexpr u8 WORD  = 2;
+static constexpr u8 BYTE  = 1;
+
 struct Value {
     friend class ByteCode;
 
@@ -44,7 +49,7 @@ struct Value {
         f64 as_f64;
 
         bool as_bool;
-        char as_string[sizeof(i64)];
+        char as_string[QWORD];
     };
 
     using SizeType = u32;
@@ -54,12 +59,12 @@ struct Value {
     Value(f64 f);
     Value(bool b);
 
-    Value(std::string_view s);
+    Value(std::string_view string);
 
     template <ValuePrimitiveType VT>
     explicit Value(const std::span<VT> values)
-        : size_bytes(values.size() * sizeof(Data)),
-          type(GetValueTypeFrom(VT {})) {
+        : size_bytes {values.size() * sizeof(Data)},
+          type {GetValueTypeFrom(VT {})} {
         const auto length = Length();
 
         if (length == 0) {

@@ -23,32 +23,46 @@ namespace hexe {
 throw std::runtime_error(FUNCSTR + std::string(" -- Reached invalid code path"))
 #endif
 
-constexpr u8 AsByte(ValueType vt) {
-    return static_cast<u8>(vt);
-}
-
 
 Value::Value(const i64 i)
     : data {new Data {.as_i64 = i}},
-      type(AsByte(Int64)) {}
+      type {Int64} {}
 
 Value::Value(const u64 u)
     : data {new Data {.as_u64 = u}},
-      type(AsByte(Uint64)) {}
+      type {Uint64} {}
 
 Value::Value(const f64 f)
     : data {new Data {.as_f64 = f}},
-      type(AsByte(Float64)) {}
+      type {Float64} {}
 
 Value::Value(const bool b)
     : data {new Data {.as_bool = b}},
-      type(AsByte(Bool)) {}
+      type {Bool} {}
+
+Value::Value(const std::string_view string)
+    : data {nullptr},
+      size_bytes {static_cast<SizeType>(string.size())},
+      type {String} {
+    if (size_bytes == 0) {
+        return;
+    }
+    const auto length = Length();
+
+    if (length == 1) {
+        data = new Data {};
+    } else {
+        data = new Data[length] {};
+    }
+
+    std::memcpy(data, string.data(), size_bytes);
+}
 
 Value::Value(const i32 i)
-    : Value(i64 {i}) {}
+    : Value {i64 {i}} {}
 
 Value::Value(const u32 u)
-    : Value(u64 {u}) {}
+    : Value {u64 {u}} {}
 
 Value::SizeType Value::Length() const {
     // divide and round up
@@ -61,7 +75,7 @@ Value::SizeType Value::ByteLength() const {
 
 Value::Value(const ValueType vt, const SizeType size)
     : size_bytes {size},
-      type {AsByte(vt)} {
+      type {vt} {
     const auto length = Length();
     if (length == 0 || type == Invalid) {
         data       = nullptr;
@@ -215,9 +229,9 @@ CASE_BOOL:
 }
 
 Value::Value(const Value& other)
-    : data(nullptr),
-      size_bytes(other.size_bytes),
-      type(other.type) {
+    : data {nullptr},
+      size_bytes {other.size_bytes},
+      type {other.type} {
     if (other.data == nullptr || size_bytes == 0) {
         return;
     }
@@ -233,9 +247,9 @@ Value::Value(const Value& other)
 }
 
 Value::Value(Value&& other) noexcept
-    : data(nullptr),
-      size_bytes(other.size_bytes),
-      type(other.type) {
+    : data {nullptr},
+      size_bytes {other.size_bytes},
+      type {other.type} {
     if (other.data == nullptr || size_bytes == 0) {
         other.size_bytes = 0;
         other.type       = Invalid;
@@ -341,24 +355,6 @@ Value::~Value() {
     if (length > 1) {
         delete[] data;
     }
-}
-
-Value::Value(const std::string_view s)
-    : data {nullptr},
-      size_bytes {static_cast<SizeType>(s.size())},
-      type {String} {
-    if (size_bytes == 0) {
-        return;
-    }
-    const auto length = Length();
-
-    if (length == 1) {
-        data = new Data {};
-    } else {
-        data = new Data[length] {};
-    }
-
-    std::memcpy(data, s.data(), size_bytes);
 }
 
 #define CGOTO_OPERATOR_BIN(ret, op)                   \
