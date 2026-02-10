@@ -313,10 +313,6 @@ void SemanticAnalyzer::Visit(const Literal<i64>&) {
     BufferType(PrimitiveName(I64));
 }
 
-void SemanticAnalyzer::Visit(const Literal<void>&) {
-    BufferType(PrimitiveName(None));
-}
-
 void SemanticAnalyzer::Visit(const Literal<bool>&) {
     BufferType(PrimitiveName(Bool));
 }

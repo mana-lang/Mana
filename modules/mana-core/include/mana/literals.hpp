@@ -20,6 +20,7 @@ using f64 = double;
 
 
 static constexpr i64 SENTINEL_I64 = -0xDEADED;
+static constexpr u64 SENTINEL_U64 = 0xDEADC0DEDEADC0DE;
 static constexpr u32 SENTINEL_32  = 0xDEADC0DE;
 static constexpr u16 SENTINEL     = 0xDEAD;
 }

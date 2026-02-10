@@ -4,7 +4,6 @@
 
 #include <stdexcept>
 #include <cstring>
-#include <utility>
 
 #include <hexe/logger.hpp>
 
@@ -21,7 +20,7 @@ namespace hexe {
 #    define UNREACHABLE() std::unreachable()
 #else
 #    define UNREACHABLE() \
-        throw std::runtime_error(FUNCSTR + std::string(" -- Reached invalid code path"))
+throw std::runtime_error(FUNCSTR + std::string(" -- Reached invalid code path"))
 #endif
 
 constexpr u8 AsByte(ValueType vt) {
@@ -30,23 +29,19 @@ constexpr u8 AsByte(ValueType vt) {
 
 
 Value::Value(const i64 i)
-    : data(new Data {.as_i64 = i}),
-      size(1),
+    : data {new Data {.as_i64 = i}},
       type(AsByte(Int64)) {}
 
 Value::Value(const u64 u)
-    : data(new Data {.as_u64 = u}),
-      size(1),
+    : data {new Data {.as_u64 = u}},
       type(AsByte(Uint64)) {}
 
 Value::Value(const f64 f)
-    : data(new Data {.as_f64 = f}),
-      size(1),
+    : data {new Data {.as_f64 = f}},
       type(AsByte(Float64)) {}
 
 Value::Value(const bool b)
-    : data(new Data {.as_bool = b}),
-      size(1),
+    : data {new Data {.as_bool = b}},
       type(AsByte(Bool)) {}
 
 Value::Value(const i32 i)
@@ -56,21 +51,26 @@ Value::Value(const u32 u)
     : Value(u64 {u}) {}
 
 Value::SizeType Value::Length() const {
-    return size;
+    //rounded division
+    return (size_bytes + sizeof(Data) - 1) / sizeof(Data);
 }
 
-Value::Value(const ValueType t, const SizeType l)
-    : size(l),
-      type(AsByte(t)) {
-    if (size == 0 || type == Invalid) {
-        data = nullptr;
-        type = Invalid;
-        size = 0;
+Value::SizeType Value::ByteLength() const {
+    return size_bytes;
+}
+
+Value::Value(const ValueType vt, const SizeType size)
+    : size_bytes {size},
+      type {AsByte(vt)} {
+    const auto length = Length();
+    if (length == 0 || type == Invalid) {
+        data       = nullptr;
+        size_bytes = 0;
         return;
     }
 
-    if (size > 1) {
-        data = new Data[size];
+    if (length > 1) {
+        data = new Data[length];
         return;
     }
 
@@ -87,9 +87,12 @@ Value::Value(const ValueType t, const SizeType l)
     case Bool:
         data = new Data {.as_bool = false};
         break;
+    case String:
+        data = new Data {.as_string = ""};
+        break;
     case None:
         data = nullptr;
-        size = 0;
+        size_bytes = 0;
         break;
     default:
         UNREACHABLE();
@@ -97,6 +100,10 @@ Value::Value(const ValueType t, const SizeType l)
 }
 
 u64 Value::BitCasted(const u32 at) const {
+    if (at >= Length()) {
+        Log->critical("Internal Compiler Error: Attempted to bitcast out of bounds");
+        return SENTINEL_U64;
+    }
     switch (type) {
     case Int64:
         return std::bit_cast<u64>(data[at].as_i64);
@@ -106,6 +113,8 @@ u64 Value::BitCasted(const u32 at) const {
         return std::bit_cast<u64>(data[at].as_f64);
     case Bool:
         return data[at].as_bool; // sobbing and weeping
+    case String:
+        return std::bit_cast<u64>(data[at].as_string);
     default:
         UNREACHABLE();
     }
@@ -118,7 +127,7 @@ ValueType Value::GetType() const {
 void Value::WriteValueBytes(const std::array<u8, sizeof(Data)>& bytes,
                             const u32 index
 ) const {
-    if (index >= size) {
+    if (index >= Length()) {
         throw std::runtime_error("Value::WriteValueBytes: Out of bounds write");
     }
 
@@ -134,6 +143,9 @@ void Value::WriteValueBytes(const std::array<u8, sizeof(Data)>& bytes,
         break;
     case Bool:
         data[index].as_bool = bytes[0];
+        break;
+    case String:
+        std::memcpy(&data[index], bytes.data(), sizeof(Data));
         break;
     default:
         UNREACHABLE();
@@ -170,7 +182,7 @@ bool Value::operator==(const Value& other) const {
 
     // we don't have logic for comparing arrays quite yet
     // so [1,2,3] == [1,2,3] currently will just eval to false
-    if (size > 1 || other.size > 1) {
+    if (Length() > 1 || other.Length() > 1) {
         return false;
     }
 
@@ -204,37 +216,38 @@ CASE_BOOL:
 
 Value::Value(const Value& other)
     : data(nullptr),
-      size(other.size),
+      size_bytes(other.size_bytes),
       type(other.type) {
-    if (other.data == nullptr || size == 0) {
+    if (other.data == nullptr || size_bytes == 0) {
         return;
     }
 
-    if (size == 1) {
+    const auto length = Length();
+    if (length == 1) {
         data = new Data(*other.data);
         return;
     }
 
-    data = new Data[size];
-    std::memcpy(data, other.data, size * sizeof(Data));
+    data = new Data[length];
+    std::memcpy(data, other.data, other.size_bytes);
 }
 
 Value::Value(Value&& other) noexcept
     : data(nullptr),
-      size(other.size),
+      size_bytes(other.size_bytes),
       type(other.type) {
-    if (other.data == nullptr || size == 0) {
-        other.size = 0;
-        other.type = Invalid;
-        other.data = nullptr;
+    if (other.data == nullptr || size_bytes == 0) {
+        other.size_bytes = 0;
+        other.type       = Invalid;
+        other.data       = nullptr;
         return;
     }
 
     data = other.data;
 
-    other.data = nullptr;
-    other.size = 0;
-    other.type = Invalid;
+    other.data       = nullptr;
+    other.size_bytes = 0;
+    other.type       = Invalid;
 }
 
 Value& Value::operator=(const Value& other) {
@@ -242,31 +255,33 @@ Value& Value::operator=(const Value& other) {
         return *this;
     }
 
+
     if (data != nullptr) {
-        if (size == 1) {
+        if (Length() == 1) {
             delete data;
         } else {
             delete[] data;
         }
     }
 
-    if (other.data == nullptr || other.size == 0) {
-        size = 0;
-        type = Invalid;
-        data = nullptr;
+    if (other.data == nullptr || other.size_bytes == 0) {
+        size_bytes = 0;
+        type       = Invalid;
+        data       = nullptr;
         return *this;
     }
 
-    size = other.size;
-    type = other.type;
+    size_bytes = other.size_bytes;
+    type       = other.type;
 
-    if (size == 1) {
+    const auto length = other.Length();
+    if (length == 1) {
         data = new Data(*other.data);
         return *this;
     }
 
-    data = new Data[size];
-    std::memcpy(data, other.data, size * sizeof(Data));
+    data = new Data[length];
+    std::memcpy(data, other.data, other.size_bytes);
     return *this;
 }
 
@@ -276,27 +291,27 @@ Value& Value::operator=(Value&& other) noexcept {
     }
 
     if (data != nullptr) {
-        if (size == 1) {
+        if (Length() == 1) {
             delete data;
         } else {
             delete[] data;
         }
     }
 
-    if (other.data == nullptr || other.size == 0) {
-        size = 0;
-        type = Invalid;
-        data = nullptr;
+    if (other.data == nullptr || other.size_bytes == 0) {
+        size_bytes = 0;
+        type       = Invalid;
+        data       = nullptr;
         return *this;
     }
 
-    size = other.size;
-    type = other.type;
-    data = other.data;
+    size_bytes = other.size_bytes;
+    type       = other.type;
+    data       = other.data;
 
-    other.data = nullptr;
-    other.size = 0;
-    other.type = Invalid;
+    other.data       = nullptr;
+    other.size_bytes = 0;
+    other.type       = Invalid;
 
     return *this;
 }
@@ -307,7 +322,7 @@ Value::~Value() {
     }
 
 #ifdef MANA_DEBUG
-    if (size == 0) {
+    if (size_bytes == 0) {
         // not sure what to do here. Value isn't supposed to log things, but we shouldn't
         // throw in a destructor either. the intuition is to delete it just in case, but
         // that might be even more catastrophic so for now, we'll just consider this a crash scenario
@@ -316,42 +331,44 @@ Value::~Value() {
     }
 #endif
 
-    if (size == 1) {
+    const auto length = Length();
+
+    if (length == 1) {
         delete data;
         return;
     }
 
-    if (size > 1) {
+    if (length > 1) {
         delete[] data;
     }
 }
 
-i32 Rdiv(const i32 a, const i32 b) {
-    if (b == 0) {
-        throw std::runtime_error("Division by zero");
-    }
-
-    return (a + b - 1) / b;
-}
-
 Value::Value(const std::string_view s)
     : data {nullptr},
-      size {(Rdiv(s.size(), SEGMENT_SIZE))},
+      size_bytes {static_cast<SizeType>(s.size())},
       type {String} {
-    if (size == 0) {
+    if (size_bytes == 0) {
         return;
     }
+    const auto length = Length();
 
-    const auto trim = s.size() % SEGMENT_SIZE;
-
-    tail = trim ? trim : SEGMENT_SIZE;
-    data = new Data[size];
+    if (length == 1) {
+        data = new Data;
+    } else {
+        data = new Data[length];
+    }
 
     // copy strings in 8 byte segments
-    for (auto i = 0; i < size; ++i) {
-        const auto segment = s.substr(i * SEGMENT_SIZE, SEGMENT_SIZE);
-        std::memcpy(&data[i], segment.data(), SEGMENT_SIZE);
+    const auto final_elem = (length - 1);
+    for (auto i = 0; i < final_elem; ++i) {
+        const auto segment = s.substr(i * sizeof(Data), sizeof(Data));
+        std::memcpy(&data[i], segment.data(), sizeof(Data));
     }
+
+    const auto offset  = final_elem * sizeof(Data);
+    const auto tail    = size_bytes - offset;
+    const auto segment = s.substr(offset, tail);
+    std::memcpy(&data[final_elem], segment.data(), tail);
 }
 
 #define CGOTO_OPERATOR_BIN(ret, op)                   \
@@ -468,13 +485,17 @@ std::string Value::AsString() const {
     }
 
     std::string output;
-    output.resize_and_overwrite(size * SEGMENT_SIZE,
-                                [this](char* ptr, std::size_t len) {
-                                    for (auto i = 0; i < size; ++i) {
-                                        const auto offset = i * SEGMENT_SIZE;
-                                        std::memcpy(ptr + offset, &data[i], SEGMENT_SIZE);
+
+    const auto length   = Length();
+    const auto capacity = length * sizeof(Data);
+    output.resize_and_overwrite(capacity,
+                                [this, length, capacity](char* ptr, std::size_t len) {
+                                    for (auto i = 0; i < length; ++i) {
+                                        const auto offset = i * sizeof(Data);
+                                        std::memcpy(ptr + offset, &data[i], sizeof(Data));
                                     }
 
+                                    const auto tail = capacity - size_bytes;
                                     return len - tail;
                                 }
     );

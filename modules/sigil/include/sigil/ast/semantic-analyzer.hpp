@@ -132,8 +132,9 @@ public:
 
     void Visit(const ast::Literal<f64>& literal) override;
     void Visit(const ast::Literal<i64>& literal) override;
-    void Visit(const ast::Literal<void>& node) override;
+
     void Visit(const ast::Literal<bool>& literal) override;
+    void Visit(const ast::StringLiteral& node) override {}
 
 private:
     void RecordFunctionDeclarations(const ast::Artifact& artifact);

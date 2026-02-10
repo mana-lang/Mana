@@ -1,12 +1,14 @@
 #pragma once
 
-#include <sigil/core/concepts.hpp>
-
 #include <mana/literals.hpp>
+#include <type_traits>
 
 namespace sigil::ast {
-template <LiteralType T>
+using namespace mana::literals;
+
+template <typename T> requires std::is_arithmetic_v<T>
 class Literal;
+
 class Initializer;
 
 class Visitor {
@@ -44,8 +46,9 @@ public:
     virtual void Visit(const class ArrayLiteral& node) = 0;
 
     virtual void Visit(const Literal<bool>& node) = 0;
-    virtual void Visit(const Literal<mana::literals::i64>& node) = 0;
-    virtual void Visit(const Literal<mana::literals::f64>& node) = 0;
-    virtual void Visit(const Literal<void>& node) = 0;
+    virtual void Visit(const Literal<i64>& node) = 0;
+    virtual void Visit(const Literal<f64>& node) = 0;
+
+    virtual void Visit(const class StringLiteral& node) = 0;
 };
 } // namespace sigil::ast

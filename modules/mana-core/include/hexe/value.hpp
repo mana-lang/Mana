@@ -5,6 +5,7 @@
 
 #include <array>
 #include <span>
+#include <stdexcept>
 #include <string_view>
 #include <vector>
 
@@ -31,8 +32,6 @@ inline ValueType GetValueTypeFrom(bool) {
 template <typename T>
 concept ValuePrimitiveType = std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>;
 
-constexpr auto SEGMENT_SIZE = sizeof(i64);
-
 struct Value {
     friend class ByteCode;
 
@@ -42,12 +41,10 @@ struct Value {
         f64 as_f64;
 
         bool as_bool;
-        char as_string[SEGMENT_SIZE];
+        char as_string[sizeof(i64)];
     };
 
-    using SizeType = i32;
-
-    static constexpr auto SIZE = sizeof(Data) + sizeof(SizeType) + sizeof(ValueType);
+    using SizeType = u32;
 
     Value(i64 i);
     Value(u64 u);
@@ -58,20 +55,22 @@ struct Value {
 
     template <ValuePrimitiveType VT>
     explicit Value(const std::span<VT> values)
-        : size(values.size()),
+        : size_bytes(values.size() * sizeof(Data)),
           type(GetValueTypeFrom(VT {})) {
-        if (size == 0) {
+        const auto length = Length();
+
+        if (length == 0) {
             data = nullptr;
             return;
         }
 
-        if (size == 1) {
+        if (length == 1) {
             data = new Data;
         } else {
-            data = new Data[size];
+            data = new Data[length];
         }
 
-        for (u64 i = 0; i < size; ++i) {
+        for (u64 i = 0; i < length; ++i) {
             if constexpr (std::is_same_v<VT, bool>) {
                 data[i].as_bool = values[i];
             } else if constexpr (std::is_floating_point_v<VT>) {
@@ -90,6 +89,8 @@ struct Value {
     Value(u32 u);
 
     MANA_NODISCARD SizeType Length() const;
+    MANA_NODISCARD SizeType ByteLength() const;
+
     MANA_NODISCARD u64 BitCasted(u32 at) const;
 
     MANA_NODISCARD ValueType GetType() const;
@@ -127,7 +128,7 @@ struct Value {
 
     Value()
         : data {nullptr},
-          size(0),
+          size_bytes(0),
           type(Invalid) {}
 
     Value(const Value& other);
@@ -141,11 +142,12 @@ struct Value {
 
 private:
     Data* data;
-    SizeType size;
-    u8 tail = 0;
+    SizeType size_bytes = sizeof(Data);
     u8 type;
 
-    Value(ValueType t, SizeType l);
+    static constexpr auto SIZE_RAW = sizeof(data) + sizeof(size_bytes) + sizeof(type);
+
+    Value(ValueType vt, SizeType size);
 
     void WriteValueBytes(const std::array<unsigned char, 8>& bytes, u32 index) const;
 

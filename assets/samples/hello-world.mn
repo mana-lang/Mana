@@ -1,0 +1,3 @@
+fn Main() {
+    Print("Hello world!")
+}

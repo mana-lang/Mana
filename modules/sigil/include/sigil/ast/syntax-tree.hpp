@@ -1,6 +1,5 @@
 #pragma once
 
-#include <sigil/core/concepts.hpp>
 #include <sigil/core/logger.hpp>
 
 #include <sigil/ast/parse-tree.hpp>
@@ -333,7 +332,7 @@ public:
     SIGIL_NODISCARD const Node& GetVal() const;
 };
 
-template <LiteralType T>
+template <typename T> requires std::is_arithmetic_v<T>
 class Literal final : public Node {
     T value;
 
@@ -354,9 +353,17 @@ public:
     }
 };
 
-template <>
-class Literal<void> final : public Node {
+class StringLiteral final : public Node {
+    std::string value;
+
 public:
+    explicit StringLiteral(const std::string_view value)
+        : value(value) {}
+
+    SIGIL_NODISCARD std::string_view Get() const {
+        return value;
+    }
+
     void Accept(Visitor& visitor) const override {
         visitor.Visit(*this);
     }
