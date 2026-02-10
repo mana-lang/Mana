@@ -615,7 +615,7 @@ StringLiteral::StringLiteral(const std::string_view sv) {
         if (sv[i] == '\\' && sv[i + 1] == 'n') {
             string.append(sv.substr(last_append, i - last_append));
             string.push_back('\n');
-            last_append = i += 2;
+            last_append = i++ + 2;
         }
     }
     string.append(sv.substr(last_append, sv.size() - last_append));

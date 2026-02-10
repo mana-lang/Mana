@@ -1,4 +1,4 @@
 fn Main() {
-    Print("Hey!\n\n")
+    Print("Hey!\n\n\n\n\n")
     Print("I'm\nwalkin'\nhere!")
 }

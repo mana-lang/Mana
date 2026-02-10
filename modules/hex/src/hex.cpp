@@ -330,8 +330,7 @@ call: {
         DISPATCH();
     }
 print: {
-        u16 reg      = NEXT_PAYLOAD;
-        const auto s = REG(reg).AsString();
+        const auto s = REG(NEXT_PAYLOAD).AsString();
         std::print("{}", s);
     }
     DISPATCH();
