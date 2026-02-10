@@ -354,14 +354,24 @@ public:
 };
 
 class StringLiteral final : public Node {
-    std::string value;
+    std::string string;
 
 public:
-    explicit StringLiteral(const std::string_view value)
-        : value(value) {}
+    explicit StringLiteral(const std::string_view sv) {
+        // unescape newlines
+        string.reserve(sv.size());
+        for (i64 i = 0; i < sv.size(); ++i) {
+            if (sv[i] == '\\' && i + 1 < sv.size() && sv[i + 1] == 'n') {
+                string.push_back('\n');
+                ++i;
+            } else {
+                string.push_back(sv[i]);
+            }
+        }
+    }
 
     SIGIL_NODISCARD std::string_view Get() const {
-        return value;
+        return string;
     }
 
     void Accept(Visitor& visitor) const override {
