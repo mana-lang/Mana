@@ -72,6 +72,8 @@ InterpretResult Hex::Execute(ByteCode* bytecode) {
             return fmt::format("{:.2f}", v.AsFloat());
         case Bool:
             return v.AsBool() ? "true" : "false";
+        case String:
+            return std::string {v.AsString()};
         case None:
             return "none";
         default:
@@ -84,7 +86,7 @@ InterpretResult Hex::Execute(ByteCode* bytecode) {
         if (offset < bytecode->Instructions().size()) {                                        \
             Log->debug("{:04} | {:<16}", offset, magic_enum::enum_name(static_cast<Op>(*ip))); \
         }                                                                                      \
-        auto  label = *ip < dispatch_max ? dispatch_table[*ip++] : &&compile_error;            \
+        auto  label = *ip < dispatch_max ? dispatch_table[*ip++] : &&err;                      \
         goto *label;                                                                           \
     }
 
@@ -331,9 +333,5 @@ print: {
         Log->info("{}", s);
     }
     DISPATCH();
-
-compile_error: {
-        return InterpretResult::CompileError;
-    }
 }
 } // namespace hex
