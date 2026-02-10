@@ -5,6 +5,7 @@
 #include <magic_enum/magic_enum.hpp>
 
 #include <array>
+#include <print>
 
 namespace hex {
 using namespace hexe;
@@ -103,7 +104,7 @@ InterpretResult Hex::Execute(ByteCode* bytecode) {
     DISPATCH();
 
 halt:
-    Log->info("");
+    std::print("\n\n");
     Log->set_pattern("%^<%n>%$ %v");
     return InterpretResult::OK;
 
@@ -331,7 +332,7 @@ call: {
 print: {
         u16 reg      = NEXT_PAYLOAD;
         const auto s = REG(reg).AsString();
-        Log->info("{}", s);
+        std::print("{}", s);
     }
     DISPATCH();
 }
