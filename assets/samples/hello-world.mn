@@ -1,4 +1,12 @@
 fn Main() {
-    Print("Hey!\n\n\n\n\n")
-    Print("I'm\nwalkin'\nhere!")
+    PrintV("I got {} bucks says ya can't do a wooglie\n\n", 8)
+
+    data whoa = "'hoosh'\n"
+    PrintV("Met this crazy lady and she was all like {}\n", whoa)
+
+    data real = true
+    PrintV("It's {}, I be profen all day\n\n", real)
+
+    data f = 97.1
+    PrintV("I be doin' {} on a gummy twirly-o\n\n", f)
 }

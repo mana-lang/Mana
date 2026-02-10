@@ -396,10 +396,15 @@ void SemanticAnalyzer::RegisterPrimitives() {
 }
 
 void SemanticAnalyzer::RegisterBuiltins() {
-    auto& fn         = GetFnTable()["Print"];
-    fn.return_type   = PrimitiveName(None);
-    fn.param_count   = 1;
-    fn.locals["str"] = {PrimitiveName(String), true};
+    auto& print         = GetFnTable()["Print"];
+    print.return_type   = PrimitiveName(None);
+    print.param_count   = 1;
+    print.locals["str"] = {PrimitiveName(String), true};
+
+    auto& printv         = GetFnTable()["PrintV"];
+    printv.return_type   = PrimitiveName(None);
+    printv.param_count   = 2;
+    printv.locals["str"] = {PrimitiveName(String), true};
 }
 
 FunctionTable& SemanticAnalyzer::GetFnTable() {

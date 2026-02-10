@@ -88,6 +88,7 @@ void PrintBytecode(const ByteCode& s) {
 
         case Move:
         case Negate:
+        case PrintValue:
         case Not: {
             const u16 dst = read();
             const u16 src = read();

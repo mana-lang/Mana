@@ -46,7 +46,8 @@ enum class Op : u8 {
                    //            == Record register frame, then jump to function at address.
                    //            == Upon returning, retval is copied into designated return register and frame is returned to previous position
 
-    Print,         // Op Src     -> Emits value at `Src` to stdout
+    Print,         // Op Str     -> Emit `Str` to stdout
+    PrintValue,        // Op Str Val -> Emit 'Str' to stdout with a value argument
 };
 // @formatter:on
 } // namespace hexe
