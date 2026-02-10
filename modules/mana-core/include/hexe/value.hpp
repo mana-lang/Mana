@@ -49,7 +49,7 @@ struct Value {
         f64 as_f64;
 
         bool as_bool;
-        char as_string[QWORD];
+        u8 as_bytes[QWORD];
     };
 
     using SizeType = u32;

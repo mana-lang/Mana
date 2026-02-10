@@ -102,7 +102,7 @@ Value::Value(const ValueType vt, const SizeType size)
         data = new Data {.as_bool = false};
         break;
     case String:
-        data = new Data {.as_string = ""};
+        data = new Data {.as_bytes = ""};
         break;
     case None:
         data = nullptr;
@@ -128,7 +128,7 @@ u64 Value::BitCasted(const u32 at) const {
     case Bool:
         return data[at].as_bool; // sobbing and weeping
     case String:
-        return std::bit_cast<u64>(data[at].as_string);
+        return std::bit_cast<u64>(data[at].as_bytes);
     default:
         UNREACHABLE();
     }
