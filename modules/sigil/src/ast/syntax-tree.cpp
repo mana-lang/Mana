@@ -606,6 +606,29 @@ BinaryExpr::BinaryExpr(const ParseNode& binary_node, const i64 depth) {
     op    = FetchTokenText(tokens[tokens.size() - depth]);
 }
 
+/// StringLiteral
+StringLiteral::StringLiteral(const std::string_view sv) {
+    // unescape newlines
+    string.reserve(sv.size());
+    i64 last_append {};
+    for (i64 i = 0; i < sv.size() - 1; ++i) {
+        if (sv[i] == '\\' && sv[i + 1] == 'n') {
+            string.append(sv.substr(last_append, i - last_append));
+            string.push_back('\n');
+            last_append = i += 2;
+        }
+    }
+    string.append(sv.substr(last_append, sv.size() - last_append));
+}
+
+std::string_view StringLiteral::Get() const {
+    return string;
+}
+
+void StringLiteral::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
 /// ArrayLiteral
 ArrayLiteral::ArrayLiteral(const ParseNode& node)
     : type(hexe::ValueType::Invalid) {
