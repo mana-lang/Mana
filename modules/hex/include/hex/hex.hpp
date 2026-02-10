@@ -31,5 +31,7 @@ class Hex {
 
 public:
     InterpretResult Execute(hexe::ByteCode* next_slice);
+
+    std::string ValueToString(const hexe::Value& value);
 };
 } // namespace hex

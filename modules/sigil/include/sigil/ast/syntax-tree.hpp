@@ -354,19 +354,14 @@ public:
 };
 
 class StringLiteral final : public Node {
-    std::string value;
+    std::string string;
 
 public:
-    explicit StringLiteral(const std::string_view value)
-        : value(value) {}
+    explicit StringLiteral(const std::string_view sv);
 
-    SIGIL_NODISCARD std::string_view Get() const {
-        return value;
-    }
+    SIGIL_NODISCARD std::string_view Get() const;
 
-    void Accept(Visitor& visitor) const override {
-        visitor.Visit(*this);
-    }
+    void Accept(Visitor& visitor) const override;
 };
 
 class ArrayLiteral final : public Node {

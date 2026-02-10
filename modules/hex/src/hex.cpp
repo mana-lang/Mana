@@ -1,9 +1,11 @@
 #include <hex/core/logger.hpp>
 #include <hex/hex.hpp>
+#include <hex/core/debug.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
 #include <array>
+#include <print>
 
 namespace hex {
 using namespace hexe;
@@ -58,28 +60,10 @@ InterpretResult Hex::Execute(ByteCode* bytecode) {
         &&jmp_false,
         &&call,
         &&print,
+        &&print_val,
     };
 
 #ifdef HEX_DEBUG
-    const auto ValueToString = [](const Value& v) -> std::string {
-        using namespace mana;
-        switch (v.GetType()) {
-        case Int64:
-            return std::to_string(v.AsInt());
-        case Uint64:
-            return std::to_string(v.AsUint());
-        case Float64:
-            return fmt::format("{:.2f}", v.AsFloat());
-        case Bool:
-            return v.AsBool() ? "true" : "false";
-        case String:
-            return std::string {v.AsString()};
-        case None:
-            return "none";
-        default:
-            return "???";
-        }
-    };
 #   define DISPATCH()                                                                          \
     {                                                                                          \
         const auto offset = ip - bytecode->Instructions().data();                              \
@@ -102,7 +86,7 @@ InterpretResult Hex::Execute(ByteCode* bytecode) {
     DISPATCH();
 
 halt:
-    Log->info("");
+    std::print("\n\n");
     Log->set_pattern("%^<%n>%$ %v");
     return InterpretResult::OK;
 
@@ -328,10 +312,37 @@ call: {
         DISPATCH();
     }
 print: {
-        u16 reg      = NEXT_PAYLOAD;
-        const auto s = REG(reg).AsString();
-        Log->info("{}", s);
+        const auto s = REG(NEXT_PAYLOAD).AsString();
+        std::print("{}", s);
+    }
+    DISPATCH();
+
+print_val: {
+        const auto s = REG(NEXT_PAYLOAD).AsString();
+        const auto v = ValueToString(REG(NEXT_PAYLOAD));
+
+        std::vprint_nonunicode(s, std::make_format_args(v));
     }
     DISPATCH();
 }
+
+std::string Hex::ValueToString(const Value& v) {
+    using namespace mana;
+    switch (v.GetType()) {
+    case Int64:
+        return std::to_string(v.AsInt());
+    case Uint64:
+        return std::to_string(v.AsUint());
+    case Float64:
+        return fmt::format("{:.2f}", v.AsFloat());
+    case Bool:
+        return v.AsBool() ? "true" : "false";
+    case String:
+        return std::string {v.AsString()};
+    case None:
+        return "none";
+    default:
+        return "???";
+    }
+};
 } // namespace hex

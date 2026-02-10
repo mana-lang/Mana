@@ -21,7 +21,11 @@ Lexer::Lexer()
       line_number {0} {}
 
 bool Lexer::IsNewline() const {
-    return Source[cursor] == '\n';
+    return IsNewline(Source[cursor]);
+}
+
+bool Lexer::IsNewline(char c) const {
+    return c == '\n';
 }
 
 void Lexer::TokenizeLine() {
@@ -147,14 +151,14 @@ bool Lexer::LexedString() {
             return false;
         }
 
-        current_char = Source[cursor];
-
         // strings must close on the line they're started
-        if (current_char == '\n' || (current_char == '\\' && Source[cursor + 1] == 'n')) {
+        if (IsNewline()) {
             Log->error("Unexpected end of string literal");
             AddToken(TokenType::Unknown, length);
             return false;
         }
+
+        current_char = Source[cursor];
 
         // end of string
         if (current_char == starting_char) {

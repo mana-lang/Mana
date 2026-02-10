@@ -189,13 +189,26 @@ void BytecodeGenerator::Visit(const Return& node) {
 }
 
 void BytecodeGenerator::Visit(const Invocation& node) {
-    const auto name = node.GetIdentifier();
-    const auto& fn  = functions[name];
+    const auto name  = node.GetIdentifier();
+    const auto& args = node.GetArguments();
+    const auto& fn   = functions[name];
 
     // handle print
     if (name == "Print") {
-        node.GetArguments().back()->Accept(*this);
+        args[0]->Accept(*this);
         bytecode.Write(Op::Print, {PopRegBuffer()});
+
+        register_buffer.push_back(REGISTER_RETURN);
+        return;
+    }
+
+    if (name == "PrintV") {
+        args[0]->Accept(*this);
+        const auto str_reg = PopRegBuffer();
+        args[1]->Accept(*this);
+        const auto val = PopRegBuffer();
+
+        bytecode.Write(Op::PrintValue, {str_reg, val});
 
         register_buffer.push_back(REGISTER_RETURN);
         return;
