@@ -79,8 +79,8 @@ InterpretResult Hex::Execute(ByteCode* bytecode) {
     // we do no bounds checking whatsoever in release
 #   define DISPATCH() goto *dispatch_table[*ip++]
 #endif
-    // Start VM
 
+    // Start VM
     call_stack[++current_function].reg_frame = bytecode->MainRegisterFrame();
     call_stack[current_function].ret_addr    = nullptr; // main doesn't return to anything.
     DISPATCH();
@@ -94,210 +94,101 @@ err:
     return InterpretResult::CompileError;
 
 ret: {
-#ifdef HEX_DEBUG
-        const auto src  = NEXT_PAYLOAD;
-        RETURN_REGISTER = REG(src);
-
-        Log->debug("  <- R{} ({})", src + frame_offset, ValueToString(RETURN_REGISTER));
-#else
-        RETURN_REGISTER = REG(NEXT_PAYLOAD);
-#endif
+        RETURN();
         frame_offset -= call_stack[current_function].reg_frame;
-
-        ip = call_stack[current_function--].ret_addr;
-        DISPATCH();
+        ip           = call_stack[current_function--].ret_addr;
     }
+    DISPATCH();
 
 load_constant: {
-        u16 dst  = NEXT_PAYLOAD;
-        u16 idx  = NEXT_PAYLOAD;
-        REG(dst) = constants[idx];
-
-#ifdef HEX_DEBUG
-        Log->debug("  R{} <- {} (const #{})", dst + frame_offset, ValueToString(REG(dst)), idx);
-#endif
-        DISPATCH();
+        LOADK();
     }
+    DISPATCH();
+
 move: {
-        u16 dst  = NEXT_PAYLOAD;
-        u16 src  = NEXT_PAYLOAD;
-        REG(dst) = REG(src);
-
-#ifdef HEX_DEBUG
-        Log->debug("  R{} <- R{} ({})", dst + frame_offset, src + frame_offset, ValueToString(REG(dst)));
-#endif
-
-        DISPATCH();
+        MOVE();
     }
-
-#ifdef HEX_DEBUG
-#define BINARY_OP(op)                                 \
-    {                                                 \
-    u16 dst = NEXT_PAYLOAD;                           \
-    u16 lhs = NEXT_PAYLOAD;                           \
-    u16 rhs = NEXT_PAYLOAD;                           \
-    std::string lhs_orig = ValueToString(REG(lhs));   \
-    REG(dst) = REG(lhs) op REG(rhs);                  \
-    Log->debug("  R{} ({}) = R{} ({}) {} R{} ({})",   \
-               dst + frame_offset, ValueToString(REG(dst)),          \
-               lhs + frame_offset, lhs_orig,                         \
-               #op,                                   \
-               rhs + frame_offset, ValueToString(REG(rhs)));         \
-    }
-#else
-#define BINARY_OP(op)       \
-    u16 dst = NEXT_PAYLOAD; \
-    u16 lhs = NEXT_PAYLOAD; \
-    u16 rhs = NEXT_PAYLOAD; \
-    REG(dst) = REG(lhs) op REG(rhs)
-#endif
+    DISPATCH();
 
 add: {
         BINARY_OP(+);
-        DISPATCH();
     }
+    DISPATCH();
 
 sub: {
         BINARY_OP(-);
-        DISPATCH();
     }
+    DISPATCH();
 
 div: {
         BINARY_OP(/);
-        DISPATCH();
     }
+    DISPATCH();
 
 mul: {
         BINARY_OP(*);
-        DISPATCH();
     }
+    DISPATCH();
 
 mod: {
         BINARY_OP(%);
-        DISPATCH();
     }
+    DISPATCH();
 
 negate: {
-        u16 dst  = NEXT_PAYLOAD;
-        u16 src  = NEXT_PAYLOAD;
-        REG(dst) = -REG(src);
-
-#ifdef HEX_DEBUG
-        Log->debug("  R{} ({}) = -R{} ({})",
-                   dst + frame_offset,
-                   ValueToString(REG(dst)),
-                   src + frame_offset,
-                   ValueToString(REG(src))
-        );
-#endif
-
-        DISPATCH();
+        NEGATE();
     }
+    DISPATCH();
 
 bool_not: {
-        u16 dst  = NEXT_PAYLOAD;
-        u16 src  = NEXT_PAYLOAD;
-        REG(dst) = !REG(src);
-
-#ifdef HEX_DEBUG
-        Log->debug("  R{} ({}) = !R{} ({})",
-                   dst + frame_offset,
-                   ValueToString(REG(dst)),
-                   src + frame_offset,
-                   ValueToString(REG(src))
-        );
-#endif
-
-        DISPATCH();
+        BOOL_NOT();
     }
+    DISPATCH();
 
 cmp_greater: {
         BINARY_OP(>);
-        DISPATCH();
     }
+    DISPATCH();
 
 cmp_greater_eq: {
         BINARY_OP(>=);
-        DISPATCH();
     }
+    DISPATCH();
 
 cmp_lesser: {
         BINARY_OP(<);
-        DISPATCH();
     }
+    DISPATCH();
 
 cmp_lesser_eq: {
         BINARY_OP(<=);
-        DISPATCH();
     }
+    DISPATCH();
 
 equals: {
         BINARY_OP(==);
-        DISPATCH();
     }
-
+    DISPATCH();
 not_equals: {
         BINARY_OP(!=);
-        DISPATCH();
     }
+    DISPATCH();
 
 jmp: {
-        // jumps are stored as u16, but encoded as i16
-        // so we need to convert them back here
-#ifdef HEX_DEBUG
-        i16 dist = static_cast<i16>(NEXT_PAYLOAD);
-
-        const auto target = ip - bytecode->Instructions().data() + dist;
-        Log->debug("  Jump ==> [{:04}]", target);
-        ip += dist;
-#else
-        ip += static_cast<i16>(NEXT_PAYLOAD);
-#endif
-
-        DISPATCH();
+        JUMP();
     }
+    DISPATCH();
 
 jmp_true: {
-        u16 reg  = NEXT_PAYLOAD;
-        i16 dist = static_cast<i16>(NEXT_PAYLOAD);
-
-#ifdef HEX_DEBUG
-        const bool taken  = REG(reg).AsBool();
-        const auto target = ip - bytecode->Instructions().data() + dist;
-        Log->debug("  Jump ==> [{:04}] R{} ({}) => {}",
-                   target,
-                   reg + frame_offset,
-                   ValueToString(REG(reg)),
-                   taken ? "TAKEN" : "SKIP"
-        );
-#endif
-
-        // sidestep branch predictions altogether
-        ip += dist * REG(reg).AsBool();
-
-
-        DISPATCH();
+        JUMP_TRUE();
     }
+    DISPATCH();
+
 jmp_false: {
-        u16 reg  = NEXT_PAYLOAD;
-        i16 dist = static_cast<i16>(NEXT_PAYLOAD);
-
-#ifdef HEX_DEBUG
-        const bool taken  = !REG(reg).AsBool();
-        const auto target = ip - bytecode->Instructions().data() + dist;
-        Log->debug("  Jump ==> [{:04}] R{} ({}) => {}",
-                   target,
-                   reg + frame_offset,
-                   ValueToString(REG(reg)),
-                   taken ? "TAKEN" : "SKIPPED"
-        );
-#endif
-
-        // this just inverts the output
-        ip += dist * ((REG(reg).AsBool() - 1) * -1);
-
-        DISPATCH();
+        JUMP_FALSE();
     }
+    DISPATCH();
+
 call: {
         frame_offset += *ip;
 
@@ -309,8 +200,9 @@ call: {
         ++ip;
         u32 t = CALL_TARGET;
         ip    = code_start + t;
-        DISPATCH();
     }
+    DISPATCH();
+
 print: {
         const auto s = REG(NEXT_PAYLOAD).AsString();
         std::print("{}", s);
