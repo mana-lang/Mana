@@ -53,6 +53,7 @@ private:
     SIGIL_NODISCARD bool IsWhitespace(char c) const;
     SIGIL_NODISCARD bool IsLineComment() const;
     SIGIL_NODISCARD bool IsNewline() const;
+    SIGIL_NODISCARD bool IsNewline(char c) const;
 
     void AddEOF();
 };

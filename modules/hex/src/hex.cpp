@@ -1,5 +1,6 @@
 #include <hex/core/logger.hpp>
 #include <hex/hex.hpp>
+#include <hex/core/debug.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
