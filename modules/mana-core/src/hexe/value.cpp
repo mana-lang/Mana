@@ -1,13 +1,10 @@
-#include <cmath>
-
 #include <hexe/value.hpp>
-
-#include <stdexcept>
-#include <cstring>
-
 #include <hexe/logger.hpp>
 
 #include <magic_enum/magic_enum.hpp>
+
+#include <stdexcept>
+#include <cstring>
 
 namespace hexe {
 #ifdef __GNUC__
@@ -20,7 +17,7 @@ namespace hexe {
 #    define UNREACHABLE() std::unreachable()
 #else
 #    define UNREACHABLE() \
-throw std::runtime_error(FUNCSTR + std::string(" -- Reached invalid code path"))
+        throw std::runtime_error(FUNCSTR + std::string(" -- Reached invalid code path"))
 #endif
 
 #ifdef MANA_RELEASE
