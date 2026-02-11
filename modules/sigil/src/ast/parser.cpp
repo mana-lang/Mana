@@ -48,16 +48,24 @@ bool Parser::Parse() {
     cursor = 0;
     while (ProgressedParseTree(parse_tree)) {}
 
-    ConstructAST(parse_tree);
-
-
     // In case there's any trailing newlines
     SkipNewlines();
 
-    return Expect(CurrentToken().type == TokenType::Eof,
-                  parse_tree,
-                  "Expected EOF"
-    );
+    if (CurrentToken().type != TokenType::Eof) {
+        if (cursor == tokens.size() - 1) {
+            Log->error("Unexpected token at end of file");
+        } else {
+            Log->error("Line {}: Unexpected token '{}'",
+                       CurrentToken().line,
+                       FetchTokenText(CurrentToken())
+            );
+        }
+        issue_counter++;
+        return false;
+    }
+
+    ConstructAST(parse_tree);
+    return true;
 }
 
 auto Parser::ViewParseTree() const -> const ParseNode& {
