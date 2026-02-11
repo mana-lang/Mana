@@ -6,8 +6,6 @@
 #include <sigil/ast/visitor.hpp>
 #include <sigil/core/logger.hpp>
 
-#include <hexe/primitive-type.hpp>
-
 #include <magic_enum/magic_enum.hpp>
 
 #include <sigil/ast/keywords.hpp>
@@ -49,7 +47,7 @@ auto MakeLiteral<bool>(const Token& token) {
 
 struct LiteralData {
     NodePtr value;
-    hexe::ValueType type;
+    std::string_view type;
 };
 
 LiteralData MakeLiteral(const Token& token) {
@@ -58,27 +56,27 @@ LiteralData MakeLiteral(const Token& token) {
 
     case Lit_true:
     case Lit_false:
-        return {MakeLiteral<bool>(token), hexe::ValueType::Bool};
+        return {MakeLiteral<bool>(token), PrimitiveName(PrimitiveType::Bool)};
 
     case Lit_Int:
-        return {MakeLiteral<i64>(token), hexe::ValueType::Int64};
+        return {MakeLiteral<i64>(token), PrimitiveName(PrimitiveType::I64)};
 
     case Lit_Float:
-        return {MakeLiteral<f64>(token), hexe::ValueType::Float64};
+        return {MakeLiteral<f64>(token), PrimitiveName(PrimitiveType::F64)};
 
     case Lit_String:
-        return {MakeLiteral<std::string>(token), hexe::ValueType::String};
+        return {MakeLiteral<std::string>(token), PrimitiveName(PrimitiveType::String)};
 
     case Lit_none:
         Log->error("Internal Compiler Error: Attempted to manifest 'none' literal");
-        return {nullptr, hexe::ValueType::None};
+        return {nullptr, PrimitiveName(PrimitiveType::None)};
 
     default:
-        Log->error("Unexpected token for literal");
         break;
     }
 
-    return {nullptr, hexe::ValueType::Invalid};
+    Log->error("Unexpected token for literal");
+    return {nullptr, PrimitiveName(PrimitiveType::None)};
 }
 
 /// Artifact
@@ -631,7 +629,7 @@ void StringLiteral::Accept(Visitor& visitor) const {
 
 /// ArrayLiteral
 ArrayLiteral::ArrayLiteral(const ParseNode& node)
-    : type(hexe::ValueType::Invalid) {
+    : type(PrimitiveName(PrimitiveType::None)) {
     // []
     if (node.branches.empty()) {
         return;
@@ -651,7 +649,7 @@ const std::vector<NodePtr>& ArrayLiteral::GetValues() const {
     return values;
 }
 
-hexe::ValueType ArrayLiteral::GetType() const {
+std::string_view ArrayLiteral::GetType() const {
     return type;
 }
 
@@ -685,7 +683,7 @@ NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
     {
         const auto literal = MakeLiteral(elem.tokens[0]);
 
-        if (literal.type == hexe::ValueType::Invalid) {
+        if (literal.type == PrimitiveName(PrimitiveType::None)) {
             Log->error(
                 "ArrayLiteral attempted to add invalid value '{}'",
                 FetchTokenText(elem.tokens[0])
@@ -694,10 +692,10 @@ NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
         }
 
         // we want to deduce the array's type based on the first literal in the
-        // elem_list so we start in Invalid, assign the type based on the first, and
+        // elem_list so we start in None, assign the type based on the first, and
         // any type changes past that raise an error
         if (literal.type != type) {
-            if (type == hexe::ValueType::Invalid) {
+            if (type == PrimitiveName(PrimitiveType::None)) {
                 type = literal.type;
             } else {
                 Log->warn(
@@ -705,7 +703,8 @@ NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
                         "ArrayLiteral is of type '{}', "
                         "but tried adding value of type '{}'"
                     ),
-                    magic_enum::enum_name(literal.type)
+                    type,
+                    literal.type
                 );
             }
         }

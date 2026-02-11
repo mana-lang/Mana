@@ -6,7 +6,6 @@
 #include <sigil/ast/visitor.hpp>
 
 #include <mana/literals.hpp>
-#include <hexe/primitive-type.hpp>
 
 #include <memory>
 #include <vector>
@@ -366,13 +365,13 @@ public:
 
 class ArrayLiteral final : public Node {
     std::vector<NodePtr> values;
-    hexe::ValueType type;
+    std::string_view type;
 
 public:
     explicit ArrayLiteral(const ParseNode& node);
 
     SIGIL_NODISCARD const std::vector<NodePtr>& GetValues() const;
-    SIGIL_NODISCARD hexe::ValueType GetType() const;
+    SIGIL_NODISCARD std::string_view GetType() const;
 
     void Accept(Visitor& visitor) const override;
 

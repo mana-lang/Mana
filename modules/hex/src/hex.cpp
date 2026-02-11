@@ -216,8 +216,8 @@ print_val: {
 }
 
 std::string Hex::ValueToString(const Value& v) {
-    using namespace mana;
-    switch (v.GetType()) {
+    using enum Value::Data::Type;
+    switch (v.Type()) {
     case Int64:
         return std::to_string(v.AsInt());
     case Uint64:

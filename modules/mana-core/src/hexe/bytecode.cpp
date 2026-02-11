@@ -322,6 +322,8 @@ u32 ByteCode::Checksum(const void* ptr, usize size) const {
     return CRC::Calculate(ptr, size, CRC::CRC_32());
 }
 
+using DataType = Value::Data::Type;
+
 bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
     if (bytes.empty()) {
         Log->error("Attempted to deserialize empty sequence.");
@@ -361,9 +363,9 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
 
     // constant pool first
     for (i64 offset = pool_range.start; offset < pool_range.end;) {
-        const auto type = static_cast<ValueType>(bytes[offset]);
+        const auto type = static_cast<DataType>(bytes[offset]);
 
-        offset += sizeof(ValueType);
+        offset += sizeof(DataType);
         for (i64 i = 0; i < length_bytes.size(); ++i) {
             length_bytes[i] = bytes[i + offset];
         }
@@ -397,7 +399,7 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
 
 u16 ByteCode::AddConstant(const std::string_view string) {
     for (i64 i = 0; i < constant_pool.size(); ++i) {
-        if (constant_pool[i].type == static_cast<u8>(String)
+        if (constant_pool[i].type == static_cast<u8>(DataType::String)
             && constant_pool[i].AsString() == string) {
             return i;
         }

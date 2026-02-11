@@ -1,33 +1,15 @@
 #pragma once
 
-#include <hexe/primitive-type.hpp>
 #include <mana/literals.hpp>
 
 #include <array>
 #include <span>
-#include <stdexcept>
 #include <string_view>
 #include <vector>
 
 namespace hexe {
 using namespace mana;
 using namespace mana::literals;
-
-inline ValueType GetValueTypeFrom(i64) {
-    return Int64;
-}
-
-inline ValueType GetValueTypeFrom(f64) {
-    return Float64;
-}
-
-inline ValueType GetValueTypeFrom(u64) {
-    return Uint64;
-}
-
-inline ValueType GetValueTypeFrom(bool) {
-    return Bool;
-}
 
 template <typename T>
 concept ValuePrimitiveType = std::is_integral_v<T>
@@ -50,16 +32,46 @@ struct Value {
 
         bool as_bool;
         u8 as_bytes[QWORD];
+
+        enum Type : u8 {
+            Int64,
+            Uint64,
+            Float64,
+
+            Bool,
+
+            String,
+
+            None,
+
+            Invalid = 222,
+        };
     };
 
     using SizeType = u32;
 
+    Value();
+
+    Value(i32 i);
     Value(i64 i);
+
+    Value(u32 u);
     Value(u64 u);
+
     Value(f64 f);
+
     Value(bool b);
 
     Value(std::string_view string);
+    Value(Data::Type vt, SizeType size);
+
+    Value(const Value& other);
+    Value(Value&& other) noexcept;
+
+    Value& operator=(const Value& other);
+    Value& operator=(Value&& other) noexcept;
+
+    ~Value();
 
     template <ValuePrimitiveType VT>
     explicit Value(const std::span<VT> values)
@@ -72,11 +84,7 @@ struct Value {
             return;
         }
 
-        if (length == 1) {
-            data = new Data;
-        } else {
-            data = new Data[length];
-        }
+        data = new Data[length];
 
         for (u64 i = 0; i < length; ++i) {
             if constexpr (std::is_same_v<VT, bool>) {
@@ -91,23 +99,20 @@ struct Value {
         }
     }
 
-    // These constructors exist only to redirect to their long/64-bit variants
-    // To avoid having to be explicit when initializing Values
-    Value(i32 i);
-    Value(u32 u);
-
     MANA_NODISCARD SizeType Length() const;
     MANA_NODISCARD SizeType ByteLength() const;
 
     MANA_NODISCARD u64 BitCasted(u32 at) const;
 
-    MANA_NODISCARD ValueType GetType() const;
+    MANA_NODISCARD Data::Type Type() const;
 
     MANA_NODISCARD f64 AsFloat() const;
     MANA_NODISCARD i64 AsInt() const;
     MANA_NODISCARD u64 AsUint() const;
     MANA_NODISCARD bool AsBool() const;
     MANA_NODISCARD std::string_view AsString() const;
+
+    void WriteBytesAt(u32 index, const std::array<u8, QWORD>& bytes) const;
 
     Value operator+(const Value& rhs) const;
     Value operator-(const Value& rhs) const;
@@ -134,30 +139,28 @@ struct Value {
 
     void operator*=(const i64& rhs);
 
-    Value()
-        : data {nullptr},
-          size_bytes(0),
-          type(Invalid) {}
-
-    Value(const Value& other);
-    Value(Value&& other) noexcept;
-
-    // copy constructs a completely new value on the heap
-    Value& operator=(const Value& other);
-    Value& operator=(Value&& other) noexcept;
-
-    ~Value();
-
 private:
+    Data::Type GetValueTypeFrom(i64) {
+        return Data::Type::Int64;
+    }
+
+    Data::Type GetValueTypeFrom(f64) {
+        return Data::Type::Float64;
+    }
+
+    Data::Type GetValueTypeFrom(u64) {
+        return Data::Type::Uint64;
+    }
+
+    Data::Type GetValueTypeFrom(bool) {
+        return Data::Type::Bool;
+    }
+
     Data* data;
     SizeType size_bytes = sizeof(Data);
     u8 type;
 
     static constexpr auto SIZE_RAW = sizeof(data) + sizeof(size_bytes) + sizeof(type);
-
-    Value(ValueType vt, SizeType size);
-
-    void WriteBytesAt(u32 index, const std::array<unsigned char, 8>& bytes) const;
 
     static i64 IDispatchI(const Data* val);
     static i64 IDispatchU(const Data* val);

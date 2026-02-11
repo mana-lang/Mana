@@ -2,7 +2,7 @@
 #include <hex/core/logger.hpp>
 
 #include <hexe/bytecode.hpp>
-#include <hexe/primitive-type.hpp>
+#include <hexe/value.hpp>
 
 #include <mana/literals.hpp>
 
@@ -21,6 +21,8 @@ static u16 ReadPayload(const u8 first_byte, const u8 second_byte) {
 }
 
 void PrintBytecode(const ByteCode& s) {
+    using enum Value::Data::Type;
+
     const auto& code = s.Instructions();
 
     for (i64 i = 0; i < code.size(); ++i) {
@@ -60,7 +62,7 @@ void PrintBytecode(const ByteCode& s) {
                 Log->debug("{:08X} | {} R{} <- {} [pool index: {}]", offset, name, reg, v, idx);
             };
 
-            switch (val.GetType()) {
+            switch (val.Type()) {
             case Float64:
                 log_val(val.AsFloat());
                 break;
