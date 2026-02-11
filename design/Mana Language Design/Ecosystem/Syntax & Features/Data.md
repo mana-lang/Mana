@@ -209,7 +209,7 @@ fmt.Print("{numbers[2]}")
 >[!tip] Output
  3
 
-Array types are deduced from their members. If all members in a list literal are of the *same* type, that list is an *array*. If any of the types differ, that list will be treated as a *tuple* instead.
+Array types are deduced from their members. If all members in a list literal are of the *same* type as its first element, that list is an *array*. If any of the types differ, that list will be treated as a *tuple* instead.
 
 To enforce that a data member is an array, you may annotate it with the array type specifier.
 ```kotlin
@@ -223,7 +223,7 @@ The array type specifier may contain either a type, or a type and an integer val
 
 If the array is not immediately assigned, its size *must* be specified in the declaration.
 
-An array which is not immediately assigned will have all its values *zeroed* by default. Much like scalar data, if you want it to be uninitialized, it must be assigned `none`.
+An array which is not immediately assigned will have all its values *zeroed* by default. Much like scalar data, if you want it to be uninitialized, it must be annotated with `@[NoInit]`.
 ```kotlin
 // creates immutable 'x' of size '5' with type 'f64'
 // all its elements will have the value '0.0'
@@ -233,14 +233,20 @@ data x: [f64, 5]
 data y: [f64] 
 
 // will be uninitialized
-mut data z: [i32, 8] = none
+mut data z: [i32, 8] = @[NoInit]
 
 // error
-data w: [i32, 8] = none
+data w: [i32, 8] = @[NoInit]
 ```
 >[!danger] Error
 > Data `y` was declared as an array of `f64`, but was not assigned, and has no size specifier
 > 
 > Data `w` was assigned `none`, but it is immutable. There is no situation where it could be used
 
-An empty-list declaration `[]` is valid, but the type and size *must* be specified.
+An empty-list declaration `[]` is valid, but the type and size *must* be specified in a type annotation.
+
+The form of an array's type is `[T, N]` where `T` is any extant type, and `N` is any integral constant.
+
+The form of a tuple's type is `[T1, T1, T2, T3, T1, Etc]` where each entry is any extant type, matching *exactly* with the order of declaration of the tuple's literal.
+
+Because of the latter restriction, it is recommended to always allow tuple types to be inferred.
