@@ -1,0 +1,11 @@
+fn Main() {
+    Recurse(1000)
+}
+
+fn Recurse(a: i32) {
+    PrintV("Current: {}\n", a)
+
+    if (a > 0) {
+        Recurse(a - 1)
+    }
+}

@@ -29,7 +29,7 @@ static constexpr auto BYTECODE_INSTRUCTION_MAX = std::numeric_limits<i64>::max()
 static constexpr auto BYTECODE_CONSTANT_MAX    = std::numeric_limits<u16>::max();
 
 static constexpr auto REGISTER_RETURN = 0;
-static constexpr auto REGISTER_TOTAL  = 1024;
+static constexpr auto REGISTER_TOTAL  = 8192;
 
 using namespace fmt::literals;
 
