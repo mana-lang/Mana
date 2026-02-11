@@ -61,7 +61,7 @@ void SemanticAnalyzer::Visit(const Artifact& artifact) {
 
     const bool lacks_main = std::ranges::none_of(GetFnTable(),
                                                  [](const auto& kv) {
-                                                     return kv.first == ENTRY_POINT;
+                                                     return IsEntryPoint(kv.first);
                                                  }
     );
 
