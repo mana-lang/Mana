@@ -43,7 +43,7 @@ public:
     virtual void Visit(const class UnaryExpr& node) = 0;
     virtual void Visit(const class BinaryExpr& node) = 0;
 
-    virtual void Visit(const class ArrayLiteral& node) = 0;
+    virtual void Visit(const class ListLiteral& node) = 0;
 
     virtual void Visit(const Literal<bool>& node) = 0;
     virtual void Visit(const Literal<i64>& node) = 0;

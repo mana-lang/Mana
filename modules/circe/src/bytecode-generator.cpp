@@ -568,7 +568,7 @@ void BytecodeGenerator::Visit(const BinaryExpr& node) {
 }
 
 // we'll add arrays eventually
-void BytecodeGenerator::Visit(const ArrayLiteral& array) {
+void BytecodeGenerator::Visit(const ListLiteral& array) {
     std::unreachable();
 }
 

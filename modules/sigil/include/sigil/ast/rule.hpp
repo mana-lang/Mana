@@ -56,7 +56,7 @@ enum class Rule : ml::u8 {
 
     Grouping,
     Literal,
-    ArrayLiteral,
+    ListLiteral,
     ElemList,
 };
 } // namespace sigil::ast

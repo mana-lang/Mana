@@ -99,7 +99,7 @@ public:
 
     void Visit(const ast::UnaryExpr& node) override;
     void Visit(const ast::BinaryExpr& node) override;
-    void Visit(const ast::ArrayLiteral& array) override;
+    void Visit(const ast::ListLiteral& array) override;
 
     void Visit(const ast::Literal<f64>& float64) override;
     void Visit(const ast::Literal<i64>& int64) override;

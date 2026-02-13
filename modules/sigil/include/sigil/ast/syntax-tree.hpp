@@ -363,12 +363,12 @@ public:
     void Accept(Visitor& visitor) const override;
 };
 
-class ArrayLiteral final : public Node {
+class ListLiteral final : public Node {
     std::vector<NodePtr> values;
-    std::string_view type;
+    std::string type;
 
 public:
-    explicit ArrayLiteral(const ParseNode& node);
+    explicit ListLiteral(const ParseNode& node);
 
     SIGIL_NODISCARD const std::vector<NodePtr>& GetValues() const;
     SIGIL_NODISCARD std::string_view GetType() const;

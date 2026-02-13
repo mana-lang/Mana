@@ -1,5 +1,5 @@
 #include <ranges>
-
+#include <sigil/ast/keywords.hpp>
 #include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/source-file.hpp>
 #include <sigil/ast/syntax-tree.hpp>
@@ -436,8 +436,10 @@ void Skip::Accept(Visitor& visitor) const {
 Return::Return(const ParseNode& node) {
     // TODO: verify this
     if (node.branches.empty()
-        || (node.branches[0]->rule == Rule::Identifier && FetchTokenText(node.branches[0]->tokens[0]) == PrimitiveName(
-                PrimitiveType::None
+        || (node.branches[0]->rule == Rule::Identifier && FetchTokenText(node.branches[0]->tokens[0]) == std::string(
+                PrimitiveName(
+                    PrimitiveType::None
+                )
             ))) {
         // it's either 'return' or 'return none' which are identical
         return;
@@ -628,8 +630,7 @@ void StringLiteral::Accept(Visitor& visitor) const {
 }
 
 /// ArrayLiteral
-ArrayLiteral::ArrayLiteral(const ParseNode& node)
-    : type(PrimitiveName(PrimitiveType::None)) {
+ListLiteral::ListLiteral(const ParseNode& node) {
     // []
     if (node.branches.empty()) {
         return;
@@ -645,19 +646,19 @@ ArrayLiteral::ArrayLiteral(const ParseNode& node)
     }
 }
 
-const std::vector<NodePtr>& ArrayLiteral::GetValues() const {
+const std::vector<NodePtr>& ListLiteral::GetValues() const {
     return values;
 }
 
-std::string_view ArrayLiteral::GetType() const {
+std::string_view ListLiteral::GetType() const {
     return type;
 }
 
-void ArrayLiteral::Accept(Visitor& visitor) const {
+void ListLiteral::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
-NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
+NodePtr ListLiteral::ProcessValue(const ParseNode& elem) {
     switch (elem.rule) {
         using enum Rule;
 
@@ -671,45 +672,16 @@ NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
         // [(foo)]
         return ProcessValue(*elem.branches[0]);
 
-    case ArrayLiteral:
+    case ListLiteral:
         // [[1, 2, 3,], [4, 3, 2],]
         // in this case we still need to ensure the array is of "array-of-arrays" type
         // and adequately handle higher-dimensional arrays.
         // this is extremely important for linalg
-        return std::make_shared<class ArrayLiteral>(elem);
+        return std::make_shared<class ListLiteral>(elem);
 
     case Literal:
         // [12.4, 95.3]
-    {
-        const auto literal = MakeLiteral(elem.tokens[0]);
-
-        if (literal.type == PrimitiveName(PrimitiveType::None)) {
-            Log->error(
-                "ArrayLiteral attempted to add invalid value '{}'",
-                FetchTokenText(elem.tokens[0])
-            );
-            return nullptr;
-        }
-
-        // we want to deduce the array's type based on the first literal in the
-        // elem_list so we start in None, assign the type based on the first, and
-        // any type changes past that raise an error
-        if (literal.type != type) {
-            if (type == PrimitiveName(PrimitiveType::None)) {
-                type = literal.type;
-            } else {
-                Log->warn(
-                    fmt::runtime(
-                        "ArrayLiteral is of type '{}', "
-                        "but tried adding value of type '{}'"
-                    ),
-                    type,
-                    literal.type
-                );
-            }
-        }
-        return literal.value;
-    }
+        return MakeLiteral(elem.tokens[0]).value;
 
     case Equality:
     case Comparison:
@@ -771,8 +743,8 @@ NodePtr CreateExpression(const ParseNode& node) {
         return MakeLiteral(token).value;
     case Identifier:
         return std::make_shared<class Identifier>(node);
-    case ArrayLiteral:
-        return std::make_shared<class ArrayLiteral>(node);
+    case ListLiteral:
+        return std::make_shared<class ListLiteral>(node);
     case Unary:
         return std::make_shared<UnaryExpr>(node);
     case Factor:

@@ -13,14 +13,14 @@ namespace sigil {
 using namespace mana::literals;
 
 // in bits
-enum class TypeSize : u8 {
-    None       = 0,
-    Byte       = 8,
-    Word       = 16,
-    DoubleWord = 32,
-    QuadWord   = 64,
+struct TypeSize {
+    static constexpr u8 None       = 0,
+                        Byte       = 8,
+                        Word       = 16,
+                        DoubleWord = 32,
+                        QuadWord   = 64,
 
-    Arbitrary = 0xFF
+                        Arbitrary = 0xFF;
 };
 
 enum class Mutability : u8 {
@@ -52,6 +52,7 @@ struct Symbol {
     Symbol() = default;
 };
 
+
 using SymbolTable = emhash8::HashMap<std::string_view, Symbol>;
 
 struct Function {
@@ -66,15 +67,45 @@ using FunctionTable = emhash8::HashMap<std::string_view, Function>;
 struct TypeInfo {
     FunctionTable functions;
 
-    TypeSize size = TypeSize::None;
+    i64 size = TypeSize::None;
 
-    explicit TypeInfo(TypeSize size)
+    explicit TypeInfo(i64 size)
         : size {size} {}
 
     TypeInfo() = default;
 };
 
-using TypeTable = emhash8::HashMap<std::string_view, TypeInfo>;
+struct StrHash {
+    // hash on string_view; reuse for all inputs
+    size_t operator()(std::string_view sv) const noexcept {
+        return std::hash<std::string_view> {}(sv);
+    }
+
+    size_t operator()(const std::string& s) const noexcept {
+        return (*this)(std::string_view {s});
+    }
+
+    size_t operator()(const char* s) const noexcept {
+        return (*this)(std::string_view {s});
+    }
+};
+
+struct StrEq {
+    bool operator()(std::string_view a, std::string_view b) const noexcept { return a == b; }
+    bool operator()(const std::string& a, std::string_view b) const noexcept { return std::string_view {a} == b; }
+    bool operator()(std::string_view a, const std::string& b) const noexcept { return a == std::string_view {b}; }
+    bool operator()(const std::string& a, const std::string& b) const noexcept { return a == b; }
+
+    bool operator()(const char* a, const std::string& b) const noexcept {
+        return std::string_view {a} == std::string_view {b};
+    }
+
+    bool operator()(const std::string& a, const char* b) const noexcept {
+        return std::string_view {a} == std::string_view {b};
+    }
+};
+
+using TypeTable = emhash8::HashMap<std::string, TypeInfo, StrHash, StrEq>;
 
 class SemanticAnalyzer final : public ast::Visitor {
     SymbolTable globals;
@@ -85,7 +116,7 @@ class SemanticAnalyzer final : public ast::Visitor {
     // this gives the analyzer some awareness of the most recently resolved type
     // the buffer only holds one type at a time
     // reading from it expires the type
-    std::array<std::string_view, 2> type_buffer;
+    std::array<std::string, 2> type_buffer;
 
     i32 issue_counter;
 
@@ -128,7 +159,7 @@ public:
 
     void Visit(const ast::UnaryExpr& node) override;
     void Visit(const ast::BinaryExpr& node) override;
-    void Visit(const ast::ArrayLiteral& array) override;
+    void Visit(const ast::ListLiteral& array) override;
 
     void Visit(const ast::Literal<f64>& literal) override;
     void Visit(const ast::Literal<i64>& literal) override;

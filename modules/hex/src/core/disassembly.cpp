@@ -75,9 +75,12 @@ void PrintBytecode(const ByteCode& s) {
             case Bool:
                 log_val(val.AsBool());
                 break;
-            case String:
-                log_val(val.AsString());
+            case String: {
+                auto str = std::string(val.AsString());
+                std::replace(str.begin(), str.end(), '\n', ' ');
+                log_val(str);
                 break;
+            }
             case None:
                 log_val("none");
                 break;

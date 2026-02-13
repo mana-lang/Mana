@@ -810,7 +810,7 @@ bool Parser::MatchedArrayLiteral(ParseNode& node) {
         return false;
     }
     auto& array_literal {node.NewBranch()};
-    array_literal.rule = Rule::ArrayLiteral;
+    array_literal.rule = Rule::ListLiteral;
     AddCycledTokenTo(array_literal); // '['
 
     // Allow [\n] etc.

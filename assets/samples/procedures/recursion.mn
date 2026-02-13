@@ -1,9 +1,9 @@
 fn Main() {
-    Recurse(1000)
+    Recurse(500)
 }
 
 fn Recurse(a: i32) {
-    PrintV("Current: {}\n", a)
+    PrintV("Recursed {} times\n", a)
 
     if (a > 0) {
         Recurse(a - 1)

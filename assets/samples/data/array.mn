@@ -1,0 +1,4 @@
+fn Main() {
+    data a = [1, 2, 3]
+    // data b = [1, true, 3] // -- correctly errors
+}
