@@ -131,6 +131,11 @@ Value::Value(const Data::Type vt, const SizeType size)
     data = new Data[length] {};
 }
 
+Value::Value(u8 vt, const Data& other)
+    : data {new Data[1] {other}},
+      type {vt} {}
+
+
 Value::Value(const Value& other)
     : data {nullptr},
       size_bytes {other.size_bytes},

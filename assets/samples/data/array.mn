@@ -1,4 +1,10 @@
 fn Main() {
-    data a = [5, 10, 15]
-    PrintV("Testing: {}", a[1])
+    data n = [5, 10, 15, 20, 50, 100]
+
+    PrintV("This is {}% luck\n", n[1])
+    PrintV("{}% skill\n", n[3])
+    PrintV("{}% concentrated power of will\n", n[2])
+    PrintV("{}% pleasure, ", n[0])
+    PrintV("{}% pain\n", n[4])
+    PrintV("And {}% Mana with support for arrays\n", n[5])
 }

@@ -228,7 +228,8 @@ list_create: {
 list_read: {
         const auto src    = NEXT_PAYLOAD;
         const auto idx    = NEXT_PAYLOAD;
-        REG(NEXT_PAYLOAD) = REG(src)[idx];
+        const auto val    = REG(src);
+        REG(NEXT_PAYLOAD) = {val.Type(), val[REG(idx).AsInt()]};
     }
     DISPATCH();
 

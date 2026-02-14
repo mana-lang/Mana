@@ -64,6 +64,7 @@ struct Value {
     Value(std::string_view string);
     Value(u8 vt, SizeType length);
     Value(Data::Type vt, SizeType size);
+    Value(u8 vt, const Data& other);
 
     Value(const Value& other);
     Value(Value&& other) noexcept;
