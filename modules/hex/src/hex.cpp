@@ -1,9 +1,12 @@
-#include <hex/core/logger.hpp>
 #include <hex/hex.hpp>
+
+#include <hex/core/logger.hpp>
+#include <hex/core/vm_trace.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
 #include <array>
+#include <print>
 
 namespace hex {
 using namespace hexe;
@@ -13,6 +16,7 @@ using namespace hexe;
 #define NEXT_PAYLOAD (ip += 2, (static_cast<u16>(*(ip - 2) | *(ip - 1) << 8)))
 
 #define CALL_TARGET (static_cast<u32>(*ip | *(ip + 1) << 8 | *(ip + 2) << 16 | *(ip + 3) << 24))
+
 #define REG(idx) registers[frame_offset + (idx)]
 #define RETURN_REGISTER registers[REGISTER_RETURN]
 
@@ -55,262 +59,140 @@ InterpretResult Hex::Execute(ByteCode* bytecode) {
         &&jmp_true,
         &&jmp_false,
         &&call,
+        &&print,
+        &&print_val,
+        &&list_create,
+        &&list_read,
+        &&list_write,
     };
 
 #ifdef HEX_DEBUG
-    const auto ValueToString = [](const Value& v) -> std::string {
-        using namespace mana;
-        switch (v.GetType()) {
-        case Int64:
-            return std::to_string(v.AsInt());
-        case Uint64:
-            return std::to_string(v.AsUint());
-        case Float64:
-            return fmt::format("{:.2f}", v.AsFloat());
-        case Bool:
-            return v.AsBool() ? "true" : "false";
-        case None:
-            return "none";
-        default:
-            return "???";
-        }
-    };
+    constexpr auto dispatch_max = dispatch_table.size();
+
 #   define DISPATCH()                                                                          \
     {                                                                                          \
-        const auto offset = ip - bytecode->Instructions().data();                              \
-        if (offset < bytecode->Instructions().size()) {                                        \
-            Log->debug("{:04} | {:<16}", offset, magic_enum::enum_name(static_cast<Op>(*ip))); \
-        }                                                                                      \
-        auto  label = *ip < dispatch_max ? dispatch_table[*ip++] : &&compile_error;            \
+        TRACE_DISPATCH()                                                                       \
+        auto  label = *ip < dispatch_max ? dispatch_table[*ip++] : &&err;                      \
         goto *label;                                                                           \
     }
-
-    constexpr auto dispatch_max = dispatch_table.size();
 #else
     // we do no bounds checking whatsoever in release
 #   define DISPATCH() goto *dispatch_table[*ip++]
 #endif
-    // Start VM
 
+    // Start VM
     call_stack[++current_function].reg_frame = bytecode->MainRegisterFrame();
     call_stack[current_function].ret_addr    = nullptr; // main doesn't return to anything.
     DISPATCH();
 
 halt:
+    std::print("\n\n");
+    Log->set_pattern("%^<%n>%$ %v");
     return InterpretResult::OK;
 
 err:
     return InterpretResult::CompileError;
 
 ret: {
-#ifdef HEX_DEBUG
-        const auto src  = NEXT_PAYLOAD;
-        RETURN_REGISTER = REG(src);
-
-        Log->debug("  <- R{} ({})", src + frame_offset, ValueToString(RETURN_REGISTER));
-#else
-        RETURN_REGISTER = REG(NEXT_PAYLOAD);
-#endif
+        RETURN();
         frame_offset -= call_stack[current_function].reg_frame;
-
-        ip = call_stack[current_function--].ret_addr;
-        DISPATCH();
+        ip           = call_stack[current_function--].ret_addr;
     }
+    DISPATCH();
 
 load_constant: {
-        u16 dst  = NEXT_PAYLOAD;
-        u16 idx  = NEXT_PAYLOAD;
-        REG(dst) = constants[idx];
-
-#ifdef HEX_DEBUG
-        Log->debug("  R{} <- {} (const #{})", dst + frame_offset, ValueToString(REG(dst)), idx);
-#endif
-        DISPATCH();
+        LOADK();
     }
+    DISPATCH();
+
 move: {
-        u16 dst  = NEXT_PAYLOAD;
-        u16 src  = NEXT_PAYLOAD;
-        REG(dst) = REG(src);
-
-#ifdef HEX_DEBUG
-        Log->debug("  R{} <- R{} ({})", dst + frame_offset, src + frame_offset, ValueToString(REG(dst)));
-#endif
-
-        DISPATCH();
+        MOVE();
     }
-
-#ifdef HEX_DEBUG
-#define BINARY_OP(op)                                 \
-    {                                                 \
-    u16 dst = NEXT_PAYLOAD;                           \
-    u16 lhs = NEXT_PAYLOAD;                           \
-    u16 rhs = NEXT_PAYLOAD;                           \
-    std::string lhs_orig = ValueToString(REG(lhs));   \
-    REG(dst) = REG(lhs) op REG(rhs);                  \
-    Log->debug("  R{} ({}) = R{} ({}) {} R{} ({})",   \
-               dst + frame_offset, ValueToString(REG(dst)),          \
-               lhs + frame_offset, lhs_orig,                         \
-               #op,                                   \
-               rhs + frame_offset, ValueToString(REG(rhs)));         \
-    }
-#else
-#define BINARY_OP(op)       \
-    u16 dst = NEXT_PAYLOAD; \
-    u16 lhs = NEXT_PAYLOAD; \
-    u16 rhs = NEXT_PAYLOAD; \
-    REG(dst) = REG(lhs) op REG(rhs)
-#endif
+    DISPATCH();
 
 add: {
         BINARY_OP(+);
-        DISPATCH();
     }
+    DISPATCH();
 
 sub: {
         BINARY_OP(-);
-        DISPATCH();
     }
+    DISPATCH();
 
 div: {
         BINARY_OP(/);
-        DISPATCH();
     }
+    DISPATCH();
 
 mul: {
         BINARY_OP(*);
-        DISPATCH();
     }
+    DISPATCH();
 
 mod: {
         BINARY_OP(%);
-        DISPATCH();
     }
+    DISPATCH();
 
 negate: {
-        u16 dst  = NEXT_PAYLOAD;
-        u16 src  = NEXT_PAYLOAD;
-        REG(dst) = -REG(src);
-
-#ifdef HEX_DEBUG
-        Log->debug("  R{} ({}) = -R{} ({})",
-                   dst + frame_offset,
-                   ValueToString(REG(dst)),
-                   src + frame_offset,
-                   ValueToString(REG(src))
-        );
-#endif
-
-        DISPATCH();
+        NEGATE();
     }
+    DISPATCH();
 
 bool_not: {
-        u16 dst  = NEXT_PAYLOAD;
-        u16 src  = NEXT_PAYLOAD;
-        REG(dst) = !REG(src);
-
-#ifdef HEX_DEBUG
-        Log->debug("  R{} ({}) = !R{} ({})",
-                   dst + frame_offset,
-                   ValueToString(REG(dst)),
-                   src + frame_offset,
-                   ValueToString(REG(src))
-        );
-#endif
-
-        DISPATCH();
+        BOOL_NOT();
     }
+    DISPATCH();
 
 cmp_greater: {
         BINARY_OP(>);
-        DISPATCH();
     }
+    DISPATCH();
 
 cmp_greater_eq: {
         BINARY_OP(>=);
-        DISPATCH();
     }
+    DISPATCH();
 
 cmp_lesser: {
         BINARY_OP(<);
-        DISPATCH();
     }
+    DISPATCH();
 
 cmp_lesser_eq: {
         BINARY_OP(<=);
-        DISPATCH();
     }
+    DISPATCH();
 
 equals: {
         BINARY_OP(==);
-        DISPATCH();
     }
-
+    DISPATCH();
 not_equals: {
         BINARY_OP(!=);
-        DISPATCH();
     }
+    DISPATCH();
 
 jmp: {
-        // jumps are stored as u16, but encoded as i16
-        // so we need to convert them back here
-#ifdef HEX_DEBUG
-        i16 dist = static_cast<i16>(NEXT_PAYLOAD);
-
-        const auto target = ip - bytecode->Instructions().data() + dist;
-        Log->debug("  Jump ==> [{:04}]", target);
-        ip += dist;
-#else
-        ip += static_cast<i16>(NEXT_PAYLOAD);
-#endif
-
-        DISPATCH();
+        JUMP();
     }
+    DISPATCH();
 
 jmp_true: {
-        u16 reg  = NEXT_PAYLOAD;
-        i16 dist = static_cast<i16>(NEXT_PAYLOAD);
-
-#ifdef HEX_DEBUG
-        const bool taken  = REG(reg).AsBool();
-        const auto target = ip - bytecode->Instructions().data() + dist;
-        Log->debug("  Jump ==> [{:04}] R{} ({}) => {}",
-                   target,
-                   reg + frame_offset,
-                   ValueToString(REG(reg)),
-                   taken ? "TAKEN" : "SKIP"
-        );
-#endif
-
-        // sidestep branch predictions altogether
-        ip += dist * REG(reg).AsBool();
-
-
-        DISPATCH();
+        JUMP_TRUE();
     }
+    DISPATCH();
+
 jmp_false: {
-        u16 reg  = NEXT_PAYLOAD;
-        i16 dist = static_cast<i16>(NEXT_PAYLOAD);
-
-#ifdef HEX_DEBUG
-        const bool taken  = !REG(reg).AsBool();
-        const auto target = ip - bytecode->Instructions().data() + dist;
-        Log->debug("  Jump ==> [{:04}] R{} ({}) => {}",
-                   target,
-                   reg + frame_offset,
-                   ValueToString(REG(reg)),
-                   taken ? "TAKEN" : "SKIPPED"
-        );
-#endif
-
-        // this just inverts the output
-        ip += dist * ((REG(reg).AsBool() - 1) * -1);
-
-        DISPATCH();
+        JUMP_FALSE();
     }
+    DISPATCH();
+
 call: {
+        // first setup the next stack frame
         frame_offset += *ip;
 
-        // then setup the next stack frame
         call_stack[++current_function].ret_addr = ip + CALL_BYTES;
         call_stack[current_function].reg_frame  = *ip;
 
@@ -318,11 +200,64 @@ call: {
         ++ip;
         u32 t = CALL_TARGET;
         ip    = code_start + t;
-        DISPATCH();
     }
+    DISPATCH();
 
-compile_error: {
-        return InterpretResult::CompileError;
+print: {
+        const auto s = REG(NEXT_PAYLOAD).AsString();
+        std::print("{}", s);
     }
+    DISPATCH();
+
+print_val: {
+        const auto s = REG(NEXT_PAYLOAD).AsString();
+        const auto v = ValueToString(REG(NEXT_PAYLOAD));
+
+        std::vprint_nonunicode(s, std::make_format_args(v));
+    }
+    DISPATCH();
+
+list_create: {
+        const u8 type   = NEXT_PAYLOAD;
+        const auto size = NEXT_PAYLOAD;
+
+        REG(NEXT_PAYLOAD) = Value {type, size};
+    }
+    DISPATCH();
+
+list_read: {
+        const auto src    = NEXT_PAYLOAD;
+        const auto idx    = NEXT_PAYLOAD;
+        const auto val    = REG(src);
+        REG(NEXT_PAYLOAD) = {val.Type(), val[REG(idx).AsInt()]};
+    }
+    DISPATCH();
+
+list_write: {
+        const auto dst = NEXT_PAYLOAD;
+        const auto idx = NEXT_PAYLOAD;
+        REG(dst)[idx]  = REG(NEXT_PAYLOAD).Raw();
+    }
+    DISPATCH();
 }
+
+std::string Hex::ValueToString(const Value& v) {
+    using enum Value::Data::Type;
+    switch (v.Type()) {
+    case Int64:
+        return std::to_string(v.AsInt());
+    case Uint64:
+        return std::to_string(v.AsUint());
+    case Float64:
+        return fmt::format("{:.2f}", v.AsFloat());
+    case Bool:
+        return v.AsBool() ? "true" : "false";
+    case String:
+        return std::string {v.AsString()};
+    case None:
+        return "none";
+    default:
+        return "???";
+    }
+};
 } // namespace hex

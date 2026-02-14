@@ -176,12 +176,12 @@ std::vector<u8> ByteCode::SerializeConstants() const {
     for (const auto& value : constant_pool) {
         out.push_back(static_cast<u8>(value.type));
 
-        for (i64 i = 0; i < sizeof(value.length); ++i) {
-            out.push_back((value.length >> i * BYTE_BITS) & 0xFF);
+        for (i64 i = 0; i < sizeof(Value::SizeType); ++i) {
+            out.push_back((value.size_bytes >> i * BYTE_BITS) & 0xFF);
         }
 
         // need to serialize each value separately
-        for (i64 i = 0; i < value.length; ++i) {
+        for (i64 i = 0; i < value.Length(); ++i) {
             const auto serializable = value.BitCasted(i);
 
             for (i64 k = 0; k < sizeof(serializable); ++k) {
@@ -245,9 +245,9 @@ u32 ByteCode::ConstantPoolBytesCount() const {
     u32 out = 0;
 
     for (const auto& value : constant_pool) {
-        out += value.length * sizeof(Value::Data); // num elements
+        out += value.Length() * sizeof(Value::Data);
         out += sizeof(value.type);
-        out += sizeof(value.length); // array length still has to be included
+        out += sizeof(Value::SizeType);
     }
     return out;
 }
@@ -257,7 +257,7 @@ u32 ByteCode::ConstantPoolBytesCount() const {
 u32 ByteCode::ConstantCount() const {
     u32 out = 0;
     for (const auto& value : constant_pool) {
-        out += value.length;
+        out += value.Length();
     }
     return out;
 }
@@ -322,6 +322,8 @@ u32 ByteCode::Checksum(const void* ptr, usize size) const {
     return CRC::Calculate(ptr, size, CRC::CRC_32());
 }
 
+using DataType = Value::Data::Type;
+
 bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
     if (bytes.empty()) {
         Log->error("Attempted to deserialize empty sequence.");
@@ -349,7 +351,7 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
 
     // actual deserialization section
     instructions.reserve(header.code_size);
-    constant_pool.reserve(header.constant_size / Value::SIZE);
+    constant_pool.reserve(header.constant_size / Value::SIZE_RAW);
 
     const IndexRange pool_range {
         sizeof(Header),
@@ -357,26 +359,26 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
     };
 
     std::array<u8, sizeof(Value::Data)> value_bytes {};
-    std::array<u8, sizeof(Value::LengthType)> length_bytes {};
+    std::array<u8, sizeof(Value::SizeType)> size_bytes {};
 
     // constant pool first
     for (i64 offset = pool_range.start; offset < pool_range.end;) {
-        const auto type = static_cast<PrimitiveValueType>(bytes[offset]);
+        const auto type = static_cast<DataType>(bytes[offset]);
 
-        offset += sizeof(PrimitiveValueType);
-        for (i64 i = 0; i < length_bytes.size(); ++i) {
-            length_bytes[i] = bytes[i + offset];
+        offset += sizeof(DataType);
+        for (i64 i = 0; i < size_bytes.size(); ++i) {
+            size_bytes[i] = bytes[i + offset];
         }
-        const auto length = std::bit_cast<Value::LengthType>(length_bytes);
+        const auto size = std::bit_cast<Value::SizeType>(size_bytes);
 
-        offset += sizeof(Value::LengthType);
+        offset += sizeof(Value::SizeType);
 
-        auto value = Value {type, length};
-        for (u32 i = 0; i < length; ++i) {
+        auto value = Value {type, size};
+        for (u32 i = 0; i < value.Length(); ++i) {
             for (i64 k = 0; k < value_bytes.size(); ++k) {
                 value_bytes[k] = bytes[k + offset];
             }
-            value.WriteValueBytes(value_bytes, i);
+            value.WriteBytesAt(i, value_bytes);
             offset += sizeof(Value::Data);
         }
         constant_pool.push_back(value);
@@ -393,6 +395,19 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
     main_frame  = header.main_frame;
 
     return true;
+}
+
+u16 ByteCode::AddConstant(const std::string_view string) {
+    for (i64 i = 0; i < constant_pool.size(); ++i) {
+        if (constant_pool[i].type == static_cast<u8>(DataType::String)
+            && constant_pool[i].AsString() == string) {
+            return i;
+        }
+    }
+
+    constant_pool.push_back(string);
+    CheckConstantPoolSize();
+    return constant_pool.size() - 1;
 }
 
 void ByteCode::CheckInstructionSize() const {

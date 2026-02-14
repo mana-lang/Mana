@@ -48,16 +48,24 @@ bool Parser::Parse() {
     cursor = 0;
     while (ProgressedParseTree(parse_tree)) {}
 
-    ConstructAST(parse_tree);
-
-
     // In case there's any trailing newlines
     SkipNewlines();
 
-    return Expect(CurrentToken().type == TokenType::Eof,
-                  parse_tree,
-                  "Expected EOF"
-    );
+    if (CurrentToken().type != TokenType::Eof) {
+        if (cursor == tokens.size() - 1) {
+            Log->error("Unexpected token at end of file");
+        } else {
+            Log->error("Line {}: Unexpected token '{}'",
+                       CurrentToken().line,
+                       FetchTokenText(CurrentToken())
+            );
+        }
+        issue_counter++;
+        return false;
+    }
+
+    ConstructAST(parse_tree);
+    return true;
 }
 
 auto Parser::ViewParseTree() const -> const ParseNode& {
@@ -802,7 +810,7 @@ bool Parser::MatchedArrayLiteral(ParseNode& node) {
         return false;
     }
     auto& array_literal {node.NewBranch()};
-    array_literal.rule = Rule::ArrayLiteral;
+    array_literal.rule = Rule::ListExpression;
     AddCycledTokenTo(array_literal); // '['
 
     // Allow [\n] etc.
@@ -926,7 +934,7 @@ bool Parser::MatchedPrimary(ParseNode& node) {
     return false;
 }
 
-// unary = ("-" | "!") unary | primary
+// unary = ("-" | "!") unary | list_access
 bool Parser::MatchedUnary(ParseNode& node) {
     switch (CurrentToken().type) {
         using enum TokenType;
@@ -944,8 +952,31 @@ bool Parser::MatchedUnary(ParseNode& node) {
     }
 
     default:
-        return MatchedPrimary(node);
+        return MatchedListAccess(node);
     }
+}
+
+// list_access = primary ('[' expr ']')?
+bool Parser::MatchedListAccess(ParseNode& node) {
+    if (not MatchedPrimary(node)) {
+        return false;
+    }
+
+    if (CurrentToken().type != TokenType::Op_BracketLeft) {
+        return true;
+    }
+
+    auto& list_access {node.NewBranch(Rule::ListAccess)};
+    list_access.AcquireBranchOf(node, node.branches.size() - 2);
+
+    SkipCurrentToken();
+
+    if (Expect(MatchedExpression(list_access), list_access, "Expected expression")) {
+        if (Expect(CurrentToken().type == TokenType::Op_BracketRight, list_access, "Expected ']'")) {
+            SkipCurrentToken();
+        }
+    }
+    return true;
 }
 
 bool IsFactorOp(const TokenType token) {

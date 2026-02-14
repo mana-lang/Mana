@@ -1,18 +1,18 @@
 #pragma once
 
-#include <sigil/core/concepts.hpp>
 #include <sigil/core/logger.hpp>
 
 #include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/visitor.hpp>
 
 #include <mana/literals.hpp>
-#include <hexe/primitive-type.hpp>
 
 #include <memory>
 #include <vector>
 #include <charconv>
 #include <string_view>
+
+#include <hexe/value.hpp>
 
 namespace sigil::ast {
 namespace ml = mana::literals;
@@ -90,6 +90,7 @@ public:
     SIGIL_NODISCARD std::string_view GetName() const;
     SIGIL_NODISCARD std::string_view GetTypeName() const;
     SIGIL_NODISCARD const NodePtr& GetInitializer() const;
+    SIGIL_NODISCARD NodePtr& GetInitializer();
 
     SIGIL_NODISCARD bool HasTypeAnnotation() const;
 
@@ -195,6 +196,19 @@ public:
 class LoopRangeMutable : public LoopRange {
 public:
     explicit LoopRangeMutable(const ParseNode& node);
+
+    void Accept(Visitor& visitor) const override;
+};
+
+class ListAccess final : public Node {
+    NodePtr item;
+    NodePtr index;
+
+public:
+    ListAccess(const ParseNode& node);
+
+    SIGIL_NODISCARD const NodePtr& GetItem() const;
+    SIGIL_NODISCARD const NodePtr& GetIndex() const;
 
     void Accept(Visitor& visitor) const override;
 };
@@ -333,7 +347,7 @@ public:
     SIGIL_NODISCARD const Node& GetVal() const;
 };
 
-template <LiteralType T>
+template <typename T> requires std::is_arithmetic_v<T>
 class Literal final : public Node {
     T value;
 
@@ -354,23 +368,28 @@ public:
     }
 };
 
-template <>
-class Literal<void> final : public Node {
+class StringLiteral final : public Node {
+    std::string string;
+
 public:
-    void Accept(Visitor& visitor) const override {
-        visitor.Visit(*this);
-    }
+    explicit StringLiteral(std::string_view sv);
+
+    SIGIL_NODISCARD std::string_view Get() const;
+
+    void Accept(Visitor& visitor) const override;
 };
 
-class ArrayLiteral final : public Node {
+class ListExpression final : public Node {
     std::vector<NodePtr> values;
-    hexe::PrimitiveValueType type;
+    hexe::Value::Data::Type type;
 
 public:
-    explicit ArrayLiteral(const ParseNode& node);
+    explicit ListExpression(const ParseNode& node);
 
-    SIGIL_NODISCARD const std::vector<NodePtr>& GetValues() const;
-    SIGIL_NODISCARD hexe::PrimitiveValueType GetType() const;
+    SIGIL_NODISCARD std::span<const NodePtr> GetValues() const;
+    SIGIL_NODISCARD hexe::Value::Data::Type GetType() const;
+
+    void SetType(hexe::Value::Data::Type new_type);
 
     void Accept(Visitor& visitor) const override;
 

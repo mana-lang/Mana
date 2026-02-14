@@ -29,7 +29,7 @@ static constexpr auto BYTECODE_INSTRUCTION_MAX = std::numeric_limits<i64>::max()
 static constexpr auto BYTECODE_CONSTANT_MAX    = std::numeric_limits<u16>::max();
 
 static constexpr auto REGISTER_RETURN = 0;
-static constexpr auto REGISTER_TOTAL  = 1024;
+static constexpr auto REGISTER_TOTAL  = 8192;
 
 using namespace fmt::literals;
 
@@ -134,7 +134,9 @@ public:
     // this function assumes correct input
     bool Deserialize(const std::vector<u8>& bytes);
 
-    template <ValuePrimitive VP>
+    u16 AddConstant(std::string_view string);
+
+    template <ValuePrimitiveType VP>
     u16 AddConstant(const VP value) {
         // only need to store unique constants
         for (i64 i = 0; i < constant_pool.size(); ++i) {
@@ -148,7 +150,7 @@ public:
         return constant_pool.size() - 1;
     }
 
-    template <ValuePrimitive CT>
+    template <ValuePrimitiveType CT>
     u16 AddArray(const std::vector<CT>& array) {
         constant_pool.push_back(Value {array});
 
@@ -161,6 +163,11 @@ private:
     MANA_NODISCARD u32 Checksum(const void* ptr, usize size) const;
 
     MANA_NODISCARD std::vector<u8> SerializeCode() const;
+
+    // Constants are stored in a fixed sequence '(bytes) name':
+    // (1) value type
+    // (1) value tail
+    //
     MANA_NODISCARD std::vector<u8> SerializeConstants() const;
     MANA_NODISCARD std::vector<u8> SerializeHeader(const std::vector<u8>& code) const;
 

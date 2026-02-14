@@ -1,0 +1,18 @@
+// TODO: Getting this file to compile properly will lead to fixing several issues.
+
+fn Main() {
+    data x = Fibonacci(10)
+    PrintV("{}", x)
+}
+
+fn Fibonacci(n: i64) -> i64 {
+    if n <= 1 {
+        return n
+    }
+
+    // TODO: Currently, two functions in the same expression like this
+    // have their return values sent to R0, but these values are not intercepted
+    // before the expr concludes
+    // this leads to R0 being clobbered.
+    return Fibonacci(n - 1) + Fibonacci(n - 2)
+}

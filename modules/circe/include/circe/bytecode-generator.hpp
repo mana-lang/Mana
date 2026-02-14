@@ -99,12 +99,13 @@ public:
 
     void Visit(const ast::UnaryExpr& node) override;
     void Visit(const ast::BinaryExpr& node) override;
-    void Visit(const ast::ArrayLiteral& array) override;
+    void Visit(const ast::ListExpression& list) override;
+    void Visit(const ast::ListAccess&) override;
 
-    void Visit(const ast::Literal<f64>& literal) override;
-    void Visit(const ast::Literal<i64>& literal) override;
-    void Visit(const ast::Literal<void>& node) override;
-    void Visit(const ast::Literal<bool>& literal) override;
+    void Visit(const ast::Literal<f64>& float64) override;
+    void Visit(const ast::Literal<i64>& int64) override;
+    void Visit(const ast::Literal<bool>& boolean) override;
+    void Visit(const ast::StringLiteral& string) override;
 
 private:
     bool IsConditionalJumpOp(hexe::Op op) const;
@@ -152,9 +153,9 @@ private:
     void HandleLoopControl(bool is_break, const ast::NodePtr& condition);
     void HandleInitializer(const ast::Initializer& node, bool is_mutable);
 
-    template <hexe::ValuePrimitive VP>
-    void CreateLiteral(const ast::Literal<VP>& literal) {
-        const auto index = bytecode.AddConstant(literal.Get());
+    template <hexe::ValuePrimitiveType VP>
+    void CreateLiteral(const VP literal) {
+        const auto index = bytecode.AddConstant(literal);
 
         const auto reg = Registers().Allocate();
         bytecode.Write(hexe::Op::LoadConstant, {reg, index});

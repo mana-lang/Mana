@@ -41,10 +41,17 @@ enum class Op : u8 {
     JumpWhenTrue,  // Op Reg Offset   -> if Reg { ip += Offset }
     JumpWhenFalse, // etc.
 
-    Call,          // Op RF Addr -> Register Frame (1 byte)
-                   //            -> Destination Address (4 bytes)
-                   //            -> Record register frame, then jump to function at address.
-                   //            -> Upon returning, retval is copied into designated return register and frame is returned to previous position
+    Call,          // Op RF Addr      -> Register Frame (1 byte)
+                   //                 == Destination Address (4 bytes)
+                   //                 == Record register frame, then jump to function at address.
+                   //                 == Upon returning, retval is copied into designated return register and frame is returned to previous position
+
+    Print,         // Op Str          -> Emit `Str` to stdout
+    PrintValue,    // Op Str Val      -> Emit 'Str' to stdout with a value argument
+
+    ListCreate,    // Op Ty  Len Reg  -> Creates new Value of type Ty and reserves Len elements at Reg
+    ListRead,      // Op Src Idx Dst  -> Copies Src[Idx] into Dst
+    ListWrite,     // Op Dst Idx Src  -> Copies Src into Dst[Idx]
 };
 // @formatter:on
 } // namespace hexe

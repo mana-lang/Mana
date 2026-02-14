@@ -21,7 +21,11 @@ Lexer::Lexer()
       line_number {0} {}
 
 bool Lexer::IsNewline() const {
-    return Source[cursor] == '\n';
+    return IsNewline(Source[cursor]);
+}
+
+bool Lexer::IsNewline(char c) const {
+    return c == '\n';
 }
 
 void Lexer::TokenizeLine() {
@@ -119,8 +123,6 @@ bool Lexer::LexedIdentifier() {
 
 // only to be entered when current char is " or '
 bool Lexer::LexedString() {
-    // start with current char, so length is 1
-    u16 length = 1;
     TokenType literal_type;
 
     char current_char = Source[cursor];
@@ -132,10 +134,13 @@ bool Lexer::LexedString() {
         literal_type = TokenType::Lit_Char;
         break;
     default:
-        Log->error("Improper call to LexedString");
-        AddToken(TokenType::Unknown, length);
+        Log->critical("Internal Compiler Error: Erroneous call to LexedString");
+        AddToken(TokenType::Unknown, 1);
         return false;
     }
+
+    u16 length = 1;
+    ++cursor; // skip opening quote
 
     const auto starting_char = current_char;
     while (true) {
@@ -146,25 +151,26 @@ bool Lexer::LexedString() {
             return false;
         }
 
-        current_char = Source[cursor];
-
         // strings must close on the line they're started
-        if (current_char == '\n' || (current_char == '\\' && Source[cursor + 1] == 'n')) {
+        if (IsNewline()) {
             Log->error("Unexpected end of string literal");
             AddToken(TokenType::Unknown, length);
             return false;
         }
 
-        ++length;
+        current_char = Source[cursor];
 
         // end of string
         if (current_char == starting_char) {
-            ++cursor;
             break;
         }
+
+        // increment after end-check to prevent closing quote being added
+        ++length;
     }
 
     AddToken(literal_type, length);
+    ++cursor; // still skip past closing quote
     return true;
 }
 

@@ -1,12 +1,10 @@
 #include <ranges>
-
+#include <sigil/ast/keywords.hpp>
 #include <sigil/ast/parse-tree.hpp>
 #include <sigil/ast/source-file.hpp>
 #include <sigil/ast/syntax-tree.hpp>
 #include <sigil/ast/visitor.hpp>
 #include <sigil/core/logger.hpp>
-
-#include <hexe/primitive-type.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
@@ -22,6 +20,11 @@ using namespace mana::literals;
 template <typename T>
 auto MakeLiteral(const Token& token) {
     return std::make_shared<Literal<T>>(FetchTokenText(token));
+}
+
+template <>
+auto MakeLiteral<std::string>(const Token& token) {
+    return std::make_shared<StringLiteral>(FetchTokenText(token));
 }
 
 template <>
@@ -42,13 +45,9 @@ auto MakeLiteral<bool>(const Token& token) {
     return std::make_shared<Literal<bool>>(val);
 }
 
-auto MakeNoneLiteral() {
-    return std::make_shared<Literal<void>>();
-}
-
 struct LiteralData {
     NodePtr value;
-    hexe::PrimitiveValueType type;
+    std::string_view type;
 };
 
 LiteralData MakeLiteral(const Token& token) {
@@ -57,23 +56,27 @@ LiteralData MakeLiteral(const Token& token) {
 
     case Lit_true:
     case Lit_false:
-        return {MakeLiteral<bool>(token), hexe::PrimitiveValueType::Bool};
+        return {MakeLiteral<bool>(token), PrimitiveName(PrimitiveType::Bool)};
 
     case Lit_Int:
-        return {MakeLiteral<i64>(token), hexe::PrimitiveValueType::Int64};
+        return {MakeLiteral<i64>(token), PrimitiveName(PrimitiveType::I64)};
 
     case Lit_Float:
-        return {MakeLiteral<f64>(token), hexe::PrimitiveValueType::Float64};
+        return {MakeLiteral<f64>(token), PrimitiveName(PrimitiveType::F64)};
+
+    case Lit_String:
+        return {MakeLiteral<std::string>(token), PrimitiveName(PrimitiveType::String)};
 
     case Lit_none:
-        return {MakeNoneLiteral(), hexe::PrimitiveValueType::None};
+        Log->error("Internal Compiler Error: Attempted to manifest 'none' literal");
+        return {nullptr, PrimitiveName(PrimitiveType::None)};
 
     default:
         break;
     }
 
     Log->error("Unexpected token for literal");
-    return {nullptr, hexe::PrimitiveValueType::Invalid};
+    return {nullptr, PrimitiveName(PrimitiveType::None)};
 }
 
 /// Artifact
@@ -364,6 +367,24 @@ void LoopRangeMutable::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
+/// ListAccess
+ListAccess::ListAccess(const ParseNode& node) {
+    item  = CreateExpression(*node.branches[0]);
+    index = CreateExpression(*node.branches[1]);
+}
+
+const NodePtr& ListAccess::GetItem() const {
+    return item;
+}
+
+const NodePtr& ListAccess::GetIndex() const {
+    return index;
+}
+
+void ListAccess::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
 /// LoopFixed
 LoopFixed::LoopFixed(const ParseNode& node) {
     count = CreateExpression(*node.branches[0]);
@@ -433,8 +454,10 @@ void Skip::Accept(Visitor& visitor) const {
 Return::Return(const ParseNode& node) {
     // TODO: verify this
     if (node.branches.empty()
-        || (node.branches[0]->rule == Rule::Identifier && FetchTokenText(node.branches[0]->tokens[0]) == PrimitiveName(
-                PrimitiveType::None
+        || (node.branches[0]->rule == Rule::Identifier && FetchTokenText(node.branches[0]->tokens[0]) == std::string(
+                PrimitiveName(
+                    PrimitiveType::None
+                )
             ))) {
         // it's either 'return' or 'return none' which are identical
         return;
@@ -601,9 +624,31 @@ BinaryExpr::BinaryExpr(const ParseNode& binary_node, const i64 depth) {
     op    = FetchTokenText(tokens[tokens.size() - depth]);
 }
 
+/// StringLiteral
+StringLiteral::StringLiteral(const std::string_view sv) {
+    // unescape newlines
+    string.reserve(sv.size());
+    i64 last_append {};
+    for (i64 i = 0; i < sv.size() - 1; ++i) {
+        if (sv[i] == '\\' && sv[i + 1] == 'n') {
+            string.append(sv.substr(last_append, i - last_append));
+            string.push_back('\n');
+            last_append = i++ + 2;
+        }
+    }
+    string.append(sv.substr(last_append, sv.size() - last_append));
+}
+
+std::string_view StringLiteral::Get() const {
+    return string;
+}
+
+void StringLiteral::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
 /// ArrayLiteral
-ArrayLiteral::ArrayLiteral(const ParseNode& node)
-    : type(hexe::PrimitiveValueType::Invalid) {
+ListExpression::ListExpression(const ParseNode& node) {
     // []
     if (node.branches.empty()) {
         return;
@@ -619,19 +664,23 @@ ArrayLiteral::ArrayLiteral(const ParseNode& node)
     }
 }
 
-const std::vector<NodePtr>& ArrayLiteral::GetValues() const {
+std::span<const NodePtr> ListExpression::GetValues() const {
     return values;
 }
 
-hexe::PrimitiveValueType ArrayLiteral::GetType() const {
+hexe::Value::Data::Type ListExpression::GetType() const {
     return type;
 }
 
-void ArrayLiteral::Accept(Visitor& visitor) const {
+void ListExpression::SetType(const hexe::Value::Data::Type new_type) {
+    type = new_type;
+}
+
+void ListExpression::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
-NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
+NodePtr ListExpression::ProcessValue(const ParseNode& elem) {
     switch (elem.rule) {
         using enum Rule;
 
@@ -645,44 +694,16 @@ NodePtr ArrayLiteral::ProcessValue(const ParseNode& elem) {
         // [(foo)]
         return ProcessValue(*elem.branches[0]);
 
-    case ArrayLiteral:
+    case ListExpression:
         // [[1, 2, 3,], [4, 3, 2],]
         // in this case we still need to ensure the array is of "array-of-arrays" type
         // and adequately handle higher-dimensional arrays.
         // this is extremely important for linalg
-        return std::make_shared<class ArrayLiteral>(elem);
+        return std::make_shared<class ListExpression>(elem);
 
     case Literal:
         // [12.4, 95.3]
-    {
-        const auto literal = MakeLiteral(elem.tokens[0]);
-
-        if (literal.type == hexe::PrimitiveValueType::Invalid) {
-            Log->error(
-                "ArrayLiteral attempted to add invalid value '{}'",
-                FetchTokenText(elem.tokens[0])
-            );
-            return nullptr;
-        }
-
-        // we want to deduce the array's type based on the first literal in the
-        // elem_list so we start in Invalid, assign the type based on the first, and
-        // any type changes past that raise an error
-        if (literal.type != type) {
-            if (type == hexe::PrimitiveValueType::Invalid) {
-                type = literal.type;
-            } else {
-                Log->warn(
-                    fmt::runtime(
-                        "ArrayLiteral is of type '{}', "
-                        "but tried adding value of type '{}'"
-                    ),
-                    magic_enum::enum_name(literal.type)
-                );
-            }
-        }
-        return literal.value;
-    }
+        return MakeLiteral(elem.tokens[0]).value;
 
     case Equality:
     case Comparison:
@@ -744,8 +765,10 @@ NodePtr CreateExpression(const ParseNode& node) {
         return MakeLiteral(token).value;
     case Identifier:
         return std::make_shared<class Identifier>(node);
-    case ArrayLiteral:
-        return std::make_shared<class ArrayLiteral>(node);
+    case ListExpression:
+        return std::make_shared<class ListExpression>(node);
+    case ListAccess:
+        return std::make_shared<class ListAccess>(node);
     case Unary:
         return std::make_shared<UnaryExpr>(node);
     case Factor:

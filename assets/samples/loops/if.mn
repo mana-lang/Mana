@@ -1,9 +1,11 @@
-mut data f = 23.0
-mut data count = 0
+fn Balls(){
+    mut data f = 23.0
+    mut data count = 0
 
-loop if f > 0 {
-    f -= 0.3
-    count += 1
+    loop if f > 0 {
+        f -= 0.3
+        count += 1
+    }
+
+    data a = count
 }
-
-data a = count

@@ -1,33 +1,26 @@
 #pragma once
 
-#include <hexe/primitive-type.hpp>
 #include <mana/literals.hpp>
 
 #include <array>
+#include <span>
+#include <string_view>
 #include <vector>
 
 namespace hexe {
 using namespace mana;
 using namespace mana::literals;
 
-inline PrimitiveValueType GetManaTypeFrom(i64) {
-    return Int64;
-}
-
-inline PrimitiveValueType GetManaTypeFrom(f64) {
-    return Float64;
-}
-
-inline PrimitiveValueType GetManaTypeFrom(u64) {
-    return Uint64;
-}
-
-inline PrimitiveValueType GetManaTypeFrom(bool) {
-    return Bool;
-}
-
 template <typename T>
-concept ValuePrimitive = std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>;
+concept ValuePrimitiveType = std::is_integral_v<T>
+                             || std::is_floating_point_v<T>
+                             || std::is_same_v<T, bool>
+                             || std::is_same_v<T, std::string_view>;
+
+static constexpr u8 QWORD = 8;
+static constexpr u8 DWORD = 4;
+static constexpr u8 WORD  = 2;
+static constexpr u8 BYTE  = 1;
 
 struct Value {
     friend class ByteCode;
@@ -36,32 +29,93 @@ struct Value {
         i64 as_i64;
         u64 as_u64;
         f64 as_f64;
+
         bool as_bool;
+        u8 as_bytes[QWORD];
+
+        enum Type : u8 {
+            Int64,
+            Uint64,
+            Float64,
+
+            Bool,
+            String,
+
+            None,
+
+            Invalid = 222,
+        };
     };
 
-    using LengthType = u32;
+    using SizeType = u32;
 
-    static constexpr auto SIZE = sizeof(Data) + sizeof(LengthType) + sizeof(PrimitiveValueType);
+    Value();
 
+    Value(i32 i);
     Value(i64 i);
+
+    Value(u32 u);
     Value(u64 u);
+
     Value(f64 f);
+
     Value(bool b);
 
-    // These constructors exist only to redirect to their long/64-bit variants
-    // To avoid having to be explicit when initializing Values
-    Value(i32 i);
-    Value(u32 u);
+    Value(std::string_view string);
+    Value(u8 vt, SizeType length);
+    Value(Data::Type vt, SizeType size);
+    Value(u8 vt, const Data& other);
 
-    MANA_NODISCARD LengthType Length() const;
+    Value(const Value& other);
+    Value(Value&& other) noexcept;
+
+    Value& operator=(const Data& other);
+    Value& operator=(const Value& other);
+    Value& operator=(Value&& other) noexcept;
+
+    ~Value();
+
+    template <ValuePrimitiveType VT>
+    explicit Value(const std::span<VT> values)
+        : size_bytes {values.size() * sizeof(Data)},
+          type {GetValueTypeFrom(VT {})} {
+        const auto length = Length();
+
+        if (length == 0) {
+            data = nullptr;
+            return;
+        }
+
+        data = new Data[length];
+
+        for (u64 i = 0; i < length; ++i) {
+            if constexpr (std::is_same_v<VT, bool>) {
+                data[i].as_bool = values[i];
+            } else if constexpr (std::is_floating_point_v<VT>) {
+                data[i].as_f64 = static_cast<f64>(values[i]);
+            } else if constexpr (std::is_unsigned_v<VT>) {
+                data[i].as_u64 = static_cast<u64>(values[i]);
+            } else {
+                data[i].as_i64 = static_cast<i64>(values[i]);
+            }
+        }
+    }
+
+    MANA_NODISCARD SizeType Length() const;
+    MANA_NODISCARD SizeType ByteLength() const;
+
     MANA_NODISCARD u64 BitCasted(u32 at) const;
 
-    MANA_NODISCARD PrimitiveValueType GetType() const;
+    MANA_NODISCARD Data::Type Type() const;
+    MANA_NODISCARD Data Raw() const;
 
-    MANA_NODISCARD f64 AsFloat() const;
-    MANA_NODISCARD i64 AsInt() const;
-    MANA_NODISCARD u64 AsUint() const;
-    MANA_NODISCARD bool AsBool() const;
+    MANA_NODISCARD f64 AsFloat(i64 index = 0) const;
+    MANA_NODISCARD i64 AsInt(i64 index = 0) const;
+    MANA_NODISCARD u64 AsUint(i64 index = 0) const;
+    MANA_NODISCARD bool AsBool(i64 index = 0) const;
+    MANA_NODISCARD std::string_view AsString() const;
+
+    void WriteBytesAt(u32 index, const std::array<u8, QWORD>& bytes) const;
 
     Value operator+(const Value& rhs) const;
     Value operator-(const Value& rhs) const;
@@ -88,56 +142,36 @@ struct Value {
 
     void operator*=(const i64& rhs);
 
-    Value()
-        : data {nullptr},
-          length(0),
-          type(Invalid) {}
+    Data& operator[](const u32 index) {
+        return data[index];
+    }
 
-    Value(const Value& other);
-    Value(Value&& other) noexcept;
-
-    // copy constructs a completely new value on the heap
-    Value& operator=(const Value& other);
-    Value& operator=(Value&& other) noexcept;
-
-    ~Value();
-
-    template <ValuePrimitive VP>
-    explicit Value(const std::vector<VP>& values)
-        : length(values.size()),
-          type(GetManaTypeFrom(VP {})) {
-        if (length == 0) {
-            data = nullptr;
-            return;
-        }
-
-        if (length == 1) {
-            data = new Data;
-        } else {
-            data = new Data[length];
-        }
-
-        for (u64 i = 0; i < length; ++i) {
-            if constexpr (std::is_same_v<VP, bool>) {
-                data[i].as_bool = values[i];
-            } else if constexpr (std::is_floating_point_v<VP>) {
-                data[i].as_f64 = static_cast<f64>(values[i]);
-            } else if constexpr (std::is_unsigned_v<VP>) {
-                data[i].as_u64 = static_cast<u64>(values[i]);
-            } else {
-                data[i].as_i64 = static_cast<i64>(values[i]);
-            }
-        }
+    const Data& operator[](const u32 index) const {
+        return data[index];
     }
 
 private:
+    Data::Type GetValueTypeFrom(i64) {
+        return Data::Type::Int64;
+    }
+
+    Data::Type GetValueTypeFrom(f64) {
+        return Data::Type::Float64;
+    }
+
+    Data::Type GetValueTypeFrom(u64) {
+        return Data::Type::Uint64;
+    }
+
+    Data::Type GetValueTypeFrom(bool) {
+        return Data::Type::Bool;
+    }
+
     Data* data;
-    LengthType length;
+    SizeType size_bytes = sizeof(Data);
     u8 type;
 
-    Value(PrimitiveValueType t, LengthType l);
-
-    void WriteValueBytes(const std::array<unsigned char, 8>& bytes, u32 index) const;
+    static constexpr auto SIZE_RAW = sizeof(data) + sizeof(size_bytes) + sizeof(type);
 
     static i64 IDispatchI(const Data* val);
     static i64 IDispatchU(const Data* val);

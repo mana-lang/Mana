@@ -1,0 +1,11 @@
+fn Main() {
+    Recurse(25)
+}
+
+fn Recurse(a: i32) {
+    PrintV("Recursed {} times\n", a)
+
+    if a > 0 {
+        Recurse(a - 1)
+    }
+}

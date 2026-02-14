@@ -3,7 +3,7 @@
 ```kotlin
 import std.fmt
     
-fn main() {
+fn Main() {
     fmt.PrintLine(5 + 2)
     fmt.Print("Hello" + " world!\n")
     fmt.Print("I have {} oranges", 3)
@@ -15,25 +15,23 @@ fn main() {
 > I have 3 oranges
 
 ##### Declarations
-Data in **Mana** is *immutable* by default. Therefore, we don't refer to them as variables, but instead as *data bindings*, or just *data* for short. A singular data binding is called a *datum*. 
+Data in **Mana** is *immutable* by default. Therefore, the compiler does not refer to them as variables, but instead as *data bindings*, or just *bindings*.
 ```kotlin  
-fn main() {
+fn Main() {
     data two = 2
     data four = two + two 
     four += 1 // won't compile
 }
 ```
->[!danger] Error
->Datum `four` is not mutable. You can make it mutable by annotating its declaration:
-> `mut data four: f32 = two + two`
+>[!error] Error
+>Attempt to assign to immutable binding `four`
 
 ##### Mutability
-To make data mutable, it must be annotated with the `mut` keyword. 
-A mutable data binding is essentially a variable.
+To create a *mutable binding* in Mana, you must qualify a declaration with the `mut` keyword. 
 ```kotlin
 import std.fmt
     
-fn main() {
+fn Main() {
 	mut data number = 15
 	number += 7
 	fmt.Print("Catch-{number}")
@@ -41,6 +39,26 @@ fn main() {
 ```
 >[!tip] Output
 >Catch-22
+
+##### Default Initialization
+In the absence of an initializer, data will still be initialized with a default value.
+```kotlin
+data x: i32
+
+fmt.Print("{x}")
+```
+>[!tip] Output
+> 0
+- For *primitive* types, the default value is the result of conversion from `0` to the given type.
+- For *enumerated* types, the default value is the *first* enumeration.
+- *Composite* types will default each of their individual fields.
+
+You may only omit an initializer for a declaration including a type annotation.
+```kotlin
+data x
+```
+>[!error] Error
+> Binding `x` has neither an initializer nor an annotation.
 
 ##### Binding
 The *binding operator* `=>` in a data declaration allows you to perform inline logic without affecting the datum's mutability.
@@ -53,13 +71,15 @@ data x: i32 => {
 	x = FetchResult()
 }
 ```
-Because data is defaulted unless otherwise specified in Mana, you can perform arithmetic on a datum before it's been assigned, by knowing its default initial value.
+Because data is defaulted unless otherwise specified in Mana, you can perform operations on a datum before its first assignment, by knowing its default initial value.
 
-For primitives, the default values are `0` and `false`.
+Additionally, when a binding is applied to a block containing *exactly one* expression, that expression will be bound to the left-hand side of the binding operation.
+```kotlin
+data x: i32 => { 55 * 2 }
+data x: i32 = 55 * 2 // this is identical
+```
 
-For composite types, they are either the default values of *all* fields, or the values specified in the type's interface.
-
-For enumerated types, the default value is the first enumeration.
+While this isn't particularly useful for a simple assignment, it will be relevant when it comes to other language constructs, such as control flow and closures.
 
 ##### Assignment Deduction
 **Mana** makes certain assumptions about data when it's assigned to other data.
@@ -180,18 +200,22 @@ const Something: string
 > Constant `SolPlanets` was not annotated
 > Constant `Something` was not assigned
 
-##### Arrays
-Arrays may be declared with the *list* operator, and indexed the *same* way.
+##### Lists
+Lists may be declared via a *list-expression*, and indexed via the *indexing operator*.
 ```kotlin
-data numbers = [1, 2, 3, 4, 5]
+data numbers = [5, 10, 15, 20, 25]
 fmt.Print("{numbers[2]}")
 ```
 >[!tip] Output
- 3
+>15
 
-Array types are deduced from their members. If all members in a list literal are of the *same* type, that list is an *array*. If any of the types differ, that list will be treated as a *tuple* instead.
+List types are deduced from their members. If: 
+- *All* elements in a *list-expression* are of the *same type* as its *first* element
+	- That list is an *array-expression*
+- *Any* element in a *list-expression* has a type different from its *first* element
+	- That list is a *tuple-expression* 
 
-To enforce that a data member is an array, you may annotate it with the array type specifier.
+List types are annotated by surrounding a data type with square brackets.
 ```kotlin
 data tuple = [3.5, 2.2859, 8.3, "how'd i get here", 16.323]
 data values: [f32] = [3.5, 2.2859, 8.3, "how'd i get here", 16.323]
@@ -199,11 +223,15 @@ data values: [f32] = [3.5, 2.2859, 8.3, "how'd i get here", 16.323]
 >[!danger] Error
 > Data `values` was declared as an array of `f32`, but was assigned a `string`
 
-The array type specifier may contain either a type, or a type and an integer value, separated by a comma. The value specifies the *size* of the array, though this may be omitted in any scenario where the array is immediately assigned.
+The *array-type-specifier* takes the form `[T, N]` where:
+- `T` is any extant type
+- `N` is any integral constant
 
-If the array is not immediately assigned, its size *must* be specified in the declaration.
+The integral constant specifies the *size* of the array, and may be omitted in any scenario where the array is immediately assigned.
 
-An array which is not immediately assigned will have all its values *zeroed* by default. Much like scalar data, if you want it to be uninitialized, it must be assigned `none`.
+If the array is *not* immediately assigned, its size *must* be specified in the declaration.
+
+An array which is not immediately assigned will have all its values *zeroed* by default. Much like scalar data, if you want it to be uninitialized, it must be annotated with `@[NoInit]`.
 ```kotlin
 // creates immutable 'x' of size '5' with type 'f64'
 // all its elements will have the value '0.0'
@@ -213,14 +241,16 @@ data x: [f64, 5]
 data y: [f64] 
 
 // will be uninitialized
-mut data z: [i32, 8] = none
+mut data z: [i32, 8] = @[NoInit]
 
 // error
-data w: [i32, 8] = none
+data w: [i32, 8] = @[NoInit]
 ```
 >[!danger] Error
 > Data `y` was declared as an array of `f64`, but was not assigned, and has no size specifier
 > 
-> Data `w` was assigned `none`, but it is immutable. There is no situation where it could be used
+> Data `w` was annotated with `@[NoInit]`, but it is immutable. There is no situation where it could be used
 
-An empty-list declaration `[]` is valid, but the type and size *must* be specified.
+An *empty-list* expression `[]` is valid, but its type *must* be specified in the declaration.
+
+The *tuple-type-specifier* takes the form `[T1, T1, T2, T3, T1, Etc]` where each entry is any extant type, matching *exactly* with the order of declaration of the tuple's literal.

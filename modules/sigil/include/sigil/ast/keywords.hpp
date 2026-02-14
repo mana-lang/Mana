@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <string_view>
 #include <sigil/ast/token.hpp>
 
@@ -8,13 +9,15 @@
 
 namespace sigil {
 namespace ml = mana::literals;
+using ml::u8;
 
 constexpr auto ENTRY_POINT = "Main";
+
 inline bool IsEntryPoint(const std::string_view name) {
     return name == ENTRY_POINT;
 }
 
-enum class PrimitiveType : ml::u8 {
+enum class PrimitiveType : u8 {
     I8, I16, I32, I64, Isize,
     U8, U16, U32, U64, Usize,
     F32, F64,
@@ -24,7 +27,7 @@ enum class PrimitiveType : ml::u8 {
     None,
 };
 
-inline constexpr ml::u8 NUM_PRIMITIVES = 18;
+inline constexpr u8 NUM_PRIMITIVES = 18;
 
 inline constexpr std::array<std::string_view, NUM_PRIMITIVES> PRIMITIVES = {
     "i8",
@@ -50,12 +53,16 @@ inline constexpr std::array<std::string_view, NUM_PRIMITIVES> PRIMITIVES = {
     "none"
 };
 
-consteval ml::u8 PrimitiveIndex(PrimitiveType type) {
-    return static_cast<ml::u8>(type);
+constexpr u8 PrimitiveIndex(const PrimitiveType type) {
+    return static_cast<u8>(type);
 }
 
-consteval std::string_view PrimitiveName(PrimitiveType type) {
+constexpr std::string_view PrimitiveName(const PrimitiveType type) {
     return PRIMITIVES[PrimitiveIndex(type)];
+}
+
+constexpr std::string PrimitiveNameString(const PrimitiveType type) {
+    return std::string(PrimitiveName(type));
 }
 
 using KeywordMap = std::unordered_map<std::string_view, TokenType>;

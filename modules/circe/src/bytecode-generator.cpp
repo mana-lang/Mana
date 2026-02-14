@@ -189,19 +189,41 @@ void BytecodeGenerator::Visit(const Return& node) {
 }
 
 void BytecodeGenerator::Visit(const Invocation& node) {
-    const auto target = node.GetIdentifier();
-    const auto& fn    = functions[target];
+    const auto name  = node.GetIdentifier();
+    const auto& args = node.GetArguments();
+    const auto& fn   = functions[name];
+
+    // handle print
+    if (name == "Print") {
+        args[0]->Accept(*this);
+        bytecode.Write(Op::Print, {PopRegBuffer()});
+
+        register_buffer.push_back(REGISTER_RETURN);
+        return;
+    }
+
+    if (name == "PrintV") {
+        args[0]->Accept(*this);
+        const auto str_reg = PopRegBuffer();
+        args[1]->Accept(*this);
+        const auto val = PopRegBuffer();
+
+        bytecode.Write(Op::PrintValue, {str_reg, val});
+
+        register_buffer.push_back(REGISTER_RETURN);
+        return;
+    }
 
     HandleInvocationArguments(node.GetArguments(), fn.registers.ViewLocked());
 
     if (fn.address == bytecode.CurrentAddress()) {
-        Log->error("Internal Compiler Error: Invocation {} jumps to call site '{}'", target, fn.address);
+        Log->error("Internal Compiler Error: Invocation {} jumps to call site '{}'", name, fn.address);
         return;
     }
 
     if (fn.address < 0) {
         const auto index     = bytecode.WriteCall(SENTINEL_32, Registers().Total());
-        pending_calls[index] = target;
+        pending_calls[index] = name;
     } else {
         bytecode.WriteCall(fn.address, Registers().Total());
     }
@@ -546,22 +568,57 @@ void BytecodeGenerator::Visit(const BinaryExpr& node) {
 }
 
 // we'll add arrays eventually
-void BytecodeGenerator::Visit(const ArrayLiteral& array) {
-    std::unreachable();
+void BytecodeGenerator::Visit(const ListExpression& list) {
+    const auto values = list.GetValues();
+
+    if (values.size() >= std::numeric_limits<u16>::max()) {
+        Log->critical(
+            "Internal Compiler Error: "
+            "Lists with lengths greater than 65535 (u16.Max()) are currently not supported by Hex."
+        );
+        return;
+    }
+
+    const auto reg    = Registers().Allocate();
+    const auto length = static_cast<u16>(values.size() * sizeof(Value::Data));
+    bytecode.Write(Op::ListCreate, {static_cast<u16>(list.GetType()), length, reg});
+
+    for (u16 i = 0; i < values.size(); ++i) {
+        values[i]->Accept(*this);
+        const auto value = PopRegBuffer();
+        bytecode.Write(Op::ListWrite, {reg, i, value});
+    }
+
+    Registers().Lock(reg);
+    register_buffer.push_back(reg);
 }
 
-void BytecodeGenerator::Visit(const Literal<f64>& literal) {
-    CreateLiteral(literal);
+void BytecodeGenerator::Visit(const ListAccess& access) {
+    access.GetItem()->Accept(*this);
+    const auto item = PopRegBuffer();
+
+    access.GetIndex()->Accept(*this);
+    const auto index = PopRegBuffer();
+    const auto dst   = Registers().Allocate();
+    bytecode.Write(Op::ListRead, {item, index, dst});
+
+    register_buffer.push_back(dst);
 }
 
-void BytecodeGenerator::Visit(const Literal<i64>& literal) {
-    CreateLiteral(literal);
+void BytecodeGenerator::Visit(const Literal<f64>& float64) {
+    CreateLiteral(float64.Get());
 }
 
-void BytecodeGenerator::Visit(const Literal<void>& node) {}
+void BytecodeGenerator::Visit(const Literal<i64>& int64) {
+    CreateLiteral(int64.Get());
+}
 
-void BytecodeGenerator::Visit(const Literal<bool>& literal) {
-    CreateLiteral(literal);
+void BytecodeGenerator::Visit(const Literal<bool>& boolean) {
+    CreateLiteral(boolean.Get());
+}
+
+void BytecodeGenerator::Visit(const StringLiteral& string) {
+    CreateLiteral(string.Get());
 }
 
 bool BytecodeGenerator::IsConditionalJumpOp(const Op op) const {

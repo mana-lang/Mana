@@ -4,6 +4,8 @@
 
 #include <ranges>
 
+#include <hexe/value.hpp>
+
 namespace sigil {
 using namespace mana::literals;
 using namespace ast;
@@ -11,21 +13,21 @@ using enum PrimitiveType;
 
 constexpr auto TB_ERROR = "_TYPEBUFFER_ERROR_";
 
-bool IsSignedIntegral(std::string_view type) {
+bool IsSignedIntegral(const std::string_view type) {
     return type == PrimitiveName(I8)
            || type == PrimitiveName(I16)
            || type == PrimitiveName(I32)
            || type == PrimitiveName(I64);
 }
 
-bool IsUnsignedIntegral(std::string_view type) {
+bool IsUnsignedIntegral(const std::string_view type) {
     return type == PrimitiveName(U8)
            || type == PrimitiveName(U16)
            || type == PrimitiveName(U32)
            || type == PrimitiveName(U64);
 }
 
-bool IsFloatPrimitive(std::string_view type) {
+bool IsFloatPrimitive(const std::string_view type) {
     return type == PrimitiveName(F32) || type == PrimitiveName(F64);
 }
 
@@ -37,9 +39,10 @@ SemanticAnalyzer::SemanticAnalyzer()
     : issue_counter {0},
       current_scope {GLOBAL_SCOPE} {
     RegisterPrimitives();
+    RegisterBuiltins();
 }
 
-ml::i32 SemanticAnalyzer::IssueCount() const {
+i32 SemanticAnalyzer::IssueCount() const {
     return issue_counter;
 }
 
@@ -60,7 +63,7 @@ void SemanticAnalyzer::Visit(const Artifact& artifact) {
 
     const bool lacks_main = std::ranges::none_of(GetFnTable(),
                                                  [](const auto& kv) {
-                                                     return kv.first == ENTRY_POINT;
+                                                     return IsEntryPoint(kv.first);
                                                  }
     );
 
@@ -298,10 +301,84 @@ void SemanticAnalyzer::Visit(const BinaryExpr& node) {
     node.GetLeft().Accept(*this);
 }
 
+hexe::Value::Data::Type ConvertPrimitive(const std::string_view type) {
+    using enum hexe::Value::Data::Type;
+    if (IsSignedIntegral(type)) {
+        return Int64;
+    }
 
-void SemanticAnalyzer::Visit(const ArrayLiteral& array) {
-    for (const auto& value : array.GetValues()) {
+    if (IsUnsignedIntegral(type)) {
+        return Uint64;
+    }
+
+    if (IsFloatPrimitive(type)) {
+        return Float64;
+    }
+
+    if (type == PrimitiveName(PrimitiveType::Bool)) {
+        return Bool;
+    }
+
+    if (type == PrimitiveName(PrimitiveType::String)) {
+        return String;
+    }
+
+    return Invalid;
+}
+
+void SemanticAnalyzer::Visit(const ListExpression& list) {
+    std::string_view element_type;
+
+    for (const auto& value : list.GetValues()) {
         value->Accept(*this);
+        const auto val_type = PopTypeBuffer();
+
+        if (element_type.empty()) {
+            element_type = val_type;
+        }
+
+        if (not TypesMatch(element_type, val_type)) {
+            Log->error("Array element type mismatch: expected '{}', got '{}'",
+                       element_type,
+                       val_type
+            );
+            ++issue_counter;
+            return;
+        }
+    }
+
+    if (not types.contains(element_type)) {
+        Log->error("Unknown array element type '{}'", element_type);
+        ++issue_counter;
+
+        BufferType(element_type);
+        return;
+    }
+
+    const auto elem_size = types.at(element_type).size;
+
+    const_cast<ListExpression&>(list).SetType(ConvertPrimitive(element_type));
+
+    std::string array_type {"["};
+    array_type.reserve(element_type.size() + 1);
+    array_type.append(element_type);
+    array_type.append("]");
+
+    types[array_type].size = elem_size * list.GetValues().size();
+    BufferType(array_type);
+}
+
+void SemanticAnalyzer::Visit(const ListAccess& access) {
+    access.GetItem()->Accept(*this);
+
+    // this is where we'd validate that the item has a valid operator[] specialization
+
+    access.GetIndex()->Accept(*this);
+    const auto index_type = PeekTypeBuffer();
+
+    if (not IsIntegral(index_type)) {
+        Log->error("List index must be of integral type");
+        ++issue_counter;
     }
 }
 
@@ -313,12 +390,12 @@ void SemanticAnalyzer::Visit(const Literal<i64>&) {
     BufferType(PrimitiveName(I64));
 }
 
-void SemanticAnalyzer::Visit(const Literal<void>&) {
-    BufferType(PrimitiveName(None));
-}
-
 void SemanticAnalyzer::Visit(const Literal<bool>&) {
     BufferType(PrimitiveName(Bool));
+}
+
+void SemanticAnalyzer::Visit(const StringLiteral& string) {
+    BufferType(PrimitiveName(String));
 }
 
 void SemanticAnalyzer::RecordFunctionDeclarations(const Artifact& artifact) {
@@ -367,35 +444,47 @@ void SemanticAnalyzer::RecordFunctionDeclarations(const Artifact& artifact) {
 
 void SemanticAnalyzer::RegisterPrimitives() {
     // register primitives
-    types[PrimitiveName(I8)]    = TypeInfo {TypeSize::Byte};
-    types[PrimitiveName(I16)]   = TypeInfo {TypeSize::Word};
-    types[PrimitiveName(I32)]   = TypeInfo {TypeSize::DoubleWord};
-    types[PrimitiveName(I64)]   = TypeInfo {TypeSize::QuadWord};
-    types[PrimitiveName(Isize)] = TypeInfo {TypeSize::QuadWord};
+    types[PrimitiveNameString(I8)]    = TypeInfo {TypeSize::Byte};
+    types[PrimitiveNameString(I16)]   = TypeInfo {TypeSize::Word};
+    types[PrimitiveNameString(I32)]   = TypeInfo {TypeSize::DoubleWord};
+    types[PrimitiveNameString(I64)]   = TypeInfo {TypeSize::QuadWord};
+    types[PrimitiveNameString(Isize)] = TypeInfo {TypeSize::QuadWord};
     // we're not supporting 32bit systems for the foreseeable future
     // so isize/usize can just be 64-bit until maybe console support or something changes that
 
-    types[PrimitiveName(U8)]    = TypeInfo {TypeSize::Byte};
-    types[PrimitiveName(U16)]   = TypeInfo {TypeSize::Word};
-    types[PrimitiveName(U32)]   = TypeInfo {TypeSize::DoubleWord};
-    types[PrimitiveName(U64)]   = TypeInfo {TypeSize::QuadWord};
-    types[PrimitiveName(Usize)] = TypeInfo {TypeSize::QuadWord};
+    types[PrimitiveNameString(U8)]    = TypeInfo {TypeSize::Byte};
+    types[PrimitiveNameString(U16)]   = TypeInfo {TypeSize::Word};
+    types[PrimitiveNameString(U32)]   = TypeInfo {TypeSize::DoubleWord};
+    types[PrimitiveNameString(U64)]   = TypeInfo {TypeSize::QuadWord};
+    types[PrimitiveNameString(Usize)] = TypeInfo {TypeSize::QuadWord};
 
-    types[PrimitiveName(F32)] = TypeInfo {TypeSize::DoubleWord};
-    types[PrimitiveName(F64)] = TypeInfo {TypeSize::QuadWord};
+    types[PrimitiveNameString(F32)] = TypeInfo {TypeSize::DoubleWord};
+    types[PrimitiveNameString(F64)] = TypeInfo {TypeSize::QuadWord};
 
-    types[PrimitiveName(Char)]   = TypeInfo {TypeSize::Byte};
-    types[PrimitiveName(String)] = TypeInfo {TypeSize::Arbitrary};
+    types[PrimitiveNameString(Char)]   = TypeInfo {TypeSize::Byte};
+    types[PrimitiveNameString(String)] = TypeInfo {TypeSize::Arbitrary};
 
-    types[PrimitiveName(Byte)] = TypeInfo {TypeSize::Byte};
-    types[PrimitiveName(Bool)] = TypeInfo {TypeSize::Byte};
+    types[PrimitiveNameString(Byte)] = TypeInfo {TypeSize::Byte};
+    types[PrimitiveNameString(Bool)] = TypeInfo {TypeSize::Byte};
 
-    types[PrimitiveName(Fn)]   = TypeInfo {TypeSize::QuadWord}; // same as ptr
-    types[PrimitiveName(None)] = TypeInfo {TypeSize::None};
+    types[PrimitiveNameString(Fn)]   = TypeInfo {TypeSize::QuadWord}; // same as ptr
+    types[PrimitiveNameString(None)] = TypeInfo {TypeSize::None};
+}
+
+void SemanticAnalyzer::RegisterBuiltins() {
+    auto& print         = GetFnTable()["Print"];
+    print.return_type   = PrimitiveName(None);
+    print.param_count   = 1;
+    print.locals["str"] = {PrimitiveName(String), true};
+
+    auto& printv         = GetFnTable()["PrintV"];
+    printv.return_type   = PrimitiveName(None);
+    printv.param_count   = 2;
+    printv.locals["str"] = {PrimitiveName(String), true};
 }
 
 FunctionTable& SemanticAnalyzer::GetFnTable() {
-    return types[PrimitiveName(Fn)].functions;
+    return types.at(PrimitiveName(Fn)).functions;
 }
 
 const FunctionTable& SemanticAnalyzer::GetFnTable() const {
@@ -414,13 +503,17 @@ const Function& SemanticAnalyzer::CurrentFunction() const {
     return GetFnTable().at(CurrentFunctionName());
 }
 
+std::string_view SemanticAnalyzer::PeekTypeBuffer() const {
+    return type_buffer[1];
+}
+
 std::string_view SemanticAnalyzer::PopTypeBuffer() {
     type_buffer[0] = type_buffer[1];
     type_buffer[1] = TB_ERROR;
     return type_buffer[0];
 }
 
-void SemanticAnalyzer::BufferType(std::string_view type_name) {
+void SemanticAnalyzer::BufferType(const std::string_view type_name) {
     type_buffer[1] = type_name;
 }
 
@@ -479,11 +572,12 @@ const Symbol* SemanticAnalyzer::GetSymbol(std::string_view name) const {
 
 void SemanticAnalyzer::HandleInitializer(const Initializer& node, const bool is_mutable) {
     // evaluate expr first
-    const auto& init    = node.GetInitializer();
-    const bool has_init = init != nullptr;
+
+    const bool has_init = node.GetInitializer() != nullptr;
 
     if (has_init) {
-        init->Accept(*this);
+        auto& init = *node.GetInitializer().get();
+        init.Accept(*this);
     }
 
     const auto initializer_type = has_init ? PopTypeBuffer() : PrimitiveName(None);

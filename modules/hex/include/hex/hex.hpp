@@ -8,7 +8,7 @@
 namespace hex {
 namespace ml = mana::literals;
 
-static constexpr auto CALL_STACK_SIZE = 1024;
+static constexpr auto CALL_STACK_SIZE = 256;
 
 enum class InterpretResult {
     OK,
@@ -31,5 +31,7 @@ class Hex {
 
 public:
     InterpretResult Execute(hexe::ByteCode* next_slice);
+
+    std::string ValueToString(const hexe::Value& value);
 };
 } // namespace hex

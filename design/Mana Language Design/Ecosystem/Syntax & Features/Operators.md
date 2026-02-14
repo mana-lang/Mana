@@ -51,8 +51,14 @@ Not all of these operators may be specialized.
 	- Scope
 		- `{ data x = 23 }`
 - `[]` 
-	- List Literal
+	- List-expression
 		- `[a, b, c]`
+	- List-type annotation
+		- `[i32]`
+		- `[i32, f32]`
+		- `[i32, 8]`
+	- Indexing operator
+		- `a[22]`
 - `()`
 	- Parameter List
 		- `fn (a: i32, b: bool)`

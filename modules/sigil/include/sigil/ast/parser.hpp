@@ -108,11 +108,14 @@ private:
     bool MatchedTerm(ParseNode& node);
     bool MatchedFactor(ParseNode& node);
 
-    bool MatchedElemList(ParseNode& node);
-    bool MatchedArrayLiteral(ParseNode& node);
-    bool MatchedGrouping(ParseNode& node);
-    bool MatchedPrimary(ParseNode& node);
     bool MatchedUnary(ParseNode& node);
+    bool MatchedListAccess(ParseNode& node);
+    bool MatchedPrimary(ParseNode& node);
+    bool MatchedGrouping(ParseNode& node);
+
+    bool MatchedArrayLiteral(ParseNode& node);
+    bool MatchedElemList(ParseNode& node);
+
 
     using MatcherFnPtr   = bool (Parser::*)(ParseNode&);
     using OpCheckerFnPtr = bool (*)(TokenType);

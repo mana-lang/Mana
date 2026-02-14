@@ -33,7 +33,7 @@ public:
 
     void AcquireBranchOf(ParseNode& target, ml::i64 index);
     void AcquireBranchesOf(ParseNode& target, ml::i64 start, ml::i64 end);
-    void AcquireBranchesOf(ParseNode& target, ml::i64 start);
+    void AcquireBranchesOf(ParseNode& target, ml::i64 start = 0);
     void AcquireTailBranchOf(ParseNode& target);
 };
 } // namespace sigil
