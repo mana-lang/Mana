@@ -61,6 +61,9 @@ InterpretResult Hex::Execute(ByteCode* bytecode) {
         &&call,
         &&print,
         &&print_val,
+        &&list_create,
+        &&list_read,
+        &&list_write,
     };
 
 #ifdef HEX_DEBUG
@@ -211,6 +214,28 @@ print_val: {
         const auto v = ValueToString(REG(NEXT_PAYLOAD));
 
         std::vprint_nonunicode(s, std::make_format_args(v));
+    }
+    DISPATCH();
+
+list_create: {
+        const u8 type   = NEXT_PAYLOAD;
+        const auto size = NEXT_PAYLOAD;
+
+        REG(NEXT_PAYLOAD) = Value {type, static_cast<Value::SizeType>(size * sizeof(Value::Data))};
+    }
+    DISPATCH();
+
+list_read: {
+        const auto src    = NEXT_PAYLOAD;
+        const auto idx    = NEXT_PAYLOAD;
+        REG(NEXT_PAYLOAD) = REG(src)[idx];
+    }
+    DISPATCH();
+
+list_write: {
+        const auto dst = NEXT_PAYLOAD;
+        const auto idx = NEXT_PAYLOAD;
+        REG(dst)[idx]  = REG(NEXT_PAYLOAD).Raw();
     }
     DISPATCH();
 }

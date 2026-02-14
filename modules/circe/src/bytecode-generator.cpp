@@ -568,8 +568,40 @@ void BytecodeGenerator::Visit(const BinaryExpr& node) {
 }
 
 // we'll add arrays eventually
-void BytecodeGenerator::Visit(const ListLiteral& array) {
-    std::unreachable();
+void BytecodeGenerator::Visit(const ListExpression& list) {
+    const auto values = list.GetValues();
+
+    if (values.size() >= std::numeric_limits<u16>::max()) {
+        Log->critical(
+            "Internal Compiler Error: "
+            "Lists with lengths greater than 65535 (u16.Max()) are currently not supported by Hex."
+        );
+        return;
+    }
+
+    const auto reg = Registers().Allocate();
+    bytecode.Write(Op::ListCreate, {static_cast<u16>(list.GetType()), static_cast<u16>(values.size()), reg});
+
+    for (u16 i = 0; i < values.size(); ++i) {
+        values[i]->Accept(*this);
+        const auto value = PopRegBuffer();
+        bytecode.Write(Op::ListWrite, {reg, i, value});
+    }
+
+    Registers().Lock(reg);
+    register_buffer.push_back(reg);
+}
+
+void BytecodeGenerator::Visit(const ListAccess& access) {
+    access.GetItem()->Accept(*this);
+    const auto item = PopRegBuffer();
+
+    access.GetIndex()->Accept(*this);
+    const auto index = PopRegBuffer();
+    const auto dst   = Registers().Allocate();
+    bytecode.Write(Op::ListRead, {item, index, dst});
+
+    register_buffer.push_back(dst);
 }
 
 void BytecodeGenerator::Visit(const Literal<f64>& float64) {

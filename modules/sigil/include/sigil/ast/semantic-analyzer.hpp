@@ -159,7 +159,9 @@ public:
 
     void Visit(const ast::UnaryExpr& node) override;
     void Visit(const ast::BinaryExpr& node) override;
-    void Visit(const ast::ListLiteral& array) override;
+
+    void Visit(const ast::ListExpression& array) override;
+    void Visit(const ast::ListAccess& access) override;
 
     void Visit(const ast::Literal<f64>& literal) override;
     void Visit(const ast::Literal<i64>& literal) override;
@@ -181,6 +183,7 @@ private:
     Function& CurrentFunction();
     const Function& CurrentFunction() const;
 
+    std::string_view PeekTypeBuffer() const;
     std::string_view PopTypeBuffer();
     void BufferType(std::string_view type_name);
 
@@ -193,5 +196,7 @@ private:
     void PreventAssignmentWithNone(std::string_view type);
 
     void HandleRangedLoop(const ast::LoopRange& node, bool is_mutable);
+
+public:
 };
 } // namespace sigil

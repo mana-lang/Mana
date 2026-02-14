@@ -71,8 +71,15 @@ equality   = comparison (  ('!=' | '==') comparison)* ;
 comparison = term ( ('>' | '>=' | '<' | '<=') term)*  ;
 term       = factor ( ('-' | '+') factor)*            ;
 factor     = unary ( ('/' | '*') unary )*             ;
-unary      = ('!' | '-') unary | primary              ;
-primary    = grouping | literal | array_literal | ID  ;
+unary      = ('!' | '-') unary | list_access          ;
+list_access = primary ('[' expr ']')?                 ;
+
+primary    = invocation 
+           | grouping 
+           | literal 
+           | array_literal 
+           | ID  
+           ;
 
 grouping   = '(' expr ')' ;
 literal    = number

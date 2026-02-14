@@ -115,6 +115,9 @@ Value::Value(const std::string_view string)
     std::memcpy(data, string.data(), size_bytes);
 }
 
+Value::Value(const u8 vt, const SizeType size)
+    : Value(static_cast<Data::Type>(vt), size) {}
+
 Value::Value(const Data::Type vt, const SizeType size)
     : size_bytes {size},
       type {vt} {
@@ -156,6 +159,14 @@ Value::Value(Value&& other) noexcept
     other.data       = nullptr;
     other.size_bytes = 0;
     other.type       = Invalid;
+}
+
+Value& Value::operator=(const Data& other) {
+    if (data != nullptr) {
+        delete[] data;
+    }
+ data = new Data[1] {other};
+    return *this;
 }
 
 Value& Value::operator=(const Value& other) {
@@ -258,6 +269,10 @@ Value::Data::Type Value::Type() const {
     return static_cast<Data::Type>(type);
 }
 
+Value::Data Value::Raw() const {
+    return data[0];
+}
+
 void Value::WriteBytesAt(const u32 index,
                          const std::array<u8, sizeof(Data)>& bytes
 ) const {
@@ -340,21 +355,21 @@ CGOTO_OPERATOR_BIN(bool, >=);
 CGOTO_OPERATOR_BIN(bool, <);
 CGOTO_OPERATOR_BIN(bool, <=);
 
-f64 Value::AsFloat() const {
-    return dispatch_float[type](data);
+f64 Value::AsFloat(const i64 index) const {
+    return dispatch_float[type](data + index);
 }
 
-i64 Value::AsInt() const {
-    return dispatch_int[type](data);
+i64 Value::AsInt(const i64 index) const {
+    return dispatch_int[type](data + index);
 }
 
 
-u64 Value::AsUint() const {
-    return dispatch_unsigned[type](data);
+u64 Value::AsUint(const i64 index) const {
+    return dispatch_unsigned[type](data + index);
 }
 
-bool Value::AsBool() const {
-    return dispatch_bool[type](data);
+bool Value::AsBool(const i64 index) const {
+    return dispatch_bool[type](data + index);
 }
 
 std::string_view Value::AsString() const {

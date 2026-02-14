@@ -53,10 +53,11 @@ enum class Rule : ml::u8 {
     Term,
     Factor,
     Unary,
+    ListAccess,
 
     Grouping,
     Literal,
-    ListLiteral,
+    ListExpression,
     ElemList,
 };
 } // namespace sigil::ast

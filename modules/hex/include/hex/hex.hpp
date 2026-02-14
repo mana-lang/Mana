@@ -8,7 +8,7 @@
 namespace hex {
 namespace ml = mana::literals;
 
-static constexpr auto CALL_STACK_SIZE = 2048;
+static constexpr auto CALL_STACK_SIZE = 256;
 
 enum class InterpretResult {
     OK,

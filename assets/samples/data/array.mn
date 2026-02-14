@@ -1,4 +1,4 @@
 fn Main() {
-    data a = [1, 2, 3]
-    // data b = [1, true, 3] // -- correctly errors
+    data a = [5, 10, 15]
+    PrintV("Testing: {}", a[1])
 }

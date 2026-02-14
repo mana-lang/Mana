@@ -42,14 +42,14 @@ void PrintBytecode(const ByteCode& s) {
             using enum Op;
         case Halt:
         case Err: {
-            Log->debug("{:08X} | {}\n", offset, name);
+            Log->debug("{:08X} | {:<15}\n", offset, name);
             break;
         }
 
         case Print:
         case Return: {
             const u16 reg = read();
-            Log->debug("{:08X} | {} R{}\n", offset, name, reg);
+            Log->debug("{:08X} | {:<15} R{}\n", offset, name, reg);
             break;
         }
 
@@ -59,7 +59,13 @@ void PrintBytecode(const ByteCode& s) {
             const auto& val = s.Constants()[idx];
 
             const auto log_val = [&](auto v) {
-                Log->debug("{:08X} | {} R{} <- {} [pool index: {}]", offset, name, reg, v, idx);
+                Log->debug("{:08X} | {:<15} {:<10} <- {} [pool index: {}]",
+                           offset,
+                           name,
+                           fmt::format("R{}", reg),
+                           v,
+                           idx
+                );
             };
 
             switch (val.Type()) {
@@ -97,7 +103,7 @@ void PrintBytecode(const ByteCode& s) {
         case Not: {
             const u16 dst = read();
             const u16 src = read();
-            Log->debug("{:08X} | {} R{}, R{}", offset, name, dst, src);
+            Log->debug("{:08X} | {:<15} {:<10} <- R{}", offset, name, fmt::format("R{}", dst), src);
             break;
         }
 
@@ -115,14 +121,14 @@ void PrintBytecode(const ByteCode& s) {
             const u16 dst = read();
             const u16 lhs = read();
             const u16 rhs = read();
-            Log->debug("{:08X} | {} R{}, R{}, R{}", offset, name, dst, lhs, rhs);
+            Log->debug("{:08X} | {:<15} R{}, R{}, R{}", offset, name, dst, lhs, rhs);
             break;
         }
 
         case Jump: {
             const i16 dist = static_cast<i16>(read());
             // Offset + Opcode (1) + Payload (2) + Distance
-            Log->debug("{:08X} | {} => {:08X}", offset, name, offset + 3 + dist);
+            Log->debug("{:08X} | {:<15} {:<10} => {:08X}", offset, name, "", offset + 3 + dist);
             break;
         }
 
@@ -131,7 +137,7 @@ void PrintBytecode(const ByteCode& s) {
             const u16 reg  = read();
             const i16 dist = static_cast<i16>(read());
             // Offset + Opcode (1) + Reg (2) + Destination (2)
-            Log->debug("{:08X} | {} R{} => {:08X}", offset, name, reg, offset + 5 + dist);
+            Log->debug("{:08X} | {:<15} {:<10} => {:08X}", offset, name, fmt::format("R{}", reg), offset + 5 + dist);
             break;
         }
 
@@ -140,13 +146,43 @@ void PrintBytecode(const ByteCode& s) {
             const u32 addr     = static_cast<u32>(code[i + 2] | (code[i + 3] << 8) | (code[i + 4] << 16) | (
                                                   code[i + 5] << 24));
 
-            Log->debug("{:08X} | {} (Frame: {}) ==> {:08X}", offset, name, reg_frame, addr);
+            Log->debug("{:08X} | {:<15} {:<10} ==> {:08X}", offset, name, fmt::format("(Frame: {})", reg_frame), addr);
             i += CALL_BYTES;
             break;
         }
 
+        case ListCreate: {
+            const u16 type = read();
+            const u16 len  = read();
+            const u16 reg  = read();
+            Log->debug("{:08X} | {:<15} {:<10} <- Type: {} | Len: {}",
+                       offset,
+                       name,
+                       fmt::format("R{}", reg),
+                       magic_enum::enum_name(static_cast<Value::Data::Type>(type)),
+                       len
+            );
+            break;
+        }
+
+        case ListRead: {
+            const u16 src = read();
+            const u16 idx = read();
+            const u16 dst = read();
+            Log->debug("{:08X} | {:<15} {:<10} <- R{}[R{}]", offset, name, fmt::format("R{}", dst), src, idx);
+            break;
+        }
+
+        case ListWrite: {
+            const u16 dst = read();
+            const u16 idx = read();
+            const u16 src = read();
+            Log->debug("{:08X} | {:<15} {:<10} <- R{}", offset, name, fmt::format("R{}[R{}]", dst, idx), src);
+            break;
+        }
+
         default:
-            Log->debug("{:08X} | ??? ({})", offset, static_cast<u8>(op));
+            Log->debug("{:08X} | {:<15} ({})", offset, "???", static_cast<u8>(op));
             break;
         }
     }

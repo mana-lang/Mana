@@ -367,6 +367,24 @@ void LoopRangeMutable::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
+/// ListAccess
+ListAccess::ListAccess(const ParseNode& node) {
+    item  = CreateExpression(*node.branches[0]);
+    index = CreateExpression(*node.branches[1]);
+}
+
+const NodePtr& ListAccess::GetItem() const {
+    return item;
+}
+
+const NodePtr& ListAccess::GetIndex() const {
+    return index;
+}
+
+void ListAccess::Accept(Visitor& visitor) const {
+    visitor.Visit(*this);
+}
+
 /// LoopFixed
 LoopFixed::LoopFixed(const ParseNode& node) {
     count = CreateExpression(*node.branches[0]);
@@ -630,7 +648,7 @@ void StringLiteral::Accept(Visitor& visitor) const {
 }
 
 /// ArrayLiteral
-ListLiteral::ListLiteral(const ParseNode& node) {
+ListExpression::ListExpression(const ParseNode& node) {
     // []
     if (node.branches.empty()) {
         return;
@@ -646,19 +664,23 @@ ListLiteral::ListLiteral(const ParseNode& node) {
     }
 }
 
-const std::vector<NodePtr>& ListLiteral::GetValues() const {
+std::span<const NodePtr> ListExpression::GetValues() const {
     return values;
 }
 
-std::string_view ListLiteral::GetType() const {
+hexe::Value::Data::Type ListExpression::GetType() const {
     return type;
 }
 
-void ListLiteral::Accept(Visitor& visitor) const {
+void ListExpression::SetType(const hexe::Value::Data::Type new_type) {
+    type = new_type;
+}
+
+void ListExpression::Accept(Visitor& visitor) const {
     visitor.Visit(*this);
 }
 
-NodePtr ListLiteral::ProcessValue(const ParseNode& elem) {
+NodePtr ListExpression::ProcessValue(const ParseNode& elem) {
     switch (elem.rule) {
         using enum Rule;
 
@@ -672,12 +694,12 @@ NodePtr ListLiteral::ProcessValue(const ParseNode& elem) {
         // [(foo)]
         return ProcessValue(*elem.branches[0]);
 
-    case ListLiteral:
+    case ListExpression:
         // [[1, 2, 3,], [4, 3, 2],]
         // in this case we still need to ensure the array is of "array-of-arrays" type
         // and adequately handle higher-dimensional arrays.
         // this is extremely important for linalg
-        return std::make_shared<class ListLiteral>(elem);
+        return std::make_shared<class ListExpression>(elem);
 
     case Literal:
         // [12.4, 95.3]
@@ -743,8 +765,10 @@ NodePtr CreateExpression(const ParseNode& node) {
         return MakeLiteral(token).value;
     case Identifier:
         return std::make_shared<class Identifier>(node);
-    case ListLiteral:
-        return std::make_shared<class ListLiteral>(node);
+    case ListExpression:
+        return std::make_shared<class ListExpression>(node);
+    case ListAccess:
+        return std::make_shared<class ListAccess>(node);
     case Unary:
         return std::make_shared<UnaryExpr>(node);
     case Factor:

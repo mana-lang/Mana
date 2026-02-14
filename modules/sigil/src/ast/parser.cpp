@@ -810,7 +810,7 @@ bool Parser::MatchedArrayLiteral(ParseNode& node) {
         return false;
     }
     auto& array_literal {node.NewBranch()};
-    array_literal.rule = Rule::ListLiteral;
+    array_literal.rule = Rule::ListExpression;
     AddCycledTokenTo(array_literal); // '['
 
     // Allow [\n] etc.
@@ -934,7 +934,7 @@ bool Parser::MatchedPrimary(ParseNode& node) {
     return false;
 }
 
-// unary = ("-" | "!") unary | primary
+// unary = ("-" | "!") unary | list_access
 bool Parser::MatchedUnary(ParseNode& node) {
     switch (CurrentToken().type) {
         using enum TokenType;
@@ -952,8 +952,31 @@ bool Parser::MatchedUnary(ParseNode& node) {
     }
 
     default:
-        return MatchedPrimary(node);
+        return MatchedListAccess(node);
     }
+}
+
+// list_access = primary ('[' expr ']')?
+bool Parser::MatchedListAccess(ParseNode& node) {
+    if (not MatchedPrimary(node)) {
+        return false;
+    }
+
+    if (CurrentToken().type != TokenType::Op_BracketLeft) {
+        return true;
+    }
+
+    auto& list_access {node.NewBranch(Rule::ListAccess)};
+    list_access.AcquireBranchOf(node, node.branches.size() - 2);
+
+    SkipCurrentToken();
+
+    if (Expect(MatchedExpression(list_access), list_access, "Expected expression")) {
+        if (Expect(CurrentToken().type == TokenType::Op_BracketRight, list_access, "Expected ']'")) {
+            SkipCurrentToken();
+        }
+    }
+    return true;
 }
 
 bool IsFactorOp(const TokenType token) {

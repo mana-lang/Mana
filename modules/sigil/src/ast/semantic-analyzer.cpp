@@ -4,6 +4,8 @@
 
 #include <ranges>
 
+#include <hexe/value.hpp>
+
 namespace sigil {
 using namespace mana::literals;
 using namespace ast;
@@ -299,11 +301,35 @@ void SemanticAnalyzer::Visit(const BinaryExpr& node) {
     node.GetLeft().Accept(*this);
 }
 
+hexe::Value::Data::Type ConvertPrimitive(const std::string_view type) {
+    using enum hexe::Value::Data::Type;
+    if (IsSignedIntegral(type)) {
+        return Int64;
+    }
 
-void SemanticAnalyzer::Visit(const ListLiteral& array) {
-    auto element_type = std::string {array.GetType()};
+    if (IsUnsignedIntegral(type)) {
+        return Uint64;
+    }
 
-    for (const auto& value : array.GetValues()) {
+    if (IsFloatPrimitive(type)) {
+        return Float64;
+    }
+
+    if (type == PrimitiveName(PrimitiveType::Bool)) {
+        return Bool;
+    }
+
+    if (type == PrimitiveName(PrimitiveType::String)) {
+        return String;
+    }
+
+    return Invalid;
+}
+
+void SemanticAnalyzer::Visit(const ListExpression& list) {
+    std::string_view element_type;
+
+    for (const auto& value : list.GetValues()) {
         value->Accept(*this);
         const auto val_type = PopTypeBuffer();
 
@@ -321,13 +347,39 @@ void SemanticAnalyzer::Visit(const ListLiteral& array) {
         }
     }
 
-    const auto elem_size = types[element_type].size;
+    if (not types.contains(element_type)) {
+        Log->error("Unknown array element type '{}'", element_type);
+        ++issue_counter;
 
-    element_type.insert(0, 1, '[');
-    element_type.append(1, ']');
+        BufferType(element_type);
+        return;
+    }
 
-    types[element_type].size = elem_size * array.GetValues().size();
-    BufferType(element_type);
+    const auto elem_size = types.at(element_type).size;
+
+    const_cast<ListExpression&>(list).SetType(ConvertPrimitive(element_type));
+
+    std::string array_type {"["};
+    array_type.reserve(element_type.size() + 1);
+    array_type.append(element_type);
+    array_type.append("]");
+
+    types[array_type].size = elem_size * list.GetValues().size();
+    BufferType(array_type);
+}
+
+void SemanticAnalyzer::Visit(const ListAccess& access) {
+    access.GetItem()->Accept(*this);
+
+    // this is where we'd validate that the item has a valid operator[] specialization
+
+    access.GetIndex()->Accept(*this);
+    const auto index_type = PeekTypeBuffer();
+
+    if (not IsIntegral(index_type)) {
+        Log->error("List index must be of integral type");
+        ++issue_counter;
+    }
 }
 
 void SemanticAnalyzer::Visit(const Literal<f64>&) {
@@ -451,6 +503,10 @@ const Function& SemanticAnalyzer::CurrentFunction() const {
     return GetFnTable().at(CurrentFunctionName());
 }
 
+std::string_view SemanticAnalyzer::PeekTypeBuffer() const {
+    return type_buffer[1];
+}
+
 std::string_view SemanticAnalyzer::PopTypeBuffer() {
     type_buffer[0] = type_buffer[1];
     type_buffer[1] = TB_ERROR;
@@ -516,11 +572,12 @@ const Symbol* SemanticAnalyzer::GetSymbol(std::string_view name) const {
 
 void SemanticAnalyzer::HandleInitializer(const Initializer& node, const bool is_mutable) {
     // evaluate expr first
-    const auto& init    = node.GetInitializer();
-    const bool has_init = init != nullptr;
+
+    const bool has_init = node.GetInitializer() != nullptr;
 
     if (has_init) {
-        init->Accept(*this);
+        auto& init = *node.GetInitializer().get();
+        init.Accept(*this);
     }
 
     const auto initializer_type = has_init ? PopTypeBuffer() : PrimitiveName(None);

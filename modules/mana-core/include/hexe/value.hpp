@@ -39,7 +39,6 @@ struct Value {
             Float64,
 
             Bool,
-
             String,
 
             None,
@@ -63,11 +62,13 @@ struct Value {
     Value(bool b);
 
     Value(std::string_view string);
+    Value(u8 vt, SizeType size);
     Value(Data::Type vt, SizeType size);
 
     Value(const Value& other);
     Value(Value&& other) noexcept;
 
+    Value& operator=(const Data& other);
     Value& operator=(const Value& other);
     Value& operator=(Value&& other) noexcept;
 
@@ -105,11 +106,12 @@ struct Value {
     MANA_NODISCARD u64 BitCasted(u32 at) const;
 
     MANA_NODISCARD Data::Type Type() const;
+ MANA_NODISCARD Data Raw() const;
 
-    MANA_NODISCARD f64 AsFloat() const;
-    MANA_NODISCARD i64 AsInt() const;
-    MANA_NODISCARD u64 AsUint() const;
-    MANA_NODISCARD bool AsBool() const;
+    MANA_NODISCARD f64 AsFloat(i64 index = 0) const;
+    MANA_NODISCARD i64 AsInt(i64 index = 0) const;
+    MANA_NODISCARD u64 AsUint(i64 index = 0) const;
+    MANA_NODISCARD bool AsBool(i64 index = 0) const;
     MANA_NODISCARD std::string_view AsString() const;
 
     void WriteBytesAt(u32 index, const std::array<u8, QWORD>& bytes) const;
@@ -138,6 +140,14 @@ struct Value {
     bool operator==(const Value& other) const;
 
     void operator*=(const i64& rhs);
+
+    Data& operator[](const u32 index) {
+        return data[index];
+    }
+
+    const Data& operator[](const u32 index) const {
+        return data[index];
+    }
 
 private:
     Data::Type GetValueTypeFrom(i64) {
