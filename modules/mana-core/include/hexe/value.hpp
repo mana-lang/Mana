@@ -62,7 +62,7 @@ struct Value {
     Value(bool b);
 
     Value(std::string_view string);
-    Value(u8 vt, SizeType size);
+    Value(u8 vt, SizeType length);
     Value(Data::Type vt, SizeType size);
 
     Value(const Value& other);
@@ -106,7 +106,7 @@ struct Value {
     MANA_NODISCARD u64 BitCasted(u32 at) const;
 
     MANA_NODISCARD Data::Type Type() const;
- MANA_NODISCARD Data Raw() const;
+    MANA_NODISCARD Data Raw() const;
 
     MANA_NODISCARD f64 AsFloat(i64 index = 0) const;
     MANA_NODISCARD i64 AsInt(i64 index = 0) const;

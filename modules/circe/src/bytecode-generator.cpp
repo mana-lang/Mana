@@ -579,8 +579,9 @@ void BytecodeGenerator::Visit(const ListExpression& list) {
         return;
     }
 
-    const auto reg = Registers().Allocate();
-    bytecode.Write(Op::ListCreate, {static_cast<u16>(list.GetType()), static_cast<u16>(values.size()), reg});
+    const auto reg    = Registers().Allocate();
+    const auto length = static_cast<u16>(values.size() * sizeof(Value::Data));
+    bytecode.Write(Op::ListCreate, {static_cast<u16>(list.GetType()), length, reg});
 
     for (u16 i = 0; i < values.size(); ++i) {
         values[i]->Accept(*this);

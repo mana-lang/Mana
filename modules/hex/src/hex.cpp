@@ -221,7 +221,7 @@ list_create: {
         const u8 type   = NEXT_PAYLOAD;
         const auto size = NEXT_PAYLOAD;
 
-        REG(NEXT_PAYLOAD) = Value {type, static_cast<Value::SizeType>(size * sizeof(Value::Data))};
+        REG(NEXT_PAYLOAD) = Value {type, size};
     }
     DISPATCH();
 

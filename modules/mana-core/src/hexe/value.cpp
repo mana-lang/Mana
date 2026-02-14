@@ -115,8 +115,8 @@ Value::Value(const std::string_view string)
     std::memcpy(data, string.data(), size_bytes);
 }
 
-Value::Value(const u8 vt, const SizeType size)
-    : Value(static_cast<Data::Type>(vt), size) {}
+Value::Value(const u8 vt, const SizeType length)
+    : Value(static_cast<Data::Type>(vt), length * sizeof(Data)) {}
 
 Value::Value(const Data::Type vt, const SizeType size)
     : size_bytes {size},
@@ -165,7 +165,7 @@ Value& Value::operator=(const Data& other) {
     if (data != nullptr) {
         delete[] data;
     }
- data = new Data[1] {other};
+    data = new Data[1] {other};
     return *this;
 }
 

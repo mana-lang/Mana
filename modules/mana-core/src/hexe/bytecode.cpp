@@ -359,21 +359,21 @@ bool ByteCode::Deserialize(const std::vector<u8>& bytes) {
     };
 
     std::array<u8, sizeof(Value::Data)> value_bytes {};
-    std::array<u8, sizeof(Value::SizeType)> length_bytes {};
+    std::array<u8, sizeof(Value::SizeType)> size_bytes {};
 
     // constant pool first
     for (i64 offset = pool_range.start; offset < pool_range.end;) {
         const auto type = static_cast<DataType>(bytes[offset]);
 
         offset += sizeof(DataType);
-        for (i64 i = 0; i < length_bytes.size(); ++i) {
-            length_bytes[i] = bytes[i + offset];
+        for (i64 i = 0; i < size_bytes.size(); ++i) {
+            size_bytes[i] = bytes[i + offset];
         }
-        const auto length = std::bit_cast<Value::SizeType>(length_bytes);
+        const auto size = std::bit_cast<Value::SizeType>(size_bytes);
 
         offset += sizeof(Value::SizeType);
 
-        auto value = Value {type, length};
+        auto value = Value {type, size};
         for (u32 i = 0; i < value.Length(); ++i) {
             for (i64 k = 0; k < value_bytes.size(); ++k) {
                 value_bytes[k] = bytes[k + offset];
