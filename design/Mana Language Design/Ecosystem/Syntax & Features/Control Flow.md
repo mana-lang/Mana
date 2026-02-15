@@ -141,9 +141,9 @@ for elem in values {
 >99
 
 ##### Match
-*Pattern matching* in **Mana** works roughly the same as **Rust**'s pattern matching.
+Mana allows you to compose your control flow around an exhaustive set of possible values via the `match` keyword.
 
-They are blocks which may contain a series of statements separated by the *map operator* `=>`
+They are blocks which may contain a series of statements separated by the *binding operator* `=>`
 
 Expressions on the left side of *match arms* in a match block are compared to the matched *subject*. If the expression matches, it will execute that arm.
 ```rust
