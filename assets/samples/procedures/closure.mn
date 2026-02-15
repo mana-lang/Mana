@@ -1,3 +1,5 @@
+// this was just a file to toy with syntax. it does not compile
+
 data alloc_origin = fn(origin: &NodePtr) -> u16 => mut &bytecode, mut this: outer {
     if origin == none {
         data reg = outer.AllocateRegister()

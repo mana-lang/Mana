@@ -22,4 +22,5 @@ fn SquareIf(a: i64, b: bool) -> i64 {
 
 fn Main() {
     data sum_of = Summate(Add(SquareIf(3, true), 17))
+    PrintV("Summation: {}", sum_of)
 }

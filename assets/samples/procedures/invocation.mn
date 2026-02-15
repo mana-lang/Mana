@@ -1,28 +1,32 @@
-fn Heck() -> i32 {
-    return 2000000000
-}
+// This file touches on a bug which must be fixed. It cannot compile for now.
 
-fn Main() {
-    data a = 95
 
-    Woah()
+// fn Heck() -> i32 {
+//     return 2000000000
+// }
 
-    data x = Heck()
-}
+// fn Main() {
+//     data a = 95
 
-fn Woah() {
-    mut data a: i64 = 0
-    mut data b = 0
+//     Woah()
 
-    loop Heck() => i {
-        a += Sheesh()
-        b = i
-    }
+//     data x = Heck()
+//     PrintV("x: {}", x)
+// }
 
-    data c = a
-    data d = b
-}
+// fn Woah() {
+//     mut data a: i64 = 0
+//     mut data b = 0
 
-fn Sheesh() -> i8 {
-    return 5
-}
+//     loop Heck() => i {
+//         a += Sheesh()
+//         b = i
+//     }
+
+//     data c = a
+//     data d = b
+// }
+
+// fn Sheesh() -> i8 {
+//     return 5
+// }

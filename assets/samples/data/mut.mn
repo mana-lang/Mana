@@ -1,5 +1,10 @@
-mut data x: i32
-mut data y = 57.7
+fn Main() {
+    mut data x = 18
+    mut data y = 57.7
 
-x = 97
-y = 82.4
+    x = 97
+    y = 82.4
+
+    PrintV("x: {}\n", x)
+    PrintV("y: {}", y)
+}

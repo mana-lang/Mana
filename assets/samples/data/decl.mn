@@ -1,2 +1,7 @@
-data x = 12
-data y: i32 = 22
+fn Main() {
+    data x = 12
+    data y: i32 = 34
+
+    PrintV("x: {}\n", x)
+    PrintV("y: {}", y)
+}

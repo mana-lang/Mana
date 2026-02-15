@@ -1,9 +1,19 @@
-mut data a = 10
+fn Main() {
+    mut data a = 10
+    PrintV("Initial: {}\n\n", a)
 
-a += 8
-a *= 8
-a -= 8
-a /= 8
-a %= 8
+    a += 8
+    PrintV("Add: {}\n", a)
 
-data b = a
+    a *= 8
+    PrintV("Mul: {}\n", a)
+
+    a -= 8
+    PrintV("Sub: {}\n", a)
+
+    a /= 8
+    PrintV("Div: {}\n", a)
+
+    a %= 8
+    PrintV("Mod: {}\n", a)
+}
