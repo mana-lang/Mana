@@ -2,12 +2,15 @@
 
 <p align="center">
   <img src="design/logo-text-white-bg.png" alt="Mana — a purple and blue gradient flame logo with the lowercase white text 'mana' beside it." width="600">
+</p>
+<p align="center">
   <em>Write fast, run fast.</em>
 </p>
 
 <p align="center">
   <em>A data-centric language purpose-built for game development.</em>
 </p>
+
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
