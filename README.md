@@ -2,10 +2,11 @@
 
 <p align="center">
   <img src="design/logo-text-white-bg.png" alt="Mana — a purple and blue gradient flame logo with the lowercase white text 'mana' beside it." width="600">
+  <em>Write fast, run fast.</em>
 </p>
 
 <p align="center">
-  <em>Write Fast, Run Fast.</em>
+  <em>A data-centric language purpose-built for game development.</em>
 </p>
 
 <p align="center">
@@ -91,7 +92,7 @@ This is actively being worked on, and these issues will be taken care of in due 
     - Extend existing interfaces from anywhere
     - Lock type fields to make them read-only beyond interface bounds
 
-See the [design documentation](design/Mana%20Language%20Design/) for the full language specification.
+See the [design documentation](design/Mana%20Language%20Design/) for the full language details. The documentation is an Obsidian vault, and so it is best read with Obsidian. However, the files are still Markdown, so they should be legible in any MD reader.
 
 ### Modules
 
