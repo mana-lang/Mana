@@ -1,7 +1,7 @@
 <h1 align="center">The Mana Programming Language</h1>
 
 <p align="center">
-  <img src="design/logo-text-black-bg.png" alt="Mana — a purple and blue gradient flame logo with the lowercase white text 'mana' beside it." width="600">
+  <img src="design/logo-text-white-bg.png" alt="Mana — a purple and blue gradient flame logo with the lowercase white text 'mana' beside it." width="600">
 </p>
 
 <p align="center">
@@ -26,13 +26,19 @@ fn Main() {
     fmt.PrintLine("{message}")
 
     data scores = [5, 10, 15, 20]
-    mut data total: i32
-    loop 0..4 => i {
-        total += scores[i]
+    mut data total: i32 // defaults to 0
+
+    for score in scores {
+        total += score
     }
     fmt.Print("Total: {}", total)
 }
 ```
+
+### Development
+Mana is currently in the **very early** stages of development. Some things may be broken or incomplete, and some references may lead to nowhere. Most notably, the code example above won't compile yet, as `import` statements have not yet been implemented; therefore, printing values is done with `PrintV` for the time being, which does not yet support string interpolation. 
+
+This is actively being worked on, and these issues will be taken care of in due time.
 
 ### Key Features
 
@@ -57,7 +63,35 @@ fn Main() {
     - Pattern matching with `match`
 - **Explicit & Deduced Assignment**
     - Control how data is passed around via explicit assignment operators, or allow Mana to deduce the best assignment form for you.
-- **Zero-cost abstractions** and compile-time reflection
+- **Zero-cost abstractions**
+    - Never incur any hidden costs in native code
+- **Advanced Enumeration**
+    - Simple yet extensible enumerations with `enum`
+    - Hierarchical, tree-like labels with `Tag`
+        - Fast comparisons across hierarchy levels with `in`, `in?` and `==`
+    - Sum types with `variant`
+- **Compile-time Evaluation & Constraints**
+    - Conditional compilation with `when`
+    - Generic type constraints with `where`
+    ```kotlin
+    when std.BuildTarget == std.Platforms.Linux.x64 { ... }
+    type Foo<T> { a: T => where std.Type.IsIntegral<T> }
+    ```
+- **Powerful Procedures**
+    - First-class functions via Mana's flexible operator specialization model
+    - Function constraints with Attributes such as `@[Inline]` and `@[Pure]`
+    - Polymorphism for functions and operators
+    - Built-in delegates
+- **Powerful Type Interface System**
+    - Create compile-time composite type interfaces with `interface for type Foo`
+        - Keeps transformations and APIs separate from data
+    - Name interfaces for separate applications on the same type (`interface Bar for type Foo`)
+    - Import named interfaces by-module
+        - Easily disambiguate colliding interfaces
+    - Extend existing interfaces from anywhere
+    - Lock type fields to make them read-only beyond interface bounds
+
+See the [design documentation](design/Mana%20Language%20Design/) for the full language specification.
 
 ### Modules
 
@@ -73,7 +107,7 @@ fn Main() {
 **Requirements:** C++23 compatible compiler with computed-goto support (GCC 13+ or Clang 17+), CMake 3.28+
 
 ```bash
-git clone https://github.com/future-link-goes-here
+git clone https://github.com/mana-lang/Mana.git
 cd mana
 
 # Configure and build (Debug)
@@ -106,7 +140,9 @@ See the [`assets/examples/`](assets/examples/) directory for example `.mn` files
 
 ### Project Status
 
-Mana is in active development. The current focus is on maturing the hot-reloadable side of Mana to be competitive with Lua as an embeddable scripting language. Salem will remain in stasis until Mana is a viable option as a scripting language for development with C++ game engines.
+The current focus is on maturing the hot-reloadable side of Mana to be competitive with Lua as an embeddable scripting language. 
+
+Salem will remain in stasis until Mana is a viable option as a scripting language for development with C++ game engines.
 
 | Component | Status |
 |-----------|--------|
@@ -128,7 +164,7 @@ Mana is in active development. The current focus is on maturing the hot-reloadab
 
 ### Editor Support
 
-A VS Code syntax highlighting extension is available in [`extensions/mana/`](extensions/mana/). This is the beginnings of what will eventually become the **Grimoire** project.
+A VS Code syntax highlighting extension is available in [`extensions/mana/`](extensions/mana/). This is the beginning of what will eventually become the **Grimoire** project. For now, simple syntax highlighting will do. Once the project is extended to include LSP support, Grimoire will be moved to its own repository.
 
 ### License
 [MIT](LICENSE)

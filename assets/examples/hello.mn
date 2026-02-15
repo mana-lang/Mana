@@ -1,0 +1,14 @@
+import std.fmt
+
+fn Main() {
+    data message = "Hello from Mana!"
+    fmt.PrintLine("{message}")
+
+    data scores = [5, 10, 15, 20]
+    mut data total: i32 // defaults to 0
+
+    for score in scores {
+        total += score
+    }
+    fmt.Print("Total: {}", total)
+}
