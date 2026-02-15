@@ -166,6 +166,24 @@ Salem will remain in stasis until Mana is a viable option as a scripting languag
 - **Grimoire** — LSP, editor plugins, and formatters
 - **Arcana** — Game development framework
 
+<p align="center">
+  <img src="design/Mana%20Language%20Design/_Assets/ManaEcosystem.png" alt="Mana ecosystem diagram showing Sigil, Circe, Hex, Salem, Conjure, Grimoire, Codex, and libraries" width="700">
+</p>
+
+### Project Model
+
+Mana's build system, **Conjure**, organizes code into **Troves** and **Artifacts**.
+
+**Artifacts** are *Virtual Translation Units* (VTUs) — Mana doesn't see source files directly. Instead, it treats everything within a named module as a single translation unit, allowing modules to be extended from anywhere.
+<p align="center">
+  <img src="design/Mana%20Language%20Design/_Assets/Info_Artifacts.png" alt="Diagram showing how source files compose into Artifacts (Virtual Translation Units)" width="800">
+</p>
+
+**Troves** are a named set of Artifacts; in other words, a package.
+<p align="center">
+  <img src="design/Mana%20Language%20Design/_Assets/Info_Troves.png" alt="Diagram showing how Artifacts are organized hierarchically within a Trove" width="800">
+</p>
+
 ### Editor Support
 
 A VS Code syntax highlighting extension is available in [`extensions/mana/`](extensions/mana/). This is the beginning of what will eventually become the **Grimoire** project. For now, simple syntax highlighting will do. Once the project is extended to include LSP support, Grimoire will be moved to its own repository.
