@@ -1,10 +1,12 @@
-mut data a = 0
-mut data b = 0
+fn Main() {
+    mut data iterations = 0
+    mut data accumulated = 0
 
-loop 8 => i {
-    a += 1
-    b += i
+    loop 8 => i {
+        iterations += 1
+        accumulated += i
+    }
+
+    PrintV("iterations:  {}\n", iterations)
+    PrintV("accumulated: {}\n", accumulated)
 }
-
-data c = a
-data d = b

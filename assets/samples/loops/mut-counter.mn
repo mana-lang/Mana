@@ -1,11 +1,17 @@
-mut data a = 0
-mut data b = 0
+fn Main() {
+    mut data iterations = 0
+    mut data final_index = 0
+    
+    loop 4..24 => mut i {
+        PrintV("iterations: {}\n", iterations)
+        PrintV("index tracker: {}\n", final_index)
+        PrintV("i: {}\n\n", i)
 
-loop 4..24 => mut i {
-    a += 1
-    i += 3
-    b = i
+        iterations += 1
+        i += 3
+        final_index = i
+    }
+
+    PrintV("iterations: {}\n", iterations)
+    PrintV("final index: {}\n", final_index)
 }
-
-data c = a
-data d = b

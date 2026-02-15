@@ -1,11 +1,15 @@
-fn Balls(){
-    mut data f = 23.0
-    mut data count = 0
+// This file involves a bug which must be resolved. It won't compile for now.
 
-    loop if f > 0 {
-        f -= 0.3
-        count += 1
-    }
+// fn Main(){
+//     mut data f: f64 = 23.0
+//     mut data count = 0
 
-    data a = count
-}
+//     loop if f > 0 {
+//         f -= 0.3
+//         count += 1
+
+//         PrintV("f: {}\n", f)
+//     }
+
+//     PrintV("Count: {}", count)
+// }

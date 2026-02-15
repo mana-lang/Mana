@@ -1,12 +1,16 @@
-mut data a = 0
-mut data b = 0
+// Again, surfacing a clobbering bug.
 
-loop 20 {
-    a += 1
+fn Main() {
+    mut data a = 0
+    mut data b = 0
 
-    skip if a % 2 == 0
-    b += 1
+    loop 20 {
+        a += 1
+
+        skip if a % 2 == 0
+        b += 1
+    }
+
+    PrintV("a: {}\n", a)
+    PrintV("b: {}", b)
 }
-
-data x = a
-data y = b

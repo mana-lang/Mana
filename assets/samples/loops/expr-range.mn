@@ -1,12 +1,14 @@
-data a = 4
-data b = 14
-mut data c = 0
-mut data d = 0
+fn Main() {
+    data start = 4
+    data end = 14
+    mut data iterations = 0
+    mut data final_index = 0
 
-loop a..b => i {
-    c += 1
-    d = i
+    loop start .. end => i {
+        iterations += 1
+        final_index = i
+    }
+
+    PrintV("iterations:  {}\n", iterations)
+    PrintV("final index: {}\n", final_index)
 }
-
-data e = c
-data f = d

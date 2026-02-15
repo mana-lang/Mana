@@ -1,12 +1,16 @@
-mut data a = 0
-loop if a < 0 {
-    a += 1
+// This file compiles, but is bugged. The constant register appears to be clobbering `a`'s register
+
+fn Main() {
+    mut data a = 0
+    loop if a < 0 {
+        a += 1
+    }
+    PrintV("Pre-conditional: {}\n", a)
+
+    mut data b = 0
+    loop {
+        b += 1
+    } => if b < 0
+
+    PrintV("Post-conditional: {}\n", b)
 }
-
-mut data b = 0
-loop {
-    b += 1
-} => if b < 0
-
-data x = a
-data y = b

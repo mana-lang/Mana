@@ -1,8 +1,10 @@
-mut data x = 0
+fn Main() {
+    mut data counter = 0
 
-loop {
-    x += 1
-    break if x >= 15
+    loop {
+        counter += 1
+        PrintV("Iteration: {}\n", counter)
+        
+        break if counter >= 15
+    }
 }
-
-data a = x

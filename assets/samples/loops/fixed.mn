@@ -1,6 +1,9 @@
-mut data a = 0
-loop 6 {
-    a += 1
-} 
+fn Main() {
+    mut data iterations = 0
 
-data b = a
+    loop 8 {
+        iterations += 1
+    }
+
+    PrintV("iterations:  {}\n", iterations)
+}
