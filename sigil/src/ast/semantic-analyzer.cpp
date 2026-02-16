@@ -91,7 +91,6 @@ void SemanticAnalyzer::Visit(const Scope& node) {
     --current_scope;
 }
 
-
 void SemanticAnalyzer::Visit(const FunctionDeclaration& node) {
     const auto name = node.GetName();
     function_stack.push_back(name);
