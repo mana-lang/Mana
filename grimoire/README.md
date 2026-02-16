@@ -1,6 +1,6 @@
-# mana README
+# Mana Grimoire README
 
-This is the README for your extension "mana". After writing up a brief description, we recommend including the following sections.
+This is the README for your extension "Mana Grimoire". After writing up a brief description, we recommend including the following sections.
 
 ## Features
 

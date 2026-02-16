@@ -1,8 +1,9 @@
 {
-  "name": "mana",
-  "displayName": "mana",
-  "description": "Syntax highlighting for the Mana language",
+  "name": "mana-grimoire",
+  "displayName": "Mana Grimoire",
+  "description": "A spellbook for the Mana language: semantic highlighting, completion, linting, and more.",
   "version": "0.0.1",
+  "publisher": "mana-lang",
   "engines": {
     "vscode": "^1.108.1"
   },
@@ -13,7 +14,7 @@
     "languages": [{
       "id": "mana",
       "aliases": ["Mana", "mana"],
-      "extensions": [".mn",".mana"],
+      "extensions": [".mn", ".mana"],
       "configuration": "./language-configuration.json"
     }],
     "grammars": [{
