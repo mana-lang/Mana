@@ -45,19 +45,19 @@ class Header {
 
 
 public:
-    u64 magic;             // fixed value
+    u64 magic;              // fixed value
 
-    u64 entry_point;       // byte offset to entry function (Main)
-    u64 code_size;         // size of instruction section in bytes
-    u32 constant_size;     // size of constant pool in bytes
+    u64 entry_point;        // byte offset to entry function (Main)
+    u64 code_size;          // size of instruction section in bytes
+    u32 constant_size;      // size of constant pool in bytes
 
-    u32 checksum;          // CRC32 of everything after header
+    u32 checksum;           // CRC32 of everything after header
 
-    u8 version_major;      // bytecode format version
+    u8 version_major;       // bytecode format version
     u8 version_minor;
     u16 version_patch;
 
-    u16 main_frame;        // register window for global scope + main
+    u16 main_frame;         // register window for global scope + main
 
     u8 PADDING_COMPAT_[26]; // extra space reserved for forward compatibility
 
@@ -99,10 +99,10 @@ public:
 
     // sets the program entry point to be the next instruction's index
     void SetEntryPoint(i64 address);
-    MANA_NODISCARD i64 EntryPointValue() const;
+    HEXE_NODISCARD i64 EntryPointValue() const;
 
     void SetMainRegisterFrame(u16 window);
-    MANA_NODISCARD u16 MainRegisterFrame() const;
+    HEXE_NODISCARD u16 MainRegisterFrame() const;
 
     // Modifies a payload for the given opcode
     // This function exists to amend instruction payloads,
@@ -113,23 +113,23 @@ public:
     // Same as Patch, but specifically for Call instructions
     void PatchCall(i64 instruction_index, u32 new_address);
 
-    MANA_NODISCARD i64 BackIndex() const;
+    HEXE_NODISCARD i64 BackIndex() const;
 
-    MANA_NODISCARD const std::vector<u8>& Instructions() const;
+    HEXE_NODISCARD const std::vector<u8>& Instructions() const;
 
-    MANA_NODISCARD i64 CurrentAddress() const;
+    HEXE_NODISCARD i64 CurrentAddress() const;
 
-    MANA_NODISCARD const std::vector<Value>& Constants() const;
+    HEXE_NODISCARD const std::vector<Value>& Constants() const;
 
     // serializes Hex bytecode to a vector of unsigned char (bytes) in the Hexe format
     // the sequence is:
     // - Hexe Header (64 bytes)
     // - Constant Pool (size specified by Hexe Header)
     // - Instructions (2 bytes each, total specified by Hexe Header)
-    MANA_NODISCARD std::vector<u8> Serialize() const;
+    HEXE_NODISCARD std::vector<u8> Serialize() const;
 
-    MANA_NODISCARD u32 ConstantPoolBytesCount() const;
-    MANA_NODISCARD u32 ConstantCount() const;
+    HEXE_NODISCARD u32 ConstantPoolBytesCount() const;
+    HEXE_NODISCARD u32 ConstantCount() const;
 
     // this function assumes correct input
     bool Deserialize(const std::vector<u8>& bytes);
@@ -159,25 +159,25 @@ public:
     }
 
 private:
-    MANA_NODISCARD Header DeserializeHeader(const std::vector<u8>& header_bytes) const;
-    MANA_NODISCARD u32 Checksum(const void* ptr, usize size) const;
+    HEXE_NODISCARD Header DeserializeHeader(const std::vector<u8>& header_bytes) const;
+    HEXE_NODISCARD u32 Checksum(const void* ptr, usize size) const;
 
-    MANA_NODISCARD std::vector<u8> SerializeCode() const;
+    HEXE_NODISCARD std::vector<u8> SerializeCode() const;
 
     // Constants are stored in a fixed sequence '(bytes) name':
     // (1) value type
     // (1) value tail
     //
-    MANA_NODISCARD std::vector<u8> SerializeConstants() const;
-    MANA_NODISCARD std::vector<u8> SerializeHeader(const std::vector<u8>& code) const;
+    HEXE_NODISCARD std::vector<u8> SerializeConstants() const;
+    HEXE_NODISCARD std::vector<u8> SerializeHeader(const std::vector<u8>& code) const;
 
-    MANA_NODISCARD Header CreateHeader(const std::vector<u8>& code) const;
+    HEXE_NODISCARD Header CreateHeader(const std::vector<u8>& code) const;
 
     void CheckInstructionSize() const;
     void CheckConstantPoolSize() const;
 
     friend class hex::Hex;
-    MANA_NODISCARD u8* EntryPoint();
-    MANA_NODISCARD std::vector<u8>& Instructions();
+    HEXE_NODISCARD u8* EntryPoint();
+    HEXE_NODISCARD std::vector<u8>& Instructions();
 };
 } // namespace hexe

@@ -52,7 +52,7 @@ add_subdirectory(salem)
 add_subdirectory(sigil)
 add_subdirectory(hex)
 add_subdirectory(circe)
-add_subdirectory(mana-core)
+add_subdirectory(hexe)
 
 ##
 add_dependencies(hex circe)
