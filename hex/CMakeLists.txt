@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(hex VERSION 0.1.17)
+project(hex VERSION 0.2.8)
 
 enable_testing()
 
@@ -19,7 +19,7 @@ set(HEX_INCLUDES
 )
 
 set(HEX_LIBS
-        mana::core
+        mana::hexe
 )
 
 add_executable(hex)

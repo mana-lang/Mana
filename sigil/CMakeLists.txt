@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(sigil VERSION 0.1.9)
+project(sigil VERSION 0.2.4)
 
 enable_testing()
 
@@ -23,7 +23,7 @@ set(SIGIL_INCLUDES
 )
 
 set(SIGIL_LIBS
-        mana::core
+        mana::hexe
 )
 
 add_library(sigil STATIC ${SIGIL_SOURCES})

@@ -101,19 +101,19 @@ struct Value {
         }
     }
 
-    MANA_NODISCARD SizeType Length() const;
-    MANA_NODISCARD SizeType ByteLength() const;
+    HEXE_NODISCARD SizeType Length() const;
+    HEXE_NODISCARD SizeType ByteLength() const;
 
-    MANA_NODISCARD u64 BitCasted(u32 at) const;
+    HEXE_NODISCARD u64 BitCasted(u32 at) const;
 
-    MANA_NODISCARD Data::Type Type() const;
-    MANA_NODISCARD Data Raw() const;
+    HEXE_NODISCARD Data::Type Type() const;
+    HEXE_NODISCARD Data Raw() const;
 
-    MANA_NODISCARD f64 AsFloat(i64 index = 0) const;
-    MANA_NODISCARD i64 AsInt(i64 index = 0) const;
-    MANA_NODISCARD u64 AsUint(i64 index = 0) const;
-    MANA_NODISCARD bool AsBool(i64 index = 0) const;
-    MANA_NODISCARD std::string_view AsString() const;
+    HEXE_NODISCARD f64 AsFloat(i64 index = 0) const;
+    HEXE_NODISCARD i64 AsInt(i64 index = 0) const;
+    HEXE_NODISCARD u64 AsUint(i64 index = 0) const;
+    HEXE_NODISCARD bool AsBool(i64 index = 0) const;
+    HEXE_NODISCARD std::string_view AsString() const;
 
     void WriteBytesAt(u32 index, const std::array<u8, QWORD>& bytes) const;
 
