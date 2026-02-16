@@ -1,6 +1,0 @@
-import std.fmt
-
-// This is a comment
-fn main() {
-	fmt.Print("Hello world!")
-}
