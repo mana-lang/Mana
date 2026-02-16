@@ -18,6 +18,7 @@
 using namespace mana::literals;
 using namespace circe;
 
+
 struct ScopedTimer {
     using Clock     = std::chrono::high_resolution_clock;
     using TimePoint = std::chrono::microseconds;

@@ -39,6 +39,15 @@ endif ()
 
 set(EXT_LIBS_MANA ${CMAKE_SOURCE_DIR}/extlib)
 
+function(copy_post_build target)
+    add_custom_command(
+            TARGET ${target} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/mana/samples
+            ${PROJECT_BINARY_DIR}/mana/samples/
+    )
+endfunction()
+
 add_subdirectory(salem)
 add_subdirectory(sigil)
 add_subdirectory(hex)

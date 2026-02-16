@@ -43,11 +43,6 @@ target_compile_definitions(circe PRIVATE CIRCE_VER_PATCH=${PROJECT_VERSION_PATCH
 
 target_compile_definitions(circe PRIVATE CIRCE_VER_STRING="${PROJECT_VERSION}-${MANA_BUILD_REV}")
 
-add_custom_command(
-        TARGET circe POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_SOURCE_DIR}/assets
-        ${PROJECT_BINARY_DIR}/assets/
-)
+copy_post_build(circe)
 
 add_subdirectory(tests)
