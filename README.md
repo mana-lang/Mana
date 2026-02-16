@@ -95,7 +95,9 @@ This is actively being worked on, and these issues will be taken care of in due 
     - Extend existing interfaces from anywhere
     - Lock type fields to make them read-only beyond interface bounds
 
-See the [design documentation](design/Mana%20Language%20Design/) for the full language details. The documentation is an Obsidian vault, and so it is best read with Obsidian. However, the files are still Markdown, so they should be legible in any MD reader.
+See the [design documentation](docs/obsidian/Mana%20Language%20Design/) for the full language details. The documentation is an Obsidian vault, and so it is best read with Obsidian. However, the files are still Markdown, so they should be legible in any MD reader.
+
+In the future, the docs will also include HTML and Markdown versions.
 
 ### Modules
 
@@ -137,10 +139,9 @@ As CMake can output to arbitrary paths, this example assumes Hex and Circe's exe
 Mana is currently in the middle of an overhaul of its test suite. Instructions for running tests will be placed here in the future.
 
 ### Code Examples
+See [`mana/samples/`](mana/samples/) for example Mana source files covering features which have already been implemented.
 
-See the [`assets/examples/`](assets/examples/) directory for example `.mn` files covering many of Mana's current and planned features.
-
-**Be aware** that the `examples` folder contains Mana code as it is planned to work in the future; for code samples that will actually compile and run, see [`assets/samples/`](assets/samples/)
+See [`mana/showcase/`](mana/showcase/) for example files covering features which are still planned or in development.
 
 ### Project Status
 
@@ -167,7 +168,7 @@ Salem will remain in stasis until Mana is a viable option as a scripting languag
 - **Arcana** — Game development framework
 
 <p align="center">
-  <img src="design/Mana%20Language%20Design/_Assets/ManaEcosystem.png" alt="Mana ecosystem diagram showing Sigil, Circe, Hex, Salem, Conjure, Grimoire, Codex, and libraries" width="700">
+  <img src="docs/obsidian/Mana%20Language%20Design/_Assets/ManaEcosystem.png" alt="Mana ecosystem diagram showing Sigil, Circe, Hex, Salem, Conjure, Grimoire, Codex, and libraries" width="700">
 </p>
 
 ### Project Model
@@ -176,17 +177,24 @@ Mana's build system, **Conjure**, organizes code into **Troves** and **Artifacts
 
 **Artifacts** are *Virtual Translation Units* (VTUs) — Mana doesn't see source files directly. Instead, it treats everything within a named module as a single translation unit, allowing modules to be extended from anywhere.
 <p align="center">
-  <img src="design/Mana%20Language%20Design/_Assets/Info_Artifacts.png" alt="Diagram showing how source files compose into Artifacts (Virtual Translation Units)" width="800">
+  <img src="docs/obsidian/Mana%20Language%20Design/_Assets/Info_Artifacts.png" alt="Diagram showing how source files compose into Artifacts (Virtual Translation Units)" width="800">
 </p>
 
 **Troves** are a named set of Artifacts; in other words, a package.
 <p align="center">
-  <img src="design/Mana%20Language%20Design/_Assets/Info_Troves.png" alt="Diagram showing how Artifacts are organized hierarchically within a Trove" width="800">
+  <img src="docs/obsidian/Mana%20Language%20Design/_Assets/Info_Troves.png" alt="Diagram showing how Artifacts are organized hierarchically within a Trove" width="800">
 </p>
 
 ### Editor Support
 
-A VS Code syntax highlighting extension is available in [`extensions/mana/`](extensions/mana/). This is the beginning of what will eventually become the **Grimoire** project. For now, simple syntax highlighting will do. Once the project is extended to include LSP support, Grimoire will be moved to its own repository.
+A VS Code syntax highlighting extension is available in [`grimoire/`](grimoire/)
+
+This is the beginning of the **Grimoire** project. For now, simple syntax highlighting will do. Once the project is extended to include LSP support, Grimoire will be moved to its own repository.
+
+If you have VS Code, you can activate syntax highlighting for `.mn` and `.mana` files by creating a symlink between Grimoire and VS Code's `extensions/` folder
+```bash
+ln -s path_to_mana/Mana/grimoire ~/.vscode/extensions/mana-grimoire
+```
 
 ### License
 [MIT](LICENSE)
