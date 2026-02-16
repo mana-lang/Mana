@@ -18,6 +18,7 @@ set(SIGIL_SOURCES
 )
 
 set(SIGIL_INCLUDES
+        ../ext/include/
         include/
 )
 
@@ -25,20 +26,9 @@ set(SIGIL_LIBS
         mana::core
 )
 
-set(EXT_INCLUDES
-        ../.ext/include/
-)
-
-set(EXT_SOURCES
-
-)
-
 add_library(sigil STATIC ${SIGIL_SOURCES})
 
-target_include_directories(sigil PUBLIC
-        ${SIGIL_INCLUDES}
-        ${EXT_INCLUDES}
-)
+target_include_directories(sigil PUBLIC ${SIGIL_INCLUDES})
 target_link_libraries(sigil PUBLIC ${SIGIL_LIBS})
 add_library(sigil::sigil ALIAS sigil)
 

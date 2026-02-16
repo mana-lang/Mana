@@ -13,19 +13,12 @@ set(CIRCE_SOURCES
 )
 
 set(CIRCE_INCLUDES
+        ../ext/include/
         include/
 )
 
 set(CIRCE_LIBS
         sigil::sigil
-)
-
-set(EXT_INCLUDES
-        ../.ext/include/
-)
-
-set(EXT_SOURCES
-
 )
 
 add_executable(circe)

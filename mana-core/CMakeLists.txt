@@ -12,6 +12,7 @@ set(MANA_SOURCES
 )
 
 set(MANA_INCLUDES
+        ../ext/include/
         include/
 )
 
@@ -19,16 +20,9 @@ set(MANA_LIBS
         spdlog::spdlog
 )
 
-set(EXT_INCLUDES
-        ../.ext/include/
-)
-
 add_library(mana-core STATIC ${MANA_SOURCES})
 
-target_include_directories(mana-core PUBLIC
-        ${MANA_INCLUDES}
-        ${EXT_INCLUDES}
-)
+target_include_directories(mana-core PUBLIC ${MANA_INCLUDES})
 target_link_libraries(mana-core PUBLIC ${MANA_LIBS})
 add_library(mana::core ALIAS mana-core)
 

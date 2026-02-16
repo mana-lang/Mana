@@ -14,6 +14,7 @@ set(HEX_SOURCES
 )
 
 set(HEX_INCLUDES
+        ../ext/include/
         include/
 )
 
@@ -21,17 +22,9 @@ set(HEX_LIBS
         mana::core
 )
 
-set(EXT_INCLUDES
-        ../.ext/include/
-)
-
-set(EXT_SOURCES
-
-)
-
 add_executable(hex)
 target_sources(hex PRIVATE ${HEX_SOURCES})
-target_include_directories(hex PUBLIC ${HEX_INCLUDES} ${EXT_INCLUDES})
+target_include_directories(hex PUBLIC ${HEX_INCLUDES})
 target_link_libraries(hex PRIVATE ${HEX_LIBS})
 
 add_library(hex_api SHARED ${HEX_SOURCES})

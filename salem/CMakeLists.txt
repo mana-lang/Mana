@@ -8,19 +8,12 @@ set(SALEM_SOURCES
 )
 
 set(SALEM_INCLUDES
+        ../ext/include/
         include/
 )
 
 set(SALEM_LIBS
         sigil::sigil
-)
-
-set(EXT_INCLUDES
-        ../.ext/include/
-)
-
-set(EXT_SOURCES
-
 )
 
 add_executable(salem)
