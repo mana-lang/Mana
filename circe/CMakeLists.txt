@@ -18,7 +18,7 @@ set(CIRCE_INCLUDES
 )
 
 set(CIRCE_LIBS
-        sigil::sigil
+        mana::sigil
 )
 
 add_executable(circe)
@@ -29,7 +29,7 @@ target_link_libraries(circe PRIVATE ${CIRCE_LIBS})
 add_library(circe_api STATIC ${CIRCE_SOURCES})
 target_include_directories(circe_api PUBLIC ${CIRCE_INCLUDES})
 target_link_libraries(circe_api PUBLIC ${CIRCE_LIBS})
-add_library(circe::circe ALIAS circe_api)
+add_library(mana::circe ALIAS circe_api)
 
 
 target_compile_definitions(circe PRIVATE $<$<CONFIG:Debug>:CIRCE_DEBUG>)
@@ -44,5 +44,3 @@ target_compile_definitions(circe PRIVATE CIRCE_VER_PATCH=${PROJECT_VERSION_PATCH
 target_compile_definitions(circe PRIVATE CIRCE_VER_STRING="${PROJECT_VERSION}-${MANA_BUILD_REV}")
 
 copy_post_build(circe)
-
-add_subdirectory(tests)

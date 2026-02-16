@@ -30,7 +30,7 @@ add_library(sigil STATIC ${SIGIL_SOURCES})
 
 target_include_directories(sigil PUBLIC ${SIGIL_INCLUDES})
 target_link_libraries(sigil PUBLIC ${SIGIL_LIBS})
-add_library(sigil::sigil ALIAS sigil)
+add_library(mana::sigil ALIAS sigil)
 
 target_compile_definitions(sigil PUBLIC $<$<CONFIG:Debug>:SIGIL_DEBUG>)
 target_compile_definitions(sigil PUBLIC $<$<CONFIG:Release>:SIGIL_RELEASE>)
@@ -42,5 +42,3 @@ target_compile_definitions(sigil PUBLIC SIGIL_VER_MINOR=${PROJECT_VERSION_MINOR}
 target_compile_definitions(sigil PUBLIC SIGIL_VER_PATCH=${PROJECT_VERSION_PATCH})
 
 target_compile_definitions(sigil PUBLIC SIGIL_VER_STRING="${PROJECT_VERSION}-${MANA_BUILD_REV}")
-
-add_subdirectory(tests)

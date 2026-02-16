@@ -30,7 +30,7 @@ target_link_libraries(hex PRIVATE ${HEX_LIBS})
 add_library(hex_api SHARED ${HEX_SOURCES})
 target_include_directories(hex_api PUBLIC ${HEX_INCLUDES} ${EXT_INCLUDES})
 target_link_libraries(hex_api PUBLIC ${HEX_LIBS})
-add_library(hex::hex ALIAS hex_api)
+add_library(mana::hex ALIAS hex_api)
 
 target_compile_definitions(hex PRIVATE $<$<CONFIG:Debug>:HEX_DEBUG>)
 target_compile_definitions(hex PRIVATE $<$<CONFIG:Release>:HEX_RELEASE>)
@@ -44,5 +44,3 @@ target_compile_definitions(hex PRIVATE HEX_VER_MINOR=${PROJECT_VERSION_MINOR})
 target_compile_definitions(hex PRIVATE HEX_VER_PATCH=${PROJECT_VERSION_PATCH})
 
 target_compile_definitions(hex PRIVATE HEX_VER_STRING="${PROJECT_VERSION}-${MANA_BUILD_REV}")
-
-add_subdirectory(tests)

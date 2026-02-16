@@ -13,7 +13,7 @@ set(SALEM_INCLUDES
 )
 
 set(SALEM_LIBS
-        sigil::sigil
+        mana::sigil
 )
 
 add_executable(salem)
