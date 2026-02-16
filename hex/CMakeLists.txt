@@ -14,7 +14,7 @@ set(HEX_SOURCES
 )
 
 set(HEX_INCLUDES
-        ../ext/include/
+        ${EXT_LIBS_MANA}
         include/
 )
 

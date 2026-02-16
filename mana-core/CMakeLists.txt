@@ -12,7 +12,7 @@ set(MANA_SOURCES
 )
 
 set(MANA_INCLUDES
-        ../ext/include/
+        ${EXT_LIBS_MANA}
         include/
 )
 

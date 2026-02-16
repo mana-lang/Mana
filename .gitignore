@@ -2,7 +2,7 @@
 *.d
 
 # Mana code output folder
-mana-output/
+.hexe/
 
 # Obsidian cache
 .makemd/

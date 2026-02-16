@@ -18,7 +18,7 @@ set(SIGIL_SOURCES
 )
 
 set(SIGIL_INCLUDES
-        ../ext/include/
+        ${EXT_LIBS_MANA}
         include/
 )
 

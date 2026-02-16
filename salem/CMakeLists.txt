@@ -8,7 +8,7 @@ set(SALEM_SOURCES
 )
 
 set(SALEM_INCLUDES
-        ../ext/include/
+        ${EXT_LIBS_MANA}
         include/
 )
 
