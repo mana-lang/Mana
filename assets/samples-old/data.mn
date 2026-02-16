@@ -1,7 +1,0 @@
-data x = 12
-data y = 3.4
-data z = true
-
-if z {
-    data w = x * 2
-}

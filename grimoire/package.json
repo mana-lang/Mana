@@ -1,0 +1,26 @@
+{
+  "name": "mana-grimoire",
+  "displayName": "Mana Grimoire",
+  "description": "A spellbook for the Mana language: semantic highlighting, completion, linting, and more.",
+  "version": "0.0.1",
+  "publisher": "mana-lang",
+  "engines": {
+    "vscode": "^1.108.1"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "mana",
+      "aliases": ["Mana", "mana"],
+      "extensions": [".mn", ".mana"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "mana",
+      "scopeName": "source.mana",
+      "path": "./syntaxes/mana.tmLanguage.json"
+    }]
+  }
+}
