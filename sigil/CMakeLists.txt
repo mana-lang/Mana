@@ -23,7 +23,7 @@ set(SIGIL_INCLUDES
 )
 
 set(SIGIL_LIBS
-        mana::hexe
+        mana::hexec
 )
 
 add_library(sigil STATIC ${SIGIL_SOURCES})

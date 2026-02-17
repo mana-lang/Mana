@@ -3,7 +3,7 @@
 #include <hex/core/logger.hpp>
 #include <hex/hex.hpp>
 
-#include <hexe/bytecode.hpp>
+#include <hexec/bytecode.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
@@ -17,7 +17,7 @@ void Execute(const std::filesystem::path& hexe_path) {
     namespace chrono = std::chrono;
     using namespace std::chrono_literals;
 
-    Log->debug("Hexe Bytecode Format Version: {}\n", hexe::Header::Version);
+    Log->debug("Hexe Bytecode Format Version: {}\n", hexec::Header::Version);
 
     const auto start_file = chrono::high_resolution_clock::now();
 
@@ -34,7 +34,7 @@ void Execute(const std::filesystem::path& hexe_path) {
     in_file.read(reinterpret_cast<char*>(raw.data()), file_size);
 
     const auto start_deser = chrono::high_resolution_clock::now();
-    hexe::ByteCode bytecode;
+    hexec::ByteCode bytecode;
     bytecode.Deserialize(raw);
     const auto end_deser = chrono::high_resolution_clock::now();
 

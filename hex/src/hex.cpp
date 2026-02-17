@@ -9,7 +9,7 @@
 #include <print>
 
 namespace hex {
-using namespace hexe;
+using namespace hexec;
 
 // payloads are little endian
 #define READ_PAYLOAD (static_cast<u16>(*ip | *(ip + 1) << 8))

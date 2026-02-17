@@ -1,7 +1,7 @@
 #pragma once
 
-#include <hexe/opcode.hpp>
-#include <hexe/value.hpp>
+#include <hexec/opcode.hpp>
+#include <hexec/value.hpp>
 
 #include <mana/literals.hpp>
 
@@ -15,7 +15,7 @@ namespace hex {
 class Hex;
 }
 
-namespace hexe {
+namespace hexec {
 using namespace mana::literals;
 
 struct IndexRange {
@@ -99,10 +99,10 @@ public:
 
     // sets the program entry point to be the next instruction's index
     void SetEntryPoint(i64 address);
-    HEXE_NODISCARD i64 EntryPointValue() const;
+    HEXEC_NODISCARD i64 EntryPointValue() const;
 
     void SetMainRegisterFrame(u16 window);
-    HEXE_NODISCARD u16 MainRegisterFrame() const;
+    HEXEC_NODISCARD u16 MainRegisterFrame() const;
 
     // Modifies a payload for the given opcode
     // This function exists to amend instruction payloads,
@@ -113,23 +113,23 @@ public:
     // Same as Patch, but specifically for Call instructions
     void PatchCall(i64 instruction_index, u32 new_address);
 
-    HEXE_NODISCARD i64 BackIndex() const;
+    HEXEC_NODISCARD i64 BackIndex() const;
 
-    HEXE_NODISCARD const std::vector<u8>& Instructions() const;
+    HEXEC_NODISCARD const std::vector<u8>& Instructions() const;
 
-    HEXE_NODISCARD i64 CurrentAddress() const;
+    HEXEC_NODISCARD i64 CurrentAddress() const;
 
-    HEXE_NODISCARD const std::vector<Value>& Constants() const;
+    HEXEC_NODISCARD const std::vector<Value>& Constants() const;
 
     // serializes Hex bytecode to a vector of unsigned char (bytes) in the Hexe format
     // the sequence is:
     // - Hexe Header (64 bytes)
     // - Constant Pool (size specified by Hexe Header)
     // - Instructions (2 bytes each, total specified by Hexe Header)
-    HEXE_NODISCARD std::vector<u8> Serialize() const;
+    HEXEC_NODISCARD std::vector<u8> Serialize() const;
 
-    HEXE_NODISCARD u32 ConstantPoolBytesCount() const;
-    HEXE_NODISCARD u32 ConstantCount() const;
+    HEXEC_NODISCARD u32 ConstantPoolBytesCount() const;
+    HEXEC_NODISCARD u32 ConstantCount() const;
 
     // this function assumes correct input
     bool Deserialize(const std::vector<u8>& bytes);
@@ -159,25 +159,25 @@ public:
     }
 
 private:
-    HEXE_NODISCARD Header DeserializeHeader(const std::vector<u8>& header_bytes) const;
-    HEXE_NODISCARD u32 Checksum(const void* ptr, usize size) const;
+    HEXEC_NODISCARD Header DeserializeHeader(const std::vector<u8>& header_bytes) const;
+    HEXEC_NODISCARD u32 Checksum(const void* ptr, usize size) const;
 
-    HEXE_NODISCARD std::vector<u8> SerializeCode() const;
+    HEXEC_NODISCARD std::vector<u8> SerializeCode() const;
 
     // Constants are stored in a fixed sequence '(bytes) name':
     // (1) value type
     // (1) value tail
     //
-    HEXE_NODISCARD std::vector<u8> SerializeConstants() const;
-    HEXE_NODISCARD std::vector<u8> SerializeHeader(const std::vector<u8>& code) const;
+    HEXEC_NODISCARD std::vector<u8> SerializeConstants() const;
+    HEXEC_NODISCARD std::vector<u8> SerializeHeader(const std::vector<u8>& code) const;
 
-    HEXE_NODISCARD Header CreateHeader(const std::vector<u8>& code) const;
+    HEXEC_NODISCARD Header CreateHeader(const std::vector<u8>& code) const;
 
     void CheckInstructionSize() const;
     void CheckConstantPoolSize() const;
 
     friend class hex::Hex;
-    HEXE_NODISCARD u8* EntryPoint();
-    HEXE_NODISCARD std::vector<u8>& Instructions();
+    HEXEC_NODISCARD u8* EntryPoint();
+    HEXEC_NODISCARD std::vector<u8>& Instructions();
 };
-} // namespace hexe
+} // namespace hexec

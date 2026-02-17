@@ -2,7 +2,7 @@
 
 #include <mana/literals.hpp>
 
-namespace hexe {
+namespace hexec {
 using namespace mana::literals;
 
 constexpr u8 BASE_REGISTERS = 128;

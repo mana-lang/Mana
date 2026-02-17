@@ -1,5 +1,5 @@
-#include <hexe/bytecode.hpp>
-#include <hexe/logger.hpp>
+#include <hexec/bytecode.hpp>
+#include <hexec/logger.hpp>
 
 #include <crc/CRC.h>
 
@@ -9,7 +9,7 @@
 constexpr auto HEADER_DESERIALIZE_ERROR = 727;
 constexpr auto BYTE_BITS                = 8;
 
-namespace hexe {
+namespace hexec {
 IndexRange::IndexRange(const i64 init_offset, const i64 range)
     : start(init_offset),
       end(init_offset + range) {
@@ -424,4 +424,4 @@ void ByteCode::CheckConstantPoolSize() const {
         throw std::runtime_error("Bytecode constant pool exceeded maximum size");
     }
 }
-} // namespace mana::hexe
+} // namespace mana::hexec

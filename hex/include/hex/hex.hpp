@@ -1,7 +1,7 @@
 #pragma once
 
 #include <mana/literals.hpp>
-#include <hexe/bytecode.hpp>
+#include <hexec/bytecode.hpp>
 
 #include <array>
 
@@ -22,16 +22,16 @@ struct StackFrame {
 };
 
 class Hex {
-    std::array<hexe::Value, hexe::REGISTER_TOTAL> registers = {};
-    std::array<StackFrame, CALL_STACK_SIZE> call_stack      = {};
+    std::array<hexec::Value, hexec::REGISTER_TOTAL> registers = {};
+    std::array<StackFrame, CALL_STACK_SIZE> call_stack        = {};
 
     ml::u8* ip               = nullptr;
     ml::i64 frame_offset     = 0;
     ml::i64 current_function = -1;
 
 public:
-    InterpretResult Execute(hexe::ByteCode* next_slice);
+    InterpretResult Execute(hexec::ByteCode* next_slice);
 
-    std::string ValueToString(const hexe::Value& value);
+    std::string ValueToString(const hexec::Value& value);
 };
 } // namespace hex

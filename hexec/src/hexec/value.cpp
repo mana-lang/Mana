@@ -1,12 +1,12 @@
-#include <hexe/value.hpp>
-#include <hexe/logger.hpp>
+#include <hexec/value.hpp>
+#include <hexec/logger.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
 #include <stdexcept>
 #include <cstring>
 
-namespace hexe {
+namespace hexec {
 #ifdef __GNUC__
 #    define FUNCSTR std::string(__PRETTY_FUNCTION__)
 #else
@@ -114,6 +114,9 @@ Value::Value(const std::string_view string)
 
     std::memcpy(data, string.data(), size_bytes);
 }
+
+Value::Value(const char* string)
+    : Value(std::string_view {string}) {}
 
 Value::Value(const u8 vt, const SizeType length)
     : Value(static_cast<Data::Type>(vt), length * sizeof(Data)) {}

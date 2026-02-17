@@ -7,7 +7,7 @@
 #include <string_view>
 #include <vector>
 
-namespace hexe {
+namespace hexec {
 using namespace mana;
 using namespace mana::literals;
 
@@ -62,6 +62,8 @@ struct Value {
     Value(bool b);
 
     Value(std::string_view string);
+    Value(const char* string);
+
     Value(u8 vt, SizeType length);
     Value(Data::Type vt, SizeType size);
     Value(u8 vt, const Data& other);
@@ -101,19 +103,19 @@ struct Value {
         }
     }
 
-    HEXE_NODISCARD SizeType Length() const;
-    HEXE_NODISCARD SizeType ByteLength() const;
+    HEXEC_NODISCARD SizeType Length() const;
+    HEXEC_NODISCARD SizeType ByteLength() const;
 
-    HEXE_NODISCARD u64 BitCasted(u32 at) const;
+    HEXEC_NODISCARD u64 BitCasted(u32 at) const;
 
-    HEXE_NODISCARD Data::Type Type() const;
-    HEXE_NODISCARD Data Raw() const;
+    HEXEC_NODISCARD Data::Type Type() const;
+    HEXEC_NODISCARD Data Raw() const;
 
-    HEXE_NODISCARD f64 AsFloat(i64 index = 0) const;
-    HEXE_NODISCARD i64 AsInt(i64 index = 0) const;
-    HEXE_NODISCARD u64 AsUint(i64 index = 0) const;
-    HEXE_NODISCARD bool AsBool(i64 index = 0) const;
-    HEXE_NODISCARD std::string_view AsString() const;
+    HEXEC_NODISCARD f64 AsFloat(i64 index = 0) const;
+    HEXEC_NODISCARD i64 AsInt(i64 index = 0) const;
+    HEXEC_NODISCARD u64 AsUint(i64 index = 0) const;
+    HEXEC_NODISCARD bool AsBool(i64 index = 0) const;
+    HEXEC_NODISCARD std::string_view AsString() const;
 
     void WriteBytesAt(u32 index, const std::array<u8, QWORD>& bytes) const;
 

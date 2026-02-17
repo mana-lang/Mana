@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 project(mana)
 
-enable_testing()
-
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_SCAN_FOR_MODULES FALSE) # prevents gcc expecting cppm files
@@ -50,9 +48,10 @@ endfunction()
 
 add_subdirectory(salem)
 add_subdirectory(sigil)
+add_subdirectory(hexec)
+
 add_subdirectory(hex)
 add_subdirectory(circe)
-add_subdirectory(hexe)
-
-##
 add_dependencies(hex circe)
+
+add_subdirectory(tests)

@@ -4,7 +4,7 @@
 #include <sigil/ast/keywords.hpp>
 #include <sigil/ast/semantic-analyzer.hpp>
 
-#include <hexe/opcode.hpp>
+#include <hexec/opcode.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
@@ -12,7 +12,7 @@
 #include <ranges>
 
 namespace circe {
-using namespace hexe;
+using namespace hexec;
 using namespace sigil::ast;
 
 BytecodeGenerator::BytecodeGenerator()

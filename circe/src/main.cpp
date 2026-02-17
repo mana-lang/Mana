@@ -7,7 +7,7 @@
 #include <sigil/ast/syntax-tree.hpp>
 #include <sigil/ast/semantic-analyzer.hpp>
 
-#include <hexe/bytecode.hpp>
+#include <hexec/bytecode.hpp>
 
 #include <mana/exit-codes.hpp>
 
@@ -107,12 +107,12 @@ int CompileFrom(const CompileSettings& compile_settings) {
 
         {
             ScopedTimer write_timer(time_write);
-            // If no output path is provided, use the input filename with .hexe extension
+            // If no output path is provided, use the input filename with .hexec extension
             if (out_path.empty()) {
                 out_path = in_path;
-                out_path.replace_extension("hexe");
+                out_path.replace_extension("hexec");
             } else if (std::filesystem::is_directory(out_path) || not out_path.has_filename()) {
-                out_path /= in_path.filename().replace_extension(".hexe");
+                out_path /= in_path.filename().replace_extension(".hexec");
             }
 
             if (out_path.has_parent_path()) {

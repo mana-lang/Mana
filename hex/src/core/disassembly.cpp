@@ -1,8 +1,8 @@
 #include <hex/core/disassembly.hpp>
 #include <hex/core/logger.hpp>
 
-#include <hexe/bytecode.hpp>
-#include <hexe/value.hpp>
+#include <hexec/bytecode.hpp>
+#include <hexec/value.hpp>
 
 #include <mana/literals.hpp>
 
@@ -10,7 +10,7 @@
 #include <magic_enum/magic_enum.hpp>
 
 namespace hex {
-using namespace hexe;
+using namespace hexec;
 using namespace mana::literals;
 
 /**

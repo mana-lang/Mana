@@ -19,7 +19,7 @@ set(HEX_INCLUDES
 )
 
 set(HEX_LIBS
-        mana::hexe
+        mana::hexec
 )
 
 add_executable(hex)

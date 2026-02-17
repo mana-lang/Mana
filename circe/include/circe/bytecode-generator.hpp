@@ -6,7 +6,7 @@
 #include <sigil/ast/visitor.hpp>
 
 #include <mana/literals.hpp>
-#include <hexe/bytecode.hpp>
+#include <hexec/bytecode.hpp>
 
 #include <emhash/emhash8.hpp>
 
@@ -63,12 +63,12 @@ class BytecodeGenerator final : public ast::Visitor {
     std::vector<std::string_view> function_stack;
     emhash8::HashMap<i64, std::string_view> pending_calls;
 
-    hexe::ByteCode bytecode;
+    hexec::ByteCode bytecode;
 
 public:
     BytecodeGenerator();
 
-    CIRCE_NODISCARD hexe::ByteCode Bytecode() const;
+    CIRCE_NODISCARD hexec::ByteCode Bytecode() const;
 
     void ObtainSemanticAnalysisInfo(const sigil::SemanticAnalyzer& analyzer);
 
@@ -108,10 +108,10 @@ public:
     void Visit(const ast::StringLiteral& string) override;
 
 private:
-    bool IsConditionalJumpOp(hexe::Op op) const;
+    bool IsConditionalJumpOp(hexec::Op op) const;
     void JumpBackwards(i64 target_index);
     void JumpForward(i64 target_index);
-    void JumpBackwardsConditional(hexe::Op op, Register condition_register, i64 target_index);
+    void JumpBackwardsConditional(hexec::Op op, Register condition_register, i64 target_index);
     void PatchJumpForward(i64 target_index);
     void PatchJumpBackward(i64 target_index);
     void PatchJumpForwardConditional(i64 target_index);
@@ -153,12 +153,12 @@ private:
     void HandleLoopControl(bool is_break, const ast::NodePtr& condition);
     void HandleInitializer(const ast::Initializer& node, bool is_mutable);
 
-    template <hexe::ValuePrimitiveType VP>
+    template <hexec::ValuePrimitiveType VP>
     void CreateLiteral(const VP literal) {
         const auto index = bytecode.AddConstant(literal);
 
         const auto reg = Registers().Allocate();
-        bytecode.Write(hexe::Op::LoadConstant, {reg, index});
+        bytecode.Write(hexec::Op::LoadConstant, {reg, index});
 
         Registers().Lock(reg);
         register_buffer.push_back(reg);

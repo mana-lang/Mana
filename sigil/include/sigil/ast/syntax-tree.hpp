@@ -12,7 +12,7 @@
 #include <charconv>
 #include <string_view>
 
-#include <hexe/value.hpp>
+#include <hexec/value.hpp>
 
 namespace sigil::ast {
 namespace ml = mana::literals;
@@ -381,15 +381,15 @@ public:
 
 class ListExpression final : public Node {
     std::vector<NodePtr> values;
-    hexe::Value::Data::Type type;
+    hexec::Value::Data::Type type;
 
 public:
     explicit ListExpression(const ParseNode& node);
 
     SIGIL_NODISCARD std::span<const NodePtr> GetValues() const;
-    SIGIL_NODISCARD hexe::Value::Data::Type GetType() const;
+    SIGIL_NODISCARD hexec::Value::Data::Type GetType() const;
 
-    void SetType(hexe::Value::Data::Type new_type);
+    void SetType(hexec::Value::Data::Type new_type);
 
     void Accept(Visitor& visitor) const override;
 
