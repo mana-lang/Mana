@@ -17,6 +17,12 @@ concept ValuePrimitiveType = std::is_integral_v<T>
                              || std::is_same_v<T, bool>
                              || std::is_same_v<T, std::string_view>;
 
+template <typename R>
+using RvType = std::ranges::range_value_t<R>;
+
+template <typename R>
+concept ValueRange = std::ranges::contiguous_range<R> && ValuePrimitiveType<RvType<R>>;
+
 static constexpr u8 QWORD = 8;
 static constexpr u8 DWORD = 4;
 static constexpr u8 WORD  = 2;
@@ -77,10 +83,9 @@ struct Value {
 
     ~Value();
 
-    template <ValuePrimitiveType VT>
-    explicit Value(const std::span<VT> values)
-        : size_bytes {values.size() * sizeof(Data)},
-          type {GetValueTypeFrom(VT {})} {
+    template <ValueRange VR>
+    explicit Value(VR&& values)
+        : size_bytes {static_cast<SizeType>(std::ranges::size(values) * sizeof(Data))} {
         const auto length = Length();
 
         if (length == 0) {
@@ -90,6 +95,8 @@ struct Value {
 
         data = new Data[length];
 
+        using VT = RvType<VR>;
+        type     = GetValueTypeFrom(VT {});
         for (u64 i = 0; i < length; ++i) {
             if constexpr (std::is_same_v<VT, bool>) {
                 data[i].as_bool = values[i];
