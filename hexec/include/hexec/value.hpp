@@ -21,12 +21,16 @@ template <typename R>
 using RvType = std::ranges::range_value_t<R>;
 
 template <typename R>
-concept ValueRange = std::ranges::contiguous_range<R> && ValuePrimitiveType<RvType<R>>;
+concept ValueRange = not std::is_convertible_v<R, std::string_view>
+                     && std::ranges::contiguous_range<R> &&
+                     ValuePrimitiveType<RvType<R>>;
 
 static constexpr u8 QWORD = 8;
 static constexpr u8 DWORD = 4;
 static constexpr u8 WORD  = 2;
 static constexpr u8 BYTE  = 1;
+
+using ull64 = unsigned long long;
 
 struct Value {
     friend class ByteCode;
@@ -62,6 +66,7 @@ struct Value {
 
     Value(u32 u);
     Value(u64 u);
+    Value(ull64 u);
 
     Value(f64 f);
 
@@ -111,7 +116,7 @@ struct Value {
     }
 
     HEXEC_NODISCARD SizeType Length() const;
-    HEXEC_NODISCARD SizeType ByteLength() const;
+    HEXEC_NODISCARD SizeType NumBytes() const;
 
     HEXEC_NODISCARD u64 BitCasted(u32 at) const;
 
@@ -161,6 +166,10 @@ struct Value {
 
 private:
     Data::Type GetValueTypeFrom(i64) {
+        return Data::Type::Int64;
+    }
+
+    Data::Type GetValueTypeFrom(i32) {
         return Data::Type::Int64;
     }
 

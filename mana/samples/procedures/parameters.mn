@@ -1,3 +1,8 @@
+fn Main() {
+    data sum_of = Summate(Add(SquareIf(3, true), 17))
+    PrintV("Summation: {}", sum_of)
+}
+
 fn Summate(count: i64) -> i64 {
     mut data a = 0
 
@@ -20,7 +25,3 @@ fn SquareIf(a: i64, b: bool) -> i64 {
     return a
 }
 
-fn Main() {
-    data sum_of = Summate(Add(SquareIf(3, true), 17))
-    PrintV("Summation: {}", sum_of)
-}

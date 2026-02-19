@@ -32,6 +32,7 @@ namespace hexec {
 #define CASE_UNSIGNED type_unsigned
 #define CASE_FLOAT    type_float
 #define CASE_BOOL     type_bool
+#define CASE_STRING   type_string
 
 #define COMPUTED_GOTO()                  \
     static constexpr std::array choice { \
@@ -39,6 +40,7 @@ namespace hexec {
         &&CASE_UNSIGNED,                 \
         &&CASE_FLOAT,                    \
         &&CASE_BOOL,                     \
+        &&CASE_STRING,                   \
     };                                   \
     CHECK_BOUNDS_CGT()                   \
     goto* choice[type]
@@ -52,6 +54,7 @@ namespace hexec {
         return data->as_u64 op rhs.AsUint();          \
     CASE_FLOAT:                                       \
         return data->as_f64 op rhs.AsFloat();         \
+    CASE_STRING:                                      \
     CASE_BOOL:                                        \
         UNREACHABLE();                                \
     }
@@ -68,6 +71,7 @@ namespace hexec {
     CASE_FLOAT:                                  \
         data->as_f64 op rhs.AsFloat();           \
         return;                                  \
+    CASE_STRING:                                 \
     CASE_BOOL:                                   \
         UNREACHABLE();                           \
     }
@@ -92,6 +96,9 @@ Value::Value(const u32 u)
 Value::Value(const u64 u)
     : data {new Data[1] {Data {.as_u64 = u}}},
       type {Uint64} {}
+
+Value::Value(ull64 u)
+    : Value {u64 {u}} {}
 
 Value::Value(const f64 f)
     : data {new Data[1] {Data {.as_f64 = f}}},
@@ -248,7 +255,7 @@ Value::SizeType Value::Length() const {
     return (size_bytes + sizeof(Data) - 1) / sizeof(Data);
 }
 
-Value::SizeType Value::ByteLength() const {
+Value::SizeType Value::NumBytes() const {
     return size_bytes;
 }
 
@@ -332,6 +339,8 @@ CASE_FLOAT:
     return data->as_f64 == other.AsFloat();
 CASE_BOOL:
     return data->as_bool == other.AsBool();
+CASE_STRING:
+    return std::memcmp(data, other.data, size_bytes) == 0;
 }
 
 void Value::operator*=(const i64& rhs) {
@@ -346,9 +355,11 @@ CASE_UNSIGNED:
 CASE_FLOAT:
     data->as_f64 *= static_cast<f64>(rhs);
     return;
+CASE_STRING:
 CASE_BOOL:
     UNREACHABLE();
 };
+
 CGOTO_OPERATOR_BIN(Value, -);
 CGOTO_OPERATOR_BIN(Value, *);
 CGOTO_OPERATOR_BIN(Value, /)
@@ -399,6 +410,7 @@ CASE_UNSIGNED:
     return data->as_u64 % rhs.AsUint();
 CASE_FLOAT:
     return std::fmod(data->as_f64, rhs.AsFloat());
+CASE_STRING:
 CASE_BOOL:
     UNREACHABLE();
 }
@@ -412,6 +424,7 @@ CASE_UNSIGNED:
     UNREACHABLE();
 CASE_FLOAT:
     return Value {-data->as_f64};
+CASE_STRING:
 CASE_BOOL:
     UNREACHABLE();
 }
@@ -427,12 +440,13 @@ CASE_UNSIGNED:
 CASE_FLOAT:
     data->as_f64 = std::fmod(data->as_f64, rhs.AsFloat());
     return;
+CASE_STRING:
 CASE_BOOL:
     UNREACHABLE();
 }
 
 bool Value::operator!() const {
-    return not data->as_bool;
+    return not AsBool();
 }
 
 // Integers
