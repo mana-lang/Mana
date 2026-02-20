@@ -11,6 +11,12 @@ using Catch::Approx;
 
 // ReSharper disable once CppDFATimeOver
 TEST_CASE("VM Generic Value Type", "[value]") {
+    constexpr auto i64_max = std::numeric_limits<i64>::max();
+    constexpr auto i64_min = std::numeric_limits<i64>::min();
+
+    constexpr auto u64_max = std::numeric_limits<u64>::max();
+    constexpr auto u64_min = std::numeric_limits<u64>::min();
+
     SECTION("Construction") {
         SECTION("Default construction", "[value]") {
             Value v;
@@ -503,27 +509,27 @@ TEST_CASE("VM Generic Value Type", "[value]") {
     }
 
     SECTION("Edge Cases", "[value][edge]") {
-        SECTION("operator==, [value][edge]") {
-            SECTION("Cross-type equality returns false", "[value][edge]") {
+        SECTION("operator==, [value][edge][eq]") {
+            SECTION("Cross-type equality returns false", "[value][edge][eq]") {
                 // this is something we'll have to fix in the future
                 Value a(1);
                 Value b(1ull);
                 REQUIRE_FALSE(a == b);
             }
 
-            SECTION("Int vs Float equality returns false", "[value][edge]") {
+            SECTION("Int vs Float equality returns false", "[value][edge][eq]") {
                 Value a(1);
                 Value b(1.0);
                 REQUIRE_FALSE(a == b);
             }
 
-            SECTION("Int vs Bool equality returns false", "[value][edge]") {
+            SECTION("Int vs Bool equality returns false", "[value][edge][eq]") {
                 Value a(1);
                 Value b(true);
                 REQUIRE_FALSE(a == b);
             }
 
-            SECTION("Array equality always returns false", "[value][edge]") {
+            SECTION("Array equality always returns false", "[value][edge][eq]") {
                 std::vector data = {1, 2, 3};
                 Value a(data);
                 Value b(data);
@@ -531,18 +537,18 @@ TEST_CASE("VM Generic Value Type", "[value]") {
                 REQUIRE_FALSE(a == b);
             }
 
-            SECTION("Bool equality", "[value][edge]") {
+            SECTION("Bool equality", "[value][edge][eq]") {
                 REQUIRE(Value(true) == Value(true));
                 REQUIRE(Value(false) == Value(false));
                 REQUIRE_FALSE(Value(true) == Value(false));
             }
 
-            SECTION("Float equality", "[value][edge]") {
+            SECTION("Float equality", "[value][edge][eq]") {
                 REQUIRE(Value(3.14) == Value(3.14));
                 REQUIRE_FALSE(Value(3.14) == Value(2.71));
             }
 
-            SECTION("Unsigned equality", "[value][edge]") {
+            SECTION("Unsigned equality", "[value][edge][eq]") {
                 Value a(42ull);
                 Value b(42ull);
                 Value c(99ull);
@@ -550,27 +556,27 @@ TEST_CASE("VM Generic Value Type", "[value]") {
                 REQUIRE_FALSE(a == c);
             }
 
-            SECTION("String equality", "[value][edge]") {
+            SECTION("String equality", "[value][edge][eq]") {
                 REQUIRE(Value("hello") == Value("hello"));
                 REQUIRE_FALSE(Value("hello") == Value("world"));
             }
         }
 
         SECTION("String", "[value][edge][str]") {
-            SECTION("String exactly sizeof(Data) bytes (8)") {
+            SECTION("String exactly sizeof(Data) bytes (8)", "[value][edge][str]") {
                 Value v("12345678");
                 REQUIRE(v.Type() == Value::Data::Type::String);
                 REQUIRE(v.AsString() == "12345678");
                 REQUIRE(v.Length() == 1);
             }
 
-            SECTION("String of 9 bytes — crosses Data boundary") {
+            SECTION("String of 9 bytes — crosses Data boundary", "[value][edge][str]") {
                 Value v("123456789");
                 REQUIRE(v.AsString() == "123456789");
                 REQUIRE(v.Length() == 2);
             }
 
-            SECTION("String with embedded null bytes") {
+            SECTION("String with embedded null bytes", "[value][edge][str]") {
                 std::string_view sv("ab\0cd", 5);
                 Value v(sv);
                 REQUIRE(v.NumBytes() == 5);
@@ -582,37 +588,73 @@ TEST_CASE("VM Generic Value Type", "[value]") {
                 REQUIRE(v2.AsString() == s);
             }
 
-            SECTION("Long string (1000 chars)") {
+            SECTION("Long string (1000 chars)", "[value][edge][str]") {
                 std::string long_str(1000, 'x');
                 Value v(long_str);
                 REQUIRE(v.AsString() == long_str);
                 REQUIRE(v.NumBytes() == 1000);
             }
 
-            SECTION("AsString on non-string throws") {
+            SECTION("AsString on non-string throws", "[value][edge][str]") {
                 Value v(42);
                 REQUIRE_THROWS_AS(v.AsString(), std::runtime_error);
             }
         }
 
+        SECTION("Type Dispatch", "[value][edge][type]") {
+            SECTION("AsInt on large u64 — wraps", "[value][edge][type]") {
+                Value v(u64_max);
+                REQUIRE(v.AsInt() == static_cast<i64>(u64_max));
+            }
+
+            SECTION("AsUint on negative i64 — wraps", "[value][edge][type]") {
+                Value v(static_cast<i64>(-1));
+                REQUIRE(v.AsUint() == u64_max);
+            }
+
+            SECTION("AsBool on nonzero int", "[value][edge][type]") {
+                Value v(42);
+                REQUIRE(v.AsBool() == true);
+            }
+
+            SECTION("AsBool on zero int", "[value][edge][type]") {
+                Value v(0);
+                REQUIRE(v.AsBool() == false);
+            }
+
+            SECTION("AsBool on nonzero float", "[value][edge][type]") {
+                Value v(3.14);
+                REQUIRE(v.AsBool() == true);
+            }
+
+            SECTION("AsBool on zero float", "[value][edge][type]") {
+                Value v(0.0);
+                REQUIRE(v.AsBool() == false);
+            }
+
+            SECTION("AsFloat precision loss on large i64", "[value][edge][type]") {
+                // 2^53 + 1 cannot be exactly represented in f64
+                constexpr i64 big = (1LL << 53) + 1;
+                const Value v(big);
+                const f64 as_float = v.AsFloat();
+                // The +1 gets lost in f64 precision
+                REQUIRE(as_float == Approx(static_cast<f64>(1LL << 53)).epsilon(0.0001));
+            }
+        }
+
         SECTION("Misc, [value][edge][misc]") {
-            constexpr auto i64_max = std::numeric_limits<i64>::max();
-            constexpr auto i64_min = std::numeric_limits<i64>::min();
-
-            constexpr auto u64_max = std::numeric_limits<u64>::max();
-
             SECTION("Large Integer", "[value][edge][misc]") {
-                Value v(i64_max);
+                const Value v(i64_max);
                 REQUIRE(v.AsInt() == i64_max);
             }
 
             SECTION("Negative Integer", "[value][edge][misc]") {
-                Value v(i64_min);
+                const Value v(i64_min);
                 REQUIRE(v.AsInt() == i64_min);
             }
 
             SECTION("Max Unsigned", "[value][edge][misc]") {
-                Value v(u64_max);
+                const Value v(u64_max);
                 REQUIRE(v.AsUint() == u64_max);
             }
         }
