@@ -1,26 +1,26 @@
-#include <hexec/value.hpp>
-#include <hexec/logger.hpp>
+#include <hexe/value.hpp>
+#include <hexe/logger.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
 #include <stdexcept>
 #include <cstring>
 
-namespace hexec {
+namespace hexe {
 #ifdef __GNUC__
 #    define FUNCSTR std::string(__PRETTY_FUNCTION__)
 #else
 #    define FUNCSTR std::string(__func__)
 #endif
 
-#ifdef MANA_RELEASE
+#ifdef HEXE_RELEASE
 #    define UNREACHABLE() std::unreachable()
 #else
 #    define UNREACHABLE() \
         throw std::runtime_error(FUNCSTR + std::string(" -- Reached invalid code path"))
 #endif
 
-#ifdef MANA_RELEASE
+#ifdef HEXE_RELEASE
 #    define CHECK_BOUNDS_CGT()
 #else
 #    define CHECK_BOUNDS_CGT()         \
@@ -177,10 +177,12 @@ Value::Value(Value&& other) noexcept
 }
 
 Value& Value::operator=(const Data& other) {
-    if (data != nullptr) {
-        delete[] data;
-    }
-    data = new Data[1] {other};
+    // other may refer to one of our own elements, so copy it before freeing
+    const Data copy = other;
+
+    delete[] data;
+    data       = new Data[1] {copy};
+    size_bytes = sizeof(Data);
     return *this;
 }
 
@@ -240,7 +242,7 @@ Value::~Value() {
         return;
     }
 
-#ifdef MANA_DEBUG
+#ifdef HEXE_DEBUG
     if (size_bytes == 0) {
         Log->critical("Empty value was non-null in destructor");
         std::terminate();
@@ -419,11 +421,11 @@ Value Value::operator-() const {
     COMPUTED_GOTO();
 
 CASE_INT:
-    return Value {-data->as_i64};
+    return Value(-data->as_i64);
 CASE_UNSIGNED:
     UNREACHABLE();
 CASE_FLOAT:
-    return Value {-data->as_f64};
+    return Value(-data->as_f64);
 CASE_STRING:
 CASE_BOOL:
     UNREACHABLE();

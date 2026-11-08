@@ -4,7 +4,7 @@
 
 #include <ranges>
 
-#include <hexec/value.hpp>
+#include <hexe/value.hpp>
 
 namespace sigil {
 using namespace mana::literals;
@@ -300,8 +300,8 @@ void SemanticAnalyzer::Visit(const BinaryExpr& node) {
     node.GetLeft().Accept(*this);
 }
 
-hexec::Value::Data::Type ConvertPrimitive(const std::string_view type) {
-    using enum hexec::Value::Data::Type;
+hexe::Value::Data::Type ConvertPrimitive(const std::string_view type) {
+    using enum hexe::Value::Data::Type;
     if (IsSignedIntegral(type)) {
         return Int64;
     }

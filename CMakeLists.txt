@@ -48,7 +48,7 @@ endfunction()
 
 add_subdirectory(salem)
 add_subdirectory(sigil)
-add_subdirectory(hexec)
+add_subdirectory(hexe)
 
 add_subdirectory(hex)
 add_subdirectory(circe)

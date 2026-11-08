@@ -668,11 +668,11 @@ std::span<const NodePtr> ListExpression::GetValues() const {
     return values;
 }
 
-hexec::Value::Data::Type ListExpression::GetType() const {
+hexe::Value::Data::Type ListExpression::GetType() const {
     return type;
 }
 
-void ListExpression::SetType(const hexec::Value::Data::Type new_type) {
+void ListExpression::SetType(const hexe::Value::Data::Type new_type) {
     type = new_type;
 }
 

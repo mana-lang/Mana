@@ -16,12 +16,12 @@ add_executable(unit-test
 
 target_include_directories(unit-test PUBLIC
         ${TEST_COMMON}
-        ${CMAKE_SOURCE_DIR}/hexec/include
+        ${CMAKE_SOURCE_DIR}/hexe/include
 )
 
 target_link_libraries(unit-test PUBLIC
         Catch2::Catch2WithMain
-        mana::hexec
+        mana::hexe
         spdlog::spdlog
 )
 

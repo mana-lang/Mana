@@ -1,16 +1,18 @@
+#include <cmath>
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-#include <hexec/value.hpp>
+#include <hexe/value.hpp>
 
 #include <vector>
 #include <span>
 
-using namespace hexec;
+using namespace hexe;
 using Catch::Approx;
 
 // ReSharper disable once CppDFATimeOver
-TEST_CASE("VM Generic const Value Type", "[const Value]") {
+TEST_CASE("VM Generic const Value Type", "[value]") {
     constexpr auto i64_max = std::numeric_limits<i64>::max();
     constexpr auto i64_min = std::numeric_limits<i64>::min();
 
@@ -18,49 +20,49 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
     constexpr auto u64_min = std::numeric_limits<u64>::min();
 
     SECTION("Construction") {
-        SECTION("Default construction", "[const Value]") {
+        SECTION("Default construction", "[value]") {
             const Value v;
         }
 
-        SECTION("From i64", "[const Value]") {
+        SECTION("From i64", "[value]") {
             const Value v(static_cast<i64>(42));
             REQUIRE(v.Type() == Value::Data::Type::Int64);
             REQUIRE(v.AsInt() == 42);
         }
 
 
-        SECTION("From i32", "[const Value]") {
+        SECTION("From i32", "[value]") {
             const Value v(static_cast<i32>(-7));
             REQUIRE(v.Type() == Value::Data::Type::Int64);
             REQUIRE(v.AsInt() == -7);
         }
 
-        SECTION("From u64", "[const Value]") {
+        SECTION("From u64", "[value]") {
             const Value v(static_cast<u64>(100));
             REQUIRE(v.Type() == Value::Data::Type::Uint64);
             REQUIRE(v.AsUint() == 100);
         }
 
-        SECTION("From u32", "[const Value]") {
+        SECTION("From u32", "[value]") {
             const Value v(static_cast<u32>(50));
             REQUIRE(v.Type() == Value::Data::Type::Uint64);
             REQUIRE(v.AsUint() == 50);
         }
 
-        SECTION("From f64", "[const Value]") {
+        SECTION("From f64", "[value]") {
             const Value v(3.14);
             REQUIRE(v.Type() == Value::Data::Type::Float64);
             REQUIRE(v.AsFloat() == Approx(3.14));
         }
 
-        SECTION("From bool", "[const Value]") {
+        SECTION("From bool", "[value]") {
             const Value t(true), f(false);
             REQUIRE(t.Type() == Value::Data::Type::Bool);
             REQUIRE(t.AsBool() == true);
             REQUIRE(f.AsBool() == false);
         }
 
-        SECTION("From string", "[const Value]") {
+        SECTION("From string", "[value]") {
             const Value v(std::string_view("hello"));
             REQUIRE(v.Type() == Value::Data::Type::String);
             REQUIRE(v.AsString() == "hello");
@@ -77,7 +79,7 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
             REQUIRE(v3.Length() == rdiv_len);
         }
 
-        SECTION("From empty string", "[const Value]") {
+        SECTION("From empty string", "[value]") {
             const Value v(std::string_view(""));
             REQUIRE(v.Type() == Value::Data::Type::String);
             REQUIRE(v.AsString() == "");
@@ -90,150 +92,175 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
 
     SECTION("Arithmetic") {
         SECTION("Integers") {
-            SECTION("Addition", "[const Value][arithmetic]") {
+            SECTION("Addition", "[value][arithmetic]") {
                 const Value a(10), b(3);
                 REQUIRE((a + b).AsInt() == 13);
             }
 
-            SECTION("Subtraction", "[const Value][arithmetic]") {
+            SECTION("Subtraction", "[value][arithmetic]") {
                 const Value a(10), b(3);
                 REQUIRE((a - b).AsInt() == 7);
             }
 
-            SECTION("Multiplication", "[const Value][arithmetic]") {
+            SECTION("Multiplication", "[value][arithmetic]") {
                 const Value a(10), b(3);
                 REQUIRE((a * b).AsInt() == 30);
             }
 
-            SECTION("Division", "[const Value][arithmetic]") {
+            SECTION("Division", "[value][arithmetic]") {
                 const Value a(10), b(3);
                 REQUIRE((a / b).AsInt() == 3);
             }
 
-            SECTION("Modulo", "[const Value][arithmetic]") {
+            SECTION("Modulo", "[value][arithmetic]") {
                 const Value a(10), b(3);
                 REQUIRE((a % b).AsInt() == 1);
             }
 
-            SECTION("Negation", "[const Value][arithmetic]") {
+            SECTION("Negation", "[value][arithmetic]") {
                 const Value a(5);
                 REQUIRE((-a).AsInt() == -5);
             }
 
-            SECTION("Double Negation", "[const Value][arithmetic]") {
+            SECTION("Double Negation", "[value][arithmetic]") {
                 const Value a(-42);
                 REQUIRE((-a).AsInt() == 42);
             }
 
-            SECTION("Unsigned Underflow", "[const Value][arithmetic]") {
+            SECTION("Unsigned Underflow", "[value][arithmetic]") {
                 const Value a(-1ull);
                 REQUIRE(a.AsUint() == -1ull);
             }
         }
 
         SECTION("Floats") {
-            SECTION("Addition", "[const Value][arithmetic]") {
+            SECTION("Addition", "[value][arithmetic]") {
                 const Value a(2.5), b(4.0);
                 REQUIRE((a + b).AsFloat() == Approx(6.5));
             }
 
-            SECTION("Subtraction", "[const Value][arithmetic]") {
+            SECTION("Subtraction", "[value][arithmetic]") {
                 const Value a(2.5), b(4.0);
                 REQUIRE((a - b).AsFloat() == Approx(-1.5));
             }
 
-            SECTION("Multiplication", "[const Value][arithmetic]") {
+            SECTION("Multiplication", "[value][arithmetic]") {
                 const Value a(2.5), b(4.0);
                 REQUIRE((a * b).AsFloat() == Approx(10.0));
             }
 
-            SECTION("Division", "[const Value][arithmetic]") {
+            SECTION("Division", "[value][arithmetic]") {
                 const Value a(2.5), b(4.0);
                 REQUIRE((a / b).AsFloat() == Approx(0.625));
             }
 
-            SECTION("Modulo", "[const Value][arithmetic]") {
+            SECTION("Modulo", "[value][arithmetic]") {
                 const Value a(7.53), b(2.38);
                 REQUIRE((a % b).AsFloat() == Approx(0.39));
             }
 
-            SECTION("Negation", "[const Value][arithmetic]") {
+            SECTION("Negation", "[value][arithmetic]") {
                 const Value a(2.5);
                 REQUIRE((-a).AsFloat() == Approx(-2.5));
             }
 
-            SECTION("Double Negation", "[const Value][arithmetic]") {
+            SECTION("Double Negation", "[value][arithmetic]") {
                 const Value a(-2.5);
                 REQUIRE((-a).AsFloat() == Approx(2.5));
             }
         }
     }
     SECTION("Compound Assignment") {
-        SECTION("Add", "[const Value][compound]") {
+        SECTION("Add", "[value][compound]") {
             Value a(5);
             a += Value(3);
             REQUIRE(a.AsInt() == 8);
         }
 
-        SECTION("Subtract", "[const Value][compound]") {
+        SECTION("Subtract", "[value][compound]") {
             Value a(10);
             a -= Value(4);
             REQUIRE(a.AsInt() == 6);
         }
 
-        SECTION("Multiply", "[const Value][compound]") {
+        SECTION("Multiply", "[value][compound]") {
             Value a(3);
             a *= Value(7);
             REQUIRE(a.AsInt() == 21);
         }
 
-        SECTION("Divide", "[const Value][compound]") {
+        SECTION("Divide", "[value][compound]") {
             Value a(20);
             a /= Value(4);
             REQUIRE(a.AsInt() == 5);
         }
 
-        SECTION("Modulo", "[const Value][compound]") {
+        SECTION("Modulo", "[value][compound]") {
             Value a(10);
             a %= Value(3);
             REQUIRE(a.AsInt() == 1);
         }
+
+        SECTION("Compound Dispatch with i64") {
+            SECTION("Int *= i64") {
+                Value a(5);
+                a *= 3;
+                REQUIRE(a.AsInt() == 15);
+            }
+
+            SECTION("Float *= i64") {
+                Value a(2.5);
+                a *= 4;
+                REQUIRE(a.AsFloat() == Approx(10.0));
+            }
+
+            SECTION("Unsigned *= i64") {
+                Value a(static_cast<u64>(5));
+                a *= 3;
+                REQUIRE(a.AsUint() == 15);
+            }
+
+            SECTION("Bool *= i64 throws") {
+                Value a(true);
+                REQUIRE_THROWS(a *= 2);
+            }
+        }
     }
 
     SECTION("Comparison") {
-        SECTION("Equality", "[const Value][comparison]") {
+        SECTION("Equality", "[value][comparison]") {
             const Value a(10), b(10), c(20);
             REQUIRE(a == b);
             REQUIRE_FALSE(a == c);
         }
 
-        SECTION("Less Than", "[const Value][comparison]") {
+        SECTION("Less Than", "[value][comparison]") {
             const Value a(10), b(20);
             REQUIRE(a < b);
             REQUIRE_FALSE(b < a);
         }
 
-        SECTION("Greater Than", "[const Value][comparison]") {
+        SECTION("Greater Than", "[value][comparison]") {
             const Value a(10), b(20);
             REQUIRE(b > a);
             REQUIRE_FALSE(a > b);
         }
 
-        SECTION("Less Than or Equal", "[const Value][comparison]") {
+        SECTION("Less Than or Equal", "[value][comparison]") {
             const Value a(10), b(10), c(20);
             REQUIRE(a <= b);
             REQUIRE(a <= c);
             REQUIRE_FALSE(c <= a);
         }
 
-        SECTION("Greater Than or Equal", "[const Value][comparison]") {
+        SECTION("Greater Than or Equal", "[value][comparison]") {
             const Value a(10), b(10), c(20);
             REQUIRE(a >= b);
             REQUIRE(c >= a);
             REQUIRE_FALSE(a >= c);
         }
 
-        SECTION("Logical not", "[const Value][comparison]") {
+        SECTION("Logical not", "[value][comparison]") {
             const Value t(true), f(false);
             REQUIRE(!f);
             REQUIRE_FALSE(!t);
@@ -241,29 +268,29 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
     }
 
     SECTION("Type Dispatch") {
-        SECTION("From int to float", "[const Value][dispatch]") {
+        SECTION("From int to float", "[value][dispatch]") {
             const Value v(static_cast<i64>(42));
             REQUIRE(v.AsFloat() == Approx(42.0));
         }
 
-        SECTION("From float to int (truncation)", "[const Value][dispatch]") {
+        SECTION("From float to int (truncation)", "[value][dispatch]") {
             const Value v(3.7);
             REQUIRE(v.AsInt() == 3);
         }
 
-        SECTION("From bool to int", "[const Value][dispatch]") {
+        SECTION("From bool to int", "[value][dispatch]") {
             REQUIRE(Value(true).AsInt() == 1);
             REQUIRE(Value(false).AsInt() == 0);
         }
 
-        SECTION("From bool to float", "[const Value][dispatch]") {
+        SECTION("From bool to float", "[value][dispatch]") {
             REQUIRE(Value(true).AsFloat() == Approx(1.0));
             REQUIRE(Value(false).AsFloat() == Approx(0.0));
         }
     }
 
     SECTION("Lifecycle") {
-        SECTION("Copy scalar", "[const Value][lifecycle]") {
+        SECTION("Copy scalar", "[value][lifecycle]") {
             const Value a(42);
             const Value b(a);
             REQUIRE(b.AsInt() == 42);
@@ -279,7 +306,7 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
             REQUIRE(a.AsString() == b.AsString());
         }
 
-        SECTION("Copy assignment with scalar const Value", "[const Value][lifecycle]") {
+        SECTION("Copy assignment with scalar const Value", "[value][lifecycle]") {
             const Value a(42);
             Value b(0);
             b = a;
@@ -296,7 +323,7 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
             REQUIRE(a.AsString() == b.AsString());
         }
 
-        SECTION("Self-assignment (copy)", "[const Value][lifecycle]") {
+        SECTION("Self-assignment (copy)", "[value][lifecycle]") {
             Value a(42);
             const Value& ref = a;
 
@@ -304,7 +331,7 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
             REQUIRE(a.AsInt() == 42);
         }
 
-        SECTION("Move scalar", "[const Value][lifecycle]") {
+        SECTION("Move scalar", "[value][lifecycle]") {
             Value a(42);
             const Value b(std::move(a));
             REQUIRE(b.AsInt() == 42);
@@ -319,7 +346,7 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
             REQUIRE(a.Type() == Value::Data::Type::Invalid);
         }
 
-        SECTION("Move assignment with scalar", "[const Value][lifecycle]") {
+        SECTION("Move assignment with scalar", "[value][lifecycle]") {
             Value a(99);
             Value b(0);
 
@@ -337,13 +364,13 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
             REQUIRE(a.Type() == Value::Data::Type::Invalid);
         }
 
-        SECTION("Self-assignment (move)", "[const Value][lifecycle]") {
+        SECTION("Self-assignment (move)", "[value][lifecycle]") {
             Value a(42);
             a = std::move(a);
             REQUIRE(a.AsInt() == 42);
         }
 
-        SECTION("Overwrite string with scalar", "[const Value][lifecycle]") {
+        SECTION("Overwrite string with scalar", "[value][lifecycle]") {
             Value a(
                 "hello everybody, this string is pretty long i think, do you all agree? perhaps it could even be a little longer"
             );
@@ -355,7 +382,7 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
             REQUIRE(a.AsInt() == 42);
         }
 
-        SECTION("Overwrite scalar with string", "[const Value][lifecycle]") {
+        SECTION("Overwrite scalar with string", "[value][lifecycle]") {
             Value a(42);
 
             const auto str =
@@ -364,7 +391,7 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
             REQUIRE(a.Type() == Value::Data::Type::String);
             REQUIRE(a.AsString() == str);
         }
-        SECTION("Overwrite string with longer string", "[const Value][lifecycle]") {
+        SECTION("Overwrite string with longer string", "[value][lifecycle]") {
             Value a("short");
             constexpr auto str = "this string is kinda shorter than before but long enough";
 
@@ -377,13 +404,13 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
             REQUIRE(b.AsString() == str);
         }
 
-        SECTION("Copy default-constructed const Value", "[const Value][lifecycle]") {
+        SECTION("Copy default-constructed const Value", "[value][lifecycle]") {
             const Value a;
             const Value b(a);
             REQUIRE(b.Type() == Value::Data::Type::Invalid);
         }
 
-        SECTION("Move default-constructed const Value", "[const Value][lifecycle]") {
+        SECTION("Move default-constructed const Value", "[value][lifecycle]") {
             const Value a;
             const Value b(std::move(a));
 
@@ -391,13 +418,13 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
             REQUIRE(a.Type() == Value::Data::Type::Invalid);
         }
 
-        SECTION("Assign to default-constructed const Value", "[const Value][lifecycle]") {
+        SECTION("Assign to default-constructed const Value", "[value][lifecycle]") {
             Value a;
             a = Value(42);
             REQUIRE(a.AsInt() == 42);
         }
 
-        SECTION("Assign default to valid const Value", "[const Value][lifecycle]") {
+        SECTION("Assign default to valid const Value", "[value][lifecycle]") {
             Value a(42);
             const Value b;
             a = b;
@@ -461,8 +488,8 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
         }
     }
 
-    SECTION("Arrays") {
-        SECTION("From i64 vector", "[const Value][array]") {
+    SECTION("Arrays", "[value][array]") {
+        SECTION("From i64 vector", "[value][array]") {
             std::vector<i64> ints = {1, 2, 3, 4};
             const Value v(ints);
 
@@ -473,7 +500,17 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
             REQUIRE(v.AsInt(3) == 4);
         }
 
-        SECTION("From f64 span", "[const Value][array]") {
+        SECTION("From initializer list", "[value][array]") {
+            const Value v({1, 2, 3, 4});
+
+            REQUIRE(v.Length() == 4);
+            REQUIRE(v.AsInt(0) == 1);
+            REQUIRE(v.AsInt(1) == 2);
+            REQUIRE(v.AsInt(2) == 3);
+            REQUIRE(v.AsInt(3) == 4);
+        }
+
+        SECTION("From f64 span", "[value][array]") {
             std::vector floats = {1.1, 2.2, 3.3};
             const Value v(std::span {floats});
 
@@ -483,7 +520,7 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
             REQUIRE(v.AsFloat(2) == Approx(3.3));
         }
 
-        SECTION("From u64 array", "[const Value][array]") {
+        SECTION("From u64 array", "[value][array]") {
             std::array<u64, 6> uints = {5, 10, 15, 20, 25, 30};
             const Value v(uints);
 
@@ -496,41 +533,87 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
             REQUIRE(v.AsInt(5) == 30);
         }
 
-        SECTION("From empty vector", "[const Value][array]") {
-            std::vector<i64> empty;
+        SECTION("From empty vector", "[value][array]") {
+            constexpr std::vector<i64> empty;
             REQUIRE(Value(empty).Length() == 0);
         }
 
-        SECTION("Scalar Length is 1", "[const Value][array]") {
+        SECTION("Scalar Length is 1", "[value][array]") {
             const Value v(42);
 
             REQUIRE(v.Length() == 1);
             REQUIRE(v.NumBytes() == sizeof(Value::Data));
         }
+
+        SECTION("operator[]", "[value][array]") {
+            SECTION("Scalar access", "[value][array]") {
+                const Value v(42);
+                REQUIRE(v[0].as_i64 == 42);
+            }
+
+            SECTION("Array access", "[value][array]") {
+                const std::vector<i64> data = {10, 20, 30};
+                const Value v(data);
+                REQUIRE(v[0].as_i64 == 10);
+                REQUIRE(v[1].as_i64 == 20);
+                REQUIRE(v[2].as_i64 == 30);
+            }
+
+            SECTION("Mutable access", "[value][array]") {
+                Value v(42);
+                v[0].as_i64 = 99;
+                REQUIRE(v.AsInt() == 99);
+            }
+        }
     }
 
-    SECTION("Edge Cases", "[const Value][edge]") {
-        SECTION("operator==, [const Value][edge][eq]") {
-            SECTION("Cross-type equality returns false", "[const Value][edge][eq]") {
+    SECTION("BitCast", "[value][edge][bitcast]") {
+        SECTION("Int", "[value][edge][bitcast]") {
+            const Value v(static_cast<i64>(42));
+            const u64 bits = v.BitCasted(0);
+            REQUIRE(bits == std::bit_cast<u64>(static_cast<i64>(42)));
+        }
+
+        SECTION("Float", "[value][edge][bitcast]") {
+            const Value v(3.14);
+            const u64 bits = v.BitCasted(0);
+            REQUIRE(bits == std::bit_cast<u64>(3.14));
+        }
+
+        SECTION("Bool", "[value][edge][bitcast]") {
+            const Value v(true);
+            REQUIRE(v.BitCasted(0) == 1);
+        }
+
+        SECTION("Out of bounds returns sentinel", "[value][edge][bitcast]") {
+            const Value v(42);
+            const u64 result = v.BitCasted(5);
+            REQUIRE(result == SENTINEL_U64);
+        }
+    }
+
+    SECTION("Edge Cases", "[value][edge]") {
+        SECTION("operator==, [value][edge][eq]") {
+            SECTION("Cross-type equality returns false", "[value][edge][eq]") {
                 // this is something we'll have to fix in the future
                 const Value a(1);
                 const Value b(1ull);
                 REQUIRE_FALSE(a == b);
             }
 
-            SECTION("Int vs Float equality returns false", "[const Value][edge][eq]") {
+            SECTION("Int vs Float equality returns false", "[value][edge][eq]") {
                 const Value a(1);
                 const Value b(1.0);
                 REQUIRE_FALSE(a == b);
             }
 
-            SECTION("Int vs Bool equality returns false", "[const Value][edge][eq]") {
+            SECTION("Int vs Bool equality returns false", "[value][edge][eq]") {
                 const Value a(1);
                 const Value b(true);
                 REQUIRE_FALSE(a == b);
             }
 
-            SECTION("Array equality always returns false", "[const Value][edge][eq]") {
+            SECTION("Array equality always returns false", "[value][edge][eq]") {
                 std::vector data = {1, 2, 3};
                 const Value a(data);
                 const Value b(data);
@@ -538,18 +621,18 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
                 REQUIRE_FALSE(a == b);
             }
 
-            SECTION("Bool equality", "[const Value][edge][eq]") {
+            SECTION("Bool equality", "[value][edge][eq]") {
                 REQUIRE(Value(true) == Value(true));
                 REQUIRE(Value(false) == Value(false));
                 REQUIRE_FALSE(Value(true) == Value(false));
             }
 
-            SECTION("Float equality", "[const Value][edge][eq]") {
+            SECTION("Float equality", "[value][edge][eq]") {
                 REQUIRE(Value(3.14) == Value(3.14));
                 REQUIRE_FALSE(Value(3.14) == Value(2.71));
             }
 
-            SECTION("Unsigned equality", "[const Value][edge][eq]") {
+            SECTION("Unsigned equality", "[value][edge][eq]") {
                 const Value a(42ull);
                 const Value b(42ull);
                 const Value c(99ull);
@@ -557,27 +640,27 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
                 REQUIRE_FALSE(a == c);
             }
 
-            SECTION("String equality", "[const Value][edge][eq]") {
+            SECTION("String equality", "[value][edge][eq]") {
                 REQUIRE(Value("hello") == Value("hello"));
                 REQUIRE_FALSE(Value("hello") == Value("world"));
             }
         }
 
-        SECTION("String", "[const Value][edge][str]") {
-            SECTION("String exactly sizeof(Data) bytes (8)", "[const Value][edge][str]") {
+        SECTION("String", "[value][edge][str]") {
+            SECTION("String exactly sizeof(Data) bytes (8)", "[value][edge][str]") {
                 const Value v("12345678");
                 REQUIRE(v.Type() == Value::Data::Type::String);
                 REQUIRE(v.AsString() == "12345678");
                 REQUIRE(v.Length() == 1);
             }
 
-            SECTION("String of 9 bytes — crosses Data boundary", "[const Value][edge][str]") {
+            SECTION("String of 9 bytes — crosses Data boundary", "[value][edge][str]") {
                 const Value v("123456789");
                 REQUIRE(v.AsString() == "123456789");
                 REQUIRE(v.Length() == 2);
             }
 
-            SECTION("String with embedded null bytes", "[const Value][edge][str]") {
+            SECTION("String with embedded null bytes", "[value][edge][str]") {
                 std::string_view sv("ab\0cd", 5);
                 const Value v(sv);
                 REQUIRE(v.NumBytes() == 5);
@@ -589,51 +672,51 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
                 REQUIRE(v2.AsString() == s);
             }
 
-            SECTION("Long string (1000 chars)", "[const Value][edge][str]") {
+            SECTION("Long string (1000 chars)", "[value][edge][str]") {
                 std::string long_str(1000, 'x');
                 const Value v(long_str);
                 REQUIRE(v.AsString() == long_str);
                 REQUIRE(v.NumBytes() == 1000);
             }
 
-            SECTION("AsString on non-string throws", "[const Value][edge][str]") {
+            SECTION("AsString on non-string throws", "[value][edge][str]") {
                 const Value v(42);
                 REQUIRE_THROWS_AS(v.AsString(), std::runtime_error);
             }
         }
 
-        SECTION("Type Dispatch", "[const Value][edge][type]") {
-            SECTION("AsInt on large u64 — wraps", "[const Value][edge][type]") {
+        SECTION("Type Dispatch", "[value][edge][type]") {
+            SECTION("AsInt on large u64 — wraps", "[value][edge][type]") {
                 const Value v(u64_max);
                 REQUIRE(v.AsInt() == static_cast<i64>(u64_max));
             }
 
-            SECTION("AsUint on negative i64 — wraps", "[const Value][edge][type]") {
+            SECTION("AsUint on negative i64 — wraps", "[value][edge][type]") {
                 const Value v(static_cast<i64>(-1));
                 REQUIRE(v.AsUint() == u64_max);
             }
 
-            SECTION("AsBool on nonzero int", "[const Value][edge][type]") {
+            SECTION("AsBool on nonzero int", "[value][edge][type]") {
                 const Value v(42);
                 REQUIRE(v.AsBool() == true);
             }
 
-            SECTION("AsBool on zero int", "[const Value][edge][type]") {
+            SECTION("AsBool on zero int", "[value][edge][type]") {
                 const Value v(0);
                 REQUIRE(v.AsBool() == false);
             }
 
-            SECTION("AsBool on nonzero float", "[const Value][edge][type]") {
+            SECTION("AsBool on nonzero float", "[value][edge][type]") {
                 const Value v(3.14);
                 REQUIRE(v.AsBool() == true);
             }
 
-            SECTION("AsBool on zero float", "[const Value][edge][type]") {
+            SECTION("AsBool on zero float", "[value][edge][type]") {
                 const Value v(0.0);
                 REQUIRE(v.AsBool() == false);
             }
 
-            SECTION("AsFloat precision loss on large i64", "[const Value][edge][type]") {
+            SECTION("AsFloat precision loss on large i64", "[value][edge][type]") {
                 // 2^53 + 1 cannot be exactly represented in f64
                 constexpr i64 big = (1LL << 53) + 1;
                 const Value v(big);
@@ -643,18 +726,144 @@ TEST_CASE("VM Generic const Value Type", "[const Value]") {
             }
         }
 
-        SECTION("Misc, [const Value][edge][misc]") {
-            SECTION("Large Integer", "[const Value][edge][misc]") {
+#ifdef HEXE_DEBUG
+        SECTION("Arithmetic on Invalid Types Throws (Debug)", "[value][edge]") {
+            SECTION("Bool addition", "[value][edge]") {
+                Value a(true), b(false);
+                REQUIRE_THROWS(a + b);
+            }
+
+            SECTION("Bool subtraction", "[value][edge]") {
+                Value a(true), b(false);
+                REQUIRE_THROWS(a - b);
+            }
+
+            SECTION("Bool multiplication", "[value][edge]") {
+                Value a(true), b(false);
+                REQUIRE_THROWS(a * b);
+            }
+
+            SECTION("Bool division", "[value][edge]") {
+                Value a(true), b(false);
+                REQUIRE_THROWS(a / b);
+            }
+
+            SECTION("Bool modulo", "[value][edge]") {
+                Value a(true), b(false);
+                REQUIRE_THROWS(a % b);
+            }
+
+            SECTION("Bool negation", "[value][edge]") {
+                Value a(true);
+                REQUIRE_THROWS(-a);
+            }
+
+            SECTION("Unsigned negation", "[value][edge]") {
+                Value a(static_cast<u64>(42));
+                REQUIRE_THROWS(-a);
+            }
+
+            SECTION("Bool compound +=", "[value][edge]") {
+                Value a(true);
+                REQUIRE_THROWS(a += Value(false));
+            }
+
+            SECTION("Bool compound -=", "[value][edge]") {
+                Value a(true);
+                REQUIRE_THROWS(a -= Value(false));
+            }
+
+            SECTION("Bool compound *=", "[value][edge]") {
+                Value a(true);
+                REQUIRE_THROWS(a *= Value(false));
+            }
+
+            SECTION("Bool compound /=", "[value][edge]") {
+                Value a(true);
+                REQUIRE_THROWS(a /= Value(false));
+            }
+
+            SECTION("Bool compound %=", "[value][edge]") {
+                Value a(true);
+                REQUIRE_THROWS(a %= Value(false));
+            }
+
+            SECTION("String addition", "[value][edge]") {
+                Value a("hello"), b("world");
+                REQUIRE_THROWS(a + b);
+            }
+
+            SECTION("String subtraction", "[value][edge]") {
+                Value a("hello"), b("world");
+                REQUIRE_THROWS(a - b);
+            }
+        }
+#endif
+
+        SECTION("Float Division", "[value][edge][float]") {
+            SECTION("Division by zero produces infinity", "[value][edge][float]") {
+                const Value a(1.0), b(0.0);
+                const Value result = a / b;
+                REQUIRE(std::isinf(result.AsFloat()));
+            }
+
+            SECTION("Negative division by zero", "[value][edge][float]") {
+                const Value a(-1.0), b(0.0);
+                const Value result = a / b;
+                REQUIRE(std::isinf(result.AsFloat()));
+                REQUIRE(result.AsFloat() < 0);
+            }
+
+            SECTION("Modulo by zero produces NaN", "[value][edge][float]") {
+                const Value a(1.0), b(0.0);
+                const Value result = a % b;
+                REQUIRE(std::isnan(result.AsFloat()));
+            }
+
+            SECTION("Float 0/0 produces NaN", "[value][edge][float]") {
+                const Value a(0.0), b(0.0);
+                const Value result = a / b;
+                REQUIRE(std::isnan(result.AsFloat()));
+            }
+        }
+
+        SECTION("Misc", "[value][edge][misc]") {
+            SECTION("Value(u8, SizeType) Constructor", "[value][edge][misc]") {
+                using enum Value::Data::Type;
+
+                SECTION("With Invalid type", "[value][edge][misc]") {
+                    Value v(static_cast<u8>(Invalid), 0);
+                    REQUIRE(v.Type() == Invalid);
+                    REQUIRE(v.Length() == 0);
+                }
+
+                SECTION("With valid type and length", "[value][edge][misc]") {
+                    Value v(static_cast<u8>(Int64), 3);
+                    REQUIRE(v.Length() == 3);
+
+                    // zero-initialized
+                    REQUIRE(v.AsInt(0) == 0);
+                    REQUIRE(v.AsInt(1) == 0);
+                    REQUIRE(v.AsInt(2) == 0);
+                }
+
+                SECTION("With length 0", "[value][edge][misc]") {
+                    Value v(static_cast<u8>(Int64), 0);
+                    REQUIRE(v.Length() == 0);
+                }
+            }
+
+            SECTION("Large Integer", "[value][edge][misc]") {
                 const Value v(i64_max);
                 REQUIRE(v.AsInt() == i64_max);
             }
 
-            SECTION("Negative Integer", "[const Value][edge][misc]") {
+            SECTION("Negative Integer", "[value][edge][misc]") {
                 const Value v(i64_min);
                 REQUIRE(v.AsInt() == i64_min);
             }
 
-            SECTION("Max Unsigned", "[const Value][edge][misc]") {
+            SECTION("Max Unsigned", "[value][edge][misc]") {
                 const Value v(u64_max);
                 REQUIRE(v.AsUint() == u64_max);
             }

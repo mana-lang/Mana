@@ -9,7 +9,7 @@
 #include <print>
 
 namespace hex {
-using namespace hexec;
+using namespace hexe;
 
 // payloads are little endian
 #define READ_PAYLOAD (static_cast<u16>(*ip | *(ip + 1) << 8))
@@ -213,7 +213,7 @@ print_val: {
         const auto s = REG(NEXT_PAYLOAD).AsString();
         const auto v = ValueToString(REG(NEXT_PAYLOAD));
 
-        std::vprint_nonunicode(s, std::make_format_args(v));
+        std::vprint_nonunicode(stdout, s, std::make_format_args(v));
     }
     DISPATCH();
 
@@ -228,7 +228,7 @@ list_create: {
 list_read: {
         const auto src    = NEXT_PAYLOAD;
         const auto idx    = NEXT_PAYLOAD;
-        const auto val    = REG(src);
+        const auto& val   = REG(src);
         REG(NEXT_PAYLOAD) = {val.Type(), val[REG(idx).AsInt()]};
     }
     DISPATCH();

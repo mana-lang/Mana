@@ -651,7 +651,7 @@ bool Parser::MatchedReturn(ParseNode& node) {
 
     auto& ret_stmt = node.NewBranch(Rule::Return);
 
-    MatchedExpression(ret_stmt);
+    MatchedExpression(ret_stmt); 
 
     return true;
 }
@@ -710,7 +710,7 @@ bool Parser::MatchedDataDeclaration(ParseNode& node) {
     AddCycledTokenTo(decl);
 
     // data x: i32
-    bool is_annotated = CurrentToken().type == TokenType::Op_Colon;
+    const bool is_annotated = CurrentToken().type == TokenType::Op_Colon;
     if (is_annotated) {
         AddCycledTokenTo(decl);
 
