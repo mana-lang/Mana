@@ -33,8 +33,9 @@ void Lexer::TokenizeLine() {
 
     while (cursor < Source.Size() && not IsNewline()) {
         if (IsLineComment()) {
-            do { ++cursor; }
-            while (not IsNewline());
+            while (cursor < Source.Size() && not IsNewline()) {
+                ++cursor;
+            }
 
             break;
         }
