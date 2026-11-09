@@ -147,7 +147,6 @@ bool Lexer::LexedString() {
         if (static_cast<usize>(++cursor) >= Source.Size()) {
             Log->warn("Unexpected EOF while lexing string literal");
             AddToken(TokenType::Unknown, length);
-            AddEOF();
             return false;
         }
 
