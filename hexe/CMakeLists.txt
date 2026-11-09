@@ -35,5 +35,5 @@ target_compile_definitions(hexe PUBLIC HEXE_VER_MAJOR=${PROJECT_VERSION_MAJOR})
 target_compile_definitions(hexe PUBLIC HEXE_VER_MINOR=${PROJECT_VERSION_MINOR})
 target_compile_definitions(hexe PUBLIC HEXE_VER_PATCH=${PROJECT_VERSION_PATCH})
 
-target_compile_definitions(hexe PUBLIC HEXE_VER_STRING="${PROJECT_VERSION}-${HEXE_BUILD_REV}")
+target_compile_definitions(hexe PUBLIC HEXE_VER_STRING="${PROJECT_VERSION}-${MANA_BUILD_REV}")
 target_compile_definitions(hexe PUBLIC HEXE_NAME="Mana")
