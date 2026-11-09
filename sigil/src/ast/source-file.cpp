@@ -9,7 +9,7 @@ namespace ml = mana::literals;
 
 namespace sigil {
 bool GlobalSourceFile::Load(const std::filesystem::path& file_path) {
-    std::ifstream source_file(file_path);
+    std::ifstream source_file(file_path, std::ios::binary);
     if (not source_file.is_open()) {
         Log->error("Failed to open file at '{}'", file_path.string());
         return false;
