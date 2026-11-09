@@ -455,6 +455,23 @@ TEST_CASE("Value Lifecycle", "[value][lifecycle]") {
         REQUIRE(a.AsString() == "this is a much longer string than before");
     }
 
+    SECTION("Copy-assign empty string") {
+        Value a("hello");
+        const Value empty("");
+        a = empty;
+        REQUIRE(a.Type() == Value::Data::Type::String);
+        REQUIRE(a.AsString() == "");
+    }
+
+    SECTION("Move-assign empty string") {
+        Value a("hello");
+        Value empty("");
+        a = std::move(empty);
+        REQUIRE(a.Type() == Value::Data::Type::String);
+        REQUIRE(a.AsString() == "");
+        REQUIRE(empty.Type() == Value::Data::Type::Invalid);
+    }
+
     SECTION("Double move") {
         Value a(42);
         const Value b(std::move(a));

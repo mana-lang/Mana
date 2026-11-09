@@ -140,8 +140,7 @@ bool Lexer::LexedString() {
         return false;
     }
 
-    u16 length = 1;
-    ++cursor; // skip opening quote
+    u16 length = 0;
 
     const auto starting_char = current_char;
     while (true) {

@@ -188,7 +188,7 @@ Value& Value::operator=(const Value& other) {
 
     if (other.data == nullptr || other.size_bytes == 0) {
         size_bytes = 0;
-        type       = Invalid;
+        type       = other.type;
         data       = nullptr;
         return *this;
     }
@@ -212,8 +212,12 @@ Value& Value::operator=(Value&& other) noexcept {
 
     if (other.data == nullptr || other.size_bytes == 0) {
         size_bytes = 0;
-        type       = Invalid;
+        type       = other.type;
         data       = nullptr;
+
+        other.size_bytes = 0;
+        other.type       = Invalid;
+        other.data       = nullptr;
         return *this;
     }
 

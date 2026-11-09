@@ -629,7 +629,7 @@ StringLiteral::StringLiteral(const std::string_view sv) {
     // unescape newlines
     string.reserve(sv.size());
     i64 last_append {};
-    for (i64 i = 0; i < sv.size() - 1; ++i) {
+    for (i64 i = 0; i + 1 < sv.size(); ++i) {
         if (sv[i] == '\\' && sv[i + 1] == 'n') {
             string.append(sv.substr(last_append, i - last_append));
             string.push_back('\n');
