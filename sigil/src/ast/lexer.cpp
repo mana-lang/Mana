@@ -153,7 +153,7 @@ bool Lexer::LexedString() {
         }
 
         // strings must close on the line they're started
-        if (IsNewline()) {
+        if (IsNewline() || Source[cursor] == '\r') {
             Log->error("Unexpected end of string literal");
             AddToken(TokenType::Unknown, length);
             return false;
