@@ -49,6 +49,18 @@ TEST_CASE("VM Generic const Value Type", "[value]") {
             REQUIRE(v.AsUint() == 50);
         }
 
+        SECTION("From long long", "[value]") {
+            const Value v(static_cast<long long>(-9));
+            REQUIRE(v.Type() == Value::Data::Type::Int64);
+            REQUIRE(v.AsInt() == -9);
+        }
+
+        SECTION("From u8", "[value]") {
+            const Value v(static_cast<u8>(5));
+            REQUIRE(v.Type() == Value::Data::Type::Uint64);
+            REQUIRE(v.AsUint() == 5);
+        }
+
         SECTION("From f64", "[value]") {
             const Value v(3.14);
             REQUIRE(v.Type() == Value::Data::Type::Float64);
@@ -643,6 +655,16 @@ TEST_CASE("VM Generic const Value Type", "[value]") {
             SECTION("String equality", "[value][edge][eq]") {
                 REQUIRE(Value("hello") == Value("hello"));
                 REQUIRE_FALSE(Value("hello") == Value("world"));
+
+                REQUIRE_FALSE(Value("hi") == Value("hiya"));
+                REQUIRE_FALSE(Value("hiya") == Value("hi"));
+
+                REQUIRE(Value("hello world!") == Value("hello world!"));
+                REQUIRE_FALSE(Value("123456789") == Value("123456780"));
+
+                REQUIRE(Value("") == Value(""));
+                REQUIRE_FALSE(Value("") == Value("a"));
+                REQUIRE_FALSE(Value("a") == Value(""));
             }
         }
 

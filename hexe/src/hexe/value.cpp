@@ -83,22 +83,13 @@ Value::Value()
       size_bytes(0),
       type(Invalid) {}
 
-Value::Value(const i32 i)
-    : Value {i64 {i}} {}
-
 Value::Value(const i64 i)
     : data {new Data[1] {Data {.as_i64 = i}}},
       type {Int64} {}
 
-Value::Value(const u32 u)
-    : Value {u64 {u}} {}
-
 Value::Value(const u64 u)
     : data {new Data[1] {Data {.as_u64 = u}}},
       type {Uint64} {}
-
-Value::Value(ull64 u)
-    : Value {u64 {u}} {}
 
 Value::Value(const f64 f)
     : data {new Data[1] {Data {.as_f64 = f}}},
@@ -325,9 +316,9 @@ bool Value::operator==(const Value& other) const {
         return false;
     }
 
-    // we don't have logic for comparing arrays quite yet
+    // array comparison semantics are still being decided on
     // so [1,2,3] == [1,2,3] currently will just eval to false
-    if (Length() > 1 || other.Length() > 1) {
+    if (type != String && (Length() > 1 || other.Length() > 1)) {
         return false;
     }
 
@@ -342,7 +333,8 @@ CASE_FLOAT:
 CASE_BOOL:
     return data->as_bool == other.AsBool();
 CASE_STRING:
-    return std::memcmp(data, other.data, size_bytes) == 0;
+    return size_bytes == other.size_bytes
+           && (size_bytes == 0 || std::memcmp(data, other.data, size_bytes) == 0);
 }
 
 void Value::operator*=(const i64& rhs) {

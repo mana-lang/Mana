@@ -3,6 +3,7 @@
 #include <mana/literals.hpp>
 
 #include <array>
+#include <concepts>
 #include <span>
 #include <string_view>
 #include <vector>
@@ -29,8 +30,6 @@ static constexpr u8 QWORD = 8;
 static constexpr u8 DWORD = 4;
 static constexpr u8 WORD  = 2;
 static constexpr u8 BYTE  = 1;
-
-using ull64 = unsigned long long;
 
 struct Value {
     friend class ByteCode;
@@ -61,12 +60,17 @@ struct Value {
 
     Value();
 
-    Value(i32 i);
     Value(i64 i);
 
-    Value(u32 u);
+    template <std::signed_integral S>
+    Value(const S i)
+        : Value(static_cast<i64>(i)) {}
+
     Value(u64 u);
-    Value(ull64 u);
+
+    template <std::unsigned_integral U>
+    Value(const U u)
+        : Value(static_cast<u64>(u)) {}
 
     Value(f64 f);
 
