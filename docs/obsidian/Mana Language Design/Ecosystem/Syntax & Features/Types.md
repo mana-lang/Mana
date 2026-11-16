@@ -5,6 +5,23 @@ All data in Mana has a *type*.
 A data type describes that data's size, how it's laid out in memory, and how its contents are to be interacted with.
 
 Mana is *statically typed*, which means *all* types of *all* data *must* be known at compile time.
+
+##### Values
+Mana has *one* value model, which applies to *every* type. Initialization, assignment, copying, moving, references and operators behave the same way whether the data is a primitive, an array, a composite or a function.
+
+Wherever data of type `T` is expected, *any* expression producing a `T` is accepted.
+
+Each category of type has its own *literal* syntax:
+```rust
+24, 3.5, "hi"               // primitive
+[5, 10, 15]                 // array
+Foo {.a = 102}              // composite
+Colour.Red                  // enumerated
+Action.Jump {.height = 2.0} // variant
+fn(x: i32) -> i32 { }       // function
+```
+A type name on its own is *not* a value. `T(x)` is a *conversion*, not a literal.
+
 ##### Primitive Types
 Primitive types are also called *built-in types*. These types are part of the language itself, and they represent different shapes of the fundamental form of data: numbers.
 
@@ -144,11 +161,12 @@ Typically, it is preferable to use *explicit* initialization.
 
 Both types of initialization are done via a *braced-list*, which means they may either be separated by commas, or by newlines.
 
-If there is no *braced-list* in the declaration, *all* members are defaulted.
+A declaration without an initializer defaults *all* members. So does an empty *braced-list*.
 ```kotlin
-data bax = Foo
+data bav: Foo
+data bax = Foo {} // identical
 ```
-In this example:
+In both cases:
 - `a` will be `0`
 - `b` will be `0.0`
 - `c` will be `""`

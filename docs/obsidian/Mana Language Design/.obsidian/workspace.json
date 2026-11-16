@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecosystem/Syntax & Features/Data.md",
+                "file": "Ecosystem/Syntax & Features/Types.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Data"
+              "title": "Types"
             }
           }
         ],
@@ -192,8 +192,12 @@
   },
   "active": "f56e1df7f62d3bea",
   "lastOpenFiles": [
-    "Ecosystem/Syntax & Features/Attributes.md",
+    "Ecosystem/Syntax & Features/Types.md.tmp.118212.43ba48766894",
+    "Ecosystem/Syntax & Features/Types.md.tmp.118212.e6b0451da5eb",
+    "Ecosystem/Syntax & Features/Types.md.tmp.118212.a1fc2522b628",
+    "Ecosystem/Syntax & Features/Types.md.tmp.118212.9e73db11a19b",
     "Ecosystem/Syntax & Features/Data.md",
+    "Ecosystem/Syntax & Features/Attributes.md",
     "Ecosystem/Syntax & Features/Control Flow.md",
     "Ecosystem/Syntax & Features/sedj4Y86w",
     "Ecosystem/Syntax & Features/sedOxMzNo",
@@ -205,9 +209,6 @@
     "Ecosystem/Syntax & Features/Build Modes.md",
     "Ecosystem/Syntax & Features/Build Modes.md.tmp.56950.9d9a8358cb74",
     "Ecosystem/Pitch.md",
-    "Ecosystem/Syntax & Features/Types.md.tmp.56950.45f4b8d918d1",
-    "Ecosystem/Syntax & Features/Attributes.md.tmp.56950.d56b63665456",
-    "Ecosystem/Syntax & Features/Types.md.tmp.56950.f531273ea958",
     "Ecosystem/Ecosystem.md",
     "Ecosystem/Syntax & Features/Procedures.md",
     "Ecosystem/Syntax & Features/Missing Docs.md",
