@@ -220,6 +220,10 @@ fn Main() {
 > `Vec3::operator+` does not take two arguments because it is unspecialized.
 > Consider writing a specialization in the interface for `Vec3`
 
+A specialization defines what an operator does to *data*. What it does to *bindings* is fixed by the language, and cannot be specialized.
+
+`operator=` *exclusively* specializes assignment, *never* initialization.
+
 ##### Invocators
 "Invocator" is just a term for types with a specialized `operator()`
 

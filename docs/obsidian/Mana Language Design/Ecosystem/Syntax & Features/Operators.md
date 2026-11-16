@@ -96,6 +96,9 @@ Not all of these operators may be specialized.
 - `..`
 	- Exclusive range
 		- `5..12`
+- `~`
+	- Inclusive range
+		- `2~5`
 - `::` 
 	- Scope resolution
 		- `import Foo::Bar`
@@ -114,16 +117,11 @@ Not all of these operators may be specialized.
 - `&&`
 	- Short-circuiting logical AND
 		- `a && b`
-- `~`
-	- Inclusive range
-		- `2~5`
-	- Explicit move
-		- `data x = ~y`
 - `&` 
 	- Explicit reference
 		- `data x = &y`
 - `$`
-	- Explicit copy
+	- Explicit move
 		- `data x = $y`
 - `@`
 	- Attribute

@@ -15,7 +15,9 @@ fn Main() {
 > I have 3 oranges
 
 ##### Declarations
-Data in Mana is *immutable* by default. Therefore, the compiler does not refer to them as variables, but instead as *data bindings*, or just *bindings*.
+Data in Mana is *immutable* by default. Therefore, the compiler does not refer to them as variables, but instead as *data bindings*, or just *bindings*. This *requires* them to be initialized within the declaration.
+
+`data` is a *contextual* keyword. It is only a keyword when it introduces a declaration, and may be used as an identifier anywhere else.
 ```kotlin  
 fn Main() {
     data two = 2
@@ -131,16 +133,16 @@ In other words, optimisations may *never* affect behaviour in an observable way,
 Short of unnoticeable optimisations, references and moves in Mana are *always explicit*. 
 
 ##### Assignment Annotation
-You can explicitly tell Mana how you want it to handle the assignment using one of the three *assignment operators*.
+By default, assignment *copies*. You can explicitly tell Mana to handle the assignment differently using one of the two *assignment operators*: `&` to *reference*, and `$` to *move*.
 ```kotlin
 import std.fmt
     
 fn main() {
 	data spell = "Stupefy"
 	
-	data copy = $spell
-	data ref  = &spell
-	data move = ~spell
+	data copy = spell  // copy
+	data ref  = &spell // reference
+	data move = $spell // move
 	
 	fmt.Print(ref) // ok
 	fmt.Print(copy) // ok
@@ -153,6 +155,8 @@ fn main() {
 > Data `spell` was invalidated by an earlier move, and cannot be used
 
 In the above example, `spell` became invalidated, because it was *moved* into `move`. A *move* in Mana signifies that data has been given a new *owner* - it does *not* invalidate references.
+
+A move *ends* the original binding, the same way leaving its scope would. It does *not* modify the data, so immutable data may be moved.
 
 This feature is an important part of how Mana handles *ownership*, which will be discussed later.
 
