@@ -47,6 +47,47 @@ string
 none
 ```
 
+##### Representation
+Every type in **Mana** has a fixed *size* and *alignment*, both of which are known at compile time.
+
+Primitives are represented as follows:
+- *Integers* use *two's complement*, with the size given in their name. `isize` and `usize` are the size of a pointer on the target platform.
+- *Real numbers* follow the *IEEE 754* standard. `f32` is single-precision, and `f64` is double-precision.
+- `bool` takes up *1 byte*, and may *only* hold `0` (`false`) or `1` (`true`).
+	- Converting an integer to `bool` yields `true` for *any* non-zero value; `bool(x)` is equivalent to `x != 0`.
+- `char` takes up *4 bytes*, and may *only* hold a valid *Unicode scalar value*.
+	- Strings do *not* consist of `char`s. A string is a UTF-8 encoded `[u8]`, and a `char` is a single *decoded* code point.
+- `none` takes up *0 bytes*.
+
+The byte order (*endianness*) of all data is that of the target platform.
+
+##### Integer Overflow
+Integer arithmetic whose result exceeds the range of its type *overflows*. By default, **Mana** treats overflow as a *bug*:
+- In *checked* builds, overflow *traps*, halting execution. See [Build Modes](Build%20Modes.md).
+- In *unchecked* builds, overflow *wraps* around. It is *never* undefined behaviour.
+
+When overflow is intended, it must be stated *explicitly* with one of two attributes:
+- `@[Wrap]` - the result wraps around.
+- `@[Saturate]` - the result is clamped to the *minimum* or *maximum* value of its type, in *every* build.
+```rust
+data x: u8 = 250
+
+data a = @[Wrap] x + 10     // 4
+data b = @[Saturate] x + 10 // 255
+
+data y: u8 = 3
+
+data c = @[Wrap] y - 5      // 254
+data d = @[Saturate] y - 5  // 0
+```
+
+Both attributes apply to `+`, `-` and `*`, as well as to signed division, where `i_min / -1` is the only operation that can overflow. 
+
+They may be placed before a single *expression*, or before a *scope* or *function*, in which case they apply to all integer arithmetic within it.
+
+> [!note]
+> Saturating arithmetic is not free; it typically costs a comparison per operation. However, most CPUs offer native saturating instructions for SIMD operations, where it is often free.
+
 
 ##### None
 `none` is a special keyword which is both a type and a value, but represents the *absence* of a value. In essence, `none`  is a value of type `none`. 
@@ -125,6 +166,25 @@ type Foo {
 data foo = Foo {.a = 102, .c = "hello"} // 'b' will be 32.99
 ```
 
+##### Memory Layout
+**Mana** lays out data in memory following the same rules as **C**. This makes **Mana** data directly compatible with **C** and **C++**, without any conversion.
+- The fields of a composite type are laid out in their *declaration order*. Each field is placed at its natural alignment, with *padding* inserted where necessary.
+- The elements of an array are *contiguous* in memory.
+- The contents of padding bytes are *unspecified*. As a result, the default `operator==` for composite types compares them *field by field*, never byte by byte.
+
+Since field order determines layout, the compiler will *warn* when the order of a type's fields wastes space on padding.
+```rust
+type Foo {
+	a: i32   // 4 bytes + 4 padding
+	b: f64   // 8 bytes
+	c: bool  // 1 byte + 7 padding
+	d: i64   // 8 bytes
+	e: u16   // 2 bytes + 6 padding
+}
+```
+>[!warning] Warning
+> Type `Foo` takes up 40 bytes, 17 of which are padding. Reordering its fields could reduce its size to 24 bytes.
+
 ##### Locking Mutable Data
 Fields may be annotated with the `@[Locked]` attribute to indicate that *only* mutable associated functions may modify them.
 
@@ -160,39 +220,3 @@ type Foo {
 ```
 > [!note]
 `[Locked]` data is restricted to only be modifiable by interface functions. However, **Mana** allows anywhere to create an associated function for a type. `[Locked]` is merely an indicator that a type member *shouldn't* freely be modified, for some reason or another.
-
-
-- Audio:
-	- Music
-	- SFX
-- IO:
-	- Config file (settings)
-	- Save files (replays?)
-	- User input (rebindable, stored in config file)
-- Game States:
-	- Main Menu
-	- Game
-	- Run Over
-	- Game Over
-	- Game End
-- Player 
-	- Resources
-		- Lives
-		- Bombs
-		- Graze
-		- Score
-		- Element?
-	- Mechanics
-		- Move (4-way)
-		- Shoot
-		- Bomb
-		- Skill
-- Boss
-	- Multiple Phases
-	- Movement
-- System
-	- Collision Detection
-	- Object Hierarchy
-	- Simple Trig Library
-	- Item Drops & Pickups
-	- Scoring

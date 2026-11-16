@@ -37,6 +37,12 @@ Below is a list of valid Attributes:
 - *Discard*
 	- Usage: *Before* an invocation-expression
 	- Effect: Will suppress the "Return value unused" compile error
+- *Wrap*
+	- Usage: *Before* an expression, scope, or function declaration
+	- Effect: Overflowing integer arithmetic *wraps around*, so going 1 above the maximum value for that size takes you to the minimum, and vice versa.
+- *Saturate*
+	- Usage: *Before* an expression, scope, or function declaration
+		- Effect: Overflowing integer arithmetic is *clamped* to the minimum or maximum value of the type's size.
 - *Timer*
 	- Usage: *Inside* a scope block, from the moment you want to measure the execution of a block.
 	- Effect: Records the time at the moment of the attribute's declaration, and again when that scope is exited. The difference is stored in a configurable global `ScopedTimer` type.

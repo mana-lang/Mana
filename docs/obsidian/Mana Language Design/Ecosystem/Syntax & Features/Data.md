@@ -81,25 +81,19 @@ data x: i32 = 55 * 2 // this is identical
 
 While this isn't particularly useful for a simple assignment, it will be relevant when it comes to other language constructs, such as control flow and closures.
 
-##### Assignment Deduction
-**Mana** makes certain assumptions about data when it's assigned to other data.
-Depending on the context, it may *copy*, *reference*, or *move* the data.
+##### Copy Semantics
+When data is assigned to a binding, it is *always* treated as a *copy*. The new binding holds its own value, and changes made to the original are *never* visible through it.
 
-- A *copy* simply *duplicates* the data
-- A *reference* takes up a *fixed* amount of *additional* space by only *referring* to the actual data
-- A *move* takes up the *same* amount of space, and *invalidates* the original data
+- A *copy* simply *duplicates* the data. Where possible, this will manifest as a "*shallow copy*."
+- A *reference* only *refers* to the original data, taking up a *fixed* amount of *additional* space
+- A *move* gives the data a new owner, and *invalidates* the original binding
 
-**Mana** will, by default, attempt to *copy* assigned data, unless it would be cheaper to *reference* that data instead. How it determines this depends on the context, but the *memory size* of the data being assigned is always a key factor.
-
-**Mana** will *almost never* perform a *move* by default, because a move *invalidates* the data being assigned from.
-
-Keep in mind that these rules *only* apply when assigning to `data`. If the data is *mutable*, it will always be copied; **Mana** wouldn't invisibly create a mutable reference, as that would be extremely bug-prone.
 ```kotlin
 import std.fmt
     
 fn main() {
 	mut data hey = "hey"
-	data hi = hey       // this is a reference
+	data hi = hey       // this is a copy
 	mut data hiya = hey // this is a copy
 	hey = "hello"
 	
@@ -111,7 +105,13 @@ fn main() {
 }
 ```
 >[!tip] Output
-> hello1hello5hey
+> hello1hey5hey
+
+This does *not* mean **Mana** always duplicates the data in memory. When the compiler can prove that a copy is indistinguishable from a *reference* or a *move* - for example, because the original is never modified while the new binding is alive, or because the original is never used again - it is free to reference or move the data instead, or simply alias the two bindings.
+
+In other words, optimisations may *never* affect behaviour in an observable way, other than allowing the same behaviour to execute faster.
+
+Short of unnoticeable optimisations, references and moves in Mana are *always explicit*. 
 
 ##### Assignment Annotation
 You can explicitly tell **Mana** how you want it to handle the assignment using one of the three *assignment operators*.
