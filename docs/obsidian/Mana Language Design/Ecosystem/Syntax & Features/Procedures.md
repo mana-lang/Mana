@@ -249,7 +249,7 @@ fmt.Print("{bar}\n{foo.a}")
 Closures are essentially syntax sugar for ad-hoc invocators.
 - Defined with the `fn` keyword inside another invocable
 - May capture surrounding data with a *capture clause*
-	- Capture clause follows a binding operator after the return type, but before the function's scope
+	- Capture clause follows a target operator after the return type, but before the function's scope
 	- Captured bindings may contain assignment operators
 		- In their absence, captures follow Mana's *assignment deduction rules*.
 	- Captured bindings are part of the closure's type

@@ -24,10 +24,12 @@ fn Main() {
 }
 ```
 >[!error] Error
->Attempt to assign to immutable binding `four`
+>Attempt to assign to immutable data bound by `four`
 
 ##### Mutability
-To create a *mutable binding* in Mana, you must qualify a declaration with the `mut` keyword. 
+To bind a name to *mutable data* in Mana, you must qualify a declaration with the `mut` keyword. 
+
+Mutability is a property of the *data*, not of the binding. `mut data` reads exactly as it behaves: the name is bound to *mutable data*.
 ```kotlin
 import std.fmt
     
@@ -60,26 +62,41 @@ data x
 >[!error] Error
 > Binding `x` has neither an initializer nor an annotation.
 
-##### Binding
-The *binding operator* `=>` in a data declaration allows you to perform inline logic without affecting the datum's mutability.
+##### Initialization Blocks
+A data declaration may *target* a block with the *target operator* `=>`. 
+This is an *initialization block*:
 ```kotlin
 data x: i32 => {
-	// 'x' binds to this scope
-	// within this scope, 'x' is assignable
+	// 'x' has already been default-initialized here
+	// within this block, 'x' is mutable
 	RunSomeFunc()
 	DoSomeTest()
 	x = FetchResult()
 }
+// 'x' is immutable from here on
 ```
-Because data is defaulted unless otherwise specified in Mana, you can perform operations on a datum before its first assignment, by knowing its default initial value.
+Within an initialization block, initialization happens in three steps:
+1. The data is *default-initialized*.
+2. The block runs. Within it, the data is *mutable*. Assignments within the block are regular assignments to the default-initialized data, and because it has a default value, you may read it before your first assignment.
+3. When the block ends, initialization is complete. Unless it was declared `mut`, the data is *immutable* from then on.
 
-Additionally, when a binding is applied to a block containing *exactly one* expression, that expression will be bound to the left-hand side of the binding operation.
+Initialization blocks allow you to build up data step by step, without having to make it mutable.
 ```kotlin
-data x: i32 => { 55 * 2 }
-data x: i32 = 55 * 2 // this is identical
+data player: Player => {
+	player.name = LoadName()
+	player.health = PlayerMaxHealthDefault
+	
+	if hardcore {
+		player.lives = 1
+	} else {
+		player.lives = 5
+	}
+}
 ```
 
-While this isn't particularly useful for a simple assignment, it will be relevant when it comes to other language constructs, such as control flow and closures.
+Since the data is default-initialized first, a declaration with an initialization block *must* include a type annotation.
+
+A declaration may also target control flow, such as an `if` or a `loop`. See [Control Flow](Control%20Flow.md).
 
 ##### Copy Semantics
 When data is assigned to a binding, it is *always* treated as a *copy*. The new binding holds its own value, and changes made to the original are *never* visible through it.
@@ -167,12 +184,12 @@ fn main() {
 
 ##### Uninitialized Data
 Unassigned data declarations are zeroed by default in **Mana**. To leave it uninitialized, you must do so explicitly with the `@[NoInit]` attribute.
-```kotlin  
+```kotlin
 import std.fmt
 
 fn main() {
 	// data will be uninitialized.
-    mut data x: bool = @[NoInit]
+    @[NoInit] mut data x: bool
     
     // using it is either a compile error, or undefined behaviour
     fmt.Print(x) 
@@ -182,6 +199,10 @@ fn main() {
 >Data `x` was not initialized, but an attempt was made to read from it
 
 This attribute can *only* be used with *mutable* data declarations. Immutable data bindings *cannot* be left uninitialized, as they would be permanently unusable.
+
+Immutable declarations with an [initialization block](#Initialization%20Blocks) are no exception. There is no need for `@[NoInit]` there: whenever a block writes its data before reading it, the default value is never observed, so the compiler is free to skip default initialization entirely.
+
+It also does this *outside* of initialization blocks, so `@[NoInit` is generally unnecessary.
  
 ##### Constants
 Compile-time constants are created with the `const` keyword.
@@ -241,10 +262,10 @@ data x: [f64, 5]
 data y: [f64] 
 
 // will be uninitialized
-mut data z: [i32, 8] = @[NoInit]
+@[NoInit] mut data z: [i32, 8]
 
 // error
-data w: [i32, 8] = @[NoInit]
+@[NoInit] data w: [i32, 8]
 ```
 >[!danger] Error
 > Data `y` was declared as an array of `f64`, but was not assigned, and has no size specifier

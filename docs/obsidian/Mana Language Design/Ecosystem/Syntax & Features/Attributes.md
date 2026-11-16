@@ -15,7 +15,7 @@ Below is a list of valid Attributes:
 	- Usage: *Before* module declaration *or* at the top of a file *without* a module declaration
 		- Effect: *All* functions within this module will have the `@[Hot]` attribute applied to them
 - *NoInit*
-	- Usage: *After* *mutable* data declaration
+	- Usage: *Before* a *mutable* data declaration
 	- Effect: Data will be left uninitialized
 - *Pure*
 	- Usage: *Before* function declaration

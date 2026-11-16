@@ -17,13 +17,13 @@ if x {
 	DoCrazyStuff()
 }
 
-// conditional assignment is also possible via the binding operator
+// an if statement may serve as an initialization block
 data a: i64 => if x || y {
-	a = 89 // inside the bound if, 'a' is temporarily assignable
+	a = 89 // 'a' is mutable until the end of the if-else
 } else {
 	a = 943
 }
-// 'a' is still immutable here
+// 'a' is immutable from here on
   
 // you can do it on a single line for short conditional assignments
 data b: u32 => if x && y { b = 7 } else { b = 27 }
@@ -74,8 +74,8 @@ loop 3..8 => i {}
 loop 12..0 => mut i {}
 
 
-// data declarations may also be bound to loops
-data x => loop if x < 30 {
+// a loop may also serve as an initialization block
+data x: i32 => loop if x < 30 {
 	// do stuff
 	x = Something()
 }
@@ -143,7 +143,7 @@ for elem in values {
 ##### Match
 Mana allows you to compose your control flow around an exhaustive set of possible values via the `match` keyword.
 
-They are blocks which may contain a series of statements separated by the *binding operator* `=>`
+They are blocks which may contain a series of statements separated by the *target operator* `=>`
 
 Expressions on the left side of *match arms* in a match block are compared to the matched *subject*. If the expression matches, it will execute that arm.
 ```rust
@@ -162,7 +162,7 @@ Keep in mind that, because the left side of a match arm is compared against the 
 This means that either a built-in comparison exists, or a valid *equality operator* has been defined for the two types being compared, just like with any other comparison.
 
 
-It's important to note that `match` will execute *only* the *first* arm that matches, and it will run comparisons *from top to bottom*. To continue matching after a match has succeeded, the *match operator* `=>` must be used at the *end* of a match arm.
+It's important to note that `match` will execute *only* the *first* arm that matches, and it will run comparisons *from top to bottom*. To continue matching after a match has succeeded, the *target operator* `=>` must be used at the *end* of a match arm.
 
 If the match arm is a *single* expression, then it must be used *after* the expression.
 Otherwise, it must be placed on an *otherwise empty* statement at the *end* of an expression block.
