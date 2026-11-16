@@ -206,7 +206,7 @@ This attribute can *only* be used with *mutable* data declarations. Immutable da
 
 Immutable declarations with an [initialization block](#Initialization%20Blocks) are no exception. There is no need for `@[NoInit]` there: whenever a block writes its data before reading it, the default value is never observed, so the compiler is free to skip default initialization entirely.
 
-It also does this *outside* of initialization blocks, so `@[NoInit` is generally unnecessary.
+It also does this *outside* of initialization blocks, so `@[NoInit]` is generally unnecessary.
  
 ##### Constants
 Compile-time constants are created with the `const` keyword.
