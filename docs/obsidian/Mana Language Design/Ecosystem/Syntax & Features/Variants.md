@@ -1,5 +1,5 @@
 
-*Variants* in **Mana** define a *sum type*. They provide a way to enumerate with a payload.
+*Variants* in Mana define a *sum type*. They provide a way to enumerate with a payload.
 
 ```kotlin
 variant Action {

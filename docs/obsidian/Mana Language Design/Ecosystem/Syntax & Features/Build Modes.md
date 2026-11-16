@@ -1,8 +1,8 @@
 
 ##### Build Modes
-**Mana** programs may be built in one of two modes: *checked* or *unchecked*. The mode is chosen at compile time, and has the same meaning for both **Circe** and **Salem**.
+Mana programs may be built in one of two modes: *checked* or *unchecked*. The mode is chosen at compile time, and has the same meaning for both **Circe** and **Salem**.
 
-Some bugs can only be detected while a program is running. **Mana** defines a list of these, called *runtime-checked errors*.
+Some bugs can only be detected while a program is running. Mana defines a list of these, called *runtime-checked errors*.
 - In a *checked* build, the compiler inserts a check before every operation that could cause a runtime-checked error. If a check fails, execution halts and reports where the error occurred.
 - In an *unchecked* build, no checks are inserted. Where the language defines a result for the operation, that result is produced. Otherwise, the behaviour is *undefined*.
 

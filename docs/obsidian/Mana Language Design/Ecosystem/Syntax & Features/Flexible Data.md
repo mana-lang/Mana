@@ -62,7 +62,7 @@ Note that **Salem** will reorder *as few members as possible* to respect as much
 
 Reordering of type members is only one of the things the `@[Flexible]` attribute does. The other is related to *access patterns*.
 
-Suppose you create a `[Foo, 5]`. Ordinarily, **Mana** orders that array in memory as follows:
+Suppose you create a `[Foo, 5]`. Ordinarily, Mana orders that array in memory as follows:
 
 <span style="font-size:0.7em;color:dimgrey"> (split into blocks of 5 for readability) </span>
 `[a][b][c][d][e] [a][b][c][d][e] [a][b][c][d][e] [a][b][c][d][e] [a][b][c][d][e]`

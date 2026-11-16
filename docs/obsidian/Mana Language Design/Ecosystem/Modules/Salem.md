@@ -3,7 +3,7 @@
 <h4><center><b>Mana Native Compiler</b></center></h4>
 
 ---
-**Salem** is the native compiler for the **Mana** language. While **Circe** focuses on rapid bytecode generation for the virtual machine, Salem is designed to be the heavy-lifting back-end that produces optimized machine code, on top of providing a solid level of code analysis to be able to detect subtle bugs and give high-quality error reports.
+**Salem** is the native compiler for the Mana language. While **Circe** focuses on rapid bytecode generation for the virtual machine, Salem is designed to be the heavy-lifting back-end that produces optimized machine code, on top of providing a solid level of code analysis to be able to detect subtle bugs and give high-quality error reports.
 
 Salem will remain in stasis as a project until Circe, Hex and Sigil are mature enough for Mana to be competitive with Lua. At that point, it will integrate LLVM as its code generation back-end to produce AOT binary executables that optionally have Hex embedded within them, primed to run `@[Hot]` code.
 ### Future Goals & Roadmap

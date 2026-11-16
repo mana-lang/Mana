@@ -1,6 +1,6 @@
 
 ##### If
-`if` statements in **Mana** evaluate a *boolean* and execute code when that boolean evaluates to *true*.
+`if` statements in Mana evaluate a *boolean* and execute code when that boolean evaluates to *true*.
 
 An `if` statement may be followed by an `else` statement, which itself may contain an `if` condition.
 

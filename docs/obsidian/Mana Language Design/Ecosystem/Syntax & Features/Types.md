@@ -1,10 +1,10 @@
 	
 ##### Typing
-All data in **Mana** has a *type*. 
+All data in Mana has a *type*. 
 
 A data type describes that data's size, how it's laid out in memory, and how its contents are to be interacted with.
 
-**Mana** is *statically typed*, which means *all* types of *all* data *must* be known at compile time.
+Mana is *statically typed*, which means *all* types of *all* data *must* be known at compile time.
 ##### Primitive Types
 Primitive types are also called *built-in types*. These types are part of the language itself, and they represent different shapes of the fundamental form of data: numbers.
 
@@ -48,7 +48,7 @@ none
 ```
 
 ##### Representation
-Every type in **Mana** has a fixed *size* and *alignment*, both of which are known at compile time.
+Every type in Mana has a fixed *size* and *alignment*, both of which are known at compile time.
 
 Primitives are represented as follows:
 - *Integers* use *two's complement*, with the size given in their name. `isize` and `usize` are the size of a pointer on the target platform.
@@ -62,7 +62,7 @@ Primitives are represented as follows:
 The byte order (*endianness*) of all data is that of the target platform.
 
 ##### Integer Overflow
-Integer arithmetic whose result exceeds the range of its type *overflows*. By default, **Mana** treats overflow as a *bug*:
+Integer arithmetic whose result exceeds the range of its type *overflows*. By default, Mana treats overflow as a *bug*:
 - In *checked* builds, overflow *traps*, halting execution. See [Build Modes](Build%20Modes.md).
 - In *unchecked* builds, overflow *wraps* around. It is *never* undefined behaviour.
 
@@ -167,7 +167,7 @@ data foo = Foo {.a = 102, .c = "hello"} // 'b' will be 32.99
 ```
 
 ##### Memory Layout
-**Mana** lays out data in memory following the same rules as **C**. This makes **Mana** data directly compatible with **C** and **C++**, without any conversion.
+Mana lays out data in memory following the same rules as **C**. This makes Mana data directly compatible with **C** and **C++**, without any conversion.
 - The fields of a composite type are laid out in their *declaration order*. Each field is placed at its natural alignment, with *padding* inserted where necessary.
 - The elements of an array are *contiguous* in memory.
 - The contents of padding bytes are *unspecified*. As a result, the default `operator==` for composite types compares them *field by field*, never byte by byte.
@@ -188,7 +188,7 @@ type Foo {
 ##### Locking Mutable Data
 Fields may be annotated with the `@[Locked]` attribute to indicate that *only* mutable associated functions may modify them.
 
-**Mana** does *not* have the concept of granular private access specifiers for individual type members. However, sometimes you want a value which may be modified by an interface function, but not by anything else. In these scenarios, you would want to use `@[Locked]`.
+Mana does *not* have the concept of granular private access specifiers for individual type members. However, sometimes you want a value which may be modified by an interface function, but not by anything else. In these scenarios, you would want to use `@[Locked]`.
 ```rust
 // 'a' may only be modified by interface functions, 
 // even if `Foo` has been declared 'mut'
@@ -219,4 +219,4 @@ type Foo {
 }
 ```
 > [!note]
-`[Locked]` data is restricted to only be modifiable by interface functions. However, **Mana** allows anywhere to create an associated function for a type. `[Locked]` is merely an indicator that a type member *shouldn't* freely be modified, for some reason or another.
+`[Locked]` data is restricted to only be modifiable by interface functions. However, Mana allows anywhere to create an associated function for a type. `[Locked]` is merely an indicator that a type member *shouldn't* freely be modified, for some reason or another.

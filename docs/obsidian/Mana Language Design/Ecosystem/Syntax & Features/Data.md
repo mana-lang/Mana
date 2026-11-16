@@ -15,7 +15,7 @@ fn Main() {
 > I have 3 oranges
 
 ##### Declarations
-Data in **Mana** is *immutable* by default. Therefore, the compiler does not refer to them as variables, but instead as *data bindings*, or just *bindings*.
+Data in Mana is *immutable* by default. Therefore, the compiler does not refer to them as variables, but instead as *data bindings*, or just *bindings*.
 ```kotlin  
 fn Main() {
     data two = 2
@@ -124,14 +124,14 @@ fn main() {
 >[!tip] Output
 > hello1hey5hey
 
-This does *not* mean **Mana** always duplicates the data in memory. When the compiler can prove that a copy is indistinguishable from a *reference* or a *move* - for example, because the original is never modified while the new binding is alive, or because the original is never used again - it is free to reference or move the data instead, or simply alias the two bindings.
+This does *not* mean Mana always duplicates the data in memory. When the compiler can prove that a copy is indistinguishable from a *reference* or a *move* - for example, because the original is never modified while the new binding is alive, or because the original is never used again - it is free to reference or move the data instead, or simply alias the two bindings.
 
 In other words, optimisations may *never* affect behaviour in an observable way, other than allowing the same behaviour to execute faster.
 
 Short of unnoticeable optimisations, references and moves in Mana are *always explicit*. 
 
 ##### Assignment Annotation
-You can explicitly tell **Mana** how you want it to handle the assignment using one of the three *assignment operators*.
+You can explicitly tell Mana how you want it to handle the assignment using one of the three *assignment operators*.
 ```kotlin
 import std.fmt
     
@@ -152,12 +152,12 @@ fn main() {
 >[!danger] Error
 > Data `spell` was invalidated by an earlier move, and cannot be used
 
-In the above example, `spell` became invalidated, because it was *moved* into `move`. A *move* in **Mana** signifies that data has been given a new *owner* - it does *not* invalidate references.
+In the above example, `spell` became invalidated, because it was *moved* into `move`. A *move* in Mana signifies that data has been given a new *owner* - it does *not* invalidate references.
 
-This feature is an important part of how **Mana** handles *ownership*, which will be discussed later.
+This feature is an important part of how Mana handles *ownership*, which will be discussed later.
 
 ##### Type annotations
-All data in **Mana** is *strongly and statically typed*. 
+All data in Mana is *strongly and statically typed*. 
 
 This means the types of all values must be known at compile-time, and data may not be assigned a value of a type that doesn't match its own.
 
@@ -183,7 +183,7 @@ fn main() {
 > z: 0
 
 ##### Uninitialized Data
-Unassigned data declarations are zeroed by default in **Mana**. To leave it uninitialized, you must do so explicitly with the `@[NoInit]` attribute.
+Unassigned data declarations are zeroed by default in Mana. To leave it uninitialized, you must do so explicitly with the `@[NoInit]` attribute.
 ```kotlin
 import std.fmt
 

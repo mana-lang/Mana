@@ -3,7 +3,7 @@
 <h4><center><b>Mana Bytecode Compiler</b></center></h4>
 
 ---
-**Circe** is the bytecode generation module for the **Mana** language. It transforms the Abstract Syntax Tree (AST) produced and validated by **Sigil** into executable bytecode (**Hexe**) for the Mana Virtual Machine (**Hex**).
+**Circe** is the bytecode generation module for the Mana language. It transforms the Abstract Syntax Tree (AST) produced and validated by **Sigil** into executable bytecode (**Hexe**) for the Mana Virtual Machine (**Hex**).
 
 Circe operates by traversing the AST and mapping its semantic structure to the low-level instructions expected by Hex.
 

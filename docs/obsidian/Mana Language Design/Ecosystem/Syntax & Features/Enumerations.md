@@ -1,5 +1,5 @@
 
-**Mana** provides three means of creating enumerations; *enums*, *tags* and *variants*.
+Mana provides three means of creating enumerations; *enums*, *tags* and *variants*.
 
 Mana's *enums*, like many other languages, offer a simple means of creating labeled values. However, they can do a lot more than that.
 ##### C++ Style Enums
@@ -28,7 +28,7 @@ data animal = Cat // won't compile
 Much like in C++, *enums* in Mana are *scoped* and can *not* be implicitly converted to their underlying type by default.
 
 ##### Extensibility
-**Mana** also offers the ability to extend an enum by *appending* new labels to it. To make an enum extensible, you must annotate it with the `mut` keyword.
+Mana also offers the ability to extend an enum by *appending* new labels to it. To make an enum extensible, you must annotate it with the `mut` keyword.
 
 You may only append labels to an extensible enum from another enum. If you wish to add single values, this is possible by creating an *anonymous enum* inline. That label will then be parented to the enum it's being appended to. 
 ```kotlin

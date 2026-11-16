@@ -1,12 +1,12 @@
 
 ##### Tags
-*Tags* are a hierarchical labeling system in **Mana**.
+*Tags* are a hierarchical labeling system in Mana.
 
 They are essentially hierarchical enums, which may be compared against their hierarchy through various comparison operators. 
 
 They can efficiently compress a lot of categorical state information into a small space, and allow for expressive querying against other tags.
 
-Unlike most keywords in **Mana**, the `Tag` keyword is capitalized.
+Unlike most keywords in Mana, the `Tag` keyword is capitalized.
 ```kotlin
 Tag Entity {
 	Ally

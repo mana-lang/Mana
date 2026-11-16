@@ -1,6 +1,6 @@
 
 ##### Procedure
-The term *procedure* is used as a catch-all term for *executable things* in **Mana**. This includes:
+The term *procedure* is used as a catch-all term for *executable things* in Mana. This includes:
 - Functions
 - Associates
 - Invocators
