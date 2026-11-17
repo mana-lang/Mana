@@ -1,4 +1,3 @@
-	
 ##### Typing
 All data in Mana has a *type*. 
 
@@ -70,6 +69,7 @@ Every type in Mana has a fixed *size* and *alignment*, both of which are known a
 Primitives are represented as follows:
 - *Integers* use *two's complement*, with the size given in their name. `isize` and `usize` are the size of a pointer on the target platform.
 - *Real numbers* follow the *IEEE 754* standard. `f32` is single-precision, and `f64` is double-precision.
+	- Floating-point operations are performed *exactly* as written, unless relaxed by a [compiler flag](Build%20Modes.md#Compiler%20Flags).
 - `bool` takes up *1 byte*, and may *only* hold `0` (`false`) or `1` (`true`).
 	- Converting an integer to `bool` yields `true` for *any* non-zero value; `bool(x)` is equivalent to `x != 0`.
 - `char` takes up *4 bytes*, and may *only* hold a valid *Unicode scalar value*.
@@ -78,7 +78,7 @@ Primitives are represented as follows:
 
 The byte order (*endianness*) of all data is that of the target platform.
 
-##### Integer Overflow
+### Integer Overflow
 Integer arithmetic whose result exceeds the range of its type *overflows*. By default, Mana treats overflow as a *bug*:
 - In *checked* builds, overflow *traps*, halting execution. See [Build Modes](Build%20Modes.md).
 - In *unchecked* builds, overflow *wraps* around. It is *never* undefined behaviour.

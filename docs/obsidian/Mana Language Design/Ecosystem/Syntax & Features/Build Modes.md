@@ -12,6 +12,10 @@ Checked builds trade performance for catching bugs where they happen.
 > Build modes are unrelated to the static analysis performed by **Sigil**. Static analysis happens at compile time, and only produces warnings; it never changes the code that gets generated.
 
 ##### Runtime-Checked Errors
-| Error                                   | Unchecked behaviour |
-| --------------------------------------- | ------------------- |
-| [Integer overflow](Types.md)            | Wraps around        |
+| Error                                           | Unchecked behaviour |
+| ----------------------------------------------- | ------------------- |
+| [Integer overflow](Types.md#Integer%20Overflow) | Wraps around        |
+| Integer division or remainder by zero           | Undefined behaviour |
+
+##### Compiler Flags
+Compilers may offer flags that relax the language's guarantees, such as allowing floating-point operations to be fused or reordered. The behaviour described by this specification applies *only* to builds without such flags. Builds using them are *not* guaranteed to behave identically to default builds, nor across **Circe** and **Salem**.

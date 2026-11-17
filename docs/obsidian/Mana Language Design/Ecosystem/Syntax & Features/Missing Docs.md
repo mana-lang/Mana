@@ -79,7 +79,5 @@ The attribute system is nice because it lets us introduce these things in the fo
 ##### Memory Allocation
 Mana must provide a means to allocate raw memory from the OS, and the `std` library should make doing so easy and safe. But the core mechanism does need to exist.
 
-However, this is completely irrelevant until Salem enters active development. Hex should perform garbage collection and memory management as a runtime.
-
 How memory-related operations interface with Hex is also a point of consideration.
 
