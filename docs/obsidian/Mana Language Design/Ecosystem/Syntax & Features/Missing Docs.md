@@ -75,9 +75,3 @@ The dooziest dooze of them all. How Hex interfaces with foreign functions is one
 
 The attribute system is nice because it lets us introduce these things in the form of something like `@[External]` rather than introducing a completely new keyword.
 
-
-##### Memory Allocation
-Mana must provide a means to allocate raw memory from the OS, and the `std` library should make doing so easy and safe. But the core mechanism does need to exist.
-
-How memory-related operations interface with Hex is also a point of consideration.
-

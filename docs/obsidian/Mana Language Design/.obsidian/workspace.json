@@ -41,12 +41,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecosystem/Syntax & Features/Build Modes.md",
+                "file": "Ecosystem/Syntax & Features/Memory.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Build Modes"
+              "title": "Memory"
             }
           }
         ],
@@ -206,9 +206,15 @@
   },
   "active": "a1f1d64352d23392",
   "lastOpenFiles": [
+    "Ecosystem/Syntax & Features/Memory.md.tmp.21649.c760db582c89",
+    "Ecosystem/Syntax & Features/Attributes.md",
+    "Ecosystem/Syntax & Features/Memory.md.tmp.21649.a515aed25006",
+    "Ecosystem/Syntax & Features/Memory.md.tmp.21649.d5b0e64b9054",
+    "Ecosystem/Syntax & Features/Memory.md",
+    "Ecosystem/Syntax & Features/Build Modes.md",
+    "Ecosystem/Syntax & Features/Memory.md.tmp.21649.a2cf871f010f",
     "Ecosystem/Syntax & Features/Missing Docs.md.tmp.21649.b9cd53c82adc",
     "Ecosystem/Syntax & Features/Types.md",
-    "Ecosystem/Syntax & Features/Build Modes.md",
     "Ecosystem/Syntax & Features/Build Modes.md.tmp.21649.aaa88aab829c",
     "Ecosystem/Syntax & Features/Build Modes.md.tmp.21649.1ead8158847a",
     "Ecosystem/Syntax & Features/Data.md.tmp.118212.18b4498f271a",
@@ -218,11 +224,6 @@
     "Ecosystem/Syntax & Features/Data.md.tmp.118212.36adb968da39",
     "Ecosystem/Syntax & Features/Enumerations.md",
     "Ecosystem/Syntax & Features/Operators.md",
-    "Ecosystem/Syntax & Features/Data.md.tmp.118212.ab3ae767cf34",
-    "Ecosystem/Syntax & Features/Data.md.tmp.118212.4806141cbe24",
-    "Ecosystem/Syntax & Features/Operators.md.tmp.118212.52d24a9d526b",
-    "Ecosystem/Syntax & Features/Types.md.tmp.118212.43ba48766894",
-    "Ecosystem/Syntax & Features/Attributes.md",
     "Ecosystem/Syntax & Features/Control Flow.md",
     "Ecosystem/Pitch.md",
     "Ecosystem/Ecosystem.md",
@@ -250,7 +251,6 @@
     "_Assets/Pasted image 20250912060624.png",
     "_Assets/Pasted image 20250908005720.png",
     "Ecosystem/Syntax/Tags.md",
-    "Ecosystem/Syntax/Variants.md",
     "_Assets/Pasted image 20250903011646.png",
     "Gameplay/Regions/Lumina/Map.canvas",
     "Untitled.canvas"

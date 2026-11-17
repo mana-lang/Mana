@@ -43,6 +43,9 @@ Below is a list of valid Attributes:
 - *Saturate*
 	- Usage: *Before* an expression, scope, or function declaration
 		- Effect: Overflowing integer arithmetic is *clamped* to the minimum or maximum value of the type's size.
+- *Allocator(name)*
+	- Usage: *Before* a scope or function declaration
+	- Effect: The named allocator becomes the current allocator within it. See [Memory](Memory.md#Scoped%20Allocators).
 - *Timer*
 	- Usage: *Inside* a scope block, from the moment you want to measure the execution of a block.
 	- Effect: Records the time at the moment of the attribute's declaration, and again when that scope is exited. The difference is stored in a configurable global `ScopedTimer` type.
