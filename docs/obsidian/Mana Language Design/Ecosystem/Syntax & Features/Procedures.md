@@ -66,6 +66,16 @@ fn Main() {
 ```rust
 fn Foo(a: i32, b: mut &string, c: [f64, 5]) -> mut &string
 ```
+A parameter may declare a *default value*, like a [field](Types.md#Default%20Values).
+
+An argument list initializes a function's parameters the same way a *braced-list* initializes a type's fields: *implicitly*, providing all parameters in order, or *explicitly*, by name. Parameters omitted from an explicit argument list are *defaulted*, unless annotated with `@[NoDefault]`.
+```rust
+fn Spawn(kind: EnemyKind, count: i32 = 1, position: Vec2) { }
+
+Spawn(Goblin, 3, origin)                  // implicit
+Spawn(.kind = Goblin, .position = origin) // 'count' is 1
+Spawn(.kind = Goblin)                     // 'count' is 1, 'position' is Vec2 {0, 0}
+```
 
 ##### Polyfunctions
 Polyfunctions are *polymorphic functions*, meaning that there are two or more functions that share the same name, but have different parameters -- and, if so, may have different return types as well.
@@ -222,7 +232,51 @@ fn Main() {
 
 A specialization defines what an operator does to *data*. What it does to *bindings* is fixed by the language, and cannot be specialized.
 
+*Every* [operator](Operators.md) may be specialized, and *no* operator may be invoked by name. An operator is *only* invoked through its own syntax, or by the language.
+
+Invoking an operator specialization annotated with `@[Forbid]` is a compile error. Without a parameter list, *every* specialization of that operator is forbidden.
+```rust
+interface for type Quat {
+	@[Forbid] operator+                          // all specializations
+	@[Forbid] operator{} => (x, y, z, w: f32)    // only this specialization
+}
+```
+
+##### Lifecycle Operators
+The lifecycle of data is defined by five operators:
+- `operator{}` - *construction*, invoked by a *braced-list*
+- `operator:=` - *copy-initialization*
+- `operator=` - *assignment*
+- `operator$` - *move*
+- `operator!{}` - *destruction*
+```rust
+interface for type LogFile {
+	operator{} => mut (path: string) {
+		.handle = OpenFile(path)
+	}
+	
+	operator!{} => mut () {
+		Close(.handle)
+	}
+	
+	@[Forbid] operator:=
+	@[Forbid] operator=
+}
+
+data log = LogFile {"game.log"}
+data copy = log  // error
+data moved = $log // ok
+```
+
+Specializing `operator{}` will *only* remove the default braced-init-list if its arguments match the type's data order, just like any other operator override. Its body runs on *default-initialized* data, like an [initialization block](Data.md#Initialization%20Blocks). A specialization without parameters is invoked by both `data x: T` and `T {}`.
+
+`operator:=` is invoked whenever data is initialized as a *copy* of other data: in declarations, parameters, fields and list elements. Unless specialized, it copies each field with that field's own `operator:=`. As a result, data with a field that forbids `operator:=` cannot be copied by default either.
+
 `operator=` *exclusively* specializes assignment, *never* initialization.
+
+`operator$` defines how data is transferred by a move. The source binding *always* ends.
+
+`operator!{}` is invoked *exactly once*, when the lifetime of data ends. It is *never* invoked on data that has been moved. After its body, the type's fields are destroyed in *reverse* declaration order. The default state of a type *must* be safe to destroy.
 
 ##### Invocators
 "Invocator" is just a term for types with a specialized `operator()`

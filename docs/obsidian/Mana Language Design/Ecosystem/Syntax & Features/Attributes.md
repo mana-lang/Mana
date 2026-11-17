@@ -17,6 +17,12 @@ Below is a list of valid Attributes:
 - *NoInit*
 	- Usage: *Before* a *mutable* data declaration
 	- Effect: Data will be left uninitialized
+- *NoDefault*
+	- Usage: *Before* a field or parameter, *or* before a type or function declaration
+	- Effect: The field or parameter has no default, and *must* be provided explicitly. On a type or function, this applies to all fields or parameters without a default value.
+- *Forbid*
+	- Usage: *Before* an operator specialization in a type interface
+	- Effect: Invoking that particular specialization is a compile error.
 - *Pure*
 	- Usage: *Before* function declaration
 	- Effect: Raises compile error if a function has any (potential) side effects

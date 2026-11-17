@@ -101,7 +101,7 @@ Since the data is default-initialized first, a declaration with an initializatio
 A declaration may also target control flow, such as an `if` or a `loop`. See [Control Flow](Control%20Flow.md).
 
 ##### Copy Semantics
-When data is assigned to a binding, it is *always* treated as a *copy*. The new binding holds its own value, and changes made to the original are *never* visible through it.
+When data is assigned to a binding, it is *always* treated as a *copy*. The new binding holds its own value, and changes made to the original are *never* visible through it. How a type is copied is defined by its [lifecycle operators](Procedures.md#Lifecycle%20Operators).
 
 - A *copy* simply *duplicates* the data. Where possible, this will manifest as a "*shallow copy*."
 - A *reference* only *refers* to the original data, taking up a *fixed* amount of *additional* space

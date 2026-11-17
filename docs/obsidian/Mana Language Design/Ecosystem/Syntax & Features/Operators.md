@@ -1,10 +1,10 @@
+##### Operators
+An *operator* acts on data. *Every* operator may be [specialized](Procedures.md#Operators), and *no* operator may be invoked by name.
 
-##### List of Mana operators
-Not all of these operators may be specialized.
-
-- `!`
+- `!`, `not`
 	- Logical NOT
 		- `!expr`
+		- `not expr`
 - `-`
 	- Unary negation
 		- `-23`
@@ -31,13 +31,64 @@ Not all of these operators may be specialized.
 - `*=` 
 	- Multiply-and-assign
 		- `a *= b`
-- `:`
-	- Colon
-		- Annotation
-			- `x: i32`
+- `%`
+	- Remainder
+		- `z = 5 % 3`
+- `%=`
+	- Remainder-and-assign
+		- `z %= y`
 -  `=` 
 	- Assignment
 		- `x = y`
+- `==` 
+	- Equality Comparison
+		- `a == b`
+- `!=` 
+	- Non-Equality Comparison
+		- `a != b`
+- `>=` 
+	- Greater-than-or-equal-to Comparison
+		- `a >= b`
+- `<=` 
+	- Lesser-than-or-equal-to Comparison
+		- `a <= b`
+- `>` 
+	- Greater-than Comparison
+		- `a > b`
+- `<`
+	- Lesser-than Comparison
+		- `a < b`
+- `[]` 
+	- Indexing
+		- `a[22]`
+- `()`
+	- Invocation/Call
+		- `foo(a, b)`
+- `..`
+	- Exclusive range
+		- `5..12`
+- `~`
+	- Inclusive range
+		- `2~5`
+- `$`
+	- Explicit move
+		- `data x = $y`
+- `{}`
+	- Construction
+		- `Foo {.a = 102}`
+- `:=`
+	- Copy-initialization
+		- Invoked by the language, e.g. `data x = y`
+- `!{}`
+	- Destruction
+		- Invoked by the language, when data's lifetime ends
+
+##### Punctuators
+A *punctuator* shapes the program. Punctuators are *not* operators, and may *not* be specialized.
+
+- `:`
+	- Annotation
+		- `x: i32`
 - `=>` 
 	- Target
 		- `Thing => Stuff()`
@@ -57,13 +108,9 @@ Not all of these operators may be specialized.
 		- `[i32]`
 		- `[i32, f32]`
 		- `[i32, 8]`
-	- Indexing operator
-		- `a[22]`
 - `()`
 	- Parameter List
 		- `fn (a: i32, b: bool)`
-	- Invocation/Call
-		- `foo(a, b)`
 	- Parenthesized Expression (Grouping)
 		- `(a + b) / c`
 - `"` 
@@ -72,57 +119,24 @@ Not all of these operators may be specialized.
 - `'`
 	- Character Literal
 		- `'\n'`
-- `==` 
-	- Equality Comparison
-		- `a == b`
-- `!=` 
-	- Non-Equality Comparison
-		- `a != b`
-- `>=` 
-	- Greater-than-or-equal-to Comparison
-		- `a >= b`
-- `<=` 
-	- Lesser-than-or-equal-to Comparison
-		- `a <= b`
-- `>` 
-	- Greater-than Comparison
-		- `a > b`
-- `<`
-	- Lesser-than Comparison
-		- `a < b`
 - `.` 
 	-  Member access
 		- `a.foo(c.bar)`
-- `..`
-	- Exclusive range
-		- `5..12`
-- `~`
-	- Inclusive range
-		- `2~5`
 - `::` 
 	- Scope resolution
 		- `import Foo::Bar`
 - `;` 
 	- Statement terminator
 		- `data x = 5;`
-- `%`
-	- Remainder
-		- `z = 5 % 3`
-- `%=`
-	- Remainder-and-assign
-		- `z %= y`
-- `||`
+- `||`, `or`
 	- Short-circuiting logical OR
 		- `a || b`
-- `&&`
+- `&&`, `and`
 	- Short-circuiting logical AND
 		- `a && b`
 - `&` 
 	- Explicit reference
 		- `data x = &y`
-- `$`
-	- Explicit move
-		- `data x = $y`
 - `@`
 	- Attribute
 		- `@[Flexible]`

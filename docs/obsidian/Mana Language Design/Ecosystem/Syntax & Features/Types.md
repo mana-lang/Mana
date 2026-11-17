@@ -155,7 +155,7 @@ data bar = Foo {.b = 43.3
 
 For *implicit* initialization, the fields *must* be initialized in the *same* order they were declared in their type declaration, and *all* data members *must* be initialized.
 
-*Explicit* initialization does *not* have these requirements. Any fields left uninitialized in an explicit initializer will be *defaulted*.
+*Explicit* initialization does *not* have these requirements. Any fields left uninitialized in an explicit initializer will be *defaulted*, unless annotated with `@[NoDefault]`.
 
 Typically, it is preferable to use *explicit* initialization.
 
@@ -173,6 +173,8 @@ In both cases:
 
 ##### Default Values
 You *may* declare a *default value* for a field. Type members with default values will use their default value instead of their zero-value when omitted from an explicit initializer.
+
+Fields annotated with `@[NoDefault]` have *no* default, and *must* be provided by every initializer. Annotating a type with `@[NoDefault]` applies it to all of its fields without a default value. Data of such a type cannot be default-initialized.
 ```rust
 type Foo {
 	a: i32
