@@ -25,7 +25,7 @@ interface for alloc type Pool {
 ##### Allocator Declarations
 Allocator types may *only* be instantiated by `alloc` declarations. Allocators are *always* mutable.
 
-Allocators may be declared in *any* scope, and are destroyed when their scope exits, like any other data.
+Allocators may be declared in *any* scope, and are destroyed when their scope exits, like any other data. They are destroyed only after *all* data in their scope has been destroyed. For allocators declared at module scope, this is all module data of the program. Their order among one another follows the same rules as [module data](Data.md#Module%20Data).
 ```rust
 alloc pool: Pool
 alloc bullets = Pool {.slot_size = 64}

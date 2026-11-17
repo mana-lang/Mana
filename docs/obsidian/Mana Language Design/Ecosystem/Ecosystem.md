@@ -39,6 +39,8 @@ By default, modules are named after their source file, so you can still treat **
 
 While **Artifacts** may be accessed as if they're contained within one another, they are imported *stand-alone*. This means `import std.io.print` will *only* import the `print` **Artifact.**
 
+Imports between **Artifacts** may *not* form cycles.
+
 The hierarchy of **Artifacts** exists primarily for organizational purposes. However, you may still explicitly import all artifacts in a lower hierarchy with the asterisk wildcard: 
 `import std.io.*`
 ![](Info_Artifacts.png)

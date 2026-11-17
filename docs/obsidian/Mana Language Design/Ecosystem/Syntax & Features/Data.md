@@ -225,6 +225,26 @@ const Something: string
 > Constant `SolPlanets` was not annotated
 > Constant `Something` was not assigned
 
+##### Module Data
+Data declared at module scope is *module data*. Like a constant, its initializer *must* be a constant expression. Module data is initialized before any code runs.
+
+This also applies to [allocators](Memory.md#Allocator%20Declarations) declared at module scope.
+```kotlin
+mut data score: i32 = 0
+mut data config: Config
+data settings = LoadSettings("game.cfg")
+```
+>[!danger] Error
+> Module data `settings` was not initialized with a constant expression
+
+Module data is destroyed when the program exits, in *reverse import order* of its Artifacts. Within an Artifact, the order of destruction is *unspecified*, unless annotated with `@[Outlive(n)]`.
+
+Annotated module data is destroyed *after* all unannotated module data of its Artifact, in *descending* order of `n`, so that `1` is destroyed *last*. Within an Artifact, `n` *must* be unique, and the values used *must* run from `1` without gaps.
+```kotlin
+@[Outlive(1)] mut data log: LogFile        // destroyed last
+@[Outlive(2)] mut data profiler: Profiler  // destroyed before 'log'
+```
+
 ##### Lists
 Lists may be declared via a *list-expression*, and indexed via the *indexing operator*.
 ```kotlin

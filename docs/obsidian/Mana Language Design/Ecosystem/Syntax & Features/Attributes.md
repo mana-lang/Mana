@@ -46,6 +46,9 @@ Below is a list of valid Attributes:
 - *Allocator(name)*
 	- Usage: *Before* a scope or function declaration
 	- Effect: The named allocator becomes the current allocator within it. See [Memory](Memory.md#Scoped%20Allocators).
+- *Outlive(n)*
+	- Usage: *Before* a module-level data or allocator declaration
+	- Effect: Destroys it after all unannotated declarations of its Artifact, in descending order of `n`, so that `1` is destroyed last. See [Module Data](Data.md#Module%20Data).
 - *Timer*
 	- Usage: *Inside* a scope block, from the moment you want to measure the execution of a block.
 	- Effect: Records the time at the moment of the attribute's declaration, and again when that scope is exited. The difference is stored in a configurable global `ScopedTimer` type.
