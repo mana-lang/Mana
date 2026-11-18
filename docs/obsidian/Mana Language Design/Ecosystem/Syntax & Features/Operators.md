@@ -1,5 +1,5 @@
 ##### Operators
-An *operator* acts on data. *Every* operator may be [specialized](Procedures.md#Operators), and *no* operator may be invoked by name.
+An *operator* is a symbol that represents a form of data transformation. *Every* operator may be [specialized](Procedures.md#Operators).
 
 - `!`, `not`
 	- Logical NOT
@@ -84,7 +84,11 @@ An *operator* acts on data. *Every* operator may be [specialized](Procedures.md#
 		- Invoked by the language, when data's lifetime ends
 
 ##### Punctuators
-A *punctuator* shapes the program. Punctuators are *not* operators, and may *not* be specialized.
+A punctuator is the inverse of an operator; a symbol where specialization would serve no purpose. Therefore, *no* punctuators may be specialized.
+
+> [!note]
+> The list below has some symbol overlap with the Operators list. This is because some symbols are operators in certain contexts, and punctuators in others. Only the specializable forms of these symbols are operators.
+
 
 - `:`
 	- Annotation

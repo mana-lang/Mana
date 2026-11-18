@@ -242,6 +242,38 @@ interface for type Quat {
 }
 ```
 
+##### Field Parameters
+The *parameter-list* of an associate or operator specialization may contain *field parameters*. A field parameter is a field of its type, written with a leading access operator `.`
+
+The argument given for a field parameter becomes the value of that field *before* the body runs. The type annotation of a field parameter *may* be omitted.
+```rust
+interface for type Vec2 {
+	mut fn Set(.x, .y) { }
+	
+	mut fn Scale(x: f32) {
+		.x *= x
+		.y *= x
+	}
+}
+
+mut data v = Vec2 {1, 2}
+v.Set(5, 10)  // 'v' is {5, 10}
+v.Scale(2)    // 'v' is {10, 20}
+v.Set(.y = 3) // 'v' is {10, 3}
+```
+Field parameters may *only* be declared on `mut` associates and operator specializations.
+
+When a field parameter is omitted from an explicit argument list, its field keeps its value.
+
+The names in a *parameter-list* *must* be unique. The name of a field parameter is the name of its field, so a field parameter and a parameter of the same name may *not* share a parameter-list.
+```rust
+mut fn Foo(.x: f32, x: f32) // error
+```
+
+Unless specialized, the `operator{}` of a type takes one field parameter for each of its fields, in declaration order.
+
+*Every* specialization of `operator{}` *must* declare a field parameter for each field annotated with `@[NoDefault]`.
+
 ##### Lifecycle Operators
 The lifecycle of data is defined by five operators:
 - `operator{}` - *construction*, invoked by a *braced-list*
@@ -272,11 +304,29 @@ Specializing `operator{}` will *only* remove the default braced-init-list if its
 
 `operator:=` is invoked whenever data is initialized as a *copy* of other data: in declarations, parameters, fields and list elements. Unless specialized, it copies each field with that field's own `operator:=`. As a result, data with a field that forbids `operator:=` cannot be copied by default either.
 
-`operator=` *exclusively* specializes assignment, *never* initialization.
+`operator=` *exclusively* specializes assignment. Unless specialized, it assigns each field with that field's own `operator=`, *overwriting* the old data.`operator$` defines how data arrives at its new binding when it is moved. The source binding is *always* left holding `none`.
 
-`operator$` defines how data is transferred by a move. The source binding *always* ends.
+> [!note]
+> The signature and default behaviour of `operator$` are provisional, until ownership is specified.
 
-`operator!{}` is invoked *exactly once*, when the lifetime of data ends. It is *never* invoked on data that has been moved. After its body, the type's fields are destroyed in *reverse* declaration order. The default state of a type *must* be safe to destroy.
+`operator!{}` is invoked *exactly once*, when a binding reaches the end of its lifetime. 
+It is *not* invoked when a binding is being moved from, as that binding is simply invalidated. 
+
+After its body, the `operator!{}` of each of the type's fields is invoked, in *reverse* declaration order. Unless specialized, the body of `operator!{}` is empty. 
+
+The `operator!{}` of a primitive does nothing. 
+
+The default state of a type *must* be safe to destroy.
+
+Data whose `operator!{}` has been invoked is said to be *destroyed*.
+
+The lifetime of a binding ends when it exits scope. 
+
+The bindings of a scope are destroyed in *reverse* declaration order.
+
+When the binding of an array ends, the `operator!{}` of each of its elements is invoked, in *reverse* index order.
+
+Data without a binding is held by an *unnamed binding*, whose scope is the statement it appears in.
 
 ##### Invocators
 "Invocator" is just a term for types with a specialized `operator()`
@@ -308,7 +358,7 @@ Closures are essentially syntax sugar for ad-hoc invocators.
 - Defined with the `fn` keyword inside another invocable
 - May capture surrounding data with a *capture clause*
 	- Capture clause follows a target operator after the return type, but before the function's scope
-	- Captured bindings may contain assignment operators
+	- Captured bindings may contain assignment annotations
 		- In their absence, captures follow Mana's *assignment deduction rules*.
 	- Captured bindings are part of the closure's type
 	- Closure's size is *at least* the size of all its captures

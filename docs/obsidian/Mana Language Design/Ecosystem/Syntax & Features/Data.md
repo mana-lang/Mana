@@ -133,7 +133,7 @@ In other words, optimisations may *never* affect behaviour in an observable way,
 Short of unnoticeable optimisations, references and moves in Mana are *always explicit*. 
 
 ##### Assignment Annotation
-By default, assignment *copies*. You can explicitly tell Mana to handle the assignment differently using one of the two *assignment operators*: `&` to *reference*, and `$` to *move*.
+By default, assignment *copies*. You can explicitly tell Mana to handle the assignment differently using an *assignment annotation*: `&` to *reference*, and `$` to *move*.
 ```kotlin
 import std.fmt
     
@@ -154,9 +154,12 @@ fn main() {
 >[!danger] Error
 > Data `spell` was invalidated by an earlier move, and cannot be used
 
-In the above example, `spell` became invalidated, because it was *moved* into `move`. A *move* in Mana signifies that data has been given a new *owner* - it does *not* invalidate references.
+In the above example, `spell` became invalidated, because it was *moved* into `move`. This invalidation did *not* apply to `ref`, because the data of `spell` did not change; therefore, neither did its address.
 
-A move *ends* the original binding, the same way leaving its scope would. It does *not* modify the data, so immutable data may be moved.
+A *move* acts on *bindings*. It takes the data bound by one binding and binds it to another, giving the data a new owner. The data itself is *not* modified, so immutable data may be moved, and a move does *not* invalidate references.
+
+The original binding is left holding a value of type [`none`](Types.md#None). Data of type `none` cannot be used in any expression, so using a binding after it has been moved from is a compile error.
+How data arrives at its new binding is defined by [`operator$`](Procedures.md#Lifecycle%20Operators).
 
 This feature is an important part of how Mana handles *ownership*, which will be discussed later.
 

@@ -68,7 +68,7 @@ Every type in Mana has a fixed *size* and *alignment*, both of which are known a
 
 Primitives are represented as follows:
 - *Integers* use *two's complement*, with the size given in their name. `isize` and `usize` are the size of a pointer on the target platform.
-- *Real numbers* follow the *IEEE 754* standard. `f32` is single-precision, and `f64` is double-precision.
+- *Real numbers* follow the **IEEE 754** standard. `f32` is single-precision, and `f64` is double-precision.
 	- Floating-point operations are performed *exactly* as written, unless relaxed by a [compiler flag](Build%20Modes.md#Compiler%20Flags).
 - `bool` takes up *1 byte*, and may *only* hold `0` (`false`) or `1` (`true`).
 	- Converting an integer to `bool` yields `true` for *any* non-zero value; `bool(x)` is equivalent to `x != 0`.

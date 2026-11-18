@@ -65,8 +65,6 @@ This is actively being worked on, and these issues will be taken care of in due 
     - Iterating ranges with `for`
         - `for val in values`
     - Pattern matching with `match`
-- **Explicit & Deduced Assignment**
-    - Control how data is passed around via explicit assignment operators, or allow Mana to deduce the best assignment form for you.
 - **Zero-cost abstractions**
     - Never incur any hidden costs in native code
 - **Advanced Enumeration**
