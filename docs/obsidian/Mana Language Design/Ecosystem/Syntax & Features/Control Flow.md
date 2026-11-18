@@ -75,10 +75,10 @@ loop 12..0 => mut i {}
 
 
 // a loop may also serve as an initialization block
-data x: i32 => loop if x < 30 {
+data x: i32 => loop {
 	// do stuff
 	x = Something()
-}
+} => if x < 30
 
 
 // break and skip statements

@@ -359,7 +359,7 @@ Closures are essentially syntax sugar for ad-hoc invocators.
 - May capture surrounding data with a *capture clause*
 	- Capture clause follows a target operator after the return type, but before the function's scope
 	- Captured bindings may contain assignment annotations
-		- In their absence, captures follow Mana's *assignment deduction rules*.
+		- In their absence, a capture is a *copy*, as in any assignment.
 	- Captured bindings are part of the closure's type
 	- Closure's size is *at least* the size of all its captures
 	- Closure will store captures in the order that requires the *least* amount of padding
