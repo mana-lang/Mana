@@ -136,7 +136,9 @@ In short, `none` is the way with which you describe the *absence* of things in M
 ##### Composite Types
 Composite types can be created using the `type` keyword.
 
-A **Composite Type** block consists of the type keyword and the type's name, followed by a block of *fields* (*type members*), each with their own type annotated.
+A *composite-type-block* consists of the type keyword and the type's name, followed by a *field-list*.
+
+A *field-list* consists of *field-declarations*, which consist of a name, followed by a `:` colon, followed by a type annotation.
 ```rust
 type Foo {
 	a: i32
@@ -144,14 +146,8 @@ type Foo {
 	c: string
 }
 ```
-```kotlin
-// implicit
-data foo = Foo {102, 43.3, "hello"}
 
-// explicit
-data bar = Foo {.b = 43.3
-				.c = "hello"} // 'a' will be 0
-```
+The mutability of each field is determined by the mutability of its instance. A *field-list* only *declares* fields, which are instantiated along with their owner, so fields may *not* be declared `mut`
 
 For *implicit* initialization, the fields *must* be initialized in the *same* order they were declared in their type declaration, and *all* data members *must* be initialized.
 
@@ -160,6 +156,14 @@ For *implicit* initialization, the fields *must* be initialized in the *same* or
 Typically, it is preferable to use *explicit* initialization.
 
 Both types of initialization are done via a *braced-list*, which means they may either be separated by commas, or by newlines.
+```kotlin
+// implicit
+data foo = Foo {102, 43.3, "hello"}
+
+// explicit
+data bar = Foo {.b = 43.3
+				.c = "hello"} // 'a' will be 0
+```
 
 A declaration without an initializer defaults *all* members. So does an empty *braced-list*.
 ```kotlin
@@ -174,7 +178,7 @@ In both cases:
 ##### Default Values
 You *may* declare a *default value* for a field. Type members with default values will use their default value instead of their zero-value when omitted from an explicit initializer.
 
-Fields annotated with `@[NoDefault]` have *no* default, and *must* be provided by every initializer. Annotating a type with `@[NoDefault]` applies it to all of its fields without a default value. Data of such a type cannot be default-initialized.
+Fields annotated with `@[NoDefault]` *must* be provided by every initializer. Annotating a *type* with `@[NoDefault]` applies it to all of its fields without a default value. Data of such a type cannot be default-initialized.
 ```rust
 type Foo {
 	a: i32

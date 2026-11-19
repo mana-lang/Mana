@@ -25,10 +25,6 @@ They consist of a *function signature* followed by a *function body*.
 Function signatures consist of a *name*, followed by a *parameter-list*, followed by an *optional* return type. 
 
 The *parameter-list* consists of a set of parentheses containing an *optional*, comma-separated list of *parameters*.
-
-A *parameter* consists of a *name*, followed by a colon, followed by a *type-name*.
-
-A parameter's type may *not* be omitted. Multiple parameters of the same type *may* be grouped under commas sharing the same type annotation.
  
 If a *return* type is *not* specified, it is *assumed* to be `none`.
 Returning any value *other* than `none` from such a function results in a compile error.
@@ -63,18 +59,46 @@ fn Main() {
 > Function `PrintIf` attempted to return a value despite having `none` return type
 
 ##### Parameters
+A parameter consists of a *name*, followed by a colon, followed by a *type-name*. The name may be qualified with `mut` or `alias`.
+
+A parameter's type may *not* be omitted, except for a [field parameter](Procedures.md#Field%20Parameters). Multiple parameters of the same type *may* be grouped under commas sharing the same type annotation.
 ```rust
 fn Foo(a: i32, b: mut &string, c: [f64, 5]) -> mut &string
 ```
-A parameter may declare a *default value*, like a [field](Types.md#Default%20Values).
+A parameter may declare a *default value*, just like a [field](Types.md#Default%20Values).
 
-An argument list initializes a function's parameters the same way a *braced-list* initializes a type's fields: *implicitly*, providing all parameters in order, or *explicitly*, by name. Parameters omitted from an explicit argument list are *defaulted*, unless annotated with `@[NoDefault]`.
+An *argument-list* initializes a function's parameters the same way a *braced-list* initializes a type's fields: *implicitly*, providing all parameters in order, or *explicitly*, by name. 
+
+Parameters omitted from an *argument-list* are *default-initialized*, unless annotated with `@[NoDefault]`
+
 ```rust
 fn Spawn(kind: EnemyKind, count: i32 = 1, position: Vec2) { }
 
 Spawn(Goblin, 3, origin)                  // implicit
 Spawn(.kind = Goblin, .position = origin) // 'count' is 1
-Spawn(.kind = Goblin)                     // 'count' is 1, 'position' is Vec2 {0, 0}
+Spawn(.kind = Goblin)                     // 'count' is 1, position is {0, 0}
+```
+
+A parameter is identical to a `data` *declaration*, initialized by its argument when the function is invoked. The only difference in declaration syntax is the omission of the `data` keyword, for convenience. 
+
+A parameter is written as a data declaration, however, it is simultaneously defining the underlying layout of that particular [function-type](Procedures.md#The%20Fn%20Type). A *parameter-list* is thus in effect a hybrid between a [field-list](Types.md#Composite%20Types) and a set of data declarations.
+
+A *parameter-list* may therefore declare mutability unlike a *field-list*, because a parameter is treated as an immediate instantiation of that binding within its function, whereas elements of a *field-list* are subject to the mutability of their instantiation.
+
+Parameters of type `*T` and `mut *T` are [pointers](Pointers.md). Parameters qualified with `alias` are [aliases](Pointers.md#Aliases), annotated with the type of the address they are initialized with.
+
+##### Invocation Arguments
+An argument is passed *exactly* as written: `x` passes a *copy*, `&x` an address with *read* access, `mut &x` an address with *write* access, and `$x` *moves* it.
+```rust
+fn Foo(v: Vec2, 
+	   mut w: Vec2, 
+	   p: *i32, 
+	   mut q: mut *i32, 
+	   alias a: *i32, 
+	   alias b: mut *i32) {
+}
+
+Foo(v, w, &x, mut &y, &z, mut &u)
 ```
 
 ##### Polyfunctions
@@ -183,6 +207,37 @@ data baz = foo.Baz()
 > Possible options:
 > - Bem::Baz()
 > - Bar::Baz() 
+
+##### Mutated Fields
+Within an *interface-block* you may declare a *mutated-field-list*.
+
+A *mutated-field-list* may *exclusively* contain fields belonging to the type the interface is for.
+
+*Every* function of that *interface-block* may mutate the listed fields, even if it is not `mut`, and even on *immutable* data. Outside that interface, the listed fields follow the usual rules.
+
+The compiler treats listed fields as *mutable data*. 
+
+A *mutated-field-list* is intended for mutations that are *not* observable through the interface, such as locking a mutex.
+```rust
+type Cache {
+	key: i32
+	mutex: Mutex
+}
+
+interface for type Cache {
+	mut { mutex }
+	
+	fn Get() -> i32 {
+		.mutex.Lock() // ok, even on an immutable 'Cache'
+		// ...
+		.mutex.Unlock()
+	}
+}
+
+data cache = Cache {}
+cache.Get()        // ok
+cache.mutex.Lock() // error: 'cache' is immutable
+```
 
 ##### Operators
 Operators in Mana are specializable polyfunctions.

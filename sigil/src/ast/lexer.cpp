@@ -69,9 +69,7 @@ void Lexer::TokenizeLine() {
 bool Lexer::Tokenize(const std::filesystem::path& file_path) {
     Reset();
     Source.Load(file_path);
-
-    // lines count from 1
-    line_number = 1;
+    
     while (cursor < Source.Size()) {
         TokenizeLine();
     }
@@ -85,7 +83,7 @@ void Lexer::Reset() {
     Source.Reset();
 
     cursor      = 0;
-    line_number = 0;
+    line_number = 1; // lines count from 1
     line_start  = 0;
 }
 
@@ -178,7 +176,7 @@ bool Lexer::LexedNumber() {
         return false;
     }
 
-    u16 length = 0;
+    u16 length = 0; 
 
     // INT = ^[-?0-9]+
     const auto eat_digits = [&] {
@@ -197,7 +195,7 @@ bool Lexer::LexedNumber() {
         AddToken(TokenType::Lit_Int, length);
         return true;
     }
-
+    
     // have to eat the dot first
     ++length;
     ++cursor;
@@ -221,7 +219,7 @@ bool Lexer::LexedOperator() {
     //
     switch (current) {
         using enum TokenType;
-
+        
     case '=':
         if (next == '=') {
             token_type = Op_Equality; // ==
@@ -388,7 +386,7 @@ bool Lexer::LexedOperator() {
 
     default:
         break;
-    }
+    } 
 
     ++cursor;
     AddToken(token_type, token_length);

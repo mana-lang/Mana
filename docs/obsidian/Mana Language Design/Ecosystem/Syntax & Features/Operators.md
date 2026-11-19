@@ -112,6 +112,12 @@ A punctuator is the inverse of an operator; a symbol where specialization would 
 		- `[i32]`
 		- `[i32, f32]`
 		- `[i32, 8]`
+- `*`
+	- Pointer-type annotation
+		- `*i32`
+		- `mut *i32`
+	- Dereference
+		- `*p`
 - `()`
 	- Parameter List
 		- `fn (a: i32, b: bool)`
