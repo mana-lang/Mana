@@ -99,6 +99,8 @@ A punctuator is the inverse of an operator; a symbol where specialization would 
 - `|`
 	- Multi-match
 		- `Thing | Thung => Stuff()` 
+	- Aliasing an enclosing `this` in a closure 
+		- `fn() | mut owner => x { }`
 - `->`  
 	- Return type
 		- `fn() -> i32`

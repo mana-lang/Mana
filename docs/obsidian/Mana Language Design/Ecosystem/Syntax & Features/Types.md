@@ -175,6 +175,15 @@ In both cases:
 - `b` will be `0.0`
 - `c` will be `""`
 
+To store an *address-value* in a field, it must be a [pointer](Pointers.md). 
+```rust
+type Foo {
+	a: *i32
+	b: mut *f64
+	c: string
+}
+```
+
 ##### Default Values
 You *may* declare a *default value* for a field. Type members with default values will use their default value instead of their zero-value when omitted from an explicit initializer.
 
@@ -188,6 +197,15 @@ type Foo {
 ```
 ```kotlin
 data foo = Foo {.a = 102, .c = "hello"} // 'b' will be 32.99
+```
+
+##### Type Aliases
+A *type-alias* is another name for an existing type, declared with `type alias`.
+
+A *type-alias* and the type it names are the *same* type.
+```kotlin
+type alias Health = i32
+type alias AddingFunction = fn(i32, i32) -> i32
 ```
 
 ##### Memory Layout

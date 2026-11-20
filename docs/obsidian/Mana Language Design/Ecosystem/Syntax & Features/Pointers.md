@@ -20,34 +20,41 @@ The *address-of* punctuator `&` yields an *address-value* whose type is the poin
 `&x` where `x` is of type `T` yields an *address-value* of type `*T` with *read* access to `x`. 
 `mut &x` conversely yields an *address-value* of type `mut *T` with *write* access, and *requires* `x` to also be mutable.
 ```kotlin
-mut data a = 1
-mut data c = 2
-data b = 3
+mut data health = 100
+mut data armor = 50
+data level = 3
 
-data p = &a     // *i32
-data q = mut &a // mut *i32
-data r = mut &b // error: 'b' is immutable
+data reader = &health     // *i32
+data writer = mut &health // mut *i32
+data invalid = mut &level // error: 'level' is immutable
 
-mut data s = &a
-s = &c          // 's' is mutable, so it may be re-pointed
+mut data target = &health
+target = &armor           // 'target' is mutable, so it may be re-pointed
 ```
 
+A pointer to a pointer is written `**T`. Each `*` carries its own access, as in `mut *mut *T`.
+
 ##### Dereferencing
-The *dereference* punctuator `*` yields the data a pointer points to. Writing through a pointer *requires* it to have *write* access.
+The *dereference* punctuator `*` yields the data a pointer points to. 
 
-Member access through `.` dereferences a pointer to a composite type *automatically*. A prefix `*` applies *after* member access, so `*a.b` dereferences `a.b`.
+For a pointer `p`, the data `*p` yields is *only* mutable when `p` has *write access*.
+In order words, its type *must* be `mut *T`
 ```kotlin
-mut data a = 1
-data p = mut &a
-data q = &a
+mut data health = 100
+data writer = mut &health
+data reader = &health
 
-*p = 5          // writes 'a'
-data b = *p + 1 // reads 'a'
-*q = 5          // error: 'q' only has read access
+*writer = 5              // writes 'health'
+data total = *writer + 1 // reads 'health'
+*reader = 5              // error: 'reader' only has read access
+```
 
+Member access through `.`  *automatically* dereferences a pointer to a composite type. A prefix `*` applies *after* member access, so `*a.b` dereferences `a.b`
+```kotlin
 data head: *Node = &first
-data v = head.next.value // dereferences 'head' and 'head.next'
-data n = *head.next      // a copy of the Node 'head.next' points to
+data v = head.next.v           // dereferences 'head' and 'head.next'
+data next = *head.next         // a copy of the Node 'head.next' points to
+data invalid = mut &head.v     // error: 'head' only has read access
 ```
 
 ##### Aliases
@@ -67,4 +74,4 @@ alias position = mut &player.position
 position.x += 1 // writes 'player.position.x'
 health = 5      // error: 'health' only has read access
 ```
-Parameters may also be aliases. See [Parameters](Procedures.md#Parameters).
+An alias is may *only* be declared in *local-scope*. To hold an address in a [parameter](Procedures.md#Parameters) or [field](Types.md#Composite%20Types), you must use a pointer.

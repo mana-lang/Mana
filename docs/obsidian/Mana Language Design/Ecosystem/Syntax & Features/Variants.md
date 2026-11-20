@@ -8,7 +8,7 @@ variant Action {
 	ChangePosition {Vec3}
 	ChangeColour {i32, i32, i32}
 	Attack {
-		target: &Entity
+		target: *Entity
 		ability: Ability
 	}
 }

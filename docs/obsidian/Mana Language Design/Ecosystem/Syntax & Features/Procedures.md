@@ -59,11 +59,11 @@ fn Main() {
 > Function `PrintIf` attempted to return a value despite having `none` return type
 
 ##### Parameters
-A parameter consists of a *name*, followed by a colon, followed by a *type-name*. The name may be qualified with `mut` or `alias`.
+A parameter consists of a *name*, followed by a colon, followed by a *type-name*. The name may be qualified with `mut`.
 
 A parameter's type may *not* be omitted, except for a [field parameter](Procedures.md#Field%20Parameters). Multiple parameters of the same type *may* be grouped under commas sharing the same type annotation.
 ```rust
-fn Foo(a: i32, b: mut &string, c: [f64, 5]) -> mut &string
+fn Foo(a: i32, b: mut *string, c: [f64, 5]) -> mut *string
 ```
 A parameter may declare a *default value*, just like a [field](Types.md#Default%20Values).
 
@@ -85,7 +85,7 @@ A parameter is written as a data declaration, however, it is simultaneously defi
 
 A *parameter-list* may therefore declare mutability unlike a *field-list*, because a parameter is treated as an immediate instantiation of that binding within its function, whereas elements of a *field-list* are subject to the mutability of their instantiation.
 
-Parameters of type `*T` and `mut *T` are [pointers](Pointers.md). Parameters qualified with `alias` are [aliases](Pointers.md#Aliases), annotated with the type of the address they are initialized with.
+A parameter that refers to other data is *always* a [pointer](Pointers.md), of type `*T` or `mut *T`.
 
 ##### Invocation Arguments
 An argument is passed *exactly* as written: `x` passes a *copy*, `&x` an address with *read* access, `mut &x` an address with *write* access, and `$x` *moves* it.
@@ -93,12 +93,10 @@ An argument is passed *exactly* as written: `x` passes a *copy*, `&x` an address
 fn Foo(v: Vec2, 
 	   mut w: Vec2, 
 	   p: *i32, 
-	   mut q: mut *i32, 
-	   alias a: *i32, 
-	   alias b: mut *i32) {
+	   mut q: mut *i32) {
 }
 
-Foo(v, w, &x, mut &y, &z, mut &u)
+Foo(v, w, &x, mut &y)
 ```
 
 ##### Polyfunctions
@@ -157,7 +155,7 @@ Associate functions are mostly like regular functions, save for a few key differ
 	- `mut` functions may modify type members
 		- This includes `@[Locked]` type members
 	- They may *only* be invoked on *mutable* bindings of that type
-- They may access members of that type via the `this` keyword
+- They may access members of that type via the `this` keyword, which is a pointer to the instance invoking them
 	- `this` may be omitted, and the members accessed with a leading access operator `.`
 ```rust
 type Foo {
@@ -252,7 +250,7 @@ type Vec2 {
 }
 
 interface for type Vec2 {
-	operator+ => (other: &Vec2) -> Vec2 {
+	operator+ => (other: *Vec2) -> Vec2 {
 		Vec2 {.x + other.x, .y + other.y}
 	}
 }
@@ -416,11 +414,15 @@ Closures are essentially syntax sugar for ad-hoc invocators.
 	- Captured bindings may contain assignment annotations
 		- In their absence, a capture is a *copy*, as in any assignment.
 	- Captured bindings are part of the closure's type
+	- The capture clause acts as the closure's *field-list*: `&y` and `mut &y` capture *pointers*, of type `*T` and `mut *T` respectively.
 	- Closure's size is *at least* the size of all its captures
 	- Closure will store captures in the order that requires the *least* amount of padding
+- May name the enclosing `this` with a `|` punctuator, after the return type and before the capture clause
+	- `| owner` has *read* access, `| mut owner` has *write* access
+	- The name is a pointer to the enclosing instance, and is used like `this`
 - May be named or anonymous
-- Will deduce the return type to the first return expression, if return type is left unspecified
-- Otherwise behave like functions
+- Will deduce the return type to the *first* return expression, if return type is left unspecified
+- Otherwise behave like invocators
 
 ```kotlin
 data x = 32
@@ -444,12 +446,10 @@ foo.Filter(fn() => x, &y {.x % .y})
 
 ```
 
-You can capture a reference to the surrounding type with an alias to `this`
+Aliasing enclosing `this`
 ```rust
-// this: ID <- 'ID' becomes standin for enclosing `this`,
-// because closure has its own `this`
-.Handle(fn() => x, mut this: foo {
-	foo.something = SomethingElse(.x)
+.Handle(fn() | mut owner => x {
+	owner.something = SomethingElse(.x)
 })
 ```
 
@@ -571,9 +571,13 @@ fn Blep() {
 }
 ```
 
-Any specific `fn` signature may be aliased:
+*Every* `fn` has a hidden `this` parameter, like any other type with a specialized `operator()`. When the body of a function accesses *none* of its fields, the compiler may *elide* `this` from its invocation.
+
+A field of type `fn` *always* holds the unelided form, and passes `this` on every invocation. A function without fields is held with an *invalid* address as its `this`.
+
+Any specific `fn` signature may be *type-aliased*:
 ```kotlin
-type AddingFunction = fn(i32, i32) -> i32
+type alias AddingFunction = fn(i32, i32) -> i32
 
 data Add = AddingFunction(a, b: i32) -> i32 { a + b }
 
@@ -651,8 +655,8 @@ Pure functions may *not* call functions which may result in auxiliary side effec
 
 Failing to meet a pure function's requirements results in a *compile error*.
 ```rust
-@[Pure]           // OK -- immutable ref
-fn DotProduct(v1, v2: &Vec2) -> Vec2 {
+@[Pure]           // OK -- read-only pointers
+fn DotProduct(v1, v2: *Vec2) -> Vec2 {
 	v1.x * v2.x + v1.y * v2.y
 }
 
