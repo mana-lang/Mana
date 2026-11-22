@@ -15,9 +15,9 @@ fn Main() {
 > I have 3 oranges
 
 ##### Declarations
-Data in Mana is *immutable* by default. Therefore, the compiler does not refer to them as variables, but instead as *data bindings*, or just *bindings*. This *requires* them to be initialized within the declaration.
+Mana allows you to store data in *bindings*, which are *immutable* by default. This requires them to be initialized as soon as they're declared.
 
-`data` is a *contextual* keyword. It is only a keyword when it introduces a declaration, and may be used as an identifier anywhere else.
+Bindings may be declared with the `data` keyword, which is *contextual*; it is only a keyword when it introduces a declaration, and may be used as an identifier anywhere else.
 ```kotlin  
 fn Main() {
     data two = 2
@@ -28,15 +28,30 @@ fn Main() {
 >[!error] Error
 >Attempt to assign to immutable data bound by `four`
 
-##### Mutability
-To bind a name to *mutable data* in Mana, you must qualify a declaration with the `mut` keyword. 
+##### Bound and Unbound Data
+Data held by a binding is considered *bound*. This applies to primitives, array elements, composite fields, and the data of a resolved *address-value*.
 
-Mutability is a property of the *data*, not of the binding. `mut data` reads exactly as it behaves: the name is bound to *mutable data*.
+All other data is *unbound*, such as literals, the results of invocations, moved data (`$x`) and *address-value* expressions (`&x`).
+
+Unbound data is *never* copied. It becomes bound by whatever it initializes.
+```kotlin
+data health = 100      // '100' is unbound, and becomes bound by 'health'
+data copy = health     // 'health' is bound, so this is a copy
+data spawned = Spawn() // the result of 'Spawn()' becomes bound by 'spawned'
+```
+
+##### Mutability
+To be able to modify bound data in Mana, you must qualify a `data` declaration with the `mut` keyword. This creates a *mutable binding*.
+
+The mutability in a mutable binding is a property of its bound data. When you modify a mutable binding, you are altering the data stored at that binding's address, rather than re-binding to new data.
+
+In other words: altering a mutable binding has *no* intrinsic effect on storage size or location.
 ```kotlin
 import std.fmt
     
 fn Main() {
-	mut data number = 15
+	mut data number = 4320
+	number = 15 // '15' is unbound, and replaces '4320'
 	number += 7
 	fmt.Print("Catch-{number}")
 }
@@ -99,9 +114,8 @@ data player: Player => {
 Since the data is default-initialized first, a declaration with an initialization block *must* include a type annotation.
 
 A declaration may also target control flow, such as an `if` or a `loop`. See [Control Flow](Control%20Flow.md).
-
 ##### Assignment Semantics
-When data is assigned to a binding, it is *always* treated as a *copy*. The new binding holds its own value, and changes made to the original are *never* visible through it. How a type is copied is defined by its [lifecycle operators](Procedures.md#Lifecycle%20Operators).
+When *bound* data is assigned to a binding, it is *always* treated as a *copy*. The new binding holds its own value, and changes made to the original are *never* visible through it. How a type is copied is defined by its [lifecycle operators](Procedures.md#Lifecycle%20Operators).
 
 - A *copy* simply *duplicates* the data. Where possible, this will manifest as a "*shallow copy*."
 - A *reference* only *refers* to the original data, taking up a *fixed* amount of *additional* space

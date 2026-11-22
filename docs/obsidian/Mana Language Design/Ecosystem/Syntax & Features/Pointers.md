@@ -34,8 +34,17 @@ target = &armor           // 'target' is mutable, so it may be re-pointed
 
 A pointer to a pointer is written `**T`. Each `*` carries its own access, as in `mut *mut *T`.
 
+A pointer-to-data with *write* access may be copied into a pointer-to-data with *read* access. At deeper levels of indirection, write access may *only* be dropped if none of the higher levels have write access.
+```kotlin
+mut data writer: mut *i32 = mut &health
+
+data a: *i32 = writer           // ok
+data b: **i32 = &writer         // ok: 'b' cannot re-point 'writer'
+data c: mut **i32 = mut &writer // error: 'c' could re-point 'writer' to read-only data
+```
+
 ##### Dereferencing
-The *dereference* punctuator `*` yields the data a pointer points to. 
+The *dereference* operator `*` yields the data a pointer points to. 
 
 For a pointer `p`, the data `*p` yields is *only* mutable when `p` has *write access*.
 In order words, its type *must* be `mut *T`
@@ -49,12 +58,45 @@ data total = *writer + 1 // reads 'health'
 *reader = 5              // error: 'reader' only has read access
 ```
 
-Member access through `.`  *automatically* dereferences a pointer to a composite type. A prefix `*` applies *after* member access, so `*a.b` dereferences `a.b`
+A [specialization](Procedures.md#Operators) of unary `operator*` returns a pointer, which allows any type to be dereferenced like one.
+
+If the left side of a member access through `.` has no field or associate of that name, `.` dereferences it *once*. A pointer has no members, so `.` *always* dereferences it. A prefix `*` applies *after* member access, so `*a.b` dereferences `a.b`
 ```kotlin
 data head: *Node = &first
 data v = head.next.v           // dereferences 'head' and 'head.next'
 data next = *head.next         // a copy of the Node 'head.next' points to
 data invalid = mut &head.v     // error: 'head' only has read access
+```
+
+Indexing through `[]` follows the same rule: if its left side has no `operator[]`, it is dereferenced *once*. Invocation through `()` *never* dereferences.
+```kotlin
+data scores_ptr: mut *[i32, 8] = mut &scores
+data double_ptr: *fn(i32) -> i32 = &Double
+
+scores_ptr[2] = 5               // dereferences 'scores_ptr'
+data doubled = (*double_ptr)(4) // ok
+data invalid = double_ptr(4)    // error: a pointer cannot be invoked
+```
+
+Member access, indexing and invocation through `->` *always* dereference the left side first: `a->b` is `(*a).b`, `a->[i]` is `(*a)[i]`, and `a->(x)` is `(*a)(x)`.
+```kotlin
+type Player {
+	address: string
+}
+
+type PlayerBox {
+	address: mut *Player
+}
+
+interface for type PlayerBox {
+	operator* => () -> *Player {
+		return .address
+	}
+}
+
+data box = PlayerBox {...}
+box.address  // PlayerBox's 'address'
+box->address // the Player's 'address'
 ```
 
 ##### Aliases

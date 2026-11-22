@@ -26,6 +26,8 @@ An *operator* is a symbol that represents a form of data transformation. *Every*
 	- Divide-and-assign
 		- `a /= b`
 - `*`
+	- Dereference
+		- `*p`
 	- Multiplication
 		- `a * b`
 - `*=` 
@@ -104,6 +106,12 @@ A punctuator is the inverse of an operator; a symbol where specialization would 
 - `->`  
 	- Return type
 		- `fn() -> i32`
+	- Member access through a dereference
+		- `box->address`
+	- Indexing through a dereference
+		- `scores_ptr_ptr->[2]`
+	- Invocation through a dereference
+		- `double_ptr->(4)`
 - `{}` 
 	- Scope
 		- `{ data x = 23 }`
@@ -118,8 +126,6 @@ A punctuator is the inverse of an operator; a symbol where specialization would 
 	- Pointer-type annotation
 		- `*i32`
 		- `mut *i32`
-	- Dereference
-		- `*p`
 - `()`
 	- Parameter List
 		- `fn (a: i32, b: bool)`

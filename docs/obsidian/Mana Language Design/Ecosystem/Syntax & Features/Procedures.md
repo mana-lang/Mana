@@ -295,8 +295,29 @@ interface for type Quat {
 }
 ```
 
+Specializations of `operator[]` and unary `operator*` *must* return a [pointer](Pointers.md). The result of the operator is the data that pointer points to, so it is considered [bound](Data.md#Bound%20and%20Unbound%20Data).
+```rust
+type Inventory {
+	slots: [Item, 16]
+}
+
+interface for type Inventory {
+	operator[] => (index: usize) -> *Item {
+		return &.slots[index]
+	}
+	
+	operator[] => mut (index: usize) -> mut *Item {
+		return mut &.slots[index]
+	}
+}
+
+mut data inventory = Inventory {}
+inventory[2] = sword     // writes an 'Item' 
+data held = inventory[2] // a copy
+```
+
 ##### Field Parameters
-The *parameter-list* of an associate or operator specialization may contain *field parameters*. A field parameter is a field of its type, written with a leading access operator `.`
+The *parameter-list* of an associate or operator specialization may contain *field parameters*. A field parameter is a field that was previously declared in that operator's *field-list*, written with a leading access operator `.`
 
 The argument given for a field parameter becomes the value of that field *before* the body runs. The type annotation of a field parameter *may* be omitted.
 ```rust
@@ -379,7 +400,7 @@ The bindings of a scope are destroyed in *reverse* declaration order.
 
 When the binding of an array ends, the `operator!{}` of each of its elements is invoked, in *reverse* index order.
 
-Data without a binding is held by an *unnamed binding*, whose scope is the statement it appears in.
+The lifetime of [unbound](Data.md#Bound%20and%20Unbound%20Data) data lasts until the end of the statement it appears in.
 
 ##### Invocators
 "Invocator" is just a term for types with a specialized `operator()`
@@ -473,8 +494,9 @@ This does raise a question, though:
 
 *What about `fn`?*
 
-##### The `fn` Type
-The `fn` keyword denotes a special data declaration of type `fn`. 
+##### The `fn` Keyword
+The `fn` keyword denotes a data declaration of an ad-hoc `operator()` specialization, with an optional [capture-clause](Procedures.md#Closures) denoting its fields. 
+
 `fn` is a special primitive whose sole purpose is to describe "normal functions."
 
 What makes `fn` special is that it is a type which allows you to concisely declare `operator()` specializations for it.
@@ -492,7 +514,7 @@ data AddSix = fn(a: i32) -> i32 {
 
 This is the first thing that `fn` makes convenient for us. What this assignment is masking is the differentiation between the `fn` type and the `fn` value. Below is the same declaration, but without any type deduction:
 ```rust
-data AddSix: fn(i32) -> i32 => fn(a: i32) -> i32 {
+data AddSix: fn(i32) -> i32 = fn(a: i32) -> i32 {
 	a + 6
 }
 ```
@@ -573,7 +595,24 @@ fn Blep() {
 
 *Every* `fn` has a hidden `this` parameter, like any other type with a specialized `operator()`. When the body of a function accesses *none* of its fields, the compiler may *elide* `this` from its invocation.
 
-A field of type `fn` *always* holds the unelided form, and passes `this` on every invocation. A function without fields is held with an *invalid* address as its `this`.
+A function binding or field is exactly the size of one pointer. A closure binding is *at least* the size of its captures.
+
+To hold *any* procedure of a given signature, annotate the `fn` type with `@[Proc]`. A `@[Proc] fn` *owns* a copy of its procedure, while a `@[Proc] *fn` points to one.
+```kotlin
+type Button {
+	on_click: @[Proc] fn()
+}
+
+fn Click() { }
+
+mut data clicks = 0
+data counter = fn() => mut &clicks { *.clicks += 1 }
+
+data a = Button {.on_click = Click}
+data b = Button {.on_click = counter} // 'counter' is copied into 'on_click'
+b.on_click()
+```
+A `@[Proc] fn` is the size of two pointers, and *only* accepts procedures that can be copy-initialized. The copy of a procedure with fields is stored in memory from the [current allocator](Memory.md#Allocator%20Capture).
 
 Any specific `fn` signature may be *type-aliased*:
 ```kotlin

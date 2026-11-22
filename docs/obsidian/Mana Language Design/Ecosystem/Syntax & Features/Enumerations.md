@@ -179,7 +179,7 @@ enum Skip : u8 {
 // it only considers the last two entries
 enum Fibonacci : u8 {
 	A  = 1
-	B  = 1 // still unsure if this should be an error
+	B  = 1
 	C  = 2
 	D  = 3
 	E  = 5
