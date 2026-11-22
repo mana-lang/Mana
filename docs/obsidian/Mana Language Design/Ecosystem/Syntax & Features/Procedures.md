@@ -403,13 +403,13 @@ Unless specialized, it copies each field with that field's own `operator#`. As a
 
 `operator=` *exclusively* specializes assignment. Unless specialized, it assigns each field with that field's own `operator=`, *overwriting* the old data.
 
-`operator$` defines how data arrives at its new binding when it is moved. The source binding is *always* left holding `none`.
+`operator$` defines how data arrives at its new binding when it is moved. What the source binding is left holding is decided by the language, *not* by `operator$`; see [Assignment Annotation](Data.md#Assignment%20Annotation).
 
 > [!note]
 > The signature and default behaviour of `operator$` are provisional, until ownership is specified.
 
 `operator!{}` is invoked *exactly once*, when a binding reaches the end of its lifetime. 
-It is *not* invoked when a binding is being moved from, as that binding is simply invalidated. 
+Moving data does *not* invoke its `operator!{}`; its new binding destroys it instead. 
 
 After its body, the `operator!{}` of each of the type's fields is invoked, in *reverse* declaration order. Unless specialized, the body of `operator!{}` is empty. 
 

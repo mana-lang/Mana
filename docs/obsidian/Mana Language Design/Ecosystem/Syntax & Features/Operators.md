@@ -5,6 +5,9 @@ An *operator* is a symbol that represents a form of data transformation. *Every*
 	- Logical NOT
 		- `!expr`
 		- `not expr`
+- `?`
+	- Null test
+		- `target?`
 - `-`
 	- Unary negation
 		- `-23`
@@ -128,6 +131,10 @@ A punctuator is the inverse of an operator; a symbol where specialization would 
 	- Pointer-type annotation
 		- `*i32`
 		- `mut *i32`
+- `?`
+	- Nullable pointer-type annotation
+		- `?*i32`
+		- `mut ?*i32`
 - `()`
 	- Parameter List
 		- `fn (a: i32, b: bool)`

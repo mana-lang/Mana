@@ -18,6 +18,7 @@ Foo {.a = 102}              // composite
 Colour.Red                  // enumerated
 Action.Jump {.height = 2.0} // variant
 fn(x: i32) -> i32 { }       // function
+null_addr                   // pointer
 ```
 A type name on its own is *not* a value. `T(x)` is a *conversion*, not a literal.
 

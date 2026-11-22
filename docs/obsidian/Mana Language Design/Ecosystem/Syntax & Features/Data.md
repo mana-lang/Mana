@@ -174,7 +174,35 @@ In the above example, `spell` became invalidated, because it was *moved* into `m
 
 A *move* acts on *bindings*. It takes the data bound by one binding and binds it to another, giving the data a new owner and new storage. The data itself is *not* modified, so immutable data may be moved.
 
-A binding is *invalidated* when it no longer holds data, which happens when it is moved from. An invalidated binding holds [`none`](Types.md#None): it cannot be used in any expression, and it has nothing to destroy.
+What a move leaves behind depends on the mutability of its source:
+- An *immutable* binding is *invalidated*.
+- A *mutable* binding is *default-initialized*. If its type cannot be default-initialized, it is invalidated instead.
+
+A binding is *invalidated* when it no longer holds data. An invalidated binding holds [`none`](Types.md#None): it cannot be used in any expression, and it has nothing to destroy.
+
+A *field* may *only* be moved out of *mutable* data, which leaves the field default-initialized. To move out of immutable data, the *whole* binding must be moved.
+```kotlin
+mut data request = Request {}
+data result = $request.result // 'request.result' is default-initialized
+request.Retry()               // ok: 'request' is still whole
+
+data order = Order {}
+data item = $order.item       // error: 'order' is immutable
+```
+
+If the field cannot be default-initialized, it is invalidated instead, and its data cannot be used as a whole until the field is assigned again. Destroying the data counts as such a use.
+```kotlin
+fn Fine() {
+	mut data player = Player {}
+	data id = $player.id // 'player.id' is invalidated
+	player.id = NextId() // 'player' is complete again
+}
+
+fn Broken() {
+	mut data player = Player {}
+	data id = $player.id
+}                        // error: 'player' is destroyed while 'player.id' is invalidated
+```
 
 A binding invalidated on *some* paths is invalidated where those paths rejoin; on the paths where it still holds data, that data is destroyed there. Assigning to an invalidated mutable binding initializes it again.
 ```kotlin

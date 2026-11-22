@@ -10,7 +10,7 @@ At runtime, a pointer is *only* an address; the type it points to exists only at
 Like any data, a pointer may only be *re-pointed* if it is mutable.
 
 > [!note]
-> Null, pointer arithmetic and conversions are not yet specified.
+> Pointer arithmetic and conversions are not yet specified.
 
 ##### Access
 The type of a pointer includes its *access* to the data it points to. `*T` may only *read* that data, while `mut *T` may also *write* it.
@@ -42,6 +42,32 @@ data a: *i32 = writer           // ok
 data b: **i32 = &writer         // ok: 'b' cannot re-point 'writer'
 data c: mut **i32 = mut &writer // error: 'c' could re-point 'writer' to read-only data
 ```
+
+##### Null Address
+A pointer of type `*T` *always* holds a valid address to data. A *nullable* pointer, written as `?*T`, may instead hold `null_addr`: an address to nothing. A nullable pointer carries access like any other, as in `mut ?*T`.
+
+A `*T` may be used wherever a `?*T` is expected.
+
+`null_addr` is the *only* pointer literal. The default value of `?*T` is `null_addr`, while `*T` has *no* default value, so it must always be provided, like a [no-default](Attributes.md) annotated field.
+
+Dereferencing `null_addr` is an error that can optionally be [checked at runtime](Build%20Modes.md#Runtime-Checked%20Errors).
+
+The *null-test* operator `?` yields `true` if its operand does *not* hold `null_addr`. It may be [specialized](Procedures.md#Operators), which allows any type to be tested like a nullable pointer.
+```kotlin
+mut data health = 100
+
+data target: mut ?*i32 = mut &health
+data unset: ?*i32                   // 'null_addr'
+
+if target? {
+	*target += 1 // only runs if 'target' holds an address
+}
+
+data invalid: *i32 = null_addr  // error: '*i32' cannot hold 'null_addr'
+data unknown: *i32              // error: '*i32' has no default value
+```
+
+[Signature types](Procedures.md#The%20%60fn%60%20Keyword) follow the same rule: `fn()` *always* holds a valid procedure address, while `?fn()` may hold `null_addr`.
 
 ##### Dereferencing
 The *dereference* operator `*` yields the data a pointer points to. 

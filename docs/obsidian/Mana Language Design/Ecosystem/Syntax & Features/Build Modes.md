@@ -16,6 +16,7 @@ Checked builds trade performance for catching bugs where they happen.
 | ----------------------------------------------- | ------------------- |
 | [Integer overflow](Types.md#Integer%20Overflow) | Wraps around        |
 | Integer division or remainder by zero           | Undefined behaviour |
+| [Dereferencing `null_addr`](Pointers.md#Null)   | Undefined behaviour |
 
 ##### Compiler Flags
 Compilers may offer flags that relax the language's guarantees, such as allowing floating-point operations to be fused or reordered. The behaviour described by this specification applies *only* to builds without such flags. Builds using them are *not* guaranteed to behave identically to default builds, nor across **Circe** and **Salem**.
