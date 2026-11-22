@@ -246,7 +246,7 @@ type Vec2 {
 }
 
 interface for type Vec2 {
-	operator+ => (other: *Vec2) -> Vec2 {
+	operator+ => (other: Vec2) -> Vec2 {
 		return Vec2 {.x + other.x, .y + other.y}
 	}
 }
@@ -347,7 +347,7 @@ Unless specialized, the `operator{}` of a type takes one field parameter for eac
 ##### Lifecycle Operators
 The lifecycle of data is defined by five operators:
 - `operator{}` - *construction*, invoked by a *braced-list*
-- `operator:=` - *copy-initialization*
+- `operator#` - *copy-initialization*
 - `operator=` - *assignment*
 - `operator$` - *move*
 - `operator!{}` - *destruction*
@@ -361,7 +361,7 @@ interface for type LogFile {
 		Close(.handle)
 	}
 	
-	@[Forbid] operator:=
+	@[Forbid] operator#
 	@[Forbid] operator=
 }
 
@@ -370,21 +370,25 @@ data copy = log  // error
 data moved = $log // ok
 ```
 
-Specializing `operator{}` will *only* remove the default braced-init-list if its arguments match the type's data order, just like any other operator override. Its body runs on *default-initialized* data, like an [initialization block](Data.md#Initialization%20Blocks). A specialization without parameters is invoked by both `data x: T` and `T {}`.
+Specializing `operator{}` will *only* override the default braced-init-list if its arguments match the type's data order, just like any other operator override. 
 
-`operator:=` is invoked whenever data is initialized as a *copy* of other data: in declarations, parameters, fields and list elements. It takes *no* parameters; `this` is the data being copied, and the specialization returns the copy.
+A specialization of `operator{}` initializes each field from its field parameter, or with its default if it has none. Its body then runs on the initialized data, like an [initialization block](Data.md#Initialization%20Blocks). A specialization without parameters is invoked by both `data x: T` and `T {}`.
+
+`operator#` is a unary operator, invoked by `#x`, and by the language whenever data is initialized as a *copy* of other data: in declarations, parameters, fields and list elements. It takes *no* parameters; `this` is the data being copied, and the specialization returns the copy.
 ```rust
 interface for type Buffer {
-	operator:= => () -> Buffer {
+	operator# => () -> Buffer {
 		return Buffer {.data = Duplicate(.data), .size = .size}
 	}
 }
 
-data b = a // invokes the 'operator:=' of 'a'
+data b = a // invokes the 'operator#' of 'a'
 ```
-Unless specialized, it copies each field with that field's own `operator:=`. As a result, data with a field that forbids `operator:=` cannot be copied by default either.
+Unless specialized, it copies each field with that field's own `operator#`. As a result, data with a field that forbids `operator#` cannot be copied by default either.
 
-`operator=` *exclusively* specializes assignment. Unless specialized, it assigns each field with that field's own `operator=`, *overwriting* the old data.`operator$` defines how data arrives at its new binding when it is moved. The source binding is *always* left holding `none`.
+`operator=` *exclusively* specializes assignment. Unless specialized, it assigns each field with that field's own `operator=`, *overwriting* the old data.
+
+`operator$` defines how data arrives at its new binding when it is moved. The source binding is *always* left holding `none`.
 
 > [!note]
 > The signature and default behaviour of `operator$` are provisional, until ownership is specified.

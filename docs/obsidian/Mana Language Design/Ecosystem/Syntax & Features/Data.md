@@ -140,7 +140,7 @@ fn main() {
 >[!tip] Output
 > hello1hey5hey
 
-This does *not* mean Mana always duplicates the data in memory. When the compiler can prove that a copy is indistinguishable from a *reference* or a *move* - for example, because the original is never modified while the new binding is alive, or because the original is never used again - it is free to reference or move the data instead, or simply alias the two bindings.
+This does *not* mean Mana always duplicates the data in memory. When the compiler can prove that a copy is indistinguishable from a *reference* or a *move* - for example, because the original is never modified while the new binding is alive, or because the original is never used again - it is free to reference or move the data instead, or simply alias the two bindings. An elided copy does *not* invoke [`operator#`](Procedures.md#Lifecycle%20Operators), whose purpose is *only* to copy. A copy written as `#x` is *never* elided.
 
 In other words, optimisations may *never* affect behaviour in an observable way, other than allowing the same behaviour to execute faster.
 

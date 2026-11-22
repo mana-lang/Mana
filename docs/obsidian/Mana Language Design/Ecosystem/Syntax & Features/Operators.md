@@ -78,8 +78,10 @@ An *operator* is a symbol that represents a form of data transformation. *Every*
 - `{}`
 	- Construction
 		- `Foo {.a = 102}`
-- `:=`
+- `#`
 	- Copy-initialization
+		- `data x = #y`
+		- Is never elided
 		- Invoked by the language, e.g. `data x = y`
 - `!{}`
 	- Destruction
