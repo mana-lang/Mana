@@ -6,7 +6,7 @@ A data type describes that data's size, how it's laid out in memory, and how its
 Mana is *statically typed*, which means *all* types of *all* data *must* be known at compile time.
 
 ##### Values
-Mana has *one* value model, which applies to *every* type. Initialization, assignment, copying, moving, references and operators behave the same way whether the data is a primitive, an array, a composite or a function.
+Mana has *one* value model, which applies to *every* type. Initialization, assignment, copying, moving, taking addresses and operators behave the same way whether the data is a primitive, an array, a composite, a function, or a pointer.
 
 Wherever data of type `T` is expected, *any* expression producing a `T` is accepted.
 

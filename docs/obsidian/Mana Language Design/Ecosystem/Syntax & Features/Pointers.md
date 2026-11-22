@@ -47,7 +47,7 @@ data c: mut **i32 = mut &writer // error: 'c' could re-point 'writer' to read-on
 The *dereference* operator `*` yields the data a pointer points to. 
 
 For a pointer `p`, the data `*p` yields is *only* mutable when `p` has *write access*.
-In order words, its type *must* be `mut *T`
+In other words, its type *must* be `mut *T`
 ```kotlin
 mut data health = 100
 data writer = mut &health
@@ -116,4 +116,4 @@ alias position = mut &player.position
 position.x += 1 // writes 'player.position.x'
 health = 5      // error: 'health' only has read access
 ```
-An alias is may *only* be declared in *local-scope*. To hold an address in a [parameter](Procedures.md#Parameters) or [field](Types.md#Composite%20Types), you must use a pointer.
+An alias may *only* be declared in *local-scope*. To hold an address in a [parameter](Procedures.md#Parameters) or [field](Types.md#Composite%20Types), you must use a pointer.

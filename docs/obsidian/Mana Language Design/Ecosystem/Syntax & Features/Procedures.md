@@ -320,6 +320,13 @@ inventory[2] = sword     // writes an 'Item'
 data held = inventory[2] // a copy
 ```
 
+When both a `mut` and a non-`mut` specialization apply, such as for `operator[]` and unary `operator*`, the `mut` one is used *only* where its result is written.
+```rust
+inventory[2] = sword              // mut operator[]
+data held = inventory[2]          // operator[]
+data writable = mut &inventory[2] // mut operator[]
+```
+
 ##### Field Parameters
 The *parameter-list* of a method or operator specialization may contain *field parameters.* A field parameter is a field that was previously declared in the *field-list* of that *interface-block*'s associated type, written with a leading access operator `.`
 
@@ -378,7 +385,7 @@ data copy = log  // error
 data moved = $log // ok
 ```
 
-Specializing `operator{}` will *only* override the default braced-init-list if its arguments match the type's data order, just like any other operator override. 
+Specializing `operator{}` will *only* override the default braced-list if its parameters *exactly* match the field order of its respective *interface-block*'s associated type, just like any other operator specialization. 
 
 A specialization of `operator{}` initializes each field from its field parameter, or with its default if it has none. Its body then runs on the initialized data, like an [initialization block](Data.md#Initialization%20Blocks). A specialization without parameters is invoked by both `data x: T` and `T {}`.
 

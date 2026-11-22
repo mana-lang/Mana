@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecosystem/Syntax & Features/Procedures.md",
+                "file": "Ecosystem/Syntax & Features/Types.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Procedures"
+              "title": "Types"
             }
           },
           {
@@ -185,19 +185,18 @@
   },
   "active": "6a57afca6b64d7ce",
   "lastOpenFiles": [
+    "Ecosystem/Syntax & Features/Procedures.md",
+    "Ecosystem/Syntax & Features/Pointers.md.tmp.23223.e31e2e97c630",
+    "Ecosystem/Syntax & Features/Pointers.md.tmp.23223.e224b5439d9b",
+    "Ecosystem/Syntax & Features/Types.md.tmp.23223.1bb7f0830e22",
+    "Ecosystem/Syntax & Features/Procedures.md.tmp.23223.a7a8ffc542bf",
+    "Ecosystem/Syntax & Features/Procedures.md.tmp.23223.d3c0a1718178",
     "Ecosystem/Syntax & Features/Procedures.md.tmp.23223.f44790f46418",
     "Ecosystem/Syntax & Features/Procedures.md.tmp.23223.05b0eb3e424c",
     "Ecosystem/Syntax & Features/Types.md.tmp.23223.ac50f773c7b9",
     "Ecosystem/Syntax & Features/Data.md.tmp.23223.a169c73538fd",
     "Ecosystem/Syntax & Features/Data.md.tmp.23223.b634fd136c88",
-    "Ecosystem/Syntax & Features/Data.md.tmp.23223.3d794d2b8a26",
-    "Ecosystem/Syntax & Features/Procedures.md.tmp.23223.a857442d8160",
     "Ecosystem/Syntax & Features/Operators.md",
-    "Ecosystem/Syntax & Features/Procedures.md",
-    "Ecosystem/Syntax & Features/Procedures.md.tmp.23223.5d8dc2ebb33c",
-    "Ecosystem/Syntax & Features/Data.md.tmp.23223.01125d3548bc",
-    "Ecosystem/Syntax & Features/Procedures.md.tmp.23223.668105544fcc",
-    "Ecosystem/Syntax & Features/Procedures.md.tmp.23223.1f5784713554",
     "Ecosystem/Syntax & Features/Data.md",
     "Ecosystem/Syntax & Features/Enumerations.md",
     "Ecosystem/Syntax & Features/Flexible Data.md",
