@@ -147,6 +147,15 @@ type Foo {
 }
 ```
 
+In a *field-list* or a [parameter-list](Procedures.md#Parameters), names may be grouped under commas to share a single annotation. Everything right of the colon is shared by the group, while anything left of a name applies *only* to that name.
+```rust
+type Vec2 {
+	x, y: f32
+}
+
+fn Blend(mut a, b: Colour) { } // only 'a' is mutable
+```
+
 The mutability of each field is determined by the mutability of its instance. A *field-list* only *declares* fields, which are instantiated along with their owner, so fields may *not* be declared `mut`
 
 For *implicit* initialization, the fields *must* be initialized in the *same* order they were declared in their type declaration, and *all* data members *must* be initialized.
@@ -228,7 +237,7 @@ type Foo {
 > Type `Foo` takes up 40 bytes, 17 of which are padding. Reordering its fields could reduce its size to 24 bytes.
 
 ##### Locking Mutable Data
-Fields may be annotated with the `@[Locked]` attribute to indicate that *only* mutable associated functions may modify them.
+Fields may be annotated with the `@[Locked]` attribute to indicate that *only* `mut` methods may modify them.
 
 Mana does *not* have the concept of granular private access specifiers for individual type members. However, sometimes you want a value which may be modified by an interface function, but not by anything else. In these scenarios, you would want to use `@[Locked]`.
 ```rust
@@ -261,4 +270,4 @@ type Foo {
 }
 ```
 > [!note]
-`[Locked]` data is restricted to only be modifiable by interface functions. However, Mana allows anywhere to create an associated function for a type. `[Locked]` is merely an indicator that a type member *shouldn't* freely be modified, for some reason or another.
+`[Locked]` data is restricted to only be modifiable by interface functions. However, Mana allows anywhere to create a method for a type. `[Locked]` is merely an indicator that a type member *shouldn't* freely be modified, for some reason or another.

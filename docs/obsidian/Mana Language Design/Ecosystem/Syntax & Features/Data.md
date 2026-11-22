@@ -147,7 +147,7 @@ In other words, optimisations may *never* affect behaviour in an observable way,
 Short of unnoticeable optimisations, references and moves in Mana are *always explicit*. 
 
 ##### Assignment Annotation
-By default, assignment *copies*. You can explicitly tell Mana to handle the assignment differently using an *assignment annotation*: `&` to *reference*, and `$` to *move*.
+By default, assignment *copies*. You can explicitly tell Mana to handle the assignment differently using an *assignment annotation*: `#` to *force* a copy, `&` to take its *address*, and `$` to *move*.
 ```kotlin
 import std.fmt
     
@@ -155,24 +155,39 @@ fn main() {
 	data spell = "Stupefy"
 	
 	data copy = spell  // copy
-	data ref  = &spell // reference
+	data ptr  = &spell // address
 	data move = $spell // move
 	
-	fmt.Print(ref) // ok
 	fmt.Print(copy) // ok
 	fmt.Print(move) // ok
 	
+	fmt.Print(*ptr)  // won't compile
 	fmt.Print(spell) // won't compile
 }
 ```
 >[!danger] Error
 > Data `spell` was invalidated by an earlier move, and cannot be used
+> 
+> Pointer `ptr` was invalidated by an earlier move of the data it points to, and cannot be used
 
-In the above example, `spell` became invalidated, because it was *moved* into `move`. This invalidation did *not* apply to `ref`, because the data of `spell` did not change; therefore, neither did its address.
+In the above example, `spell` became invalidated, because it was *moved* into `move`. `ptr` was invalidated along with it, because a move gives the data new storage, so *every* pointer to the moved data is invalidated.
 
-A *move* acts on *bindings*. It takes the data bound by one binding and binds it to another, giving the data a new owner. The data itself is *not* modified, so immutable data may be moved, and a move does *not* invalidate references.
+A *move* acts on *bindings*. It takes the data bound by one binding and binds it to another, giving the data a new owner and new storage. The data itself is *not* modified, so immutable data may be moved.
 
-The original binding is left holding a value of type [`none`](Types.md#None). Data of type `none` cannot be used in any expression, so using a binding after it has been moved from is a compile error.
+A binding is *invalidated* when it no longer holds data, which happens when it is moved from. An invalidated binding holds [`none`](Types.md#None): it cannot be used in any expression, and it has nothing to destroy.
+
+A binding invalidated on *some* paths is invalidated where those paths rejoin; on the paths where it still holds data, that data is destroyed there. Assigning to an invalidated mutable binding initializes it again.
+```kotlin
+fn Cast(spell: Spell) {
+	if spell.instant {
+		Resolve($spell)
+		return         // this path leaves, so it never rejoins
+	}
+
+	queue.Push($spell) // 'spell' is still valid here
+}
+```
+
 How data arrives at its new binding is defined by [`operator$`](Procedures.md#Lifecycle%20Operators).
 
 This feature is an important part of how Mana handles *ownership*, which will be discussed later.

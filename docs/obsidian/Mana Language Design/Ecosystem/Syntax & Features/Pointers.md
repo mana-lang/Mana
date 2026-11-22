@@ -60,7 +60,7 @@ data total = *writer + 1 // reads 'health'
 
 A [specialization](Procedures.md#Operators) of unary `operator*` returns a pointer, which allows any type to be dereferenced like one.
 
-If the left side of a member access through `.` has no field or associate of that name, `.` dereferences it *once*. A pointer has no members, so `.` *always* dereferences it. A prefix `*` applies *after* member access, so `*a.b` dereferences `a.b`
+If the left side of a member access through `.` has no field or method of that name, `.` dereferences it *once*. A pointer has no members, so `.` *always* dereferences it. A prefix `*` applies *after* member access, so `*a.b` dereferences `a.b`
 ```kotlin
 data head: *Node = &first
 data v = head.next.v           // dereferences 'head' and 'head.next'

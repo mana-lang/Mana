@@ -2,7 +2,7 @@
 ##### Procedure
 The term *procedure* is used as a catch-all term for *executable things* in Mana. This includes:
 - Functions
-- Associates
+- Methods
 - Invocators
 - Closures
 - Delegates
@@ -57,7 +57,7 @@ fn Main() {
 ##### Parameters
 A parameter consists of a *name*, followed by a colon, followed by a *type-name*. The name may be qualified with `mut`.
 
-A parameter's type may *not* be omitted, except for a [field parameter](Procedures.md#Field%20Parameters). Multiple parameters of the same type *may* be grouped under commas sharing the same type annotation.
+A parameter's type may *not* be omitted, except for a [field parameter](Procedures.md#Field%20Parameters). Parameters may be [grouped](Types.md#Composite%20Types) like fields.
 ```rust
 fn Foo(a: i32, b: mut *string, c: [f64, 5]) -> mut *string
 ```
@@ -73,6 +73,14 @@ fn Spawn(kind: EnemyKind, count: i32 = 1, position: Vec2) { }
 Spawn(Goblin, 3, origin)                  // implicit
 Spawn(.kind = Goblin, .position = origin) // 'count' is 1
 Spawn(.kind = Goblin)                     // 'count' is 1, position is {0, 0}
+```
+
+Parameter names and default values belong to a function's *own* type. A [signature type](Procedures.md#The%20%60fn%60%20Keyword) consists *only* of parameter and return types, so a function invoked through a binding, field or parameter of a signature type must be given *every* argument, in order.
+```rust
+data spawn: fn(EnemyKind, i32, Vec2) = Spawn
+
+spawn(Goblin, 1, origin) // ok
+spawn(.kind = Goblin)    // error: 'fn(EnemyKind, i32, Vec2)' has no parameter names or defaults
 ```
 
 A parameter is identical to a `data` *declaration*, initialized by its argument when the function is invoked. The only difference in declaration syntax is the omission of the `data` keyword, for convenience. 
@@ -143,10 +151,10 @@ fn Sub<T>(a, b: T) -> T {
 }
 ```
 
-##### Associates
-You may *associate* functions to types by creating *type interfaces*. 
+##### Methods
+You may add *methods* to types by creating *type interfaces*. 
 
-Associate functions are mostly like regular functions, save for a few key differences:
+Methods are mostly like regular functions, save for a few key differences:
 - They may be declared `mut`
 	- `mut` functions may modify type members
 		- This includes `@[Locked]` type members
@@ -182,7 +190,7 @@ interface Bar for type Foo {
 data foo = Foo {1, 2, false}
 data x = foo.Fuzz()
 
-// when multiple associate functions share the exact same signature, 
+// when multiple methods share the exact same signature, 
 // and both are imported at once, 
 // you must disambiguate them with the scope resolution operator '::'
 
@@ -197,7 +205,7 @@ data bru = foo.Bem::Baz()
 data baz = foo.Baz()
 ```
 >[!danger] Error
-> Call to associate `foo.Baz()` is ambiguous. 
+> Call to method `foo.Baz()` is ambiguous. 
 > Possible options:
 > - Bem::Baz()
 > - Bar::Baz() 
@@ -313,7 +321,7 @@ data held = inventory[2] // a copy
 ```
 
 ##### Field Parameters
-The *parameter-list* of an associate or operator specialization may contain *field parameters*. A field parameter is a field that was previously declared in that operator's *field-list*, written with a leading access operator `.`
+The *parameter-list* of a method or operator specialization may contain *field parameters.* A field parameter is a field that was previously declared in the *field-list* of that *interface-block*'s associated type, written with a leading access operator `.`
 
 The argument given for a field parameter becomes the value of that field *before* the body runs. The type annotation of a field parameter *may* be omitted.
 ```rust
@@ -331,7 +339,7 @@ v.Set(5, 10)  // 'v' is {5, 10}
 v.Scale(2)    // 'v' is {10, 20}
 v.Set(.y = 3) // 'v' is {10, 3}
 ```
-Field parameters may *only* be declared on `mut` associates and operator specializations.
+A field parameter may *only* be declared on `mut` methods; this includes operator specializations.
 
 When a field parameter is omitted from an explicit argument list, its field keeps its value.
 
@@ -534,7 +542,7 @@ Consider the syntax that instantiates a compound type:
 data x: Foo = Foo {1, 2, 3}
 ```
 
-In this case, we are also writing `Foo` twice; `Foo` is the type, and `Foo {1, 2, 3}` is a value of that type. `fn` works the same way: `fn(i32) -> i32` is a type which holds *any* procedure without fields of that signature, and `fn(a: i32) -> i32 { }` is such a procedure.
+In this case, we are also writing `Foo` twice; `Foo` is the type, and `Foo {1, 2, 3}` is a value of that type. `fn` works the same way: `fn(i32) -> i32` is a *signature type*, which holds *any* procedure without fields of that signature, and `fn(a: i32) -> i32 { }` is such a procedure.
 
 The type form is the function signature, which you would write when storing a particular kind of function. The value form still includes the `fn` keyword to make it clear that we are instantiating a function.
 
@@ -559,7 +567,7 @@ data x = AddSix(6) // x == 12
 In essence, `fn` exists to preserve Mana's philosophy while still allowing us to conveniently write "standalone" functions. It's a keyword which declares a type and instantiates it in one step.
 
 ##### Declaring `fn`
-A function may be declared in *any* situation where data may be declared. When declaring a field of an `fn` type, its signature *must* be included.
+A function may be declared in *any* situation where data may be declared. A field holding a function *must* be declared with a signature type.
 ```rust
 /// Field
 type Foo {
@@ -604,7 +612,7 @@ fn Blep() {
 
 A function binding or field is exactly the size of one pointer. A closure binding is *at least* the size of its captures.
 
-To hold *any* procedure of a given signature, annotate the `fn` type with `@[Proc]`. A `@[Proc] fn` *owns* a copy of its procedure, while a `@[Proc] *fn` points to one.
+To hold *any* procedure of a given signature, annotate its signature type with `@[Proc]`. A `@[Proc] fn` *owns* a copy of its procedure, while a `@[Proc] *fn` points to one.
 ```kotlin
 type Button {
 	on_click: @[Proc] fn()
@@ -692,7 +700,7 @@ const fn ToRadians(degrees: f64) -> f64 {
 4. They may *not write* to *mutable data* that was not declared within their function body
 5. They may *not* return *mutable references*
 
-A pure function, in essence, is not allowed to have *side effects*. This means it cannot modify state outside of itself. This includes any data that would normally be modifiable by an associate.
+A pure function, in essence, is not allowed to have *side effects*. This means it cannot modify state outside of itself. This includes any data that would normally be modifiable by a method.
 
 Data local to the pure function's scope may be freely modified within that scope. It may *not* be transmitted beyond its bounds.
 
