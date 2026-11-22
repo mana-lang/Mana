@@ -29,18 +29,14 @@ The *parameter-list* consists of a set of parentheses containing an *optional*, 
 If a *return* type is *not* specified, it is *assumed* to be `none`.
 Returning any value *other* than `none` from such a function results in a compile error.
 
-The *function body* consists of a *scope* whose contents take one of two forms:
-- Zero or more statements
-- Only and *exactly* one expression
-
-Should the function body contain only and exactly one expression, then the function will return that expression. This expression's evaluated type *must* then also match the function's return type.
+The *function body* is a *scope*. A function returns a value *only* through `return`.
 
 *All* valid binding names are *also* valid function names.
 ```rust
 import std.fmt
 
 fn Subtract(a, b: f32) -> f32 {
-	a - b
+	return a - b
 }
 
 fn PrintIf(b: bool) {
@@ -138,12 +134,12 @@ fn Main() {
 ```rust
 type T for
 fn Add(a, b: T) -> T {
-	a + b
+	return a + b
 }
 
 // shorthand, for when there are no constraints
 fn Sub<T>(a, b: T) -> T {
-	a - b
+	return a - b
 }
 ```
 
@@ -172,7 +168,7 @@ interface Bar for type Foo {
 	
 	@[Pure, Inline]
 	fn Fuzz() -> f64 {
-		.b * Pi / 180
+		return .b * Pi / 180
 	}
 }
 
@@ -251,7 +247,7 @@ type Vec2 {
 
 interface for type Vec2 {
 	operator+ => (other: *Vec2) -> Vec2 {
-		Vec2 {.x + other.x, .y + other.y}
+		return Vec2 {.x + other.x, .y + other.y}
 	}
 }
 
@@ -376,7 +372,17 @@ data moved = $log // ok
 
 Specializing `operator{}` will *only* remove the default braced-init-list if its arguments match the type's data order, just like any other operator override. Its body runs on *default-initialized* data, like an [initialization block](Data.md#Initialization%20Blocks). A specialization without parameters is invoked by both `data x: T` and `T {}`.
 
-`operator:=` is invoked whenever data is initialized as a *copy* of other data: in declarations, parameters, fields and list elements. Unless specialized, it copies each field with that field's own `operator:=`. As a result, data with a field that forbids `operator:=` cannot be copied by default either.
+`operator:=` is invoked whenever data is initialized as a *copy* of other data: in declarations, parameters, fields and list elements. It takes *no* parameters; `this` is the data being copied, and the specialization returns the copy.
+```rust
+interface for type Buffer {
+	operator:= => () -> Buffer {
+		return Buffer {.data = Duplicate(.data), .size = .size}
+	}
+}
+
+data b = a // invokes the 'operator:=' of 'a'
+```
+Unless specialized, it copies each field with that field's own `operator:=`. As a result, data with a field that forbids `operator:=` cannot be copied by default either.
 
 `operator=` *exclusively* specializes assignment. Unless specialized, it assigns each field with that field's own `operator=`, *overwriting* the old data.`operator$` defines how data arrives at its new binding when it is moved. The source binding is *always* left holding `none`.
 
@@ -435,7 +441,8 @@ Closures are essentially syntax sugar for ad-hoc invocators.
 	- Captured bindings may contain assignment annotations
 		- In their absence, a capture is a *copy*, as in any assignment.
 	- Captured bindings are part of the closure's type
-	- The capture clause acts as the closure's *field-list*: `&y` and `mut &y` capture *pointers*, of type `*T` and `mut *T` respectively.
+	- The capture clause declares the closure's fields and initializes them at once. Like a [parameter-list](Procedures.md#Parameters), it may therefore declare mutability: `mut v` captures a mutable copy of `v`.
+	- `&y` and `mut &y` capture *pointers*, of type `*T` and `mut *T` respectively.
 	- Closure's size is *at least* the size of all its captures
 	- Closure will store captures in the order that requires the *least* amount of padding
 - May name the enclosing `this` with a `|` punctuator, after the return type and before the capture clause
@@ -451,19 +458,19 @@ data y = "hello"
 data v = Vec2 {5, 10}
 
 // closures may be named
-data closure = fn(a: i32) -> i32 => x, y, mut &v {
+data closure = fn(a: i32) -> i32 => x, &y, mut v {
 	fmt.Print(.y) // captures are members of the 'closure' invocator
 	
 	.v.x = a
 	.v.y = .x
 	
-	return a * x
+	return a * .x
 }
 @[Discard] closure(55)
 
 // or anonymous	
-foo.Filter(fn() => x, &y {.x % .y})
-		.Map(fn(t: i32) => x, mut &v {t - .x + .v.Cycle()})
+foo.Filter(fn() => x { return .x % 5 })
+		.Map(fn(t: i32) => x, mut v { return t - .x + .v.Cycle() })
 
 ```
 
@@ -495,62 +502,60 @@ This does raise a question, though:
 *What about `fn`?*
 
 ##### The `fn` Keyword
-The `fn` keyword denotes a data declaration of an ad-hoc `operator()` specialization, with an optional [capture-clause](Procedures.md#Closures) denoting its fields. 
-
-`fn` is a special primitive whose sole purpose is to describe "normal functions."
-
-What makes `fn` special is that it is a type which allows you to concisely declare `operator()` specializations for it.
+The `fn` keyword declares an ad-hoc type with an `operator()` specialization, and immediately instantiates it. Its optional [capture-clause](Procedures.md#Closures) denotes the type's fields.
 
 The two declarations below are identical.
 ```rust
 fn AddSix(a: i32) -> i32 {
-	a + 6
+	return a + 6
 }
 
 data AddSix = fn(a: i32) -> i32 {
-	a + 6
+	return a + 6
 }
 ```
 
-This is the first thing that `fn` makes convenient for us. What this assignment is masking is the differentiation between the `fn` type and the `fn` value. Below is the same declaration, but without any type deduction:
+This is the first thing that `fn` makes convenient for us. What this initialization is masking is the differentiation between the function's type and its value. Below is the same declaration, but without any type deduction:
 ```rust
 data AddSix: fn(i32) -> i32 = fn(a: i32) -> i32 {
-	a + 6
+	return a + 6
 }
 ```
 It very quickly turns into a mess. 
 
-Additionally, you may have noticed that this declaration is somewhat recursive; `fn` is both a type as well as a value. Why is this?
+Additionally, you may have noticed that this declaration is somewhat recursive; `fn` appears in both the type and the value. Why is this?
 
-This is related to how `fn` is a type. Consider the syntax that instantiates a compound type:
+Consider the syntax that instantiates a compound type:
 ```rust
 data x: Foo = Foo {1, 2, 3}
 ```
 
-In this case, we are also writing `Foo` twice; `Foo` is the type, and `Foo {1, 2, 3}` is a value of that type. `fn` is no different, because it is itself a type. 
+In this case, we are also writing `Foo` twice; `Foo` is the type, and `Foo {1, 2, 3}` is a value of that type. `fn` works the same way: `fn(i32) -> i32` is a type which holds *any* procedure without fields of that signature, and `fn(a: i32) -> i32 { }` is such a procedure.
 
 The type form is the function signature, which you would write when storing a particular kind of function. The value form still includes the `fn` keyword to make it clear that we are instantiating a function.
 
 To get an idea of what an `fn` declaration does under the hood, we can rewrite the above declaration to look more like a "normal" invocator:
 ```kotlin
-interface __Foo for type fn {
+type __AddSix { } // no capture-clause, so no fields
+
+interface for type __AddSix {
 	operator() => (a: i32) -> i32 {
-		a + 6
+		return a + 6
 	}
 }
 
-data Foo: __Foo
+data AddSix = __AddSix {}
 ```
 
 Which then lets us write:
 ```kotlin
-data x = Foo(6) // x == 12
+data x = AddSix(6) // x == 12
 ```
 
-In essence, `fn` exists to preserve Mana's philosophy while still allowing us to conveniently write "standalone" functions. It's a keyword representing a type which may be instantiated with special syntax.
+In essence, `fn` exists to preserve Mana's philosophy while still allowing us to conveniently write "standalone" functions. It's a keyword which declares a type and instantiates it in one step.
 
 ##### Declaring `fn`
-Data of type `fn` may be declared in *any* situation where data may be declared. When declaring a field of type `fn`, its signature *must* be included.
+A function may be declared in *any* situation where data may be declared. When declaring a field of an `fn` type, its signature *must* be included.
 ```rust
 /// Field
 type Foo {
@@ -585,15 +590,13 @@ Invoke(Bar, 95.4, "hey")
 fn Blep() {
 	data x = 32
 	fn Closure() => x {
-		fmt.PrintLine("{x}")
-		return x * 2
+		fmt.PrintLine("{.x}")
+		return .x * 2
 	}
 	
 	data y = Closure() // y == 64
 }
 ```
-
-*Every* `fn` has a hidden `this` parameter, like any other type with a specialized `operator()`. When the body of a function accesses *none* of its fields, the compiler may *elide* `this` from its invocation.
 
 A function binding or field is exactly the size of one pointer. A closure binding is *at least* the size of its captures.
 
@@ -616,11 +619,12 @@ A `@[Proc] fn` is the size of two pointers, and *only* accepts procedures that c
 
 Any specific `fn` signature may be *type-aliased*:
 ```kotlin
-type alias AddingFunction = fn(i32, i32) -> i32
+type alias Callback = @[Proc] fn(i32)
 
-data Add = AddingFunction(a, b: i32) -> i32 { a + b }
-
-data x = Add(12, 34) // x == 46
+type Button {
+	on_press: Callback
+	on_release: Callback
+}
 ```
 
 This is particularly useful when repeatedly storing the same kind of function signature in a field, or when passing around the same kind of function signature among functions.
@@ -646,7 +650,7 @@ An *inlined function* has two properties:
 ```rust
 @[Inline]
 fn Sqrt(x: f64) -> f64 {
-	x * x
+	return x * x
 }
 ```
 If a function *cannot* be inlined, the compiler *may* raise a *warning*. The function will then behave as normal.
@@ -667,11 +671,11 @@ Just like *constant data*, constant functions *must* have their return type spec
 ```rust
 // equivalent to 'const pi: f64 = 3.14159265358979'
 const fn Pi() -> f64 {
-	3.14159265358979
+	return 3.14159265358979
 }
 
 const fn ToRadians(degrees: f64) -> f64 {
-	degrees * Pi() / 180
+	return degrees * Pi() / 180
 }
 ```
 
@@ -696,13 +700,13 @@ Failing to meet a pure function's requirements results in a *compile error*.
 ```rust
 @[Pure]           // OK -- read-only pointers
 fn DotProduct(v1, v2: *Vec2) -> Vec2 {
-	v1.x * v2.x + v1.y * v2.y
+	return v1.x * v2.x + v1.y * v2.y
 }
 
 // Pure often pairs well with Inline
 @[Pure, Inline]
 fn Sqrt(v: i32) -> i32 {
-	v * v
+	return v * v
 }
 ```
 
@@ -711,7 +715,7 @@ When you invoke a function which returns a meaningful value (i.e. not `none` or 
 
 ```rust
 fn Add(a, b: i32) -> i32 {
-	a + b
+	return a + b
 }
 
 fn Main() {
@@ -724,7 +728,7 @@ fn Main() {
 However, you may wish to intentionally discard this value, because you are invoking a function for its side effects alone. In this case, you may use the `@[Discard]` attribute before the discarding expression.
 ```rust
 fn Add(a, b: i32) -> i32 {
-	a + b
+	return a + b
 }
 
 fn Main() {

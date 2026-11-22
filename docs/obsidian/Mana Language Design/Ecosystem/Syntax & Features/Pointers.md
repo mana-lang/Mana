@@ -100,7 +100,7 @@ box->address // the Player's 'address'
 ```
 
 ##### Aliases
-An *alias* is a binding to existing data, declared with the `alias` keyword. It is initialized with an address: `&x` aliases `x` with *read* access, and `mut &x` with *write* access.
+An *alias* is a binding to existing data, declared with the `alias` keyword. It is initialized with the address-of punctuator: `&x` aliases `x` with *read* access, and `mut &x` with *write* access.
 
 An alias is used *exactly* like the data it aliases. It holds *no* data of its own, so it can *never* be re-pointed, and `mut alias` does not exist.
 
