@@ -266,7 +266,7 @@ fn Main() {
 }
 ```
 
-By default, *most* operators for composite types return `none` and take no parameters. To make them return something else, you have to specialize them.
+An operator has *no* specialization for a composite type, unless the language provides one or the type specializes it. Invoking an operator without a matching specialization is a compile error.
 
 Comparison operators, however, check for equality among all fields.
 ```rust
@@ -284,7 +284,7 @@ fn Main() {
 }
 ```
 >[!danger] Error
-> `Vec3::operator+` does not take two arguments because it is unspecialized.
+> `Vec3` has no specialization of `operator+`.
 > Consider writing a specialization in the interface for `Vec3`
 
 A specialization defines what an operator does to *data*. What it does to *bindings* is fixed by the language, and cannot be specialized.
@@ -325,6 +325,43 @@ When both a `mut` and a non-`mut` specialization apply, such as for `operator[]`
 inventory[2] = sword              // mut operator[]
 data held = inventory[2]          // operator[]
 data writable = mut &inventory[2] // mut operator[]
+```
+
+##### Freestanding Operators
+An operator specialization may also be declared outside an *interface-block*, wherever a function may be declared. A *freestanding* specialization takes *every* operand as a parameter.
+
+A [binding operator](Operators.md#Binding%20Operators) may *only* be specialized in an *interface-block*, where `this` is the data of that binding.
+
+In a method specialization, `this` is the *first* operand. A method and a freestanding specialization with the same operand types are the *same* specialization.
+```rust
+operator* => (scale: f32, v: Vec2) -> Vec2 {
+	return Vec2 {scale * v.x, scale * v.y}
+}
+
+operator+= => (a: Vec2, b: Vec2) { } // error: 'operator+=' is a binding operator
+
+interface for type Vec2 {
+	operator+= => mut (other: Vec2) {
+		.x += other.x
+		.y += other.y
+	}
+}
+
+mut data position = Vec2 {1, 2}
+position += Vec2 {3, 4}      // ok
+data scaled = 2.0 * position // ok
+5 += position                // error: '5' is not a mutable binding
+```
+
+Freestanding specializations are imported with the Artifact that declares them. If several imported Artifacts declare the same specialization, invoking it is a compile error, unless *exactly one* of those Artifacts is imported with `::operator`.
+```rust
+// both declare 'operator+ => (a: Vec2, b: Vec2)'
+import geometry.vec
+import physics.vec_ops
+
+import geometry.vec::operator
+
+data c = a + b // uses 'geometry.vec'
 ```
 
 ##### Field Parameters
@@ -408,7 +445,7 @@ Unless specialized, it copies each field with that field's own `operator#`. As a
 > [!note]
 > The signature and default behaviour of `operator$` are provisional, until ownership is specified.
 
-`operator!{}` is invoked *exactly once*, when a binding reaches the end of its lifetime. 
+`operator!{}` is invoked *exactly once*, when data reaches the end of its lifetime. 
 Moving data does *not* invoke its `operator!{}`; its new binding destroys it instead. 
 
 After its body, the `operator!{}` of each of the type's fields is invoked, in *reverse* declaration order. Unless specialized, the body of `operator!{}` is empty. 
@@ -420,6 +457,8 @@ The default state of a type *must* be safe to destroy.
 Data whose `operator!{}` has been invoked is said to be *destroyed*.
 
 The lifetime of a binding ends when it exits scope. 
+
+The lifetime of bound data ends with the binding holding it.
 
 The bindings of a scope are destroyed in *reverse* declaration order.
 

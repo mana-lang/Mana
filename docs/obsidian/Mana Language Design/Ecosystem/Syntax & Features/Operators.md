@@ -1,6 +1,9 @@
 ##### Operators
 An *operator* is a symbol that represents a form of data transformation. *Every* operator may be [specialized](Procedures.md#Operators).
 
+###### Data Operators
+A *data operator* acts *only* on the data of its operands, and yields [unbound](Data.md#Bound%20and%20Unbound%20Data) data.
+
 - `!`, `not`
 	- Logical NOT
 		- `!expr`
@@ -13,59 +16,36 @@ An *operator* is a symbol that represents a form of data transformation. *Every*
 		- `-23`
 	- Subtraction
 		- `a - b`
-- `-=`  
-	- Subtract-and-assign
-		- `a -= b`
 - `+`
 	- Addition
 		- `a + b`
-- `+=` 
-	- Add-and-assign
-		- `a += b`
 - `/`
 	- Division
 		- `a / b`
-- `/=` 
-	- Divide-and-assign
-		- `a /= b`
 - `*`
-	- Dereference
-		- `*p`
 	- Multiplication
 		- `a * b`
-- `*=` 
-	- Multiply-and-assign
-		- `a *= b`
 - `%`
 	- Remainder
 		- `z = 5 % 3`
-- `%=`
-	- Remainder-and-assign
-		- `z %= y`
--  `=` 
-	- Assignment
-		- `x = y`
-- `==` 
+- `==`
 	- Equality Comparison
 		- `a == b`
-- `!=` 
+- `!=`
 	- Non-Equality Comparison
 		- `a != b`
-- `>=` 
+- `>=`
 	- Greater-than-or-equal-to Comparison
 		- `a >= b`
-- `<=` 
+- `<=`
 	- Lesser-than-or-equal-to Comparison
 		- `a <= b`
-- `>` 
+- `>`
 	- Greater-than Comparison
 		- `a > b`
 - `<`
 	- Lesser-than Comparison
 		- `a < b`
-- `[]` 
-	- Indexing
-		- `a[22]`
 - `()`
 	- Invocation/Call
 		- `foo(a, b)`
@@ -75,9 +55,34 @@ An *operator* is a symbol that represents a form of data transformation. *Every*
 - `~`
 	- Inclusive range
 		- `2~5`
-- `$`
-	- Explicit move
-		- `data x = $y`
+
+###### Binding Operators
+A *binding operator* acts on the binding of its operand: it initializes, writes, moves or destroys that binding's data, or yields [bound](Data.md#Bound%20and%20Unbound%20Data) data.
+
+- `=`
+	- Assignment
+		- `x = y`
+- `-=`
+	- Subtract-and-assign
+		- `a -= b`
+- `+=`
+	- Add-and-assign
+		- `a += b`
+- `/=`
+	- Divide-and-assign
+		- `a /= b`
+- `*=`
+	- Multiply-and-assign
+		- `a *= b`
+- `%=`
+	- Remainder-and-assign
+		- `z %= y`
+- `*`
+	- Dereference
+		- `*p`
+- `[]`
+	- Indexing
+		- `a[22]`
 - `{}`
 	- Construction
 		- `Foo {.a = 102}`
@@ -86,9 +91,12 @@ An *operator* is a symbol that represents a form of data transformation. *Every*
 		- `data x = #y`
 		- Is never elided
 		- Invoked by the language, e.g. `data x = y`
+- `$`
+	- Explicit move
+		- `data x = $y`
 - `!{}`
 	- Destruction
-		- Invoked by the language, when data's lifetime ends
+		- Invoked by the language, when data reaches the end of its lifetime
 
 ##### Punctuators
 A punctuator is the inverse of an operator; a symbol where specialization would serve no purpose. Therefore, *no* punctuators may be specialized.

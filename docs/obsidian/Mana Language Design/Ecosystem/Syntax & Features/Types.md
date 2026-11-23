@@ -117,8 +117,6 @@ What this means is:
 	- The following two statements are equivalent:
 		- `return`
 		- `return none`
-	- By default, operators for composite types are empty functions which return `none`.
-		- While this means that for two bindings `a, b` of a type `T`, the operation `a + b` *would* compile (the result of that expression is `none`, the compiler *may* warn for such expressions, and can be configured not to.
 - Data
 	- You may assign `none` to a binding during initialization, and that will deduce its type to be `none`.  
 		- You may annotate a binding with type `none`, which will default its value to `none`
