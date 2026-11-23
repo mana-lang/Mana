@@ -83,8 +83,8 @@ type Foo<SomeConstraint> {
 Interfaces of types implementing this constraint *must* implement any functions defined by the constraint
 ```rust
 type interface DoesThing where {
-	fn DoThing(this) -> i32
-	fn DoOtherThing(this) -> f64
+	fn DoThing(*This) -> i32
+	fn DoOtherThing(*This) -> f64
 }
 
 type Foo: DoesThing {
@@ -93,19 +93,19 @@ type Foo: DoesThing {
 }
 
 interface Bar for type Foo {
-	fn Blah(this) {
+	fn Blah(*This) {
 		// do something
 	}
 	
-	fn DoOtherThing(this) -> f32 {
+	fn DoOtherThing(*This) -> f32 {
 		// do other thing
 	}
 }
 ```
 >[!danger] Error
 > Type `Foo` does not satisfy constraint `DoesThing`:
-> - Function `fn DoThing(this) -> i32` is not implemented
-> - Function `fn DoOtherThing(this) -> f32` does not match return requirement: `f64`
+> - Function `fn DoThing(*This) -> i32` is not implemented
+> - Function `fn DoOtherThing(*This) -> f32` does not match return requirement: `f64`
 
 For types wishing to implement multiple interfaces:
 ```rust
@@ -128,7 +128,7 @@ type Foo {
 
 type T where (t: T) => t.Bar() -> Baz for
 interface Bar for type Foo {
-	fn Doohickey(mut this) -> T {
+	fn Doohickey(mut *This) -> T {
 		// do some stuff, return constrained T
 	}
 }

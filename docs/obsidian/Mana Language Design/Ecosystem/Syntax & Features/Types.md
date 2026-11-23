@@ -236,7 +236,7 @@ type Foo {
 > Type `Foo` takes up 40 bytes, 17 of which are padding. Reordering its fields could reduce its size to 24 bytes.
 
 ##### Locking Mutable Data
-Fields may be annotated with the `@[Locked]` attribute to indicate that *only* methods may modify them, through a `mut this` receiver.
+Fields may be annotated with the `@[Locked]` attribute to indicate that *only* methods may modify them, through a `mut *This` receiver.
 
 Mana does *not* have the concept of granular private access specifiers for individual type members. However, sometimes you want a value which may be modified by an interface function, but not by anything else. In these scenarios, you would want to use `@[Locked]`.
 ```rust
@@ -249,7 +249,7 @@ type Foo {
 }
 
 interface Bar for type Foo {
-	fn Baz(mut this) -> i32 {
+	fn Baz(mut *This) -> i32 {
 		.a += 2
 		return .a
 	}

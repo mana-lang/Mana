@@ -89,7 +89,7 @@ type PlayerBox {
 }
 
 interface for type PlayerBox {
-	operator*(this) -> *Player {
+	operator* (*This) -> *Player {
 		return .address
 	}
 }
