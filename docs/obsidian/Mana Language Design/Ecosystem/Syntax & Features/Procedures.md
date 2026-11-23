@@ -63,7 +63,7 @@ fn Foo(a: i32, b: mut *string, c: [f64, 5]) -> mut *string
 ```
 A parameter may declare a *default value*, just like a [field](Types.md#Default%20Values).
 
-An *argument-list* initializes a function's parameters the same way a *braced-list* initializes a type's fields: *implicitly*, providing all parameters in order, or *explicitly*, by name. 
+An *argument-list* initializes a function's parameters: *implicitly*, providing all parameters in order, or *explicitly*, by name.
 
 Parameters omitted from an *argument-list* are *default-initialized*, unless annotated with `@[NoDefault]`
 
@@ -75,19 +75,28 @@ Spawn(.kind = Goblin, .position = origin) // 'count' is 1
 Spawn(.kind = Goblin)                     // 'count' is 1, position is {0, 0}
 ```
 
-Parameter names and default values belong to a function's *own* type. A [signature type](Procedures.md#The%20%60fn%60%20Keyword) consists *only* of parameter and return types, so a function invoked through a binding, field or parameter of a signature type must be given *every* argument, in order.
+Parameter names and default values belong to the *declaration* of a callable binding, field or parameter, *not* to its type. They are written in its signature annotation, or in the `fn` literal that initializes it. A [signature type](Procedures.md#The%20%60fn%60%20Keyword) consists *only* of parameter and return types, so a callable whose declaration writes *no* parameter names must be given *every* argument, in order.
 ```rust
 data spawn: fn(EnemyKind, i32, Vec2) = Spawn
+data named: fn(kind: EnemyKind, count: i32 = 1, position: Vec2) = Spawn
 
 spawn(Goblin, 1, origin) // ok
-spawn(.kind = Goblin)    // error: 'fn(EnemyKind, i32, Vec2)' has no parameter names or defaults
+spawn(.kind = Goblin)    // error: 'spawn' declares no parameter names or defaults
+named(.kind = Goblin)    // ok: 'count' is 1
+```
+
+Re-binding a callable binding does *not* change its parameter names or defaults.
+```rust
+mut fn Attack(target: *Enemy, damage: i32 = 10) { }
+fn Heal(target: *Enemy, amount: i32 = 5) { }
+
+Attack = Heal
+Attack(.target = enemy) // invokes 'Heal' with a 'damage' of 10
 ```
 
 A parameter is identical to a `data` *declaration*, initialized by its argument when the function is invoked. The only difference in declaration syntax is the omission of the `data` keyword, for convenience. 
 
-A parameter is written as a data declaration, however, it is simultaneously defining the underlying layout of that particular [function-type](Procedures.md#The%20Fn%20Type). A *parameter-list* is thus in effect a hybrid between a [field-list](Types.md#Composite%20Types) and a set of data declarations.
-
-A *parameter-list* may therefore declare mutability unlike a *field-list*, because a parameter is treated as an immediate instantiation of that binding within its function, whereas elements of a *field-list* are subject to the mutability of their instantiation.
+A *parameter-list* may declare mutability, unlike a [field-list](Types.md#Composite%20Types), because a parameter is an immediate instantiation of its binding within its function, whereas the elements of a *field-list* are subject to the mutability of their instantiation.
 
 A parameter that refers to other data is *always* a [pointer](Pointers.md), of type `*T` or `mut *T`.
 
@@ -154,13 +163,41 @@ fn Sub<T>(a, b: T) -> T {
 ##### Methods
 You may add *methods* to types by creating *type interfaces*. 
 
-Methods are mostly like regular functions, save for a few key differences:
-- They may be declared `mut`
-	- `mut` functions may modify type members
-		- This includes `@[Locked]` type members
-	- They may *only* be invoked on *mutable* bindings of that type
-- They may access members of that type via the `this` keyword, which is a pointer to the instance invoking them
-	- `this` may be omitted, and the members accessed with a leading access operator `.`
+Within an *interface-block*, `this` is a type: a [pointer](Pointers.md) to the block's associated type. `this` has *read* access, and `mut this` has *write* access.
+
+A method is a function whose *first* parameter is of type `this`. That parameter is its *receiver*. *Only* the first parameter may be of type `this`, and a function without one has *no* receiver.
+
+The receiver is initialized from the data the method is invoked on, *not* by the *argument-list*: as `&x` for a `this` receiver, and as `mut &x` for a `mut this` receiver.
+
+A receiver whose name is omitted is named `this`. Its members may be accessed with a leading access operator `.`, whatever its name.
+```rust
+type Vec2 {
+	x: f32
+	y: f32
+}
+
+interface for type Vec2 {
+	fn Scale(mut this, x: f32) {
+		.x *= x
+		.y *= x
+	}
+	
+	fn Dot(v: this, other: Vec2) -> f32 {
+		return .x * other.x + .y * other.y // '.x' is 'v.x'
+	}
+}
+
+mut data a = Vec2 {3, 4}
+data b = Vec2 {1, 2}
+
+a.Scale(2)        // 'this' is 'mut &a', 'x' is 2
+data d = b.Dot(a) // 'v' is '&b'
+b.Scale(2)        // error: 'b' is immutable
+```
+
+> [!note]
+> How a function without a receiver is invoked is not yet specified.
+
 ```rust
 type Foo {
 	a: i32 @[Locked]
@@ -169,13 +206,13 @@ type Foo {
 }
 
 interface Bar for type Foo {
-	mut fn Baz() -> i32 {
+	fn Baz(mut this) -> i32 {
 		.a *= 3
 		return .a
 	}
 	
 	@[Pure, Inline]
-	fn Fuzz() -> f64 {
+	fn Fuzz(this) -> f64 {
 		return .b * Pi / 180
 	}
 }
@@ -187,7 +224,7 @@ interface Bar for type Foo {
 // 'import SomeModule.Foo::Bar'
 // or all of them with 'import SomeModule.Foo::*'
 
-data foo = Foo {1, 2, false}
+mut data foo = Foo {1, 2, false}
 data x = foo.Fuzz()
 
 // when multiple methods share the exact same signature, 
@@ -195,7 +232,7 @@ data x = foo.Fuzz()
 // you must disambiguate them with the scope resolution operator '::'
 
 interface Bem for type Foo {
-	mut fn Baz() -> i32 {
+	fn Baz(mut this) -> i32 {
 		.a *= 27
 		return .a
 	}
@@ -215,7 +252,7 @@ Within an *interface-block* you may declare a *mutated-field-list*.
 
 A *mutated-field-list* may *exclusively* contain fields belonging to the type the interface is for.
 
-*Every* function of that *interface-block* may mutate the listed fields, even if it is not `mut`, and even on *immutable* data. Outside that interface, the listed fields follow the usual rules.
+*Every* function of that *interface-block* may mutate the listed fields, even through a `this` receiver, and even on *immutable* data. Outside that interface, the listed fields follow the usual rules.
 
 The compiler treats listed fields as *mutable data*. 
 
@@ -229,7 +266,7 @@ type Cache {
 interface for type Cache {
 	mut { mutex }
 	
-	fn Get() -> i32 {
+	fn Get(this) -> i32 {
 		.mutex.Lock() // ok, even on an immutable 'Cache'
 		// ...
 		.mutex.Unlock()
@@ -246,7 +283,7 @@ Operators in Mana are specializable polyfunctions.
 
 You can specialize operators in the *interface block* of any given type. 
 
-Operator specializations do *not* use the `fn` keyword in their declaration; instead, they bind directly to a *parameter-list* and have an *optional* return type. 
+Operator specializations are declared like functions, with `operator` and the operator's symbol in place of `fn` and a name. 
 ```rust
 type Vec2 {
 	x: f32
@@ -254,7 +291,7 @@ type Vec2 {
 }
 
 interface for type Vec2 {
-	operator+ => (other: Vec2) -> Vec2 {
+	operator+(this, other: Vec2) -> Vec2 {
 		return Vec2 {.x + other.x, .y + other.y}
 	}
 }
@@ -294,8 +331,8 @@ A specialization defines what an operator does to *data*. What it does to *bindi
 Invoking an operator specialization annotated with `@[Forbid]` is a compile error. Without a parameter list, *every* specialization of that operator is forbidden.
 ```rust
 interface for type Quat {
-	@[Forbid] operator+                          // all specializations
-	@[Forbid] operator{} => (x, y, z, w: f32)    // only this specialization
+	@[Forbid] operator+                             // all specializations
+	@[Forbid] operator{}(mut this, x, y, z, w: f32) // only this specialization
 }
 ```
 
@@ -306,11 +343,11 @@ type Inventory {
 }
 
 interface for type Inventory {
-	operator[] => (index: usize) -> *Item {
+	operator[](this, index: usize) -> *Item {
 		return &.slots[index]
 	}
 	
-	operator[] => mut (index: usize) -> mut *Item {
+	operator[](mut this, index: usize) -> mut *Item {
 		return mut &.slots[index]
 	}
 }
@@ -320,28 +357,28 @@ inventory[2] = sword     // writes an 'Item'
 data held = inventory[2] // a copy
 ```
 
-When both a `mut` and a non-`mut` specialization apply, such as for `operator[]` and unary `operator*`, the `mut` one is used *only* where its result is written.
+When specializations with a `this` and a `mut this` receiver both apply, such as for `operator[]` and unary `operator*`, the `mut this` one is used *only* where its result is written.
 ```rust
-inventory[2] = sword              // mut operator[]
-data held = inventory[2]          // operator[]
-data writable = mut &inventory[2] // mut operator[]
+inventory[2] = sword              // 'mut this' operator[]
+data held = inventory[2]          // 'this' operator[]
+data writable = mut &inventory[2] // 'mut this' operator[]
 ```
 
 ##### Freestanding Operators
 An operator specialization may also be declared outside an *interface-block*, wherever a function may be declared. A *freestanding* specialization takes *every* operand as a parameter.
 
-A [binding operator](Operators.md#Binding%20Operators) may *only* be specialized in an *interface-block*, where `this` is the data of that binding.
+A [binding operator](Operators.md#Binding%20Operators) may *only* be specialized with a receiver, which is the data of that binding.
 
-In a method specialization, `this` is the *first* operand. A method and a freestanding specialization with the same operand types are the *same* specialization.
+A specialization with a receiver and a freestanding specialization with the same operand types are the *same* specialization.
 ```rust
-operator* => (scale: f32, v: Vec2) -> Vec2 {
+operator*(scale: f32, v: Vec2) -> Vec2 {
 	return Vec2 {scale * v.x, scale * v.y}
 }
 
-operator+= => (a: Vec2, b: Vec2) { } // error: 'operator+=' is a binding operator
+operator+=(a: Vec2, b: Vec2) { } // error: 'operator+=' is a binding operator
 
 interface for type Vec2 {
-	operator+= => mut (other: Vec2) {
+	operator+=(mut this, other: Vec2) {
 		.x += other.x
 		.y += other.y
 	}
@@ -350,12 +387,12 @@ interface for type Vec2 {
 mut data position = Vec2 {1, 2}
 position += Vec2 {3, 4}      // ok
 data scaled = 2.0 * position // ok
-5 += position                // error: '5' is not a mutable binding
+5 += position                // error: '5' is not mutable
 ```
 
 Freestanding specializations are imported with the Artifact that declares them. If several imported Artifacts declare the same specialization, invoking it is a compile error, unless *exactly one* of those Artifacts is imported with `::operator`.
 ```rust
-// both declare 'operator+ => (a: Vec2, b: Vec2)'
+// both declare 'operator+(a: Vec2, b: Vec2)'
 import geometry.vec
 import physics.vec_ops
 
@@ -370,9 +407,9 @@ The *parameter-list* of a method or operator specialization may contain *field p
 The argument given for a field parameter becomes the value of that field *before* the body runs. The type annotation of a field parameter *may* be omitted.
 ```rust
 interface for type Vec2 {
-	mut fn Set(.x, .y) { }
+	fn Set(mut this, .x, .y) { }
 	
-	mut fn Scale(x: f32) {
+	fn Scale(mut this, x: f32) {
 		.x *= x
 		.y *= x
 	}
@@ -383,13 +420,13 @@ v.Set(5, 10)  // 'v' is {5, 10}
 v.Scale(2)    // 'v' is {10, 20}
 v.Set(.y = 3) // 'v' is {10, 3}
 ```
-A field parameter may *only* be declared on `mut` methods; this includes operator specializations.
+A field parameter may *only* be declared after a `mut this` receiver; this includes operator specializations.
 
 When a field parameter is omitted from an explicit argument list, its field keeps its value.
 
 The names in a *parameter-list* *must* be unique. The name of a field parameter is the name of its field, so a field parameter and a parameter of the same name may *not* share a parameter-list.
 ```rust
-mut fn Foo(.x: f32, x: f32) // error
+fn Foo(mut this, .x: f32, x: f32) // error
 ```
 
 Unless specialized, the `operator{}` of a type takes one field parameter for each of its fields, in declaration order.
@@ -405,11 +442,11 @@ The lifecycle of data is defined by five operators:
 - `operator!{}` - *destruction*
 ```rust
 interface for type LogFile {
-	operator{} => mut (path: string) {
+	operator{}(mut this, path: string) {
 		.handle = OpenFile(path)
 	}
 	
-	operator!{} => mut () {
+	operator!{}(mut this) {
 		Close(.handle)
 	}
 	
@@ -422,14 +459,14 @@ data copy = log  // error
 data moved = $log // ok
 ```
 
-Specializing `operator{}` will *only* override the default braced-list if its parameters *exactly* match the field order of its respective *interface-block*'s associated type, just like any other operator specialization. 
+Specializing `operator{}` will *only* override the default braced-list if its parameters after its receiver *exactly* match the field order of its respective *interface-block*'s associated type, just like any other operator specialization. 
 
-A specialization of `operator{}` initializes each field from its field parameter, or with its default if it has none. Its body then runs on the initialized data, like an [initialization block](Data.md#Initialization%20Blocks). A specialization without parameters is invoked by both `data x: T` and `T {}`.
+A specialization of `operator{}` initializes each field from its field parameter, or with its default if it has none. Its body then runs on the initialized data, like an [initialization block](Data.md#Initialization%20Blocks). A specialization without parameters besides its receiver is invoked by both `data x: T` and `T {}`.
 
-`operator#` is a unary operator, invoked by `#x`, and by the language whenever data is initialized as a *copy* of other data: in declarations, parameters, fields and list elements. It takes *no* parameters; `this` is the data being copied, and the specialization returns the copy.
+`operator#` is a unary operator, invoked by `#x`, and by the language whenever data is initialized as a *copy* of other data: in declarations, parameters, fields and list elements. Its *only* parameter is its receiver, the data being copied, and the specialization returns the copy.
 ```rust
 interface for type Buffer {
-	operator# => () -> Buffer {
+	operator#(this) -> Buffer {
 		return Buffer {.data = Duplicate(.data), .size = .size}
 	}
 }
@@ -477,7 +514,7 @@ type Invocator {
 }
 
 interface for type Invocator {
-	operator () => mut (x: i32) -> i32 {
+	operator()(mut this, x: i32) -> i32 {
 		.a += x
 		return .a
 	}
@@ -496,16 +533,20 @@ Closures are essentially syntax sugar for ad-hoc invocators.
 - Defined with the `fn` keyword inside another invocable
 - May capture surrounding data with a *capture clause*
 	- Capture clause follows a target operator after the return type, but before the function's scope
+	- Each capture is written `name = value`
+		- A capture of a binding under its own name may omit the name: `x` is `x = x`, and `&y` is `y = &y`
+		- The values of a capture clause know *exclusively* of the enclosing scope, *not* of the closure's parameters
 	- Captured bindings may contain assignment annotations
 		- In their absence, a capture is a *copy*, as in any assignment.
 	- Captured bindings are part of the closure's type
-	- The capture clause declares the closure's fields and initializes them at once. Like a [parameter-list](Procedures.md#Parameters), it may therefore declare mutability: `mut v` captures a mutable copy of `v`.
+	- The capture clause declares the closure's fields and initializes them at once. Like any fields, they may *not* be declared `mut`; a closure writes its own fields through a `mut this` receiver.
 	- `&y` and `mut &y` capture *pointers*, of type `*T` and `mut *T` respectively.
 	- Closure's size is *at least* the size of all its captures
 	- Closure will store captures in the order that requires the *least* amount of padding
-- May name the enclosing `this` with a `|` punctuator, after the return type and before the capture clause
-	- `| owner` has *read* access, `| mut owner` has *write* access
-	- The name is a pointer to the enclosing instance, and is used like `this`
+- Within a closure, `this` is a pointer to the closure's *own* type
+	- Its captures are reached through its [receiver](Procedures.md#Methods), like the fields of any receiver
+	- A closure without a receiver cannot reach its captures
+- The enclosing `this` is captured like any other data, under another name: `owner = this`
 - May be named or anonymous
 - Will deduce the return type to the *first* return expression, if return type is left unspecified
 - Otherwise behave like invocators
@@ -516,7 +557,7 @@ data y = "hello"
 data v = Vec2 {5, 10}
 
 // closures may be named
-data closure = fn(a: i32) -> i32 => x, &y, mut v {
+mut data closure = fn(mut this, a: i32) -> i32 => x, &y, v {
 	fmt.Print(.y) // captures are members of the 'closure' invocator
 	
 	.v.x = a
@@ -527,15 +568,15 @@ data closure = fn(a: i32) -> i32 => x, &y, mut v {
 @[Discard] closure(55)
 
 // or anonymous	
-foo.Filter(fn() => x { return .x % 5 })
-		.Map(fn(t: i32) => x, mut v { return t - .x + .v.Cycle() })
+foo.Filter(fn(this) => x { return .x % 5 })
+		.Map(fn(mut this, t: i32) => x, v { return t - .x + .v.Cycle() })
 
 ```
 
-Aliasing enclosing `this`
+Capturing the enclosing `this`
 ```rust
-.Handle(fn() | mut owner => x {
-	owner.something = SomethingElse(.x)
+.Handle(fn(this) => x, owner = this {
+	.owner.something = SomethingElse(.x)
 })
 ```
 
@@ -560,7 +601,7 @@ This does raise a question, though:
 *What about `fn`?*
 
 ##### The `fn` Keyword
-The `fn` keyword declares an ad-hoc type with an `operator()` specialization, and immediately instantiates it. Its optional [capture-clause](Procedures.md#Closures) denotes the type's fields.
+The `fn` keyword declares an ad-hoc type with an `operator()` specialization, and immediately instantiates it. Its optional [capture-clause](Procedures.md#Closures) denotes the type's fields. Without a capture-clause, that type has *no* fields, and is exactly the function's *signature type*.
 
 The two declarations below are identical.
 ```rust
@@ -597,7 +638,7 @@ To get an idea of what an `fn` declaration does under the hood, we can rewrite t
 type __AddSix { } // no capture-clause, so no fields
 
 interface for type __AddSix {
-	operator() => (a: i32) -> i32 {
+	operator()(this, a: i32) -> i32 {
 		return a + 6
 	}
 }
@@ -647,7 +688,7 @@ Invoke(Bar, 95.4, "hey")
 /// Within function scope, as a closure
 fn Blep() {
 	data x = 32
-	fn Closure() => x {
+	fn Closure(this) => x {
 		fmt.PrintLine("{.x}")
 		return .x * 2
 	}
@@ -667,7 +708,7 @@ type Button {
 fn Click() { }
 
 mut data clicks = 0
-data counter = fn() => mut &clicks { *.clicks += 1 }
+data counter = fn(this) => mut &clicks { *.clicks += 1 }
 
 data a = Button {.on_click = Click}
 data b = Button {.on_click = counter} // 'counter' is copied into 'on_click'

@@ -59,6 +59,8 @@ fn Main() {
 >[!tip] Output
 >Catch-22
 
+Immutable data is mutable while it is being initialized, and while it is being destroyed.
+
 ##### Default Initialization
 In the absence of an initializer, data will still be initialized with a default value.
 ```kotlin

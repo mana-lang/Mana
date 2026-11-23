@@ -12,10 +12,10 @@ alloc type Pool {
 }
 
 interface for alloc type Pool {
-	mut fn Alloc(size: usize, align: usize) -> Block { }
-	mut fn Free(block: Block) { }
-	fn Enter() -> usize { }
-	mut fn Exit(token: usize) { }
+	fn Alloc(mut this, size: usize, align: usize) -> Block { }
+	fn Free(mut this, block: Block) { }
+	fn Enter(this) -> usize { }
+	fn Exit(mut this, token: usize) { }
 }
 ```
 - `Alloc` is *required*.
