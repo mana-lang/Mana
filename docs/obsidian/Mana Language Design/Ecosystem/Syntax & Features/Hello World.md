@@ -4,7 +4,7 @@
 import std.fmt
 
 // This is a comment    
-fn main() {
+fn Main() {
 	fmt.Print("Hello world!")
 }
 ```

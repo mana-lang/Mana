@@ -18,8 +18,8 @@ This is by design. It allows Sigil's components to avoid redundant verification,
 > [!tip] Analysis Pipeline
 > **Source ➾ Lexical Analysis ➾ Syntax Analysis ➾ Semantic Analysis ➾ Error Report**
 
-The semantic analyzer does not modify the AST. Instead, it will record useful information about the AST that can be passed off to code generators such as Circe.
+The semantic analyser does not modify the AST. Instead, it will record useful information about the AST that can be passed off to code generators such as Circe.
 
-All errors encountered by Sigil will be recorded to an external **ErrorSink**. The error sink may be configured and swapped out freely, however it uses distinct error codes to analyze the source code itself, and can output configurable, comprehensive, detailed, and well-formatted errors to any `spdlog` logger.
+All errors encountered by Sigil will be recorded to an external **ErrorSink**. The error sink may be configured and swapped out freely, however it uses distinct error codes to analyse the source code itself, and can output configurable, comprehensive, detailed, and well-formatted errors to any `spdlog` logger.
 
 Sigil is designed to both serve as the front-end to Mana's compilers as well as the primary driver behind semantic analysis interfaces such as LSP, which should afford a relatively easy time in the implementation of Mana language plugins for different code editors.

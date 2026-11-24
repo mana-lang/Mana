@@ -10,8 +10,8 @@ Salem will remain in stasis as a project until Circe, Hex and Sigil are mature e
 As the ecosystem evolves, Salem is intended to implement several advanced features:
 
 - **Native Code Generation**: Moving beyond bytecode to produce highly optimized binaries for target platforms (starting with x64 Windows and Linux).
-- **Data Layout Optimization**: Automatically reordering members in `@[Flexible]` data types to minimize padding and improve cache locality—a core part of Mana's performance philosophy.
-- **Safety & Performance Analysis**: Providing deep-tissue analysis of code to spot potential performance bottlenecks or safety violations.
+- **Data Layout Hints**: Reporting **Sceptre**'s suggestions for layout changes that improve cache locality.
+- **Safety & Performance Analysis**: Running **Sceptre** to spot potential performance bottlenecks or safety violations.
 - **Errors for Humans**: Offering configurably detailed error and warning diagnostics, formatted in a way that's easy to understand.
 - **Hybrid Execution**: Automatically embedding the **Hex** VM into native executables to support `@[Hot]` code reloading, allowing for a seamless blend of native performance and runtime flexibility.
 

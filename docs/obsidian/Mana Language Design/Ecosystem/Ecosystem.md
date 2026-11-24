@@ -7,7 +7,7 @@ Mana itself consists of several major components, as well as some tools to suppo
 ![](ManaEcosystem.png)
 
 ##### Salem
-**Salem** is the *native compiler*. It's what compiles Mana code to machine code. It's designed to be friendly, especially towards beginners, and is capable of both safety and performance checks, on top of the usual stuff you'd expect out of a compiler. 
+**Salem** is the *native compiler*. It's what compiles Mana code to machine code. It's designed to be friendly, especially towards beginners, and is capable of both safety and performance checks through **Sceptre**, on top of the usual stuff you'd expect out of a compiler. 
 
 Salem will also *automatically* embed **Hex** into any Mana executable that has `@[Hot]` code in it. This allows Hex to track and execute the relevant code. 
 
@@ -19,7 +19,7 @@ Hex is the *virtual machine* that executes Mana *bytecode*. It's what allows `@[
 ##### Circe
 Circe is the *bytecode JIT compiler*. It compiles `@[Hot]` Mana code to `.hexe` *bytecode* files that may be executed by Hex - also called *hexecutables*. 
 
-Unlike Salem, Circe does not perform any special checking. It also does not reorganize data layouts or do anything else to optimize or speed up your code. This is because Circe's primary purpose is to compile to bytecode as quickly as possible.
+Unlike Salem, Circe does not perform any special checking. It also does not do anything to optimize or speed up your code. This is because Circe's primary purpose is to compile to bytecode as quickly as possible.
 
 Circe can be invoked by Salem, Hex, or standalone.
 
@@ -51,6 +51,9 @@ Likely not happening anytime soon.
 
 ##### Grimoire
 **Grimoire** is the collective name for all Mana editing-related tools. LSP, editor plugins, auto-formatters; if it falls under "Mana text editing," it falls under the **Grimoire** project.
+
+##### Sceptre
+**Sceptre** is the Mana static analyser. It runs on **Sigil**'s output and reports warnings and hints, such as likely bugs, performance bottlenecks, and data layout suggestions. **Salem**, **Grimoire**'s language server, and linters may all use it.
 
 ##### STD
 The Mana *standard library* is relatively small compared to general-purpose languages. This is because Mana is focused on being a language specifically for *game development*, and as such, does not try to account for platforms, architectures, and use cases that aren't related to real-time, high-performance graphical applications.

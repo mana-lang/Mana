@@ -104,7 +104,7 @@ loop {
 	DoAnotherThing()
 }
 
-// loops may be labeled
+// loops may be labelled
 loop A: 2 .. arr.BackIndex() => i {
 	loop B: if i % 5 == 0 {
 		if some_cond {

@@ -1,7 +1,7 @@
 
 Mana provides three means of creating enumerations; *enums*, *tags* and *variants*.
 
-Mana's *enums*, like many other languages, offer a simple means of creating labeled values. However, they can do a lot more than that.
+Mana's *enums*, like many other languages, offer a simple means of creating labelled values. However, they can do a lot more than that.
 ##### C++ Style Enums
 If you're familiar with the **C++** `enum class`, that is how Mana enums work in their most basic form.
 ```kotlin

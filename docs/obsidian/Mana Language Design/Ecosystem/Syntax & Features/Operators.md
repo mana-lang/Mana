@@ -168,8 +168,8 @@ A punctuator is the inverse of an operator; a symbol where specialization would 
 	- Short-circuiting logical AND
 		- `a && b`
 - `&` 
-	- Explicit reference
+	- Address-of
 		- `data x = &y`
 - `@`
 	- Attribute
-		- `@[Flexible]`
+		- `@[Inline]`

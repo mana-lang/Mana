@@ -6,10 +6,10 @@
 Lorem ipsum i forgot the rest
 
 #### Headings look nice
-I mean seriously look at them. Almost makes you wanna **emphasise** them with *italics* or something.
+I mean seriously look at them. Almost makes you wanna **emphasize** them with *italics* or something.
 
 > [!info] This is a note!
-> It emphasises even harder!
+> It emphasizes even harder!
 
 ```cpp
 // and of course, a code block

@@ -7,7 +7,7 @@
 
 Circe operates by traversing the AST and mapping its semantic structure to the low-level instructions expected by Hex.
 
-Like Sigil, Circe follows a philosophy of "correct by construction." It assumes that the input AST has been fully validated by Sigil's `SemanticAnalyzer`. Therefore, Circe does not perform type checking or semantic validation; it focuses exclusively on efficient bytecode emission and register allocation.
+Like Sigil, Circe follows a philosophy of "correct by construction." It assumes that the input AST has been fully validated by Sigil's `SemanticAnalyser`. Therefore, Circe does not perform type checking or semantic validation; it focuses exclusively on efficient bytecode emission and register allocation.
 
 > [!tip] Compilation Pipeline
 > **AST ➾ Bytecode Generation ➾ Serialization ➾ Hexecutable (.hexe)**

@@ -21,7 +21,7 @@ The *address-of* punctuator `&` yields an *address-value* whose type is the poin
 `mut &x` conversely yields an *address-value* of type `mut *T` with *write* access, and *requires* `x` to also be mutable.
 ```kotlin
 mut data health = 100
-mut data armor = 50
+mut data armour = 50
 data level = 3
 
 data reader = &health     // *i32
@@ -29,7 +29,7 @@ data writer = mut &health // mut *i32
 data invalid = mut &level // error: 'level' is immutable
 
 mut data target = &health
-target = &armor           // 'target' is mutable, so it may be re-pointed
+target = &armour          // 'target' is mutable, so it may be re-pointed
 ```
 
 A pointer to a pointer is written `**T`. Each `*` carries its own access, as in `mut *mut *T`.

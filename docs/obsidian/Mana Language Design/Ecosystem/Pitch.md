@@ -28,7 +28,7 @@ Mana's ultimate goal is to be easy to integrate into existing projects, make it 
 Mana adheres to 5 core design principles. These principles are listed in order of importance.
 
 1. **Transparency.** Mana strives to keep data flow comprehensible. What you see is what you get, and it aims to have that clarity as concisely as possible in its syntax.
-2. **Performance.** Mana's transparency and Sigil's performance-oriented static analysis options make it easier to write fast code.
+2. **Performance.** Mana's transparency and Sceptre's performance-oriented static analysis options make it easier to write fast code.
 3. **Iteration.** Hex's hot reloading makes it easy to rapidly iterate on ideas.
 4. **Control.** Mana allows full control over low-level operations, like any systems language. Mana will warn you about potential performance or safety issues, but will always respect your judgment.
 5. **Approachability.** Mana is easy to pick up. Its defaults do the obvious thing, so beginners can be productive before they've learned everything the language has to offer.

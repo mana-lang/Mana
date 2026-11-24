@@ -222,7 +222,7 @@ Mana lays out data in memory following the same rules as **C**. This makes Mana 
 - The elements of an array are *contiguous* in memory.
 - The contents of padding bytes are *unspecified*. As a result, the default `operator==` for composite types compares them *field by field*, never byte by byte.
 
-Since field order determines layout, the compiler will *warn* when the order of a type's fields wastes space on padding.
+Since field order determines layout, **Sceptre** will *warn* when the order of a type's fields wastes space on padding.
 ```rust
 type Foo {
 	a: i32   // 4 bytes + 4 padding

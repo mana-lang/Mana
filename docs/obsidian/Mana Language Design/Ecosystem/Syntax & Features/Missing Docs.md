@@ -56,10 +56,6 @@ What the exact definition of "iterator" is in Mana remains to be seen. I know th
 This one is thankfully (hopefully) not that complex. It is simply on hold until the type system is solid. For the time being, native conversions are automatically done between integral primitives. The syntax will likely look like `TypeName(x)`, e.g. `i32(foo)`
 
 
-##### Type Aliasing
-This one should also be simple, but is useless until a proper type system exists.
-
-
 ##### Strings
 UTF-8? UTF-32? ASCII? String conversions? Views? Slices?
 

@@ -727,11 +727,11 @@ type Button {
 
 This is particularly useful when repeatedly storing the same kind of function signature in a field, or when passing around the same kind of function signature among functions.
 ##### Delegates
-- Type-safe (multicast) invocable references
+- Type-safe (multicast) containers for invocables
 - May have an arbitrary number of invocables bound to them
 - Invocation forwards to all bound invocables
 - Lightweight 
-- Commonly used for event-driven behavior
+- Commonly used for event-driven behaviour
 
 ##### Entry Point
 A standalone Mana program will always start execution from the special `Main` function. Other functions may still be called from outside Mana, e.g. when using Mana for scripting; however, *Main* is the typical place for execution to begin and end.
@@ -747,7 +747,7 @@ An *inlined function* has two properties:
 	- In this case, inlined calls are replaced with their computed values instead 
 ```rust
 @[Inline]
-fn Sqrt(x: f64) -> f64 {
+fn Square(x: f64) -> f64 {
 	return x * x
 }
 ```
@@ -778,13 +778,10 @@ const fn ToRadians(degrees: f64) -> f64 {
 ```
 
 ##### Pure Functions
-*Pure functions* are written exactly the same as regular functions, with five major differences:
+*Pure functions* are written exactly the same as regular functions, with two major differences:
 
 1. They must be annotated with the `@[Pure]` *attribute*
-2. They may *not* have *mutable references* as parameters
-3. They may *not* have *mutable ownership* over their parameters
-4. They may *not write* to *mutable data* that was not declared within their function body
-5. They may *not* return *mutable references*
+2. They may *not write* to *mutable data* that was not declared within their function body, even through a [pointer](Pointers.md)
 
 A pure function, in essence, is not allowed to have *side effects*. This means it cannot modify state outside of itself. This includes any data that would normally be modifiable by a method.
 
@@ -796,14 +793,14 @@ Pure functions may *not* call functions which may result in auxiliary side effec
 
 Failing to meet a pure function's requirements results in a *compile error*.
 ```rust
-@[Pure]           // OK -- read-only pointers
-fn DotProduct(v1, v2: *Vec2) -> Vec2 {
+@[Pure] // ok: writes no data outside its body
+fn DotProduct(v1, v2: *Vec2) -> f32 {
 	return v1.x * v2.x + v1.y * v2.y
 }
 
 // Pure often pairs well with Inline
 @[Pure, Inline]
-fn Sqrt(v: i32) -> i32 {
+fn Square(v: i32) -> i32 {
 	return v * v
 }
 ```

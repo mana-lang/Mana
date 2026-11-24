@@ -120,13 +120,13 @@ A declaration may also target control flow, such as an `if` or a `loop`. See [Co
 When *bound* data is assigned to a binding, it is *always* treated as a *copy*. The new binding holds its own value, and changes made to the original are *never* visible through it. How a type is copied is defined by its [lifecycle operators](Procedures.md#Lifecycle%20Operators).
 
 - A *copy* simply *duplicates* the data. Where possible, this will manifest as a "*shallow copy*."
-- A *reference* only *refers* to the original data, taking up a *fixed* amount of *additional* space
-- A *move* gives the data a new binding, and *invalidates* the original
+- A [pointer](Pointers.md) only *points* to the original data, taking up the size of a `usize`
+- A *move* gives the data a new binding and new storage
 
 ```kotlin
 import std.fmt
     
-fn main() {
+fn Main() {
 	mut data hey = "hey"
 	data hi = hey       // this is a copy
 	mut data hiya = hey // this is a copy
@@ -142,18 +142,18 @@ fn main() {
 >[!tip] Output
 > hello1hey5hey
 
-This does *not* mean Mana always duplicates the data in memory. When the compiler can prove that a copy is indistinguishable from a *reference* or a *move* - for example, because the original is never modified while the new binding is alive, or because the original is never used again - it is free to reference or move the data instead, or simply alias the two bindings. An elided copy does *not* invoke [`operator#`](Procedures.md#Lifecycle%20Operators), whose purpose is *only* to copy. A copy written as `#x` is *never* elided.
+This does *not* mean Mana always duplicates the data in memory. When the compiler can prove that a copy is indistinguishable from *pointing* to the original or *moving* it - for example, because the original is never modified while the new binding is alive, or because the original is never used again - it is free to point to or move the data instead, or simply alias the two bindings. An elided copy does *not* invoke [`operator#`](Procedures.md#Lifecycle%20Operators), whose purpose is *only* to copy. A copy written as `#x` is *never* elided.
 
-In other words, optimisations may *never* affect behaviour in an observable way, other than allowing the same behaviour to execute faster.
+In other words, optimizations may *never* affect behaviour in an observable way, other than allowing the same behaviour to execute faster.
 
-Short of unnoticeable optimisations, references and moves in Mana are *always explicit*. 
+Short of unnoticeable optimizations, addresses and moves in Mana are *always explicit*. 
 
 ##### Assignment Annotation
 By default, assignment *copies*. You can explicitly tell Mana to handle the assignment differently using an *assignment annotation*: `#` to *force* a copy, `&` to take its *address*, and `$` to *move*.
 ```kotlin
 import std.fmt
     
-fn main() {
+fn Main() {
 	data spell = "Stupefy"
 	
 	data copy = spell  // copy
@@ -231,7 +231,7 @@ Data declarations may have *explicit* type annotations. This may be useful if yo
 ```kotlin
 import std.fmt
     
-fn main() {
+fn Main() {
 	data x: i32 = 5
 	
 	// 'x' and '2' are silently converted to f64 here
@@ -253,7 +253,7 @@ Unassigned data declarations are zeroed by default in Mana. To leave it uninitia
 ```kotlin
 import std.fmt
 
-fn main() {
+fn Main() {
 	// data will be uninitialized.
     @[NoInit] mut data x: bool
     
@@ -357,6 +357,14 @@ data y: [f64]
 > Data `y` was declared as an array of `f64`, but was not assigned, and has no size specifier
 > 
 > Data `w` was annotated with `@[NoInit]`, but it is immutable. There is no situation where it could be used
+
+Indexing an array of size `N` with a constant index outside `0` to `N - 1` is a *compile error*. Any other out-of-bounds index is a [runtime-checked error](Build%20Modes.md#Runtime-Checked%20Errors).
+```kotlin
+data scores: [i32, 4]
+
+data a = scores[7] // error: 7 is out of bounds for '[i32, 4]'
+data b = scores[i] // checked at runtime
+```
 
 An *empty-list* expression `[]` is valid, but its type *must* be specified in the declaration.
 

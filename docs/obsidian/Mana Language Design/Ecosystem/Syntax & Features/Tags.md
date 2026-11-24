@@ -1,6 +1,6 @@
 
 ##### Tags
-*Tags* are a hierarchical labeling system in Mana.
+*Tags* are a hierarchical labelling system in Mana.
 
 They are essentially hierarchical enums, which may be compared against their hierarchy through various comparison operators. 
 
@@ -35,10 +35,10 @@ Tag Entity.Enemy {
 
 // tags do not occupy their type's name
 // instead, they're added to the global 'Tag' type
-struct Entity {
-	data tag: Tag.Entity
-	data bark: string
-	data health: i32
+type Entity {
+	tag: Tag.Entity
+	bark: string
+	health: i32
 }
 
 // the 'Tag' type must be specified when using tag values
@@ -56,7 +56,7 @@ data john = Entity {
 }
 ```
 >[!danger] Error 
-struct `Entity` contains no member `Neutral`. Did you mean `Tag.Entity.Neutral`?
+Type `Entity` contains no member `Neutral`. Did you mean `Tag.Entity.Neutral`?
 
 You can compare hierarchical tags with one another, including different levels of their hierarchy. Tag comparisons
 ```kotlin
