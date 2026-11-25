@@ -34,6 +34,8 @@ Data held by a binding is considered *bound*. This applies to primitives, array 
 All other data is *unbound*, such as literals, the results of invocations, moved data (`$x`) and *address-value* expressions (`&x`).
 
 Unbound data is *never* copied. It becomes bound by whatever it initializes.
+
+Unbound data is *immutable*.
 ```kotlin
 data health = 100      // '100' is unbound, and becomes bound by 'health'
 data copy = health     // 'health' is bound, so this is a copy

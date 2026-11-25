@@ -1,5 +1,5 @@
 ##### Pointers
-A *pointer* is data holding the *address* of other data.
+A *pointer* is data holding the *address* of other data, or of a [specialization](Procedures.md#Specialization%20Addresses).
 
 The type of a pointer is written `*T`, where `T` is the type of the data it points to. 
 
@@ -71,7 +71,7 @@ data invalid = mut &head.v     // error: 'head' only has read access
 Indexing through `[]` follows the same rule: if its left side has no `operator[]`, it is dereferenced *once*. Invocation through `()` *never* dereferences.
 ```kotlin
 data scores_ptr: mut *[i32, 8] = mut &scores
-data double_ptr: *fn(i32) -> i32 = &Double
+data double_ptr: *fn(i32) -> i32 = &type(Double)::operator() (i32)
 
 scores_ptr[2] = 5               // dereferences 'scores_ptr'
 data doubled = (*double_ptr)(4) // ok
@@ -123,8 +123,6 @@ if target? {
 data invalid: *i32 = null_addr  // error: '*i32' cannot hold 'null_addr'
 data unknown: *i32              // error: '*i32' has no default value
 ```
-
-[Signature types](Procedures.md#The%20%60fn%60%20Keyword) follow the same rule: `fn()` *never* holds `null_addr`, while `?fn()` may.
 
 ##### Aliases
 An *alias* is a binding to existing data, declared with the `alias` keyword. It is initialized with the address-of punctuator: `&x` aliases `x` with *read* access, and `mut &x` with *write* access.

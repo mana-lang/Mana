@@ -58,6 +58,8 @@ Likely not happening anytime soon.
 ##### STD
 The Mana *standard library* is relatively small compared to general-purpose languages. This is because Mana is focused on being a language specifically for *game development*, and as such, does not try to account for platforms, architectures, and use cases that aren't related to real-time, high-performance graphical applications.
 
+Planned modules are listed in [Standard Library](Standard%20Library.md).
+
 ##### Arcana
 Despite its small *standard library*, Mana does ship with a secondary *extended library*, focused on being a complete *game development framework*: **Arcana**.
 

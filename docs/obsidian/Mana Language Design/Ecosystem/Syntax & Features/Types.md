@@ -44,9 +44,6 @@ f32, f64
 	// text types
 [u8]   // treated by mana as utf-8 string
 char   // unicode scalar value, 32 bits in size
-
-	// function type
-fn
 ```
 
 
@@ -213,7 +210,7 @@ A *type-alias* is another name for an existing type, declared with `type alias`.
 A *type-alias* and the type it names are the *same* type.
 ```kotlin
 type alias Health = i32
-type alias AddingFunction = fn(i32, i32) -> i32
+type alias AddingFunction = *fn(i32, i32) -> i32
 ```
 
 ##### Memory Layout

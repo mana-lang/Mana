@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecosystem/Syntax & Features/Procedures.md",
-                "mode": "preview",
+                "file": "Ecosystem/Syntax & Features/Types.md",
+                "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Procedures"
+              "title": "Types"
             }
           },
           {
@@ -27,15 +27,16 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecosystem/Syntax & Features/Data.md",
+                "file": "Ecosystem/Syntax & Features/Attributes.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Data"
+              "title": "Attributes"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -183,30 +184,30 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "6a57afca6b64d7ce",
+  "active": "a1f1d64352d23392",
   "lastOpenFiles": [
-    "Ecosystem/Modules/Circe.md.tmp.30354.8ac6b21e529d",
-    "Ecosystem/Ecosystem.md.tmp.30354.7d0f0eef196e",
-    "Ecosystem/Syntax & Features/Data.md.tmp.30354.307430098206",
-    "Ecosystem/Syntax & Features/Build Modes.md.tmp.30354.660bf5d25b4a",
-    "Ecosystem/Modules/Salem.md.tmp.30354.c59682091f95",
-    "Ecosystem/Ecosystem.md.tmp.30354.4bc5caeefe8d",
-    "Ecosystem/Syntax & Features/Types.md.tmp.30354.cf47785a8c90",
-    "Ecosystem/Syntax & Features/Build Modes.md.tmp.30354.19c8b8d1bf2b",
-    "Ecosystem/Modules/Salem.md.tmp.30354.b71f008a70a5",
-    "Ecosystem/Ecosystem.md.tmp.30354.0aa8b68fcff7",
-    "Ecosystem/Ecosystem.md.tmp.30354.2bd6e03bbba2",
-    "Ecosystem/Syntax & Features/Memory.md",
+    "Ecosystem/Standard Library.md",
     "Ecosystem/Syntax & Features/Procedures.md",
-    "Ecosystem/Syntax & Features/Operators.md",
+    "Ecosystem/Syntax & Features/Attributes.md",
+    "Ecosystem/Syntax & Features/Build Modes.md",
     "Ecosystem/Syntax & Features/Pointers.md",
     "Ecosystem/Syntax & Features/Types.md",
     "Ecosystem/Syntax & Features/Data.md",
-    "Ecosystem/Syntax & Features/Attributes.md",
-    "Ecosystem/Syntax & Features/Build Modes.md",
+    "Ecosystem/Syntax & Features/Operators.md.tmp.19577.86a984dd9c30",
+    "Ecosystem/Syntax & Features/Build Modes.md.tmp.19577.2d44cfbe46f3",
+    "Ecosystem/Syntax & Features/Pointers.md.tmp.19577.58b434155a10",
+    "Ecosystem/Syntax & Features/Pointers.md.tmp.19577.ba3caecd0b12",
+    "Ecosystem/Syntax & Features/Data.md.tmp.23223.121de5415c10",
+    "Ecosystem/Syntax & Features/Procedures.md.tmp.23223.45969d6a5557",
+    "Ecosystem/Syntax & Features/Procedures.md.tmp.23223.caf2244793e8",
+    "Ecosystem/Syntax & Features/Data.md.tmp.23223.3eafec6a7d92",
+    "Ecosystem/Syntax & Features/Pointers.md.tmp.23223.e31e2e97c630",
+    "Ecosystem/Syntax & Features/Pointers.md.tmp.23223.e224b5439d9b",
+    "Ecosystem/Syntax & Features/Operators.md",
     "Ecosystem/Syntax & Features/Enumerations.md",
     "Ecosystem/Syntax & Features/Flexible Data.md",
     "Ecosystem/Syntax & Features/Hello World.md",
+    "Ecosystem/Syntax & Features/Memory.md",
     "Ecosystem/Syntax & Features/Missing Docs.md",
     "Ecosystem/Syntax & Features/Variants.md",
     "Ecosystem/Syntax & Features/Tags.md",

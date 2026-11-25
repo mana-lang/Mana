@@ -13,7 +13,7 @@ Procedures *may* also have the following **Attributes**:
 - Hot
 - Discardable
 
-Certain procedures may be qualified with the `mut` or `const` keywords.
+Certain procedures may be qualified with the `const` keyword.
 
 Additionally, procedures can be *polymorphic*.
 
@@ -75,24 +75,7 @@ Spawn(.kind = Goblin, .position = origin) // 'count' is 1
 Spawn(.kind = Goblin)                     // 'count' is 1, position is {0, 0}
 ```
 
-Parameter names and default values belong to the *declaration* of a callable binding, field or parameter, *not* to its type. They are written in its signature annotation, or in the `fn` literal that initializes it. A [signature type](Procedures.md#The%20%60fn%60%20Keyword) consists *only* of parameter and return types, so a callable whose declaration writes *no* parameter names must be given *every* argument, in order.
-```rust
-data spawn: fn(EnemyKind, i32, Vec2) = Spawn
-data named: fn(kind: EnemyKind, count: i32 = 1, position: Vec2) = Spawn
-
-spawn(Goblin, 1, origin) // ok
-spawn(.kind = Goblin)    // error: 'spawn' declares no parameter names or defaults
-named(.kind = Goblin)    // ok: 'count' is 1
-```
-
-Re-binding a callable binding does *not* change its parameter names or defaults.
-```rust
-mut fn Attack(target: *Enemy, damage: i32 = 10) { }
-fn Heal(target: *Enemy, amount: i32 = 5) { }
-
-Attack = Heal
-Attack(.target = enemy) // invokes 'Heal' with a 'damage' of 10
-```
+Parameter names and default values belong to the *parameter-list* they are written in. A parameter-list written without names, as in a [signature](Procedures.md#The%20%60fn%60%20Keyword), must be given *every* argument, in order.
 
 A parameter is identical to a `data` *declaration*, initialized by its argument when the function is invoked. The only difference in declaration syntax is the omission of the `data` keyword, for convenience. 
 
@@ -325,7 +308,7 @@ fn Main() {
 
 A specialization defines what an operator does to *data*. What it does to *bindings* is fixed by the language, and cannot be specialized.
 
-*Every* [operator](Operators.md) may be specialized, and *no* operator may be invoked by name. An operator is *only* invoked through its own syntax, or by the language.
+*Every* [operator](Operators.md) may be specialized, and *no* operator may be invoked by name. An operator is *only* invoked through its own syntax, by the language, or through a [pointer to its specialization](Procedures.md#Specialization%20Addresses).
 
 Invoking an operator specialization annotated with `@[Forbid]` is a compile error. Without a parameter list, *every* specialization of that operator is forbidden.
 ```rust
@@ -399,6 +382,30 @@ import geometry.vec::operator
 
 data c = a + b // uses 'geometry.vec'
 ```
+
+##### Specialization Addresses
+`&T::operator+= (parameter-types)` yields the address of the specialization of `operator+=` for type `T` whose parameter types, receiver included, are *exactly* `parameter-types`. The same form names a method, as in `&T::Scale (parameter-types)`. A specialization with a receiver and a freestanding specialization with the same operand types share *one* address.
+
+The type of a procedure declared with `fn` has no name of its own; `type(x)` names it.
+
+The address is of type `*fn(parameter-types) -> R`, where `R` is the specialization's return type. A pointer to a specialization points to *code*:
+- It is *only* invoked, through `(*p)(...)` or `p->(...)`. Its receiver is passed like any other argument.
+- What it points to cannot be read, copied or written. `mut *fn` is therefore a compile error.
+- Like any pointer, it may be re-pointed if it is mutable, and `?*fn` may hold [`null_addr`](Pointers.md#Null%20Address).
+```rust
+fn Double(value: i32) -> i32 {
+	return value * 2
+}
+
+data grow: *fn(mut *Vec2, Vec2) = &Vec2::operator+= (mut *Vec2, Vec2)
+data doubler: *fn(i32) -> i32 = &type(Double)::operator() (i32)
+
+mut data position = Vec2 {1, 2}
+(*grow)(mut &position, Vec2 {3, 4}) // 'position' is {4, 6}
+data eight = doubler->(4)
+```
+> [!note]
+> How a pointer to a `@[Hot]` specialization behaves when **Hex** reloads its code is not yet specified.
 
 ##### Field Parameters
 The *parameter-list* of a method or operator specialization may contain *field parameters.* A field parameter is a field that was previously declared in the *field-list* of that *interface-block*'s associated type, written with a leading access operator `.`
@@ -600,7 +607,7 @@ This does raise a question, though:
 *What about `fn`?*
 
 ##### The `fn` Keyword
-The `fn` keyword declares an ad-hoc type with an `operator()` specialization, and immediately instantiates it. Its optional [capture-clause](Procedures.md#Closures) denotes the type's fields. Without a capture-clause, that type has *no* fields, and is exactly the function's *signature type*.
+The `fn` keyword declares an ad-hoc type with an `operator()` specialization, and immediately instantiates it. Its optional [capture-clause](Procedures.md#Closures) denotes the type's fields. Without a capture-clause, that type has *no* fields.
 
 The two declarations below are identical.
 ```rust
@@ -613,31 +620,22 @@ data AddSix = fn(a: i32) -> i32 {
 }
 ```
 
-This is the first thing that `fn` makes convenient for us. What this initialization is masking is the differentiation between the function's type and its value. Below is the same declaration, but without any type deduction:
+This is the first thing that `fn` makes convenient for us. What this initialization is masking is the differentiation between the function's type and its value. The type of `AddSix` is the ad-hoc type that `fn` declared.
+
+Written as a type, `fn(i32) -> i32` is a *signature*: a [constraint](Compile%20Time.md#Where) met by *any* type with an `operator()` of that signature. Annotating a declaration with a signature checks that constraint, and leaves its type unchanged. The declaration below is therefore identical to the two above:
 ```rust
 data AddSix: fn(i32) -> i32 = fn(a: i32) -> i32 {
 	return a + 6
 }
 ```
-It very quickly turns into a mess. 
-
-Additionally, you may have noticed that this declaration is somewhat recursive; `fn` appears in both the type and the value. Why is this?
-
-Consider the syntax that instantiates a compound type:
-```rust
-data x: Foo = Foo {1, 2, 3}
-```
-
-In this case, we are also writing `Foo` twice; `Foo` is the type, and `Foo {1, 2, 3}` is a value of that type. `fn` works the same way: `fn(i32) -> i32` is a *signature type*, which holds *any* procedure without fields of that signature, and `fn(a: i32) -> i32 { }` is such a procedure.
-
-The type form is the function signature, which you would write when storing a particular kind of function. The value form still includes the `fn` keyword to make it clear that we are instantiating a function.
+`fn(i32) -> i32` is the signature, and `fn(a: i32) -> i32 { }` is a procedure meeting it.
 
 To get an idea of what an `fn` declaration does under the hood, we can rewrite the above declaration to look more like a "normal" invocator:
 ```kotlin
 type __AddSix { } // no capture-clause, so no fields
 
 interface for type __AddSix {
-	operator() (*This, a: i32) -> i32 {
+	operator() (a: i32) -> i32 {
 		return a + 6
 	}
 }
@@ -653,7 +651,7 @@ data x = AddSix(6) // x == 12
 In essence, `fn` exists to preserve Mana's philosophy while still allowing us to conveniently write "standalone" functions. It's a keyword which declares a type and instantiates it in one step.
 
 ##### Declaring `fn`
-A function may be declared in *any* situation where data may be declared. A field holding a function *must* be declared with a signature type.
+A function may be declared in *any* situation where data may be declared. A parameter or field annotated with a signature has the type of the procedure it is initialized with. A function with such a parameter is generic over it, and so is a type with such a field.
 ```rust
 /// Field
 type Foo {
@@ -696,12 +694,12 @@ fn Blep() {
 }
 ```
 
-A function binding or field is exactly the size of one pointer. A closure binding is *at least* the size of its captures.
+A procedure binding holds *only* its fields, so a closure binding is *at least* the size of its captures.
 
-To hold *any* procedure of a given signature, annotate its signature type with `@[Proc]`. A `@[Proc] fn` *owns* a copy of its procedure, while a `@[Proc] *fn` points to one.
+To hold procedures of *different* types in one binding or field, use [`std.Procedure`](../Standard%20Library.md#Procedure), or a [pointer to a specialization](Procedures.md#Specialization%20Addresses) for procedures without fields.
 ```kotlin
 type Button {
-	on_click: @[Proc] fn()
+	on_click: std.Procedure<fn()>
 }
 
 fn Click() { }
@@ -713,11 +711,10 @@ data a = Button {.on_click = Click}
 data b = Button {.on_click = counter} // 'counter' is copied into 'on_click'
 b.on_click()
 ```
-A `@[Proc] fn` is the size of two pointers, and *only* accepts procedures that can be copy-initialized. The copy of a procedure with fields is stored in memory from the [current allocator](Memory.md#Allocator%20Capture).
 
-Any specific `fn` signature may be *type-aliased*:
+A `std.Procedure` of a specific signature may be *type-aliased*:
 ```kotlin
-type alias Callback = @[Proc] fn(i32)
+type alias Callback = std.Procedure<fn(i32)>
 
 type Button {
 	on_press: Callback
@@ -834,12 +831,9 @@ fn Main() {
 Additionally, you may be writing a function where you know its resulting value is only optionally used. In such cases, you may annotate the function with `@[Discardable]`
 ```rust
 @[Discardable]
-fn Pop() -> SomeType {
-	data ret = .coll[.length - 1]
-	--.length
-	
-	return ret
+fn Save(path: string) -> bool {
+	// ...
 }
 
-thing.Pop() // Ok, we don't have to use the value
+Save("game.sav") // Ok, we don't have to use the value
 ```
