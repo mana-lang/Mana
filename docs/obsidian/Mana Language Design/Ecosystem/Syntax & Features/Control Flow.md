@@ -193,6 +193,6 @@ To match against *multiple* options, use the `|` operator.
 ```rust
 match x {
 	Animal.Dog | Animal.Cat => DoCatDogThing()
-	_ => PrintError()
+	none => PrintError()
 }
 ```
