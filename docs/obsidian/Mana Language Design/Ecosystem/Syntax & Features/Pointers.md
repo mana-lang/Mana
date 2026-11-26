@@ -1,7 +1,7 @@
 ##### Pointers
-A *pointer* is data holding the *address* of other data, or of a [specialization](Procedures.md#Specialization%20Addresses).
+A *pointer* is data holding an *address*.
 
-The type of a pointer is written `*T`, where `T` is the type of the data it points to. 
+The type of a pointer is written `*X`, where `X` describes what its address resolves to: a *data type*, or a [signature type](Procedures.md#Specialization%20Addresses). `X` determines which operations are supported through the pointer. 
 
 A pointer has the size and alignment of `usize`. 
 
@@ -71,7 +71,7 @@ data invalid = mut &head.v     // error: 'head' only has read access
 Indexing through `[]` follows the same rule: if its left side has no `operator[]`, it is dereferenced *once*. Invocation through `()` *never* dereferences.
 ```kotlin
 data scores_ptr: mut *[i32, 8] = mut &scores
-data double_ptr: *fn(i32) -> i32 = &type(Double)::operator() (i32)
+data double_ptr: *operator() as (i32) -> i32 = &type(Double)::operator() as (i32)
 
 scores_ptr[2] = 5               // dereferences 'scores_ptr'
 data doubled = (*double_ptr)(4) // ok
@@ -89,7 +89,7 @@ type PlayerBox {
 }
 
 interface for type PlayerBox {
-	operator* (*This) -> *Player {
+	operator* as (*This) -> *Player {
 		return .address
 	}
 }

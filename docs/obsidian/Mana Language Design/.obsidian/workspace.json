@@ -186,7 +186,22 @@
   },
   "active": "a1f1d64352d23392",
   "lastOpenFiles": [
+<<<<<<< Updated upstream
     "Ecosystem/Standard Library.md",
+=======
+    "Ecosystem/Syntax & Features/Attributes.md.tmp.39413.af392d7a0e8c",
+    "Ecosystem/Syntax & Features/Procedures.md.tmp.39413.4e0c6463f470",
+    "Ecosystem/Syntax & Features/Procedures.md.tmp.39413.4e403eadb778",
+    "Ecosystem/Syntax & Features/Procedures.md.tmp.39413.ff4996614f2b",
+    "Ecosystem/Modules/Circe.md.tmp.30354.8ac6b21e529d",
+    "Ecosystem/Ecosystem.md.tmp.30354.7d0f0eef196e",
+    "Ecosystem/Syntax & Features/Data.md.tmp.30354.307430098206",
+    "Ecosystem/Syntax & Features/Build Modes.md.tmp.30354.660bf5d25b4a",
+    "Ecosystem/Modules/Salem.md.tmp.30354.c59682091f95",
+    "Ecosystem/Ecosystem.md.tmp.30354.4bc5caeefe8d",
+    "Ecosystem/Syntax & Features/Types.md.tmp.30354.cf47785a8c90",
+    "Ecosystem/Syntax & Features/Memory.md",
+>>>>>>> Stashed changes
     "Ecosystem/Syntax & Features/Procedures.md",
     "Ecosystem/Syntax & Features/Attributes.md",
     "Ecosystem/Syntax & Features/Build Modes.md",

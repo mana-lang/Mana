@@ -265,7 +265,7 @@ Operators in Mana are specializable polyfunctions.
 
 You can specialize operators in the *interface block* of any given type. 
 
-Operator specializations are declared like functions, with `operator` and the operator's symbol in place of `fn` and a name. 
+Operator specializations are declared like functions, with `operator` and the operator's symbol in place of `fn` and a name, and `as` before the *parameter-list*. 
 ```rust
 type Vec2 {
 	x: f32
@@ -273,7 +273,7 @@ type Vec2 {
 }
 
 interface for type Vec2 {
-	operator+ (*This, other: Vec2) -> Vec2 {
+	operator+ as (*This, other: Vec2) -> Vec2 {
 		return Vec2 {.x + other.x, .y + other.y}
 	}
 }
@@ -313,8 +313,8 @@ A specialization defines what an operator does to *data*. What it does to *bindi
 Invoking an operator specialization annotated with `@[Forbid]` is a compile error. Without a parameter list, *every* specialization of that operator is forbidden.
 ```rust
 interface for type Quat {
-	@[Forbid] operator+                              // all specializations
-	@[Forbid] operator{} (mut *This, x, y, z, w: f32) // only this specialization
+	@[Forbid] operator+                                  // all specializations
+	@[Forbid] operator{} as (mut *This, x, y, z, w: f32) // only this specialization
 }
 ```
 
@@ -325,11 +325,11 @@ type Inventory {
 }
 
 interface for type Inventory {
-	operator[] (*This, index: usize) -> *Item {
+	operator[] as (*This, index: usize) -> *Item {
 		return &.slots[index]
 	}
 	
-	operator[] (mut *This, index: usize) -> mut *Item {
+	operator[] as (mut *This, index: usize) -> mut *Item {
 		return mut &.slots[index]
 	}
 }
@@ -353,14 +353,14 @@ A [binding operator](Operators.md#Binding%20Operators) may *only* be specialized
 
 A specialization with a receiver and a freestanding specialization with the same operand types are the *same* specialization.
 ```rust
-operator* (scale: f32, v: Vec2) -> Vec2 {
+operator* as (scale: f32, v: Vec2) -> Vec2 {
 	return Vec2 {scale * v.x, scale * v.y}
 }
 
-operator+= (a: Vec2, b: Vec2) { } // error: 'operator+=' is a binding operator
+operator+= as (a: Vec2, b: Vec2) { } // error: 'operator+=' is a binding operator
 
 interface for type Vec2 {
-	operator+= (mut *This, other: Vec2) {
+	operator+= as (mut *This, other: Vec2) {
 		.x += other.x
 		.y += other.y
 	}
@@ -374,7 +374,7 @@ data scaled = 2.0 * position // ok
 
 Freestanding specializations are imported with the Artifact that declares them. If several imported Artifacts declare the same specialization, invoking it is a compile error, unless *exactly one* of those Artifacts is imported with `::operator`.
 ```rust
-// both declare 'operator+ (a: Vec2, b: Vec2)'
+// both declare 'operator+ as (a: Vec2, b: Vec2)'
 import geometry.vec
 import physics.vec_ops
 
@@ -384,25 +384,31 @@ data c = a + b // uses 'geometry.vec'
 ```
 
 ##### Specialization Addresses
-`&T::operator+= (parameter-types)` yields the address of the specialization of `operator+=` for type `T` whose parameter types, receiver included, are *exactly* `parameter-types`. The same form names a method, as in `&T::Scale (parameter-types)`. A specialization with a receiver and a freestanding specialization with the same operand types share *one* address.
+`&T::operator+= as (parameter-types)` yields the address of the specialization of `operator+=` for type `T` whose parameter types, receiver included, are *exactly* `parameter-types`. For a procedure `x`, `&x as (parameter-types)` is shorthand for `&type(x)::operator() as (parameter-types)`. This includes methods, as in `&T::Scale as (parameter-types)`. A specialization with a receiver and a freestanding specialization with the same operand types share *one* address.
 
 The type of a procedure declared with `fn` has no name of its own; `type(x)` names it.
 
-The address is of type `*fn(parameter-types) -> R`, where `R` is the specialization's return type. A pointer to a specialization points to *code*:
-- It is *only* invoked, through `(*p)(...)` or `p->(...)`. Its receiver is passed like any other argument.
-- What it points to cannot be read, copied or written. `mut *fn` is therefore a compile error.
-- Like any pointer, it may be re-pointed if it is mutable, and `?*fn` may hold [`null_addr`](Pointers.md#Null%20Address).
+A specialization's *signature type* consists of its operator, its parameter types and its return type, as in `operator+ as (*Vec2, Vec2) -> Vec2`. Its address is a [pointer](Pointers.md) to its signature type: `*operator+ as (*Vec2, Vec2) -> Vec2`.
+
+`&x` alone is the address of a procedure's *data*. A specialization address is the address of its *code*, and is *only* needed where the procedure's type is erased.
+
+A specialization is *not* data. It *only* supports invocation, through `(*p)(...)` or `p->(...)`, and its receiver is passed like any other argument. It cannot be read, copied or written, so a pointer to a specialization cannot have write access.
+
+Like any pointer, it may be re-pointed if it is mutable, and `?*operator() as (i32)` may hold [`null_addr`](Pointers.md#Null%20Address).
 ```rust
 fn Double(value: i32) -> i32 {
 	return value * 2
 }
 
-data grow: *fn(mut *Vec2, Vec2) = &Vec2::operator+= (mut *Vec2, Vec2)
-data doubler: *fn(i32) -> i32 = &type(Double)::operator() (i32)
+data grow: *operator+= as (mut *Vec2, Vec2) = &Vec2::operator+= as (mut *Vec2, Vec2)
+data doubler: *operator() as (i32) -> i32 = &type(Double)::operator() as (i32)
+data same = &Double as (i32) // shorthand: the same address as 'doubler'
+data instance = &Double // '*type(Double)': the address of its data, which is zero bytes
 
 mut data position = Vec2 {1, 2}
 (*grow)(mut &position, Vec2 {3, 4}) // 'position' is {4, 6}
 data eight = doubler->(4)
+data copy = *doubler                // error: a specialization is not data
 ```
 > [!note]
 > How a pointer to a `@[Hot]` specialization behaves when **Hex** reloads its code is not yet specified.
@@ -448,11 +454,11 @@ The lifecycle of data is defined by five operators:
 - `operator!{}` - *destruction*
 ```rust
 interface for type LogFile {
-	operator{} (mut *This, path: string) {
+	operator{} as (mut *This, path: string) {
 		.handle = OpenFile(path)
 	}
 	
-	operator!{} (mut *This) {
+	operator!{} as (mut *This) {
 		Close(.handle)
 	}
 	
@@ -472,7 +478,7 @@ A specialization of `operator{}` initializes each field from its field parameter
 `operator#` is a unary operator, invoked by `#x`, and by the language whenever data is initialized as a *copy* of other data: in declarations, parameters, fields and list elements. Its *only* parameter is its receiver, the data being copied, and the specialization returns the copy.
 ```rust
 interface for type Buffer {
-	operator# (*This) -> Buffer {
+	operator# as (*This) -> Buffer {
 		return Buffer {.data = Duplicate(.data), .size = .size}
 	}
 }
@@ -520,7 +526,7 @@ type Invocator {
 }
 
 interface for type Invocator {
-	operator() (mut *This, x: i32) -> i32 {
+	operator() as (mut *This, x: i32) -> i32 {
 		.a += x
 		return .a
 	}
@@ -586,26 +592,6 @@ Capturing the enclosing `this`
 })
 ```
 
-##### Executable Data
-"Mana is data-centric. Everything in Mana is data, *including functions*."
-
-*But what does this actually mean?*
-
-Mana's focus is exclusively on data and its transformations. As part of this philosophy, the *only* way to transform data is through *operators*. 
-
-The way to think about Mana's data-centrism is:
-- Types *describe* data
-- Bindings *contain* data
-- Operators *transform* data
-
-In essence; *functions in Mana are just specialized operators.*
-
-By specializing an operator, you are describing to Mana how a certain type ought to be transformed in expressions containing that operator.
-
-This does raise a question, though: 
-
-*What about `fn`?*
-
 ##### The `fn` Keyword
 The `fn` keyword declares an ad-hoc type with an `operator()` specialization, and immediately instantiates it. Its optional [capture-clause](Procedures.md#Closures) denotes the type's fields. Without a capture-clause, that type has *no* fields.
 
@@ -635,7 +621,7 @@ To get an idea of what an `fn` declaration does under the hood, we can rewrite t
 type __AddSix { } // no capture-clause, so no fields
 
 interface for type __AddSix {
-	operator() (a: i32) -> i32 {
+	operator() as (a: i32) -> i32 {
 		return a + 6
 	}
 }
@@ -695,6 +681,15 @@ fn Blep() {
 ```
 
 A procedure binding holds *only* its fields, so a closure binding is *at least* the size of its captures.
+
+A procedure without fields is therefore *zero* bytes in size. Invoking it is resolved from its type at compile time, so it holds *no* address.
+```rust
+fn Foo(a: i32) -> i32 {
+	return a * 2
+}
+
+data bar = Foo // 'type(Foo)', zero bytes: 'bar(4)' invokes Foo's code directly
+```
 
 To hold procedures of *different* types in one binding or field, use [`std.Procedure`](../Standard%20Library.md#Procedure), or a [pointer to a specialization](Procedures.md#Specialization%20Addresses) for procedures without fields.
 ```kotlin
@@ -775,10 +770,17 @@ const fn ToRadians(degrees: f64) -> f64 {
 ```
 
 ##### Pure Functions
-*Pure functions* are written exactly the same as regular functions, with two major differences:
+*Pure functions* are written exactly the same as regular functions, with seven major differences:
 
 1. They must be annotated with the `@[Pure]` *attribute*
-2. They may *not write* to *mutable data* that was not declared within their function body, even through a [pointer](Pointers.md)
+2. They may only call procedures annotated with `const` or the `@[Pure]` *attribute*
+3. They may access constants and immutable bindings declared in any scope
+4. They may access mutable bindings if declared within their own scope
+5. They must produce an output in the form of a return value, or a write to their receiver
+6. They may only dereference a write pointer if it is their receiver
+7. They may *not* write through a read pointer
+
+A pure procedure with a `mut *This` receiver is *weakly pure*: it modifies *only* its receiver.
 
 A pure function, in essence, is not allowed to have *side effects*. This means it cannot modify state outside of itself. This includes any data that would normally be modifiable by a method.
 
@@ -786,7 +788,7 @@ Data local to the pure function's scope may be freely modified within that scope
 
 Dynamic allocations within a pure function *must* be deallocated by the end of said function, *unless* this allocation is returned by the function, thus relinquishing ownership to the caller.
 
-Pure functions may *not* call functions which may result in auxiliary side effects.
+Pure functions may *only* invoke pure procedures: functions annotated with `@[Pure]`, and anything invoked through a signature type annotated with `@[Pure]`.
 
 Failing to meet a pure function's requirements results in a *compile error*.
 ```rust
@@ -799,6 +801,45 @@ fn DotProduct(v1, v2: *Vec2) -> f32 {
 @[Pure, Inline]
 fn Square(v: i32) -> i32 {
 	return v * v
+}
+
+@[Pure]
+fn Twice(f: @[Pure] fn(i32) -> i32, x: i32) -> i32 {
+	return f(f(x))
+}
+
+@[Pure]
+fn Apply(f: fn(i32) -> i32, x: i32) -> i32 {
+	return f(x) // error: 'f' may hold an impure procedure
+}
+
+Twice(Square, 3) // ok: 81
+
+type Mesh {
+	points: [Vec2, 64]
+	area: f32
+	area_known: bool
+}
+
+interface for type Mesh {
+	mut { area, area_known }
+
+	@[Pure]
+	fn ComputeArea(*This) -> f32 {
+		return Measure(&.points)
+	}
+
+	@[Pure]
+	fn Area(*This) -> f32 {
+		.area = .ComputeArea() // error: writes through a read pointer
+		return .area
+	}
+
+	@[Pure] // weakly pure
+	fn Refresh(mut *This) {
+		.area = .ComputeArea() // ok: writes its receiver
+		.area_known = true
+	}
 }
 ```
 

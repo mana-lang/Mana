@@ -25,7 +25,9 @@ Below is a list of valid Attributes:
 	- Effect: Invoking that particular specialization is a compile error.
 - *Pure*
 	- Usage: *Before* function declaration
-	- Effect: Raises compile error if a function has any (potential) side effects
+		- Effect: Raises compile error if the function breaks any of the [pure function](Procedures.md#Pure%20Functions) rules
+	- Usage: *Before* a signature type, wherever a type is written
+		- Effect: The type holds *only* pure procedures of that signature
 - *Locked*
 	- Usage:
 		- *After* type member declaration

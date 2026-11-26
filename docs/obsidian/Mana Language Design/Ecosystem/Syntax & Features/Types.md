@@ -210,7 +210,7 @@ A *type-alias* is another name for an existing type, declared with `type alias`.
 A *type-alias* and the type it names are the *same* type.
 ```kotlin
 type alias Health = i32
-type alias AddingFunction = *fn(i32, i32) -> i32
+type alias AddingFunction = *operator() as (i32, i32) -> i32
 ```
 
 ##### Memory Layout
