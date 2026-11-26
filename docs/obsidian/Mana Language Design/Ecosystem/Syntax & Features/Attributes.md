@@ -26,8 +26,8 @@ Below is a list of valid Attributes:
 - *Pure*
 	- Usage: *Before* function declaration
 		- Effect: Raises compile error if the function breaks any of the [pure function](Procedures.md#Pure%20Functions) rules
-	- Usage: *Before* a signature type, wherever a type is written
-		- Effect: The type holds *only* pure procedures of that signature
+	- Usage: *Before* a [signature](Procedures.md#The%20%60fn%60%20Keyword)
+		- Effect: The signature is met *only* by types whose `operator()` of that signature is annotated with `@[Pure]`
 - *Locked*
 	- Usage:
 		- *After* type member declaration

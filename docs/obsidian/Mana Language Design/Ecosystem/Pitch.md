@@ -10,7 +10,7 @@ It achieves this by being a **hybrid** language whose runtime can be *selectivel
 
 Additionally, Mana is designed to let you write expressive and modular code *without* sacrificing performance. 
 
-It is a data-centric language, meaning that everything in Mana can be thought of as data; even functions. This allows the developer to reason about their program as the flow of data and its transformations, rather than a series of logic statements. In many ways, Mana can be thought of as an imperative inversion of functional programming.
+It is a data-centric language. This allows the developer to reason about their program as the flow of data and its transformations, rather than a series of logic statements. In many ways, Mana can be thought of as an imperative inversion of functional programming.
 
 **Salem**, its native/AOT compiler, is designed to spot areas of poor performance based on their *data access patterns*, and can respond to this by warning the user about them, and even suggesting optimized data layouts, access patterns, and branch reduction to achieve the highest performance possible.
 

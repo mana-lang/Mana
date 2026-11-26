@@ -1,5 +1,7 @@
 
 ##### Procedure
+Types *describe* data, and operators *transform* it. A function is an instance of a type whose sole purpose is transforming data, and a method is such an instance that belongs to a type.
+
 The term *procedure* is used as a catch-all term for *executable things* in Mana. This includes:
 - Functions
 - Methods
@@ -146,13 +148,22 @@ fn Sub<T>(a, b: T) -> T {
 ##### Methods
 You may add *methods* to types by creating *type interfaces*. 
 
+An *interface-block* is a namespace belonging to its associated type. Its declarations are reached through `T::Name`, and follow the same rules as declarations at module scope, except that an *interface-block* may *not* declare mutable data.
+```rust
+interface for type Vec2 {
+	const Zero = Vec2 {0, 0}  // 'Vec2::Zero'
+	data unit_x = Vec2 {1, 0} // 'Vec2::unit_x', following the rules of module data
+	mut data count: i32 = 0   // error: an interface-block may not declare mutable data
+}
+```
+
 Within an *interface-block*, `This` is the block's associated type.
 
-A method is a function whose *first* parameter is a [pointer](Pointers.md) to `This`, of type `*This` or `mut *This`. That parameter is its *receiver*. A function without one has *no* receiver.
+A method is a function whose *first* parameter is of type `This`, or a [pointer](Pointers.md) to `This`, of type `*This` or `mut *This`. That parameter is its *receiver*. A function without one has *no* receiver.
 
-The receiver is initialized from the data the method is invoked on, *not* by the *argument-list*: as `&x` for a `*This` receiver, and as `mut &x` for a `mut *This` receiver.
+The receiver is initialized from the data the method is invoked on, *not* by the *argument-list*: as `x` for a `This` receiver, as `&x` for a `*This` receiver, and as `mut &x` for a `mut *This` receiver.
 
-A receiver whose name is omitted is named `this`. Its members may be accessed with a leading access operator `.`, whatever its name.
+A receiver whose name is omitted is named `this`. Only a receiver with a name may be qualified with `mut`. Its members may be accessed with a leading access operator `.`, whatever its name.
 ```rust
 type Vec2 {
 	x: f32
@@ -318,7 +329,7 @@ interface for type Quat {
 }
 ```
 
-Specializations of `operator[]` and unary `operator*` *must* return a [pointer](Pointers.md). The result of the operator is the data that pointer points to, so it is considered [bound](Data.md#Bound%20and%20Unbound%20Data).
+When a specialization of `operator[]` or unary `operator*` returns a [pointer](Pointers.md), the result of the operator is the data that pointer points to, so it is considered [bound](Data.md#Bound%20and%20Unbound%20Data).
 ```rust
 type Inventory {
 	slots: [Item, 16]
@@ -339,7 +350,7 @@ inventory[2] = sword     // writes an 'Item'
 data held = inventory[2] // a copy
 ```
 
-When specializations with a `*This` and a `mut *This` receiver both apply, such as for `operator[]` and unary `operator*`, the `mut *This` one is used *only* where its result is written.
+When specializations with a `This`, `*This` or `mut *This` receiver apply, such as for `operator[]` and unary `operator*`, the `mut *This` one is used *only* where its result is written, and the `This` one wherever its result is *only* read.
 ```rust
 inventory[2] = sword              // 'mut *This' operator[]
 data held = inventory[2]          // '*This' operator[]
@@ -770,30 +781,23 @@ const fn ToRadians(degrees: f64) -> f64 {
 ```
 
 ##### Pure Functions
-*Pure functions* are written exactly the same as regular functions, with seven major differences:
+*Pure functions* are written exactly the same as regular functions, with six major differences:
 
 1. They must be annotated with the `@[Pure]` *attribute*
-2. They may only call procedures annotated with `const` or the `@[Pure]` *attribute*
-3. They may access constants and immutable bindings declared in any scope
-4. They may access mutable bindings if declared within their own scope
-5. They must produce an output in the form of a return value, or a write to their receiver
-6. They may only dereference a write pointer if it is their receiver
-7. They may *not* write through a read pointer
-
-A pure procedure with a `mut *This` receiver is *weakly pure*: it modifies *only* its receiver.
+2. They may only invoke procedures qualified with `const` or annotated with the `@[Pure]` *attribute*
+3. They may access constants and immutable data declared in any scope
+4. They may access mutable data if declared within their own scope
+5. They must produce an output in the form of a return value
+6. They may *not* dereference a pointer
 
 A pure function, in essence, is not allowed to have *side effects*. This means it cannot modify state outside of itself. This includes any data that would normally be modifiable by a method.
 
-Data local to the pure function's scope may be freely modified within that scope. It may *not* be transmitted beyond its bounds.
-
-Dynamic allocations within a pure function *must* be deallocated by the end of said function, *unless* this allocation is returned by the function, thus relinquishing ownership to the caller.
-
-Pure functions may *only* invoke pure procedures: functions annotated with `@[Pure]`, and anything invoked through a signature type annotated with `@[Pure]`.
+Data local to the pure function's scope may be freely modified within that scope.
 
 Failing to meet a pure function's requirements results in a *compile error*.
 ```rust
 @[Pure] // ok: writes no data outside its body
-fn DotProduct(v1, v2: *Vec2) -> f32 {
+fn DotProduct(v1, v2: Vec2) -> f32 {
 	return v1.x * v2.x + v1.y * v2.y
 }
 
@@ -822,23 +826,22 @@ type Mesh {
 }
 
 interface for type Mesh {
-	mut { area, area_known }
-
 	@[Pure]
-	fn ComputeArea(*This) -> f32 {
-		return Measure(&.points)
+	fn ComputeArea(This) -> f32 {
+		return Measure(.points)
 	}
 
 	@[Pure]
 	fn Area(*This) -> f32 {
-		.area = .ComputeArea() // error: writes through a read pointer
-		return .area
+		return .ComputeArea() // error: dereferences a pointer
 	}
 
-	@[Pure] // weakly pure
-	fn Refresh(mut *This) {
-		.area = .ComputeArea() // ok: writes its receiver
-		.area_known = true
+	@[Pure]
+	fn Refreshed(This) -> Mesh {
+		mut data m = this
+		m.area = .ComputeArea()
+		m.area_known = true
+		return $m
 	}
 }
 ```

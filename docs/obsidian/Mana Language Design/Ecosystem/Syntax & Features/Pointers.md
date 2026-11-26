@@ -58,7 +58,7 @@ data total = *writer + 1 // reads 'health'
 *reader = 5              // error: 'reader' only has read access
 ```
 
-A [specialization](Procedures.md#Operators) of unary `operator*` returns a pointer, which allows any type to be dereferenced like one.
+A [specialization](Procedures.md#Operators) of unary `operator*` allows any type to be dereferenced like a pointer.
 
 If the left side of a member access through `.` has no field or method of that name, `.` dereferences it *once*. A pointer has no members, so `.` *always* dereferences it. A prefix `*` applies *after* member access, so `*a.b` dereferences `a.b`
 ```kotlin
@@ -122,6 +122,22 @@ if target? {
 
 data invalid: *i32 = null_addr  // error: '*i32' cannot hold 'null_addr'
 data unknown: *i32              // error: '*i32' has no default value
+```
+
+##### Opaque Pointers
+A pointer written as `*` alone is *opaque*. Nothing is known about what its address resolves to, so it supports *no* operations through it. Like any pointer, it carries access, as in `mut *`, and may be nullable, as in `?*`.
+
+Any pointer may be used wherever an opaque pointer of the same access is expected.
+
+Converting an opaque pointer to any pointer type other than the one it was made from is *undefined behaviour*. **Sceptre** warns wherever it can detect such a conversion.
+```kotlin
+mut data health = 100
+
+data o: * = &health         // an address, with read access
+data w: mut * = mut &health // with write access
+data n: ?* = null_addr      // nullable
+
+data v = *o                 // error: nothing is known about what 'o' resolves to
 ```
 
 ##### Aliases

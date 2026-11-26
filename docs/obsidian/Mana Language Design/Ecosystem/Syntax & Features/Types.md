@@ -217,6 +217,7 @@ type alias AddingFunction = *operator() as (i32, i32) -> i32
 Mana lays out data in memory following the same rules as **C**. This makes Mana data directly compatible with **C** and **C++**, without any conversion.
 - The fields of a composite type are laid out in their *declaration order*. Each field is placed at its natural alignment, with *padding* inserted where necessary.
 - The elements of an array are *contiguous* in memory.
+- A type is zero-size when its data needs no storage: `none`, a type whose fields are all zero-size, a fieldless composite type, or an array of zero length or of zero-size elements. Bindings of such a type occupy no storage. Every instance of such a type has the same address, unique to that type.
 - The contents of padding bytes are *unspecified*. As a result, the default `operator==` for composite types compares them *field by field*, never byte by byte.
 
 Since field order determines layout, **Sceptre** will *warn* when the order of a type's fields wastes space on padding.
