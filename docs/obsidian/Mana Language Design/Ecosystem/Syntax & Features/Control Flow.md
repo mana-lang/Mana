@@ -52,26 +52,36 @@ loop 8 {
 }
 
 // ranged loop
-// binds inclusive range from 0 to 8 to a local temporary 'i'
-// aka: for (int i = 0; i <= 8; ++i)
+// binds exclusive range from 0 to 8 to a local temporary 'i'
+// aka: for (int i = 0; i < 8; ++i)
 loop 8 => i {
 	DoSomething()
 }
 
-// identical to the above, except it starts at 8 and counts down to 0
-// aka: for (int i = 8; i >= 0; --i)
-loop 8..0 => i {
+// identical to the above, except it counts down from 7 to 0
+// aka: for (int i = 7; i >= 0; --i)
+loop 0<..8 => i {
 	things[i].DoSstuff()
 }
 
-// identical to the above. 
-// ranges can be arbitrary and will count from lhs to rhs
+// ranges count up from lhs to rhs
+// aka: for (int i = 3; i < 8; ++i)
+loop 3..8 => i {}
+
+// inclusive ranges include rhs
 // aka: for (int i = 3; i <= 8; ++i)
-loop 3..8 => i {}  
+loop 3~8 => i {}
+
+// reverse ranges yield the same values in reverse order, so their bounds are still written lowest-first
+// aka: for (int i = 8; i >= 3; --i)
+loop 3<~8 => i {}
+
+// a range whose lhs exceeds its rhs is empty, so the body never runs
+loop 8..0 => i {} // warning: empty range
 
 
 // the bound temporary is immutable unless otherwise stated
-loop 12..0 => mut i {}
+loop 0..12 => mut i {}
 
 
 // a loop may also serve as an initialization block
@@ -105,7 +115,7 @@ loop {
 }
 
 // loops may be labelled
-loop A: 2 .. arr.BackIndex() => i {
+loop A: 2 .. arr.Size() => i {
 	loop B: if i % 5 == 0 {
 		if some_cond {
 			skip => A // go back to the start of A
@@ -115,7 +125,7 @@ loop A: 2 .. arr.BackIndex() => i {
 }
 
 // you can still use break-if and skip-if
-loop A: elems.Size() .. 0 => mut i {
+loop A: 0 <.. elems.Size() => mut i {
 	loop B: if i % 3 == 0 {
 		DoStuff()
 		skip if cond => A

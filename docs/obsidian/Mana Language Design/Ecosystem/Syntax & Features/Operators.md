@@ -55,6 +55,12 @@ A *data operator* acts *only* on the data of its operands, and yields [unbound](
 - `~`
 	- Inclusive range
 		- `2~5`
+- `<..`
+	- Exclusive reverse range
+		- `5<..12`
+- `<~`
+	- Inclusive reverse range
+		- `2<~5`
 
 ###### Binding Operators
 A *binding operator* acts on the binding of its operand: it initializes, writes, moves or destroys that binding's data, or yields [bound](Data.md#Bound%20and%20Unbound%20Data) data.
