@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Ecosystem/Syntax & Features/Attributes.md",
+                "file": "Ecosystem/Axioms.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Attributes"
+              "title": "Axioms"
             }
           }
         ]
@@ -99,7 +99,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Ecosystem/Syntax & Features/Attributes.md",
+                "file": "Ecosystem/Axioms.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -118,7 +118,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Ecosystem/Syntax & Features/Attributes.md",
+                "file": "Ecosystem/Axioms.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -147,7 +147,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Ecosystem/Syntax & Features/Attributes.md",
+                "file": "Ecosystem/Axioms.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -175,5 +175,10 @@
     }
   },
   "active": "be831a885ad33809",
-  "lastOpenFiles": []
+  "lastOpenFiles": [
+    "Ecosystem/Syntax & Features/Memory.md",
+    "Ecosystem/Syntax & Features/Tags.md",
+    "Ecosystem/Syntax & Features/Attributes.md",
+    "Ecosystem/Axioms.md"
+  ]
 }
