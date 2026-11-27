@@ -66,9 +66,6 @@ Below is a list of valid Attributes:
 - *Outlive(n)*
 	- Usage: *Before* a module-level data or allocator declaration
 	- Effect: Destroys it after all unannotated declarations of its Artifact, in descending order of `n`, so that `1` is destroyed last. See [Module Data](Data.md#Module%20Data).
-- *Timer*
-	- Usage: *Inside* a scope block, from the moment you want to measure the execution of a block.
-	- Effect: Records the time at the moment of the attribute's declaration, and again when that scope is exited. The difference is stored in a configurable global `ScopedTimer` type.
 
 
 ##### Attribute Groups
@@ -82,6 +79,6 @@ fn Foo() // etc
 
 Keep in mind that you *cannot* group attributes with differing usage specs. For example, you cannot write the following:
 ```rust
-@NotAGoodIdea = @[Pure, Timer]
+@NotAGoodIdea = @[Pure, Discard]
 ```
-This would result in a compile error, because `Pure` and `Timer` are placed in different locations.
+This would result in a compile error, because `Pure` and `Discard` are placed in different locations.

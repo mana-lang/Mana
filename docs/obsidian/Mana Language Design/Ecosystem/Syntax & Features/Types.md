@@ -1,7 +1,7 @@
 ##### Typing
 All data in Mana has a *type*. 
 
-A data type describes that data's size, how it's laid out in memory, and how its contents are to be interacted with.
+A data type describes that data's size, alignment and representation in memory.
 
 Mana is *statically typed*, which means *all* types of *all* data *must* be known at compile time.
 
