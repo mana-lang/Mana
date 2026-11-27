@@ -1,7 +1,7 @@
 ##### Pointers
 A *pointer* is data holding an *address*.
 
-The type of a pointer is written `*X`, where `X` describes what its address resolves to: a *data type*, or a [signature type](Procedures.md#Specialization%20Addresses). `X` determines which operations are supported through the pointer. 
+The type of a pointer is written `*X`, where `X` describes what its address resolves to: a *data type*, or a [specialization type](Procedures.md#Specialization%20Addresses). `X` determines which operations are supported through the pointer. 
 
 A pointer has the size and alignment of `usize`. 
 
@@ -127,17 +127,19 @@ data unknown: *i32              // error: '*i32' has no default value
 ##### Opaque Pointers
 A pointer written as `*` alone is *opaque*. Nothing is known about what its address resolves to, so it supports *no* operations through it. Like any pointer, it carries access, as in `mut *`, and may be nullable, as in `?*`.
 
-Any pointer may be used wherever an opaque pointer of the same access is expected.
+Any pointer may be used wherever an opaque pointer of the same or lesser access is expected.
 
-Converting an opaque pointer to any pointer type other than the one it was made from is *undefined behaviour*. **Sceptre** warns wherever it can detect such a conversion.
+An opaque pointer is converted to another pointer type *only* through a [conversion](Types.md#Conversions), as in `(*i32)(opaque)`. The target's access may not exceed the opaque pointer's own; otherwise the conversion is a compile error. Converting it to any type other than the one it was made from, or one that type may be [copied into](#Access), is *undefined behaviour*. **Sceptre** warns wherever it can detect such a conversion.
 ```kotlin
 mut data health = 100
 
-data o: * = &health         // an address, with read access
-data w: mut * = mut &health // with write access
-data n: ?* = null_addr      // nullable
+data opaque: * = &health               // an address, with read access
+data opaque_writer: mut * = mut &health // with write access
+data nullable: ?* = null_addr           // nullable
 
-data v = *o                 // error: nothing is known about what 'o' resolves to
+data value = *opaque                    // error: nothing is known about what 'opaque' resolves to
+data reader = (*i32)(opaque_writer)     // ok: drops write access
+data writer = (mut *i32)(opaque)        // error: 'opaque' only has read access
 ```
 
 ##### Aliases

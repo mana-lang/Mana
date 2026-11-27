@@ -23,6 +23,9 @@ Below is a list of valid Attributes:
 - *Forbid*
 	- Usage: *Before* an operator specialization in a type interface
 	- Effect: Invoking that particular specialization is a compile error.
+- *Implicit*
+	- Usage: *Before* a [conversion operator](Types.md#Conversions) specialization
+		- Effect: The language invokes the conversion wherever data of its target type is expected
 - *Pure*
 	- Usage: *Before* function declaration
 		- Effect: Raises compile error if the function breaks any of the [pure function](Procedures.md#Pure%20Functions) rules

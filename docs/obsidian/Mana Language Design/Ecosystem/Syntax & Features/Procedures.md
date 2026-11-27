@@ -399,7 +399,7 @@ data c = a + b // uses 'geometry.vec'
 
 The type of a procedure declared with `fn` has no name of its own; `type(x)` names it.
 
-A specialization's *signature type* consists of its operator, its parameter types and its return type, as in `operator+ as (*Vec2, Vec2) -> Vec2`. Its address is a [pointer](Pointers.md) to its signature type: `*operator+ as (*Vec2, Vec2) -> Vec2`.
+A *specialization type* consists of a specialization's operator, its parameter types and its return type, as in `operator+ as (*Vec2, Vec2) -> Vec2`. A specialization's address is a [pointer](Pointers.md) to its specialization type: `*operator+ as (*Vec2, Vec2) -> Vec2`.
 
 `&x` alone is the address of a procedure's *data*. A specialization address is the address of its *code*, and is *only* needed where the procedure's type is erased.
 
@@ -786,7 +786,7 @@ const fn ToRadians(degrees: f64) -> f64 {
 1. They must be annotated with the `@[Pure]` *attribute*
 2. They may only invoke procedures qualified with `const` or annotated with the `@[Pure]` *attribute*
 3. They may access constants and immutable data declared in any scope
-4. They may access mutable data if declared within their own scope
+4. They may access mutable data *only* if declared within their own scope
 5. They must produce an output in the form of a return value
 6. They may *not* dereference a pointer
 

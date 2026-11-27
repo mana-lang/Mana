@@ -49,6 +49,9 @@ A *data operator* acts *only* on the data of its operands, and yields [unbound](
 - `()`
 	- Invocation/Call
 		- `foo(a, b)`
+- `T()`
+	- [Conversion](Types.md#Conversions) to type `T`
+		- `f64(x)`
 - `..`
 	- Exclusive range
 		- `5..12`

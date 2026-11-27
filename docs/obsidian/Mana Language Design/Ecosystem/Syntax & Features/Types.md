@@ -96,7 +96,7 @@ data c = @[Wrap] y - 5      // 254
 data d = @[Saturate] y - 5  // 0
 ```
 
-Both attributes apply to `+`, `-` and `*`, as well as to signed division, where `i_min / -1` is the only operation that can overflow. 
+Both attributes apply to `+`, `-` and `*`, to signed division, where `i_min / -1` is the only operation that can overflow, and to [conversions](#Conversions) between integer types. 
 
 They may be placed before a single *expression*, or before a *scope* or *function*, in which case they apply to all integer arithmetic within it.
 
@@ -104,13 +104,44 @@ They may be placed before a single *expression*, or before a *scope* or *functio
 > Saturating arithmetic is not free; it typically costs a comparison per operation. However, most CPUs offer native saturating instructions for SIMD operations, where it is often free.
 
 ##### Conversions
-`T(x)` *converts* `x` to type `T`.
+`T(x)` *converts* `x` to type `T` by invoking the *conversion operator* `operator T` on `x`. If `x` is already of type `T`, `T(x)` yields `x`. Otherwise, without such a specialization, `T(x)` is a compile error. A type that begins with a punctuator is parenthesized, as in `(*i32)(x)`.
 
-Data is accepted where data of *another* type is expected *only* if an *implicit conversion* to that type exists. A type's interface may declare implicit conversions to other types. Between primitives, the standard library declares *only* conversions that cannot lose information, such as from `i32` to `f64`.
+A conversion operator is declared like any [operator specialization](Procedures.md#Operators). Its operand is its *only* parameter, and it returns `T`, so its return type is not written.
+
+Data is accepted where data of *another* type is expected *only* if an *implicit conversion* to that type exists. A conversion operator annotated with `@[Implicit]` is an implicit conversion: the language invokes it wherever data of type `T` is expected. The language invokes at most *one* conversion to reach an expected type.
+```rust
+interface for type Kelvin {
+	operator Celsius as (*This) {
+		return Celsius {.degrees - 273.15}
+	}
+
+	@[Implicit]
+	operator f64 as (*This) {
+		return .degrees
+	}
+}
+
+data boiling = Kelvin {373.15}
+data celsius = Celsius(boiling) // invokes 'operator Celsius'
+data degrees: f64 = boiling     // the language invokes 'operator f64'
+data invalid: Celsius = boiling // error: no implicit conversion from 'Kelvin' to 'Celsius'
+```
+
+Between primitives, the standard library declares the following conversion operators:
+- *Integer to integer* yields the same value. If the value is outside the range of the target type, the conversion [overflows](#Integer%20Overflow). It is implicit when the target type can hold *every* value of the source type.
+- *Integer to floating-point* yields the nearest representable value. It is implicit when *every* value of the source type is represented exactly: from integers of up to 16 bits to `f32`, and of up to 32 bits to `f64`.
+- *Floating-point to floating-point* yields the nearest representable value. It is implicit from `f32` to `f64`.
+- *Floating-point to integer* discards the fraction. If the result is outside the range of the target type, or the value is NaN, the conversion traps in *checked* builds; in *unchecked* builds it is clamped to the range of the target type, and NaN yields `0`.
+- *Integer to `bool`* yields `true` for any non-zero value.
+- *`bool` to integer* yields `0` or `1`.
+
+`byte` converts as an 8-bit unsigned integer type. `isize` and `usize` have *no* implicit conversions to or from other primitive types.
 
 An integer literal is of type `i64`, and a literal with a decimal point is of type `f64`.
 
-Where data of type `T` is expected, an invocation, including that of an operator, invokes the specialization that returns `T`, if one accepts its arguments. Otherwise, its arguments select the specialization by their types, and the result is converted to `T`.
+Where data of type `T` is expected, an invocation, including that of an operator, is resolved in two steps. First, the specialization that returns `T` is invoked, if one accepts its arguments. Otherwise, its arguments select the specialization by their types, and the result is converted to `T`. A constant expression is resolved the same way; its value is converted *only* in the second step.
+
+Within `T(x)`, data of type `T` is expected of `x`, so `x` is resolved in the same two steps, except that its second step may invoke *any* conversion operator to `T`.
 
 When arguments select a specialization, one they match *without* converting data is chosen over one that requires a conversion. A constant argument matches a parameter of an integer type when it is of an integer type, and a parameter of a floating-point type when it is of a floating-point type, if its value can be represented in it. If more than one specialization matches equally, the invocation is a compile error.
 
@@ -123,6 +154,8 @@ data b: f64 = 7 / 2     // 3.5
 data c: f64 = x * 2     // 10.0
 data d: u8 = 255
 data e: f32 = 1.5
+data half = f64(7 / 2)  // 3.5
+data small = u8(x)      // 5
 
 data f: u8 = 300        // error: 300 cannot be represented as 'u8'
 data g: u8 = x          // error: no implicit conversion from 'i32' to 'u8'
@@ -242,7 +275,7 @@ type alias AddingFunction = *operator() as (i32, i32) -> i32
 Mana lays out data in memory following the same rules as **C**. This makes Mana data directly compatible with **C** and **C++**, without any conversion.
 - The fields of a composite type are laid out in their *declaration order*. Each field is placed at its natural alignment, with *padding* inserted where necessary.
 - The elements of an array are *contiguous* in memory.
-- A type is zero-size when its data needs no storage: `none`, a type whose fields are all zero-size, a fieldless composite type, or an array of zero length or of zero-size elements. Bindings of such a type occupy no storage. Every instance of such a type has the same address, unique to that type.
+- A type is zero-size when its data needs no storage: `none`, a type whose fields are all zero-size, a fieldless composite type, or an array of zero length or of zero-size elements. Bindings of such a type occupy no storage. Every instance of such a type has the same address, unique to that type. Zero-size data takes no part in the layout of what contains it, and its address is that of its own type.
 - The contents of padding bytes are *unspecified*. As a result, the default `operator==` for composite types compares them *field by field*, never byte by byte.
 
 Since field order determines layout, **Sceptre** will *warn* when the order of a type's fields wastes space on padding.

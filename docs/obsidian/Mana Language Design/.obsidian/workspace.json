@@ -1,28 +1,14 @@
 {
   "main": {
-    "id": "669d91a8f0522cc2",
+    "id": "06426422a461a1a6",
     "type": "split",
     "children": [
       {
-        "id": "f549b600b1a07ab1",
+        "id": "93b6e631ef913b1a",
         "type": "tabs",
         "children": [
           {
-            "id": "6a57afca6b64d7ce",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Ecosystem/Syntax & Features/Types.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Types"
-            }
-          },
-          {
-            "id": "a1f1d64352d23392",
+            "id": "be831a885ad33809",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -35,22 +21,21 @@
               "title": "Attributes"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
   },
   "left": {
-    "id": "e9d98c3987af8ac1",
+    "id": "4299c17a602d5cc7",
     "type": "split",
     "children": [
       {
-        "id": "f406c85e7d8c38fc",
+        "id": "c5776a67b248f1ae",
         "type": "tabs",
         "children": [
           {
-            "id": "debb322593be192c",
+            "id": "c4d18985a68c810c",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -65,12 +50,12 @@
             }
           },
           {
-            "id": "d47e5745574e40d8",
+            "id": "6e1ac1a96aba4540",
             "type": "leaf",
             "state": {
               "type": "search",
               "state": {
-                "query": "wailing wood",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -82,7 +67,7 @@
             }
           },
           {
-            "id": "b13334726976744d",
+            "id": "e79f0a6421ab1ccd",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
@@ -98,23 +83,23 @@
       }
     ],
     "direction": "horizontal",
-    "width": 355.5
+    "width": 300
   },
   "right": {
-    "id": "54e53a07588f83e2",
+    "id": "13e4448f3fa47a94",
     "type": "split",
     "children": [
       {
-        "id": "4cf2cc4e95a24385",
+        "id": "b60a086aaaaa6f58",
         "type": "tabs",
         "children": [
           {
-            "id": "71ae9fcba5145481",
+            "id": "e2cb9036cf817198",
             "type": "leaf",
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Ecosystem/Ecosystem.md",
+                "file": "Ecosystem/Syntax & Features/Attributes.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -124,46 +109,51 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Ecosystem"
+              "title": "Backlinks"
             }
           },
           {
-            "id": "807a806eb6859c2f",
+            "id": "b142abc1f708d605",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Gameplay/Systems/Player/Combat.md",
+                "file": "Ecosystem/Syntax & Features/Attributes.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Combat"
+              "title": "Outgoing links"
             }
           },
           {
-            "id": "11ebd0e1d2d24a04",
+            "id": "5ebdd47adc66d0fe",
             "type": "leaf",
             "state": {
               "type": "tag",
               "state": {
                 "sortOrder": "frequency",
-                "useHierarchy": true
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
               },
               "icon": "lucide-tags",
               "title": "Tags"
             }
           },
           {
-            "id": "c245a7be6af591c1",
+            "id": "f03ebd71106529cd",
             "type": "leaf",
             "state": {
               "type": "outline",
               "state": {
-                "file": "Gameplay/Systems/Player/Combat.md"
+                "file": "Ecosystem/Syntax & Features/Attributes.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Combat"
+              "title": "Outline"
             }
           }
         ]
@@ -175,79 +165,15 @@
   },
   "left-ribbon": {
     "hiddenItems": {
-      "bases:Create new base": false,
       "switcher:Open quick switcher": false,
       "graph:Open graph view": false,
       "canvas:Create new canvas": false,
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
-      "command-palette:Open command palette": false
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
     }
   },
-  "active": "a1f1d64352d23392",
-  "lastOpenFiles": [
-<<<<<<< Updated upstream
-    "Ecosystem/Standard Library.md",
-=======
-    "Ecosystem/Syntax & Features/Attributes.md.tmp.39413.af392d7a0e8c",
-    "Ecosystem/Syntax & Features/Procedures.md.tmp.39413.4e0c6463f470",
-    "Ecosystem/Syntax & Features/Procedures.md.tmp.39413.4e403eadb778",
-    "Ecosystem/Syntax & Features/Procedures.md.tmp.39413.ff4996614f2b",
-    "Ecosystem/Modules/Circe.md.tmp.30354.8ac6b21e529d",
-    "Ecosystem/Ecosystem.md.tmp.30354.7d0f0eef196e",
-    "Ecosystem/Syntax & Features/Data.md.tmp.30354.307430098206",
-    "Ecosystem/Syntax & Features/Build Modes.md.tmp.30354.660bf5d25b4a",
-    "Ecosystem/Modules/Salem.md.tmp.30354.c59682091f95",
-    "Ecosystem/Ecosystem.md.tmp.30354.4bc5caeefe8d",
-    "Ecosystem/Syntax & Features/Types.md.tmp.30354.cf47785a8c90",
-    "Ecosystem/Syntax & Features/Memory.md",
->>>>>>> Stashed changes
-    "Ecosystem/Syntax & Features/Procedures.md",
-    "Ecosystem/Syntax & Features/Attributes.md",
-    "Ecosystem/Syntax & Features/Build Modes.md",
-    "Ecosystem/Syntax & Features/Pointers.md",
-    "Ecosystem/Syntax & Features/Types.md",
-    "Ecosystem/Syntax & Features/Data.md",
-    "Ecosystem/Syntax & Features/Operators.md.tmp.19577.86a984dd9c30",
-    "Ecosystem/Syntax & Features/Build Modes.md.tmp.19577.2d44cfbe46f3",
-    "Ecosystem/Syntax & Features/Pointers.md.tmp.19577.58b434155a10",
-    "Ecosystem/Syntax & Features/Pointers.md.tmp.19577.ba3caecd0b12",
-    "Ecosystem/Syntax & Features/Data.md.tmp.23223.121de5415c10",
-    "Ecosystem/Syntax & Features/Procedures.md.tmp.23223.45969d6a5557",
-    "Ecosystem/Syntax & Features/Procedures.md.tmp.23223.caf2244793e8",
-    "Ecosystem/Syntax & Features/Data.md.tmp.23223.3eafec6a7d92",
-    "Ecosystem/Syntax & Features/Pointers.md.tmp.23223.e31e2e97c630",
-    "Ecosystem/Syntax & Features/Pointers.md.tmp.23223.e224b5439d9b",
-    "Ecosystem/Syntax & Features/Operators.md",
-    "Ecosystem/Syntax & Features/Enumerations.md",
-    "Ecosystem/Syntax & Features/Flexible Data.md",
-    "Ecosystem/Syntax & Features/Hello World.md",
-    "Ecosystem/Syntax & Features/Memory.md",
-    "Ecosystem/Syntax & Features/Missing Docs.md",
-    "Ecosystem/Syntax & Features/Variants.md",
-    "Ecosystem/Syntax & Features/Tags.md",
-    "Ecosystem/Syntax & Features/Control Flow.md",
-    "Ecosystem/Syntax & Features/Compile Time.md",
-    "_Assets/Info_Artifacts.png",
-    "Ecosystem/Ecosystem.md",
-    "Ecosystem/Pitch.md",
-    "_Assets/Info_Troves.png",
-    "_Assets/ManaEcosystem.png",
-    "_Assets/logo-text-white-bg.png",
-    "_Assets/logo-text-black-bg.png",
-    "Ecosystem/Modules/Sigil.md",
-    "Ecosystem/Modules/Salem.md",
-    "Ecosystem/Modules/Hex.md",
-    "Ecosystem/Modules/Circe.md",
-    "Ecosystem/logo-text-white-bg.png",
-    "_Assets/Pasted image 20260126095822.png",
-    "Modules.md",
-    "_Templates/Dummy.md",
-    "Ecosystem/Syntax & Features/v.md",
-    "_Assets/Pasted image 20250912060624.png",
-    "_Assets/Pasted image 20250908005720.png",
-    "_Assets/Pasted image 20250903011646.png",
-    "Gameplay/Regions/Lumina/Map.canvas",
-    "Untitled.canvas"
-  ]
+  "active": "be831a885ad33809",
+  "lastOpenFiles": []
 }
