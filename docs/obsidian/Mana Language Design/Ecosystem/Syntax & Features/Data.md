@@ -227,7 +227,7 @@ This feature is an important part of how Mana handles *ownership*, which will be
 ##### Type annotations
 All data in Mana is *strongly and statically typed*. 
 
-This means the types of all values must be known at compile-time, and data may not be assigned a value of a type that doesn't match its own.
+This means the types of all values must be known at compile-time, and data may not be assigned a value of a type that doesn't match its own, unless it [converts implicitly](Types.md#Conversions).
 
 Data declarations may have *explicit* type annotations. This may be useful if you want to convert certain types, or ensure a variable's type doesn't silently change e.g. in the case of a function's return type being modified unexpectedly.
 ```kotlin

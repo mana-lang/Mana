@@ -52,10 +52,6 @@ What is an iterator? ~~(And how much does it weigh?)~~
 What the exact definition of "iterator" is in Mana remains to be seen. I know that it will be the mechanism via which `for x in y` statements can decompose collections into a loop over their elements, but how exactly this will be achieved remains to be seen.
 
 
-##### Type conversions
-This one is thankfully (hopefully) not that complex. It is simply on hold until the type system is solid. For the time being, native conversions are automatically done between integral primitives. The syntax will likely look like `TypeName(x)`, e.g. `i32(foo)`
-
-
 ##### Strings
 UTF-8? UTF-32? ASCII? String conversions? Views? Slices?
 

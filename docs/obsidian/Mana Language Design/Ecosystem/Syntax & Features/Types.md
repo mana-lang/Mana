@@ -103,6 +103,31 @@ They may be placed before a single *expression*, or before a *scope* or *functio
 > [!note]
 > Saturating arithmetic is not free; it typically costs a comparison per operation. However, most CPUs offer native saturating instructions for SIMD operations, where it is often free.
 
+##### Conversions
+`T(x)` *converts* `x` to type `T`.
+
+Data is accepted where data of *another* type is expected *only* if an *implicit conversion* to that type exists. A type's interface may declare implicit conversions to other types. Between primitives, the standard library declares *only* conversions that cannot lose information, such as from `i32` to `f64`.
+
+An integer literal is of type `i64`, and a literal with a decimal point is of type `f64`.
+
+Where data of type `T` is expected, an invocation, including that of an operator, invokes the specialization that returns `T`, if one accepts its arguments. Otherwise, its arguments select the specialization by their types, and the result is converted to `T`.
+
+When arguments select a specialization, one they match *without* converting data is chosen over one that requires a conversion. A constant argument matches a parameter of an integer type when it is of an integer type, and a parameter of a floating-point type when it is of a floating-point type, if its value can be represented in it. If more than one specialization matches equally, the invocation is a compile error.
+
+A [constant](Data.md#Constants) expression is converted at *compile time*. If its value can be represented in the expected type, it is treated as if it were of that type to begin with; a floating-point type represents it rounded to the nearest value. Otherwise, the conversion is a compile error.
+```rust
+data x: i32 = 5
+
+data a = 7 / 2          // i64: 3
+data b: f64 = 7 / 2     // 3.5
+data c: f64 = x * 2     // 10.0
+data d: u8 = 255
+data e: f32 = 1.5
+
+data f: u8 = 300        // error: 300 cannot be represented as 'u8'
+data g: u8 = x          // error: no implicit conversion from 'i32' to 'u8'
+data h: string = 7 / 2  // error: no implicit conversion from 'i64' to 'string'
+```
 
 ##### None
 `none` is a special keyword which is both a type and a value, but represents the *absence* of a value. In essence, `none`  is a value of type `none`. 

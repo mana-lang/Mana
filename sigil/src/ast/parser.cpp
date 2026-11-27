@@ -548,12 +548,6 @@ bool IsPrimitiveKeyword(const TokenType token) {
     default:
         return false;
     }
-    <>
-    ==>
-    >=>
-    >==
-    >>=    
-    <<=    
 }
 
 bool IsType(const TokenType token) {
