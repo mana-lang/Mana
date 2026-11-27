@@ -12,7 +12,7 @@ Additionally, Mana is designed to let you write expressive and modular code *wit
 
 It is a data-centric language. This allows the developer to reason about their program as the flow of data and its transformations, rather than a series of logic statements. In many ways, Mana can be thought of as an imperative inversion of functional programming.
 
-**Salem**, its native/AOT compiler, is designed to spot areas of poor performance based on their *data access patterns*, and can respond to this by warning the user about them, and even suggesting optimized data layouts, access patterns, and branch reduction to achieve the highest performance possible.
+**Salem**, its native/AOT compiler, runs **Sceptre**, its static analyser, which is designed to spot areas of poor performance based on their *data access patterns*. Sceptre can respond to this by warning the user about them, and even suggesting optimized data layouts, access patterns, and branch reduction to achieve the highest performance possible.
 
 Meanwhile **Circe**, its bytecode/JIT compiler, is designed to recompile `@[Hot]` code modules as fast as possible. These are then executed by **Hex**, its low-overhead runtime/VM, which enables the user to *seamlessly prototype* their code as their program is running. All this *without* the need for any glue code, while still maintaining excellent performance.
 

@@ -10,7 +10,7 @@ At runtime, a pointer is *only* an address; the type it points to exists only at
 Like any data, a pointer may only be *re-pointed* if it is mutable.
 
 > [!note]
-> Pointer arithmetic and conversions are not yet specified.
+> Pointer arithmetic is not yet specified.
 
 ##### Access
 The type of a pointer includes its *access* to the data it points to. `*T` may only *read* that data, while `mut *T` may also *write* it.
@@ -129,7 +129,7 @@ A pointer written as `*` alone is *opaque*. Nothing is known about what its addr
 
 Any pointer may be used wherever an opaque pointer of the same or lesser access is expected.
 
-An opaque pointer is converted to another pointer type *only* through a [conversion](Types.md#Conversions), as in `(*i32)(opaque)`. The target's access may not exceed the opaque pointer's own; otherwise the conversion is a compile error. Converting it to any type other than the one it was made from, or one that type may be [copied into](#Access), is *undefined behaviour*. **Sceptre** warns wherever it can detect such a conversion.
+An opaque pointer is converted to another pointer type *only* through a [conversion](Types.md#Conversions), as in `(*i32)(opaque)`. The target's access may not exceed the opaque pointer's own; otherwise the conversion is a compile error. Converting it to any type other than the one it was made from, or one that type may be [copied into](#Access), is *undefined behaviour*, unless the conversion is a [reinterpretation](#Reinterpreting%20Pointers). **Sceptre** warns wherever it can detect such a conversion.
 ```kotlin
 mut data health = 100
 
@@ -141,6 +141,48 @@ data value = *opaque                    // error: nothing is known about what 'o
 data reader = (*i32)(opaque_writer)     // ok: drops write access
 data writer = (mut *i32)(opaque)        // error: 'opaque' only has read access
 ```
+
+##### Reinterpreting Pointers
+A pointer to one type is converted to a pointer to *another* type *only* through a [reinterpretation](Types.md#Reinterpretation), as in `@[Reinterpret] (*u32)(pointer)`. The result holds the *same* address.
+
+The target's access may not exceed the source's; otherwise the conversion is a compile error. An integer has *no* access, so a pointer reinterpreted from an integer has the access of its target type.
+
+A read or write through a reinterpreted pointer treats the bytes at its address as data of the type it points to. Those bytes *must* be at least the size of that type, aligned for it, and, when read, a value that type can hold; otherwise the behaviour is *undefined*.
+```kotlin
+mut data health: i32 = 100
+
+data bits = @[Reinterpret] (*u32)(&health)       // the same address, read as a 'u32'
+data address = @[Reinterpret] usize(&health)     // the address, as an integer
+data writer = @[Reinterpret] (mut *u32)(&health) // error: '&health' only has read access
+```
+
+##### Strict Aliasing
+A type annotated with `@[StrictAliasing]` is *strict*:
+- Data of a strict type is *only* written as that type, or as the types of its fields.
+- A pointer to a strict type *only* points to data of that type.
+
+The compiler may therefore assume that a write through a pointer to any other type leaves strict data unchanged.
+
+A [reinterpretation](#Reinterpreting%20Pointers) is a compile error if:
+- it yields a pointer to a strict type from a pointer to another type, or
+- it yields a pointer with *write* access from a pointer to a strict type, or to data containing one.
+
+Breaking these rules by a route the compiler cannot see, such as through an opaque pointer or an integer, is *undefined behaviour*. **Sceptre** warns wherever it can detect it.
+```kotlin
+@[StrictAliasing]
+type Particle {
+	position: Vec2
+	life: f32
+}
+
+mut data particle = Particle {}
+
+data view = @[Reinterpret] (*[byte, 12])(&particle)           // ok: a read-only view
+data writer = @[Reinterpret] (mut *[byte, 12])(mut &particle) // error: 'Particle' is strict
+data fake = @[Reinterpret] (*Particle)(view)                  // error: 'Particle' is strict
+```
+> [!note]
+> `@[StrictAliasing]` is provisional.
 
 ##### Aliases
 An *alias* is a binding to existing data, declared with the `alias` keyword. It is initialized with the address-of punctuator: `&x` aliases `x` with *read* access, and `mut &x` with *write* access.

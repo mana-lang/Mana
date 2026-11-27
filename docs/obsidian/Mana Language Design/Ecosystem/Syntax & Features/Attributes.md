@@ -26,6 +26,12 @@ Below is a list of valid Attributes:
 - *Implicit*
 	- Usage: *Before* a [conversion operator](Types.md#Conversions) specialization
 		- Effect: The language invokes the conversion wherever data of its target type is expected
+- *Reinterpret*
+	- Usage: *Before* a [conversion](Types.md#Conversions)
+		- Effect: The conversion yields the bytes of its operand as its target type. See [Reinterpretation](Types.md#Reinterpretation).
+- *StrictAliasing*
+	- Usage: *Before* a type declaration
+		- Effect: Data of that type is *only* written as that type, or as the types of its fields. See [Strict Aliasing](Pointers.md#Strict%20Aliasing).
 - *Pure*
 	- Usage: *Before* function declaration
 		- Effect: Raises compile error if the function breaks any of the [pure function](Procedures.md#Pure%20Functions) rules

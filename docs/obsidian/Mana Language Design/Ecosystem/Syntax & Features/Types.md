@@ -162,6 +162,25 @@ data g: u8 = x          // error: no implicit conversion from 'i32' to 'u8'
 data h: string = 7 / 2  // error: no implicit conversion from 'i64' to 'string'
 ```
 
+##### Reinterpretation
+`@[Reinterpret] T(x)` yields the bytes of `x` as a `T`, in place of invoking `operator T`. `T` and the type of `x` *must* have the same size.
+
+`x` is resolved on its own, without an expected type, and is passed [exactly as written](Procedures.md#Invocation%20Arguments). The result is destroyed as a `T`.
+
+The bytes of `x` *must* form a value that `T` can hold; otherwise the behaviour is *undefined*.
+
+`@[Reinterpret]` applies to a *single* conversion.
+```rust
+data ratio: f32 = 1.5
+
+data bits = @[Reinterpret] u32(ratio) // the bit pattern of 'ratio'
+data wide = @[Reinterpret] u64(ratio) // error: 'f32' and 'u64' differ in size
+```
+Reinterpreting a pointer is described in [Pointers](Pointers.md#Reinterpreting%20Pointers).
+
+> [!note]
+> `@[Reinterpret]` is provisional.
+
 ##### None
 `none` is a special keyword which is both a type and a value, but represents the *absence* of a value. In essence, `none`  is a value of type `none`. 
 
